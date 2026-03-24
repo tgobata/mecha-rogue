@@ -1,0 +1,147 @@
+{
+  "_comment": "階層スケーリング係数。GDD section 2〜8 の各数値から導出。",
+
+  "floor_ranges": [
+    {
+      "label": "序盤",
+      "minFloor": 1,
+      "maxFloor": 5,
+      "map_size": { "width": 25, "height": 25 },
+      "enemy_hp_range":   [10, 30],
+      "enemy_atk_range":  [3,  8],
+      "enemy_def_range":  [0,  2],
+      "enemy_exp_mult":   1.0,
+      "enemy_gold_mult":  1.0,
+      "lava_enabled":     false,
+      "ice_enabled":      false,
+      "warp_enabled":     false,
+      "magnetic_enabled": false,
+      "design_note": "初心者でもクリア可。撃破率5%以下を目標"
+    },
+    {
+      "label": "中盤前半",
+      "minFloor": 6,
+      "maxFloor": 10,
+      "map_size": { "width": 30, "height": 30 },
+      "enemy_hp_range":   [25, 60],
+      "enemy_atk_range":  [7,  15],
+      "enemy_def_range":  [1,  5],
+      "enemy_exp_mult":   2.0,
+      "enemy_gold_mult":  2.0,
+      "lava_enabled":     true,
+      "ice_enabled":      false,
+      "warp_enabled":     false,
+      "magnetic_enabled": false
+    },
+    {
+      "label": "中盤",
+      "minFloor": 11,
+      "maxFloor": 15,
+      "map_size": { "width": 35, "height": 35 },
+      "enemy_hp_range":   [50, 90],
+      "enemy_atk_range":  [12, 20],
+      "enemy_def_range":  [3,  8],
+      "enemy_exp_mult":   3.5,
+      "enemy_gold_mult":  3.5,
+      "lava_enabled":     true,
+      "ice_enabled":      true,
+      "warp_enabled":     false,
+      "magnetic_enabled": false
+    },
+    {
+      "label": "中盤後半",
+      "minFloor": 16,
+      "maxFloor": 20,
+      "map_size": { "width": 35, "height": 35 },
+      "enemy_hp_range":   [80, 120],
+      "enemy_atk_range":  [18, 25],
+      "enemy_def_range":  [5,  10],
+      "enemy_exp_mult":   5.5,
+      "enemy_gold_mult":  5.0,
+      "lava_enabled":     true,
+      "ice_enabled":      true,
+      "warp_enabled":     true,
+      "magnetic_enabled": false
+    },
+    {
+      "label": "後半",
+      "minFloor": 21,
+      "maxFloor": 25,
+      "map_size": { "width": 40, "height": 40 },
+      "enemy_hp_range":   [100, 180],
+      "enemy_atk_range":  [22, 32],
+      "enemy_def_range":  [8,  15],
+      "enemy_exp_mult":   8.0,
+      "enemy_gold_mult":  8.0,
+      "lava_enabled":     true,
+      "ice_enabled":      true,
+      "warp_enabled":     true,
+      "magnetic_enabled": true
+    },
+    {
+      "label": "深層前半",
+      "minFloor": 26,
+      "maxFloor": 30,
+      "map_size": { "width": 40, "height": 40 },
+      "enemy_hp_range":   [150, 250],
+      "enemy_atk_range":  [30, 40],
+      "enemy_def_range":  [12, 20],
+      "enemy_exp_mult":   12.0,
+      "enemy_gold_mult":  12.0,
+      "lava_enabled":     true,
+      "ice_enabled":      true,
+      "warp_enabled":     true,
+      "magnetic_enabled": true
+    },
+    {
+      "label": "深層",
+      "minFloor": 31,
+      "maxFloor": 9999,
+      "map_size": { "width": 45, "height": 45 },
+      "enemy_hp_range":   [200, 500],
+      "enemy_atk_range":  [35, 60],
+      "enemy_def_range":  [15, 30],
+      "enemy_exp_mult":   18.0,
+      "enemy_gold_mult":  18.0,
+      "lava_enabled":     true,
+      "ice_enabled":      true,
+      "warp_enabled":     true,
+      "magnetic_enabled": true
+    }
+  ],
+
+  "stat_scale_per_floor": {
+    "hp_growth_rate":   0.08,
+    "atk_growth_rate":  0.06,
+    "def_growth_rate":  0.05,
+    "exp_growth_rate":  0.10,
+    "gold_growth_rate": 0.15
+  },
+
+  "boss_hp_mult_by_tier": {
+    "minor": 1.0,
+    "mid":   1.0,
+    "major": 1.0,
+    "final": 1.0
+  },
+
+  "rest_point_heal_amount": 50,
+  "repair_point_durability_restore_pct": 0.5,
+
+  "lava_damage_per_step": 5,
+  "water_speed_penalty": 1,
+  "ice_slide_distance": 1,
+
+  "weapon_low_durability_threshold_pct": 0.25,
+  "weapon_low_durability_atk_mult": 0.7,
+
+  "pilot_skill_bonuses": {
+    "iron_defense_dmg_reduce_per_lv":       0.02,
+    "hawk_eye_view_radius_per_lv":           0.5,
+    "treasure_hunter_drop_rate_per_lv":      0.03,
+    "engineer_durability_loss_reduce_per_lv": 0.05,
+    "speedster_speed_bonus_at_lv5":          1,
+    "bargainer_shop_discount_per_lv":        0.03,
+    "survival_rest_heal_bonus_per_lv":       0.10
+  }
+}

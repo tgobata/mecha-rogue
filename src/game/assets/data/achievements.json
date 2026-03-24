@@ -1,0 +1,38 @@
+[
+  {
+    "id": "first_steps",
+    "name": "First Steps",
+    "description": "Reach Floor 2.",
+    "icon": "🚀"
+  },
+  {
+    "id": "survivor",
+    "name": "Survivor",
+    "description": "Reach Floor 10.",
+    "icon": "🛡️"
+  },
+  {
+    "id": "boss_slayer_1",
+    "name": "Bug Squasher",
+    "description": "Defeat the Bug Swarm.",
+    "icon": "🪲"
+  },
+  {
+    "id": "boss_slayer_13",
+    "name": "Mecha Master",
+    "description": "Defeat the Final Boss.",
+    "icon": "👑"
+  },
+  {
+    "id": "wealthy",
+    "name": "Resourceful",
+    "description": "Accumulate 1000 Gold.",
+    "icon": "💰"
+  },
+  {
+    "id": "collector",
+    "name": "Arsenal",
+    "description": "Fill all weapon slots with Legendary items.",
+    "icon": "⚔️"
+  }
+]

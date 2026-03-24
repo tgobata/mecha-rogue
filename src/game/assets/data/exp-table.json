@@ -1,0 +1,25 @@
+{
+  "version": "1.1",
+  "levels": [
+    { "level": 1,  "exp_required": 0,     "hp_bonus": 0,  "atk_bonus": 0, "def_bonus": 0 },
+    { "level": 2,  "exp_required": 120,   "hp_bonus": 5,  "atk_bonus": 1, "def_bonus": 0 },
+    { "level": 3,  "exp_required": 300,   "hp_bonus": 5,  "atk_bonus": 1, "def_bonus": 0 },
+    { "level": 4,  "exp_required": 560,   "hp_bonus": 5,  "atk_bonus": 1, "def_bonus": 0 },
+    { "level": 5,  "exp_required": 920,   "hp_bonus": 8,  "atk_bonus": 1, "def_bonus": 1 },
+    { "level": 6,  "exp_required": 1420,  "hp_bonus": 8,  "atk_bonus": 1, "def_bonus": 0 },
+    { "level": 7,  "exp_required": 2100,  "hp_bonus": 8,  "atk_bonus": 2, "def_bonus": 0 },
+    { "level": 8,  "exp_required": 2980,  "hp_bonus": 10, "atk_bonus": 2, "def_bonus": 0 },
+    { "level": 9,  "exp_required": 4080,  "hp_bonus": 10, "atk_bonus": 2, "def_bonus": 1 },
+    { "level": 10, "exp_required": 5480,  "hp_bonus": 10, "atk_bonus": 2, "def_bonus": 0 },
+    { "level": 11, "exp_required": 7280,  "hp_bonus": 10, "atk_bonus": 2, "def_bonus": 0 },
+    { "level": 12, "exp_required": 9580,  "hp_bonus": 12, "atk_bonus": 2, "def_bonus": 1 },
+    { "level": 13, "exp_required": 12480, "hp_bonus": 12, "atk_bonus": 2, "def_bonus": 0 },
+    { "level": 14, "exp_required": 16080, "hp_bonus": 12, "atk_bonus": 3, "def_bonus": 0 },
+    { "level": 15, "exp_required": 20580, "hp_bonus": 12, "atk_bonus": 3, "def_bonus": 1 },
+    { "level": 16, "exp_required": 26180, "hp_bonus": 14, "atk_bonus": 3, "def_bonus": 0 },
+    { "level": 17, "exp_required": 33080, "hp_bonus": 14, "atk_bonus": 3, "def_bonus": 0 },
+    { "level": 18, "exp_required": 41480, "hp_bonus": 14, "atk_bonus": 3, "def_bonus": 1 },
+    { "level": 19, "exp_required": 51680, "hp_bonus": 15, "atk_bonus": 3, "def_bonus": 0 },
+    { "level": 20, "exp_required": 64080, "hp_bonus": 15, "atk_bonus": 3, "def_bonus": 1 }
+  ]
+}

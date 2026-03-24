@@ -1,0 +1,689 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>主人公仕様 - メカローグ</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Segoe UI', 'Noto Sans JP', sans-serif;
+      background: #1a1a2e;
+      color: #e0e0e0;
+      min-height: 100vh;
+    }
+    header {
+      background: #16213e;
+      border-bottom: 2px solid #2a2a5e;
+      padding: 16px 24px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+    header a { color: #7ecfff; text-decoration: none; font-size: 0.85rem; }
+    header a:hover { text-decoration: underline; }
+    header h1 { font-size: 1.2rem; color: #ffcc88; }
+
+    .tabs {
+      background: #16213e;
+      border-bottom: 1px solid #2a2a5e;
+      display: flex;
+      gap: 0;
+      padding: 0 24px;
+    }
+    .tab {
+      padding: 12px 20px;
+      cursor: pointer;
+      font-size: 0.9rem;
+      color: #888;
+      border-bottom: 3px solid transparent;
+      transition: color 0.2s, border-color 0.2s;
+      white-space: nowrap;
+    }
+    .tab:hover { color: #ccc; }
+    .tab.active { color: #ffcc88; border-bottom-color: #ffcc88; }
+
+    .content {
+      display: none;
+      padding: 24px;
+      max-width: 1000px;
+    }
+    .content.active { display: block; }
+
+    h2 {
+      font-size: 1rem;
+      color: #ffcc88;
+      margin-bottom: 16px;
+      padding-bottom: 6px;
+      border-bottom: 1px solid #2a2a5e;
+    }
+    h3 {
+      font-size: 0.9rem;
+      color: #88ccff;
+      margin: 20px 0 10px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.83rem;
+      margin-bottom: 24px;
+    }
+    thead th {
+      background: #0f3460;
+      color: #7ecfff;
+      padding: 9px 10px;
+      text-align: left;
+      border-bottom: 2px solid #2a2a5e;
+      white-space: nowrap;
+    }
+    tbody tr { border-bottom: 1px solid #1e1e3e; transition: background 0.1s; }
+    tbody tr:hover { background: #1e1e3e; }
+    td { padding: 8px 10px; vertical-align: middle; }
+    td.param { font-weight: 500; white-space: nowrap; color: #e8e8e8; }
+    td.val { font-family: monospace; color: #c8d8ff; text-align: right; }
+    td.desc { color: #aaa; font-size: 0.8rem; line-height: 1.5; }
+    td.id-cell { font-family: monospace; font-size: 0.75rem; color: #888; }
+    td.effect-cell { font-size: 0.8rem; color: #aaa; line-height: 1.5; }
+
+    .badge {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-size: 0.72rem;
+      font-weight: bold;
+    }
+    .badge-active   { background: #1e3a5e; color: #88aaff; }
+    .badge-passive  { background: #2a1e4e; color: #cc99ff; }
+    .badge-pilot    { background: #1e3a1e; color: #88ff88; }
+    .badge-machine  { background: #3a2200; color: #ffbb44; }
+
+    .note {
+      background: #16213e;
+      border-left: 3px solid #ffcc88;
+      padding: 10px 14px;
+      border-radius: 0 6px 6px 0;
+      font-size: 0.82rem;
+      color: #ccc;
+      margin-bottom: 16px;
+      line-height: 1.6;
+    }
+
+    /* レベルアップテーブル */
+    .exp-table-wrap { overflow-x: auto; }
+    .lvup-num { text-align: right; font-family: monospace; color: #c8d8ff; }
+    .lvup-exp { text-align: right; font-family: monospace; color: #ffcc88; }
+    .lvup-hp  { text-align: right; font-family: monospace; color: #88ff88; }
+    .lvup-atk { text-align: right; font-family: monospace; color: #ff9999; }
+    .lvup-def { text-align: right; font-family: monospace; color: #88aaff; }
+    .lvup-sp  { text-align: right; font-family: monospace; color: #cc99ff; }
+    .lvup-total { color: #888; font-size: 0.78rem; }
+
+    .skill-row-active td { border-left: 2px solid #4477cc; }
+    .skill-row-passive td { border-left: 2px solid #7744cc; }
+
+    /* パイロットスキルテーブル */
+    .pskill-max { color: #888; font-size: 0.75rem; }
+    .pskill-effect { font-size: 0.78rem; color: #aaa; line-height: 1.5; }
+
+    /* スプライトギャラリー */
+    .sprite-gallery { display: flex; flex-direction: column; gap: 24px; }
+    .sprite-group { background: #16213e; border: 1px solid #2a2a5e; border-radius: 8px; padding: 14px 18px; }
+    .sprite-group-title {
+      font-size: 0.9rem; font-weight: bold; color: #ffcc88;
+      margin-bottom: 12px; padding-bottom: 6px; border-bottom: 1px solid #2a2a5e;
+    }
+    .sprite-dir-row { display: flex; flex-wrap: wrap; gap: 16px; }
+    .sprite-entry { display: flex; flex-direction: column; align-items: center; gap: 4px; }
+    .sprite-entry-label { font-size: 0.7rem; color: #888; font-family: monospace; }
+    .sprite-entry img {
+      image-rendering: pixelated;
+      width: 64px; height: 64px;
+      background: #0a0a18;
+      border: 1px solid #2a2a5e;
+      border-radius: 4px;
+    }
+    .sprite-entry img.missing { opacity: 0.15; }
+    .dir-label { font-size: 0.75rem; color: #88aaff; margin-bottom: 4px; font-weight: bold; min-width: 60px; }
+    .sprite-dir-block { display: flex; flex-direction: column; gap: 6px; }
+    .frames-row { display: flex; gap: 6px; align-items: flex-start; }
+  </style>
+</head>
+<body>
+  <header>
+    <a href="index.html">&#x2190; ドキュメント一覧</a>
+    <h1>主人公仕様</h1>
+  </header>
+
+  <div class="tabs">
+    <div class="tab active" data-tab="pilot">パイロットステータス</div>
+    <div class="tab" data-tab="skills">スキル一覧</div>
+    <div class="tab" data-tab="pskills">パイロットスキル</div>
+    <div class="tab" data-tab="machine">マシンステータス</div>
+    <div class="tab" data-tab="levelup">レベルアップ表</div>
+    <div class="tab" data-tab="sprites">ドット絵</div>
+  </div>
+
+  <!-- パイロットステータス -->
+  <div class="content active" id="tab-pilot">
+    <h2>パイロットステータス</h2>
+    <div class="note">
+      パイロットはゲームオーバー後もレベル・スキルが引き継がれる永続キャラクター。
+      マシン（機体）とは独立して管理される。
+    </div>
+    <table>
+      <thead>
+        <tr>
+          <th>パラメータ</th>
+          <th>初期値</th>
+          <th>上限</th>
+          <th>レベルアップ増加</th>
+          <th>説明</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="param"><span class="badge badge-pilot">Lv</span> パイロットLv</td>
+          <td class="val">1</td>
+          <td class="val">20</td>
+          <td class="val">-</td>
+          <td class="desc">経験値で上昇。最大Lv20。</td>
+        </tr>
+        <tr>
+          <td class="param">経験値 (EXP)</td>
+          <td class="val">0</td>
+          <td class="val">64,080</td>
+          <td class="val">-</td>
+          <td class="desc">敵を倒すと獲得。累積経験値でLvが上がる。</td>
+        </tr>
+        <tr>
+          <td class="param">操縦技術</td>
+          <td class="val">10</td>
+          <td class="val">-</td>
+          <td class="val">+1</td>
+          <td class="desc">回避率に影響する。レベルアップごとに+1。</td>
+        </tr>
+        <tr>
+          <td class="param">判断力</td>
+          <td class="val">10</td>
+          <td class="val">-</td>
+          <td class="val">+1</td>
+          <td class="desc">クリティカル率に影響する。レベルアップごとに+1。</td>
+        </tr>
+        <tr>
+          <td class="param">幸運</td>
+          <td class="val">5</td>
+          <td class="val">-</td>
+          <td class="val">+0.5</td>
+          <td class="desc">アイテムドロップ率に影響する。レベルアップごとに+0.5（内部は小数管理）。</td>
+        </tr>
+        <tr>
+          <td class="param"><span class="badge badge-passive">SP</span> スキルポイント</td>
+          <td class="val">0</td>
+          <td class="val">-</td>
+          <td class="val">+2</td>
+          <td class="desc">レベルアップで+2獲得。パイロットスキルへの割り振りに使用する。</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- スキル一覧（battle skills）-->
+  <div class="content" id="tab-skills">
+    <h2>バトルスキル一覧</h2>
+    <div class="note">
+      レベルアップ時に1つ習得（選択式）。アクティブスキルはエネルギー・クールダウン有り。
+      パッシブスキルは常時発動。同一スキルは1回のみ習得可能。
+    </div>
+    <table>
+      <thead>
+        <tr>
+          <th>スキルID</th>
+          <th>種別</th>
+          <th>クールダウン</th>
+          <th>効果</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr class="skill-row-active">
+          <td class="id-cell">power_strike</td>
+          <td><span class="badge badge-active">アクティブ</span></td>
+          <td class="val">5ターン</td>
+          <td class="effect-cell">ATK×2の一撃を与える。</td>
+        </tr>
+        <tr class="skill-row-active">
+          <td class="id-cell">barrier</td>
+          <td><span class="badge badge-active">アクティブ</span></td>
+          <td class="val">4ターン</td>
+          <td class="effect-cell">1ターン DEF+10のバリアを張る。</td>
+        </tr>
+        <tr class="skill-row-active">
+          <td class="id-cell">overcharge</td>
+          <td><span class="badge badge-active">アクティブ</span></td>
+          <td class="val">6ターン</td>
+          <td class="effect-cell">前方3マスの範囲攻撃を行う。</td>
+        </tr>
+        <tr class="skill-row-passive">
+          <td class="id-cell">passive_regen</td>
+          <td><span class="badge badge-passive">パッシブ</span></td>
+          <td class="val">-</td>
+          <td class="effect-cell">毎ターン HP+1 自動回復する。</td>
+        </tr>
+        <tr class="skill-row-passive">
+          <td class="id-cell">passive_tough</td>
+          <td><span class="badge badge-passive">パッシブ</span></td>
+          <td class="val">-</td>
+          <td class="effect-cell">受けるダメージを2軽減する（下限1）。</td>
+        </tr>
+        <tr class="skill-row-passive">
+          <td class="id-cell">passive_scavenger</td>
+          <td><span class="badge badge-passive">パッシブ</span></td>
+          <td class="val">-</td>
+          <td class="effect-cell">アイテムドロップ率が+20%になる。</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- パイロットスキル（SP割り振り型）-->
+  <div class="content" id="tab-pskills">
+    <h2>パイロットスキル（SP割り振り型）</h2>
+    <div class="note">
+      スキルポイント(SP)を割り振ることでレベルが上がる育成スキル。
+      ゲームオーバー後も維持される永続強化。
+    </div>
+    <table>
+      <thead>
+        <tr>
+          <th>スキルID</th>
+          <th>スキル名</th>
+          <th>最大Lv</th>
+          <th>効果（per Lv）</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="id-cell">ironControl</td>
+          <td class="param">鉄壁操縦</td>
+          <td class="val pskill-max">10</td>
+          <td class="pskill-effect">被ダメージ -2% / Lv（最大 -20%）</td>
+        </tr>
+        <tr>
+          <td class="id-cell">hawkEye</td>
+          <td class="param">ホークアイ</td>
+          <td class="val pskill-max">4</td>
+          <td class="pskill-effect">視界 +0.5タイル / Lv（最大 +2タイル）</td>
+        </tr>
+        <tr>
+          <td class="id-cell">treasureHunter</td>
+          <td class="param">トレジャーハンター</td>
+          <td class="val pskill-max">10</td>
+          <td class="pskill-effect">アイテムドロップ率 +3% / Lv（最大 +30%）</td>
+        </tr>
+        <tr>
+          <td class="id-cell">engineer</td>
+          <td class="param">エンジニア</td>
+          <td class="val pskill-max">10</td>
+          <td class="pskill-effect">武器耐久消耗 -5% / Lv（最大 -50%）</td>
+        </tr>
+        <tr>
+          <td class="id-cell">speedStar</td>
+          <td class="param">スピードスター</td>
+          <td class="val pskill-max">5</td>
+          <td class="pskill-effect">移動速度 +1（Lv5到達時のみ発動）</td>
+        </tr>
+        <tr>
+          <td class="id-cell">bargainer</td>
+          <td class="param">値切り上手</td>
+          <td class="val pskill-max">10</td>
+          <td class="pskill-effect">ショップ割引 +3% / Lv（最大 -30%）</td>
+        </tr>
+        <tr>
+          <td class="id-cell">survival</td>
+          <td class="param">サバイバル</td>
+          <td class="val pskill-max">5</td>
+          <td class="pskill-effect">休憩ポイント回復量 +10% / Lv（最大 +50%）</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- マシンステータス -->
+  <div class="content" id="tab-machine">
+    <h2>マシンステータス</h2>
+    <div class="note">
+      マシン（機体）のステータス。ゲームオーバー時にリセットされる。
+      強化パーツ適用による永続強化は <code>appliedParts</code> に記録される。
+    </div>
+    <table>
+      <thead>
+        <tr>
+          <th>パラメータ</th>
+          <th>初期値</th>
+          <th>上限</th>
+          <th>説明</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="param"><span class="badge badge-machine">HP</span> マシンHP</td>
+          <td class="val">100</td>
+          <td class="val">-</td>
+          <td class="desc">0になるとゲームオーバー（スタート帰還ペナルティ）。</td>
+        </tr>
+        <tr>
+          <td class="param">装甲 (armor)</td>
+          <td class="val">5</td>
+          <td class="val">500</td>
+          <td class="desc">DEF値。受けるダメージを軽減する。</td>
+        </tr>
+        <tr>
+          <td class="param">移動速度 (moveSpeed)</td>
+          <td class="val">1</td>
+          <td class="val">5</td>
+          <td class="desc">1ターンに移動できるタイル数。</td>
+        </tr>
+        <tr>
+          <td class="param">武器スロット (weaponSlots)</td>
+          <td class="val">2</td>
+          <td class="val">5</td>
+          <td class="desc">同時装備できる武器の最大本数。</td>
+        </tr>
+        <tr>
+          <td class="param">盾スロット (shieldSlots)</td>
+          <td class="val">1</td>
+          <td class="val">3</td>
+          <td class="desc">同時装備できる盾の最大個数。</td>
+        </tr>
+        <tr>
+          <td class="param">アーマースロット (armorSlots)</td>
+          <td class="val">1</td>
+          <td class="val">3</td>
+          <td class="desc">同時装備できるアーマーの最大個数。</td>
+        </tr>
+        <tr>
+          <td class="param">道具スロット (toolSlots)</td>
+          <td class="val">3</td>
+          <td class="val">8</td>
+          <td class="desc">同時装備できる道具の最大個数。</td>
+        </tr>
+        <tr>
+          <td class="param">アイテムポーチ (itemPouch)</td>
+          <td class="val">10</td>
+          <td class="val">30</td>
+          <td class="desc">持ち運べるアイテム数の上限。</td>
+        </tr>
+        <tr>
+          <td class="param"><span class="badge badge-machine">EN</span> エネルギー</td>
+          <td class="val">100</td>
+          <td class="val">-</td>
+          <td class="desc">特殊武器・道具の使用に消費する。</td>
+        </tr>
+        <tr>
+          <td class="param">最大エネルギー (maxEnergy)</td>
+          <td class="val">100</td>
+          <td class="val">999</td>
+          <td class="desc">リアクター強化パーツで増加。</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <h3>マシン強化オプション</h3>
+    <table>
+      <thead>
+        <tr>
+          <th>強化ID</th>
+          <th>効果</th>
+          <th>必要アイテム</th>
+          <th>必要数</th>
+          <th>最大回数</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="id-cell">upgrade_atk_small</td>
+          <td class="desc">ATK +2</td>
+          <td class="id-cell">upgrade_core_i</td>
+          <td class="val">×1</td>
+          <td class="val">5回</td>
+        </tr>
+        <tr>
+          <td class="id-cell">upgrade_def_small</td>
+          <td class="desc">DEF +1</td>
+          <td class="id-cell">upgrade_core_i</td>
+          <td class="val">×2</td>
+          <td class="val">5回</td>
+        </tr>
+        <tr>
+          <td class="id-cell">upgrade_max_hp</td>
+          <td class="desc">MaxHP +10</td>
+          <td class="id-cell">repair_kit_large</td>
+          <td class="val">×1</td>
+          <td class="val">5回</td>
+        </tr>
+        <tr>
+          <td class="id-cell">upgrade_atk_medium</td>
+          <td class="desc">ATK +5</td>
+          <td class="id-cell">upgrade_core_ii</td>
+          <td class="val">×1</td>
+          <td class="val">3回</td>
+        </tr>
+        <tr>
+          <td class="id-cell">upgrade_atk_large</td>
+          <td class="desc">ATK +10</td>
+          <td class="id-cell">upgrade_core_iii</td>
+          <td class="val">×1</td>
+          <td class="val">2回</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- レベルアップ必要経験値表 -->
+  <div class="content" id="tab-levelup">
+    <h2>レベルアップ表</h2>
+    <div class="note">
+      exp-table.json (version 1.1) のデータ。exp_required は累積経験値。
+      HP/ATK/DEF ボーナスはレベルアップ時に加算される増分。
+    </div>
+    <div class="exp-table-wrap">
+      <table id="levelup-table">
+        <thead>
+          <tr>
+            <th>Lv</th>
+            <th>累積EXP</th>
+            <th>差分EXP</th>
+            <th>HP+</th>
+            <th>ATK+</th>
+            <th>DEF+</th>
+            <th>SP+</th>
+            <th>累積HP増</th>
+            <th>累積ATK増</th>
+            <th>累積DEF増</th>
+          </tr>
+        </thead>
+        <tbody id="levelup-tbody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ドット絵 -->
+  <div class="content" id="tab-sprites">
+    <h2>主人公ドット絵一覧</h2>
+    <div class="note">
+      主人公（プレイヤー機体）の全スプライト。ファイルパス: <code>public/sprites/player/</code><br>
+      方向なしのファイル（例: <code>idle_0.png</code>）は下向きと同じ画像。各アニメは2〜3フレーム。
+    </div>
+    <div class="sprite-gallery" id="sprite-gallery"></div>
+  </div>
+
+  <script>
+    // スプライトギャラリー生成
+    (function buildSpriteGallery() {
+      const gallery = document.getElementById('sprite-gallery');
+      if (!gallery) return;
+
+      const BASE = '../public/sprites/player/';
+      const DIRS = ['down', 'up', 'left', 'right'];
+      const DIR_LABELS = { down: '下', up: '上', left: '左', right: '右' };
+
+      const STATES = [
+        { key: 'idle',     label: '待機 (idle)',     frames: [0, 1] },
+        { key: 'move',     label: '移動 (move)',     frames: [0, 1] },
+        { key: 'attack',   label: '攻撃 (attack)',   frames: [0, 1, 2] },
+        { key: 'hit',      label: '被弾 (hit)',      frames: [0, 1] },
+      ];
+      const SPECIAL_STATES = [
+        { key: 'item_use', label: 'アイテム使用 (item_use)', frames: [0, 1], noDir: true },
+        { key: 'near_death', label: '瀕死 (near_death)',     frames: [0, 1], noDir: true },
+      ];
+
+      function mkImg(src, label) {
+        const img = document.createElement('img');
+        img.src = src;
+        img.alt = label;
+        img.onerror = function() { this.classList.add('missing'); };
+        return img;
+      }
+
+      function mkEntry(src, label) {
+        const div = document.createElement('div');
+        div.className = 'sprite-entry';
+        div.appendChild(mkImg(src, label));
+        const lbl = document.createElement('div');
+        lbl.className = 'sprite-entry-label';
+        lbl.textContent = label;
+        div.appendChild(lbl);
+        return div;
+      }
+
+      // 方向付きステート
+      STATES.forEach(state => {
+        const group = document.createElement('div');
+        group.className = 'sprite-group';
+        const title = document.createElement('div');
+        title.className = 'sprite-group-title';
+        title.textContent = state.label;
+        group.appendChild(title);
+
+        const dirRow = document.createElement('div');
+        dirRow.className = 'sprite-dir-row';
+
+        DIRS.forEach(dir => {
+          const block = document.createElement('div');
+          block.className = 'sprite-dir-block';
+          const dirLbl = document.createElement('div');
+          dirLbl.className = 'dir-label';
+          dirLbl.textContent = DIR_LABELS[dir];
+          block.appendChild(dirLbl);
+          const frRow = document.createElement('div');
+          frRow.className = 'frames-row';
+          state.frames.forEach(f => {
+            const src = `${BASE}${state.key}_${dir}_${f}.png`;
+            frRow.appendChild(mkEntry(src, `${state.key}_${dir}_${f}`));
+          });
+          block.appendChild(frRow);
+          dirRow.appendChild(block);
+        });
+
+        group.appendChild(dirRow);
+        gallery.appendChild(group);
+      });
+
+      // 特殊ステート（方向なし）
+      const specialGroup = document.createElement('div');
+      specialGroup.className = 'sprite-group';
+      const specialTitle = document.createElement('div');
+      specialTitle.className = 'sprite-group-title';
+      specialTitle.textContent = '特殊状態';
+      specialGroup.appendChild(specialTitle);
+      const specialRow = document.createElement('div');
+      specialRow.className = 'sprite-dir-row';
+      SPECIAL_STATES.forEach(state => {
+        const block = document.createElement('div');
+        block.className = 'sprite-dir-block';
+        const lbl = document.createElement('div');
+        lbl.className = 'dir-label';
+        lbl.textContent = state.label;
+        block.appendChild(lbl);
+        const frRow = document.createElement('div');
+        frRow.className = 'frames-row';
+        state.frames.forEach(f => {
+          const src = `${BASE}${state.key}_${f}.png`;
+          frRow.appendChild(mkEntry(src, `${state.key}_${f}`));
+        });
+        block.appendChild(frRow);
+        specialRow.appendChild(block);
+      });
+      specialGroup.appendChild(specialRow);
+      gallery.appendChild(specialGroup);
+    })();
+
+    const EXP_TABLE = {
+  "version": "1.1",
+  "levels": [
+    { "level": 1,  "exp_required": 0,     "hp_bonus": 0,  "atk_bonus": 0, "def_bonus": 0 },
+    { "level": 2,  "exp_required": 120,   "hp_bonus": 5,  "atk_bonus": 1, "def_bonus": 0 },
+    { "level": 3,  "exp_required": 300,   "hp_bonus": 5,  "atk_bonus": 1, "def_bonus": 0 },
+    { "level": 4,  "exp_required": 560,   "hp_bonus": 5,  "atk_bonus": 1, "def_bonus": 0 },
+    { "level": 5,  "exp_required": 920,   "hp_bonus": 8,  "atk_bonus": 1, "def_bonus": 1 },
+    { "level": 6,  "exp_required": 1420,  "hp_bonus": 8,  "atk_bonus": 1, "def_bonus": 0 },
+    { "level": 7,  "exp_required": 2100,  "hp_bonus": 8,  "atk_bonus": 2, "def_bonus": 0 },
+    { "level": 8,  "exp_required": 2980,  "hp_bonus": 10, "atk_bonus": 2, "def_bonus": 0 },
+    { "level": 9,  "exp_required": 4080,  "hp_bonus": 10, "atk_bonus": 2, "def_bonus": 1 },
+    { "level": 10, "exp_required": 5480,  "hp_bonus": 10, "atk_bonus": 2, "def_bonus": 0 },
+    { "level": 11, "exp_required": 7280,  "hp_bonus": 10, "atk_bonus": 2, "def_bonus": 0 },
+    { "level": 12, "exp_required": 9580,  "hp_bonus": 12, "atk_bonus": 2, "def_bonus": 1 },
+    { "level": 13, "exp_required": 12480, "hp_bonus": 12, "atk_bonus": 2, "def_bonus": 0 },
+    { "level": 14, "exp_required": 16080, "hp_bonus": 12, "atk_bonus": 3, "def_bonus": 0 },
+    { "level": 15, "exp_required": 20580, "hp_bonus": 12, "atk_bonus": 3, "def_bonus": 1 },
+    { "level": 16, "exp_required": 26180, "hp_bonus": 14, "atk_bonus": 3, "def_bonus": 0 },
+    { "level": 17, "exp_required": 33080, "hp_bonus": 14, "atk_bonus": 3, "def_bonus": 0 },
+    { "level": 18, "exp_required": 41480, "hp_bonus": 14, "atk_bonus": 3, "def_bonus": 1 },
+    { "level": 19, "exp_required": 51680, "hp_bonus": 15, "atk_bonus": 3, "def_bonus": 0 },
+    { "level": 20, "exp_required": 64080, "hp_bonus": 15, "atk_bonus": 3, "def_bonus": 1 }
+  ]
+};
+
+    // タブ切り替え
+    document.querySelectorAll('.tab').forEach(t => {
+      t.addEventListener('click', () => {
+        const tab = t.dataset.tab;
+        document.querySelectorAll('.tab').forEach(x => x.classList.toggle('active', x.dataset.tab === tab));
+        document.querySelectorAll('.content').forEach(x => x.classList.toggle('active', x.id === 'tab-' + tab));
+      });
+    });
+
+    // レベルアップ表を生成
+    (function buildLevelupTable() {
+      const tbody = document.getElementById('levelup-tbody');
+      const levels = EXP_TABLE.levels;
+      let cumHp = 0, cumAtk = 0, cumDef = 0;
+      levels.forEach((row, i) => {
+        const prevExp = i === 0 ? 0 : levels[i - 1].exp_required;
+        const diff = row.exp_required - prevExp;
+        cumHp  += row.hp_bonus;
+        cumAtk += row.atk_bonus;
+        cumDef += row.def_bonus;
+        const isMax = row.level === 20;
+        const sp = row.level === 1 ? 0 : 2;
+        tbody.innerHTML += `<tr>
+          <td class="lvup-num" style="${isMax ? 'color:#ffcc88;font-weight:bold' : ''}">${row.level}</td>
+          <td class="lvup-exp">${row.exp_required.toLocaleString()}</td>
+          <td class="lvup-exp" style="color:#aaa">${i === 0 ? '-' : diff.toLocaleString()}</td>
+          <td class="lvup-hp">${row.hp_bonus > 0 ? '+' + row.hp_bonus : '-'}</td>
+          <td class="lvup-atk">${row.atk_bonus > 0 ? '+' + row.atk_bonus : '-'}</td>
+          <td class="lvup-def">${row.def_bonus > 0 ? '+' + row.def_bonus : '-'}</td>
+          <td class="lvup-sp">${sp > 0 ? '+' + sp : '-'}</td>
+          <td class="lvup-hp lvup-total">${cumHp > 0 ? '+' + cumHp : '-'}</td>
+          <td class="lvup-atk lvup-total">${cumAtk > 0 ? '+' + cumAtk : '-'}</td>
+          <td class="lvup-def lvup-total">${cumDef > 0 ? '+' + cumDef : '-'}</td>
+        </tr>`;
+      });
+    })();
+  </script>
+</body>
+</html>

@@ -1,0 +1,1353 @@
+{
+  "version": "2.0",
+  "enemy_drops": {
+    "scout_drone_lv1": {
+      "exp": 10,
+      "gold": { "min": 3, "max": 8 },
+      "drops": [
+        { "item_id": "scrap_metal",      "type": "item",   "weight": 55, "floor_min": 1 },
+        { "item_id": "repair_kit_small", "type": "item",   "weight": 30, "floor_min": 1 },
+        { "item_id": "id_scope",         "type": "item",   "weight": 15, "floor_min": 1 }
+      ]
+    },
+    "scout_drone_lv2": {
+      "exp": 15,
+      "gold": { "min": 5, "max": 12 },
+      "drops": [
+        { "item_id": "scrap_metal",      "type": "item",   "weight": 45, "floor_min": 1 },
+        { "item_id": "repair_kit_small", "type": "item",   "weight": 25, "floor_min": 1 },
+        { "item_id": "id_scope",         "type": "item",   "weight": 15, "floor_min": 1 },
+        { "item_id": "smoke_bomb",       "type": "item",   "weight": 15, "floor_min": 1 }
+      ]
+    },
+    "scout_drone_lv3": {
+      "exp": 23,
+      "gold": { "min": 8, "max": 18 },
+      "drops": [
+        { "item_id": "scrap_metal",      "type": "item",   "weight": 35, "floor_min": 1 },
+        { "item_id": "repair_kit_small", "type": "item",   "weight": 20, "floor_min": 1 },
+        { "item_id": "smoke_bomb",       "type": "item",   "weight": 18, "floor_min": 1 },
+        { "item_id": "id_scope",         "type": "item",   "weight": 15, "floor_min": 1 },
+        { "item_id": "blade_arm",        "type": "weapon", "weight": 12, "floor_min": 1 }
+      ]
+    },
+    "mine_beetle_lv1": {
+      "exp": 18,
+      "gold": { "min": 5, "max": 12 },
+      "drops": [
+        { "item_id": "scrap_metal",      "type": "item",   "weight": 47, "floor_min": 1 },
+        { "item_id": "repair_kit_small", "type": "item",   "weight": 28, "floor_min": 1 },
+        { "item_id": "smoke_bomb",       "type": "item",   "weight": 18, "floor_min": 1 },
+        { "item_id": "armor_plate_i",    "type": "item",   "weight": 7,  "floor_min": 2 }
+      ]
+    },
+    "mine_beetle_lv2": {
+      "exp": 27,
+      "gold": { "min": 8, "max": 18 },
+      "drops": [
+        { "item_id": "scrap_metal",      "type": "item",   "weight": 40, "floor_min": 1 },
+        { "item_id": "repair_kit_small", "type": "item",   "weight": 30, "floor_min": 1 },
+        { "item_id": "smoke_bomb",       "type": "item",   "weight": 20, "floor_min": 1 },
+        { "item_id": "upgrade_core_i",   "type": "item",   "weight": 10, "floor_min": 1 }
+      ]
+    },
+    "mine_beetle_lv3": {
+      "exp": 41,
+      "gold": { "min": 12, "max": 25 },
+      "drops": [
+        { "item_id": "scrap_metal",      "type": "item",   "weight": 30, "floor_min": 1 },
+        { "item_id": "repair_kit_small", "type": "item",   "weight": 25, "floor_min": 1 },
+        { "item_id": "smoke_bomb",       "type": "item",   "weight": 20, "floor_min": 1 },
+        { "item_id": "upgrade_core_i",   "type": "item",   "weight": 15, "floor_min": 1 },
+        { "item_id": "blade_arm",        "type": "weapon", "weight": 10, "floor_min": 1 }
+      ]
+    },
+    "guard_bot_lv1": {
+      "exp": 22,
+      "gold": { "min": 8, "max": 15 },
+      "drops": [
+        { "item_id": "scrap_metal",      "type": "item",   "weight": 42, "floor_min": 2 },
+        { "item_id": "repair_kit_small", "type": "item",   "weight": 28, "floor_min": 2 },
+        { "item_id": "id_scope",         "type": "item",   "weight": 22, "floor_min": 2 },
+        { "item_id": "armor_plate_i",    "type": "item",   "weight": 5,  "floor_min": 2 },
+        { "item_id": "light_shield",     "type": "weapon", "weight": 3,  "floor_min": 2 }
+      ]
+    },
+    "guard_bot_lv2": {
+      "exp": 33,
+      "gold": { "min": 12, "max": 22 },
+      "drops": [
+        { "item_id": "scrap_metal",      "type": "item",   "weight": 32, "floor_min": 2 },
+        { "item_id": "repair_kit_small", "type": "item",   "weight": 25, "floor_min": 2 },
+        { "item_id": "id_scope",         "type": "item",   "weight": 18, "floor_min": 2 },
+        { "item_id": "upgrade_core_i",   "type": "item",   "weight": 15, "floor_min": 2 },
+        { "item_id": "armor_plate_i",    "type": "item",   "weight": 8,  "floor_min": 3 },
+        { "item_id": "light_shield",     "type": "weapon", "weight": 5,  "floor_min": 3 }
+      ]
+    },
+    "guard_bot_lv3": {
+      "exp": 51,
+      "gold": { "min": 18, "max": 35 },
+      "drops": [
+        { "item_id": "steel_plate",      "type": "item",   "weight": 65, "floor_min": 2 },
+        { "item_id": "scrap_metal",      "type": "item",   "weight": 15, "floor_min": 2 },
+        { "item_id": "repair_kit_small", "type": "item",   "weight": 10, "floor_min": 2 },
+        { "item_id": "upgrade_core_i",   "type": "item",   "weight": 10, "floor_min": 2 }
+      ]
+    },
+    "guard_bot_lv4": {
+      "exp": 77,
+      "gold": { "min": 28, "max": 52 },
+      "drops": [
+        { "item_id": "steel_plate",      "type": "item",   "weight": 70, "floor_min": 2 },
+        { "item_id": "repair_kit_small", "type": "item",   "weight": 12, "floor_min": 2 },
+        { "item_id": "upgrade_core_i",   "type": "item",   "weight": 10, "floor_min": 2 },
+        { "item_id": "double_blade",     "type": "weapon", "weight": 8,  "floor_min": 3 }
+      ]
+    },
+    "slime_x_lv1": {
+      "exp": 20,
+      "gold": { "min": 5, "max": 12 },
+      "drops": [
+        { "item_id": "scrap_metal",      "type": "item",   "weight": 55, "floor_min": 2 },
+        { "item_id": "repair_kit_small", "type": "item",   "weight": 30, "floor_min": 2 },
+        { "item_id": "energy_pack",      "type": "item",   "weight": 15, "floor_min": 3 }
+      ]
+    },
+    "slime_x_lv2": {
+      "exp": 30,
+      "gold": { "min": 8, "max": 18 },
+      "drops": [
+        { "item_id": "scrap_metal",      "type": "item",   "weight": 45, "floor_min": 2 },
+        { "item_id": "repair_kit_small", "type": "item",   "weight": 30, "floor_min": 2 },
+        { "item_id": "energy_pack",      "type": "item",   "weight": 25, "floor_min": 3 }
+      ]
+    },
+    "slime_x_lv3": {
+      "exp": 46,
+      "gold": { "min": 12, "max": 26 },
+      "drops": [
+        { "item_id": "scrap_metal",      "type": "item",   "weight": 35, "floor_min": 2 },
+        { "item_id": "repair_kit_small", "type": "item",   "weight": 28, "floor_min": 2 },
+        { "item_id": "energy_pack",      "type": "item",   "weight": 22, "floor_min": 3 },
+        { "item_id": "smoke_bomb",       "type": "item",   "weight": 15, "floor_min": 2 }
+      ]
+    },
+    "mini_slime_lv1": {
+      "exp": 5,
+      "gold": { "min": 1, "max": 3 },
+      "drops": [
+        { "item_id": "scrap_metal",      "type": "item",   "weight": 65, "floor_min": 2 },
+        { "item_id": "repair_kit_small", "type": "item",   "weight": 35, "floor_min": 2 }
+      ]
+    },
+    "mini_slime_lv2": {
+      "exp": 8,
+      "gold": { "min": 2, "max": 5 },
+      "drops": [
+        { "item_id": "scrap_metal",      "type": "item",   "weight": 55, "floor_min": 2 },
+        { "item_id": "repair_kit_small", "type": "item",   "weight": 30, "floor_min": 2 },
+        { "item_id": "id_scope",         "type": "item",   "weight": 15, "floor_min": 2 }
+      ]
+    },
+    "rust_hound_lv1": {
+      "exp": 15,
+      "gold": { "min": 4, "max": 10 },
+      "drops": [
+        { "item_id": "scrap_metal",      "type": "item",   "weight": 50, "floor_min": 3 },
+        { "item_id": "repair_kit_small", "type": "item",   "weight": 28, "floor_min": 3 },
+        { "item_id": "smoke_bomb",       "type": "item",   "weight": 14, "floor_min": 3 },
+        { "item_id": "armor_plate_i",    "type": "item",   "weight": 6,  "floor_min": 3 },
+        { "item_id": "light_shield",     "type": "weapon", "weight": 2,  "floor_min": 3 }
+      ]
+    },
+    "rust_hound_lv2": {
+      "exp": 23,
+      "gold": { "min": 6, "max": 15 },
+      "drops": [
+        { "item_id": "scrap_metal",      "type": "item",   "weight": 40, "floor_min": 3 },
+        { "item_id": "repair_kit_small", "type": "item",   "weight": 25, "floor_min": 3 },
+        { "item_id": "smoke_bomb",       "type": "item",   "weight": 15, "floor_min": 3 },
+        { "item_id": "speed_boost",      "type": "item",   "weight": 9,  "floor_min": 3 },
+        { "item_id": "armor_plate_i",    "type": "item",   "weight": 8,  "floor_min": 3 },
+        { "item_id": "light_shield",     "type": "weapon", "weight": 3,  "floor_min": 3 }
+      ]
+    },
+    "rust_hound_lv3": {
+      "exp": 35,
+      "gold": { "min": 10, "max": 22 },
+      "drops": [
+        { "item_id": "scrap_metal",      "type": "item",   "weight": 35, "floor_min": 3 },
+        { "item_id": "repair_kit_small", "type": "item",   "weight": 25, "floor_min": 3 },
+        { "item_id": "smoke_bomb",       "type": "item",   "weight": 18, "floor_min": 3 },
+        { "item_id": "speed_boost",      "type": "item",   "weight": 12, "floor_min": 3 },
+        { "item_id": "double_blade",     "type": "weapon", "weight": 10, "floor_min": 4 }
+      ]
+    },
+    "rust_hound_lv4": {
+      "exp": 53,
+      "gold": { "min": 16, "max": 32 },
+      "drops": [
+        { "item_id": "scrap_metal",      "type": "item",   "weight": 28, "floor_min": 3 },
+        { "item_id": "repair_kit_small", "type": "item",   "weight": 22, "floor_min": 3 },
+        { "item_id": "speed_boost",      "type": "item",   "weight": 18, "floor_min": 3 },
+        { "item_id": "upgrade_core_i",   "type": "item",   "weight": 15, "floor_min": 3 },
+        { "item_id": "double_blade",     "type": "weapon", "weight": 12, "floor_min": 4 },
+        { "item_id": "enemy_radar_map",  "type": "item",   "weight": 5,  "floor_min": 4 }
+      ]
+    },
+    "spark_lv1": {
+      "exp": 25,
+      "gold": { "min": 7, "max": 15 },
+      "drops": [
+        { "item_id": "scrap_metal",      "type": "item",   "weight": 45, "floor_min": 3 },
+        { "item_id": "energy_pack",      "type": "item",   "weight": 30, "floor_min": 3 },
+        { "item_id": "repair_kit_small", "type": "item",   "weight": 25, "floor_min": 3 }
+      ]
+    },
+    "spark_lv2": {
+      "exp": 38,
+      "gold": { "min": 10, "max": 22 },
+      "drops": [
+        { "item_id": "scrap_metal",      "type": "item",   "weight": 35, "floor_min": 3 },
+        { "item_id": "energy_pack",      "type": "item",   "weight": 30, "floor_min": 3 },
+        { "item_id": "repair_kit_small", "type": "item",   "weight": 20, "floor_min": 3 },
+        { "item_id": "upgrade_core_i",   "type": "item",   "weight": 15, "floor_min": 3 }
+      ]
+    },
+    "spark_lv3": {
+      "exp": 58,
+      "gold": { "min": 15, "max": 32 },
+      "drops": [
+        { "item_id": "energy_pack",      "type": "item",   "weight": 35, "floor_min": 3 },
+        { "item_id": "scrap_metal",      "type": "item",   "weight": 25, "floor_min": 3 },
+        { "item_id": "repair_kit_small", "type": "item",   "weight": 18, "floor_min": 3 },
+        { "item_id": "upgrade_core_i",   "type": "item",   "weight": 15, "floor_min": 3 },
+        { "item_id": "machine_gun",      "type": "weapon", "weight": 7,  "floor_min": 3 }
+      ]
+    },
+    "spark_lv4": {
+      "exp": 88,
+      "gold": { "min": 22, "max": 45 },
+      "drops": [
+        { "item_id": "energy_pack",      "type": "item",   "weight": 30, "floor_min": 3 },
+        { "item_id": "scrap_metal",      "type": "item",   "weight": 20, "floor_min": 3 },
+        { "item_id": "upgrade_core_i",   "type": "item",   "weight": 20, "floor_min": 3 },
+        { "item_id": "repair_kit_small", "type": "item",   "weight": 15, "floor_min": 3 },
+        { "item_id": "machine_gun",      "type": "weapon", "weight": 10, "floor_min": 3 },
+        { "item_id": "weapon_repair_kit","type": "item",   "weight": 5,  "floor_min": 4 }
+      ]
+    },
+    "mine_layer_lv1": {
+      "exp": 40,
+      "gold": { "min": 15, "max": 28 },
+      "drops": [
+        { "item_id": "scrap_metal",      "type": "item",   "weight": 40, "floor_min": 5 },
+        { "item_id": "repair_kit_small", "type": "item",   "weight": 30, "floor_min": 5 },
+        { "item_id": "floor_map",        "type": "item",   "weight": 20, "floor_min": 5 },
+        { "item_id": "id_scope",         "type": "item",   "weight": 10, "floor_min": 5 }
+      ]
+    },
+    "mine_layer_lv2": {
+      "exp": 60,
+      "gold": { "min": 22, "max": 42 },
+      "drops": [
+        { "item_id": "scrap_metal",      "type": "item",   "weight": 32, "floor_min": 5 },
+        { "item_id": "repair_kit_medium","type": "item",   "weight": 25, "floor_min": 5 },
+        { "item_id": "floor_map",        "type": "item",   "weight": 22, "floor_min": 5 },
+        { "item_id": "upgrade_core_i",   "type": "item",   "weight": 21, "floor_min": 5 }
+      ]
+    },
+    "mine_layer_lv3": {
+      "exp": 92,
+      "gold": { "min": 35, "max": 65 },
+      "drops": [
+        { "item_id": "scrap_metal",      "type": "item",   "weight": 25, "floor_min": 5 },
+        { "item_id": "repair_kit_medium","type": "item",   "weight": 25, "floor_min": 5 },
+        { "item_id": "floor_map",        "type": "item",   "weight": 20, "floor_min": 5 },
+        { "item_id": "upgrade_core_i",   "type": "item",   "weight": 18, "floor_min": 5 },
+        { "item_id": "emp_pulse",        "type": "weapon", "weight": 12, "floor_min": 9 }
+      ]
+    },
+    "mine_layer_lv4": {
+      "exp": 140,
+      "gold": { "min": 55, "max": 95 },
+      "drops": [
+        { "item_id": "repair_kit_medium","type": "item",   "weight": 28, "floor_min": 5 },
+        { "item_id": "floor_map",        "type": "item",   "weight": 22, "floor_min": 5 },
+        { "item_id": "upgrade_core_i",   "type": "item",   "weight": 20, "floor_min": 5 },
+        { "item_id": "emp_pulse",        "type": "weapon", "weight": 15, "floor_min": 9 },
+        { "item_id": "upgrade_core_ii",  "type": "item",   "weight": 10, "floor_min": 8 },
+        { "item_id": "weapon_repair_kit","type": "item",   "weight": 5,  "floor_min": 5 }
+      ]
+    },
+    "assault_mecha_lv1": {
+      "exp": 45,
+      "gold": { "min": 18, "max": 35 },
+      "drops": [
+        { "item_id": "scrap_metal",      "type": "item",   "weight": 35, "floor_min": 6 },
+        { "item_id": "repair_kit_medium","type": "item",   "weight": 28, "floor_min": 6 },
+        { "item_id": "upgrade_core_i",   "type": "item",   "weight": 22, "floor_min": 6 },
+        { "item_id": "machine_gun",      "type": "weapon", "weight": 15, "floor_min": 6 }
+      ]
+    },
+    "assault_mecha_lv2": {
+      "exp": 68,
+      "gold": { "min": 28, "max": 52 },
+      "drops": [
+        { "item_id": "repair_kit_medium","type": "item",   "weight": 30, "floor_min": 6 },
+        { "item_id": "scrap_metal",      "type": "item",   "weight": 25, "floor_min": 6 },
+        { "item_id": "upgrade_core_i",   "type": "item",   "weight": 22, "floor_min": 6 },
+        { "item_id": "machine_gun",      "type": "weapon", "weight": 15, "floor_min": 6 },
+        { "item_id": "weapon_repair_kit","type": "item",   "weight": 8,  "floor_min": 6 }
+      ]
+    },
+    "assault_mecha_lv3": {
+      "exp": 104,
+      "gold": { "min": 42, "max": 78 },
+      "drops": [
+        { "item_id": "repair_kit_medium","type": "item",   "weight": 28, "floor_min": 6 },
+        { "item_id": "upgrade_core_i",   "type": "item",   "weight": 22, "floor_min": 6 },
+        { "item_id": "weapon_repair_kit","type": "item",   "weight": 18, "floor_min": 6 },
+        { "item_id": "shotgun",          "type": "weapon", "weight": 18, "floor_min": 6 },
+        { "item_id": "upgrade_core_ii",  "type": "item",   "weight": 10, "floor_min": 8 },
+        { "item_id": "floor_map",        "type": "item",   "weight": 4,  "floor_min": 6 }
+      ]
+    },
+    "assault_mecha_lv4": {
+      "exp": 158,
+      "gold": { "min": 65, "max": 110 },
+      "drops": [
+        { "item_id": "upgrade_core_ii",  "type": "item",   "weight": 28, "floor_min": 8 },
+        { "item_id": "repair_kit_medium","type": "item",   "weight": 22, "floor_min": 6 },
+        { "item_id": "weapon_repair_kit","type": "item",   "weight": 18, "floor_min": 6 },
+        { "item_id": "shotgun",          "type": "weapon", "weight": 18, "floor_min": 6 },
+        { "item_id": "sniper_rifle",     "type": "weapon", "weight": 8,  "floor_min": 7 },
+        { "item_id": "armor_plate_i",    "type": "item",   "weight": 6,  "floor_min": 8 }
+      ]
+    },
+    "stealth_killer_lv1": {
+      "exp": 55,
+      "gold": { "min": 22, "max": 40 },
+      "drops": [
+        { "item_id": "scrap_metal",      "type": "item",   "weight": 35, "floor_min": 7 },
+        { "item_id": "smoke_bomb",       "type": "item",   "weight": 28, "floor_min": 7 },
+        { "item_id": "repair_kit_medium","type": "item",   "weight": 22, "floor_min": 7 },
+        { "item_id": "upgrade_core_i",   "type": "item",   "weight": 15, "floor_min": 7 }
+      ]
+    },
+    "stealth_killer_lv2": {
+      "exp": 83,
+      "gold": { "min": 32, "max": 58 },
+      "drops": [
+        { "item_id": "smoke_bomb",       "type": "item",   "weight": 28, "floor_min": 7 },
+        { "item_id": "repair_kit_medium","type": "item",   "weight": 25, "floor_min": 7 },
+        { "item_id": "upgrade_core_i",   "type": "item",   "weight": 22, "floor_min": 7 },
+        { "item_id": "teleport_beacon",  "type": "item",   "weight": 15, "floor_min": 7 },
+        { "item_id": "speed_boost",      "type": "item",   "weight": 10, "floor_min": 7 }
+      ]
+    },
+    "stealth_killer_lv3": {
+      "exp": 127,
+      "gold": { "min": 48, "max": 85 },
+      "drops": [
+        { "item_id": "smoke_bomb",       "type": "item",   "weight": 25, "floor_min": 7 },
+        { "item_id": "repair_kit_medium","type": "item",   "weight": 22, "floor_min": 7 },
+        { "item_id": "upgrade_core_i",   "type": "item",   "weight": 18, "floor_min": 7 },
+        { "item_id": "teleport_beacon",  "type": "item",   "weight": 18, "floor_min": 7 },
+        { "item_id": "sniper_rifle",     "type": "weapon", "weight": 10, "floor_min": 7 },
+        { "item_id": "speed_boost",      "type": "item",   "weight": 7,  "floor_min": 7 }
+      ]
+    },
+    "stealth_killer_lv4": {
+      "exp": 193,
+      "gold": { "min": 72, "max": 125 },
+      "drops": [
+        { "item_id": "teleport_beacon",  "type": "item",   "weight": 25, "floor_min": 7 },
+        { "item_id": "repair_kit_medium","type": "item",   "weight": 20, "floor_min": 7 },
+        { "item_id": "upgrade_core_ii",  "type": "item",   "weight": 20, "floor_min": 8 },
+        { "item_id": "sniper_rifle",     "type": "weapon", "weight": 18, "floor_min": 7 },
+        { "item_id": "speed_boost",      "type": "item",   "weight": 12, "floor_min": 7 },
+        { "item_id": "armor_plate_i",    "type": "item",   "weight": 5,  "floor_min": 8 }
+      ]
+    },
+    "shield_knight_lv1": {
+      "exp": 60,
+      "gold": { "min": 28, "max": 48 },
+      "drops": [
+        { "item_id": "scrap_metal",      "type": "item",   "weight": 38, "floor_min": 8 },
+        { "item_id": "repair_kit_medium","type": "item",   "weight": 28, "floor_min": 8 },
+        { "item_id": "armor_plate_i",    "type": "item",   "weight": 22, "floor_min": 8 },
+        { "item_id": "upgrade_core_i",   "type": "item",   "weight": 12, "floor_min": 8 }
+      ]
+    },
+    "shield_knight_lv2": {
+      "exp": 90,
+      "gold": { "min": 42, "max": 72 },
+      "drops": [
+        { "item_id": "repair_kit_medium","type": "item",   "weight": 30, "floor_min": 8 },
+        { "item_id": "armor_plate_i",    "type": "item",   "weight": 28, "floor_min": 8 },
+        { "item_id": "upgrade_core_i",   "type": "item",   "weight": 22, "floor_min": 8 },
+        { "item_id": "weapon_repair_kit","type": "item",   "weight": 15, "floor_min": 8 },
+        { "item_id": "shield_bash",      "type": "weapon", "weight": 5,  "floor_min": 8 }
+      ]
+    },
+    "shield_knight_lv3": {
+      "exp": 138,
+      "gold": { "min": 62, "max": 105 },
+      "drops": [
+        { "item_id": "iron_shield",      "type": "item",   "weight": 65, "floor_min": 8 },
+        { "item_id": "armor_plate_i",    "type": "item",   "weight": 15, "floor_min": 8 },
+        { "item_id": "upgrade_core_ii",  "type": "item",   "weight": 12, "floor_min": 8 },
+        { "item_id": "shield_bash",      "type": "weapon", "weight": 8,  "floor_min": 8 }
+      ]
+    },
+    "shield_knight_lv4": {
+      "exp": 210,
+      "gold": { "min": 95, "max": 155 },
+      "drops": [
+        { "item_id": "iron_shield",      "type": "item",   "weight": 70, "floor_min": 8 },
+        { "item_id": "upgrade_core_ii",  "type": "item",   "weight": 14, "floor_min": 8 },
+        { "item_id": "frame_upgrade_i",  "type": "item",   "weight": 10, "floor_min": 8 },
+        { "item_id": "shield_bash",      "type": "weapon", "weight": 6,  "floor_min": 8 }
+      ]
+    },
+    "healer_drone_lv1": {
+      "exp": 35,
+      "gold": { "min": 12, "max": 25 },
+      "drops": [
+        { "item_id": "repair_kit_medium","type": "item",   "weight": 40, "floor_min": 10 },
+        { "item_id": "repair_kit_small", "type": "item",   "weight": 30, "floor_min": 10 },
+        { "item_id": "energy_pack",      "type": "item",   "weight": 30, "floor_min": 10 }
+      ]
+    },
+    "healer_drone_lv2": {
+      "exp": 53,
+      "gold": { "min": 18, "max": 36 },
+      "drops": [
+        { "item_id": "repair_kit_medium","type": "item",   "weight": 38, "floor_min": 10 },
+        { "item_id": "repair_kit_small", "type": "item",   "weight": 22, "floor_min": 10 },
+        { "item_id": "energy_pack",      "type": "item",   "weight": 22, "floor_min": 10 },
+        { "item_id": "weapon_repair_kit","type": "item",   "weight": 18, "floor_min": 10 }
+      ]
+    },
+    "healer_drone_lv3": {
+      "exp": 81,
+      "gold": { "min": 28, "max": 52 },
+      "drops": [
+        { "item_id": "repair_kit_medium","type": "item",   "weight": 32, "floor_min": 10 },
+        { "item_id": "weapon_repair_kit","type": "item",   "weight": 25, "floor_min": 10 },
+        { "item_id": "energy_pack",      "type": "item",   "weight": 20, "floor_min": 10 },
+        { "item_id": "upgrade_core_ii",  "type": "item",   "weight": 15, "floor_min": 10 },
+        { "item_id": "reactor_upgrade",  "type": "item",   "weight": 8,  "floor_min": 10 }
+      ]
+    },
+    "healer_drone_lv4": {
+      "exp": 123,
+      "gold": { "min": 42, "max": 75 },
+      "drops": [
+        { "item_id": "repair_kit_medium","type": "item",   "weight": 28, "floor_min": 10 },
+        { "item_id": "weapon_repair_kit","type": "item",   "weight": 22, "floor_min": 10 },
+        { "item_id": "upgrade_core_ii",  "type": "item",   "weight": 20, "floor_min": 10 },
+        { "item_id": "reactor_upgrade",  "type": "item",   "weight": 18, "floor_min": 10 },
+        { "item_id": "repair_kit_large", "type": "item",   "weight": 8,  "floor_min": 14 },
+        { "item_id": "energy_pack",      "type": "item",   "weight": 4,  "floor_min": 10 }
+      ]
+    },
+    "metal_wolf_lv1": {
+      "exp": 50,
+      "gold": { "min": 20, "max": 38 },
+      "drops": [
+        { "item_id": "scrap_metal",      "type": "item",   "weight": 38, "floor_min": 11 },
+        { "item_id": "repair_kit_medium","type": "item",   "weight": 28, "floor_min": 11 },
+        { "item_id": "upgrade_core_ii",  "type": "item",   "weight": 22, "floor_min": 11 },
+        { "item_id": "speed_boost",      "type": "item",   "weight": 12, "floor_min": 11 }
+      ]
+    },
+    "metal_wolf_lv2": {
+      "exp": 75,
+      "gold": { "min": 30, "max": 55 },
+      "drops": [
+        { "item_id": "repair_kit_medium","type": "item",   "weight": 30, "floor_min": 11 },
+        { "item_id": "upgrade_core_ii",  "type": "item",   "weight": 25, "floor_min": 11 },
+        { "item_id": "enemy_radar_map",  "type": "item",   "weight": 20, "floor_min": 11 },
+        { "item_id": "speed_boost",      "type": "item",   "weight": 15, "floor_min": 11 },
+        { "item_id": "chainsaw",         "type": "weapon", "weight": 10, "floor_min": 11 }
+      ]
+    },
+    "metal_wolf_lv3": {
+      "exp": 115,
+      "gold": { "min": 46, "max": 82 },
+      "drops": [
+        { "item_id": "upgrade_core_ii",  "type": "item",   "weight": 28, "floor_min": 11 },
+        { "item_id": "enemy_radar_map",  "type": "item",   "weight": 22, "floor_min": 11 },
+        { "item_id": "repair_kit_medium","type": "item",   "weight": 20, "floor_min": 11 },
+        { "item_id": "chainsaw",         "type": "weapon", "weight": 18, "floor_min": 11 },
+        { "item_id": "speed_boost",      "type": "item",   "weight": 8,  "floor_min": 11 },
+        { "item_id": "unknown_part_a",   "type": "item",   "weight": 4,  "floor_min": 11 }
+      ]
+    },
+    "metal_wolf_lv4": {
+      "exp": 175,
+      "gold": { "min": 70, "max": 120 },
+      "drops": [
+        { "item_id": "upgrade_core_ii",  "type": "item",   "weight": 28, "floor_min": 11 },
+        { "item_id": "enemy_radar_map",  "type": "item",   "weight": 20, "floor_min": 11 },
+        { "item_id": "chainsaw",         "type": "weapon", "weight": 20, "floor_min": 11 },
+        { "item_id": "repair_kit_large", "type": "item",   "weight": 15, "floor_min": 14 },
+        { "item_id": "unknown_part_a",   "type": "item",   "weight": 10, "floor_min": 11 },
+        { "item_id": "boost_engine_i",   "type": "item",   "weight": 7,  "floor_min": 11 }
+      ]
+    },
+    "metal_wolf_lv5": {
+      "exp": 250,
+      "gold": { "min": 105, "max": 175 },
+      "drops": [
+        { "item_id": "upgrade_core_ii",  "type": "item",   "weight": 25, "floor_min": 11 },
+        { "item_id": "chainsaw",         "type": "weapon", "weight": 20, "floor_min": 11 },
+        { "item_id": "repair_kit_large", "type": "item",   "weight": 18, "floor_min": 14 },
+        { "item_id": "boost_engine_i",   "type": "item",   "weight": 18, "floor_min": 11 },
+        { "item_id": "unknown_part_a",   "type": "item",   "weight": 12, "floor_min": 11 },
+        { "item_id": "rare_circuit",     "type": "item",   "weight": 7,  "floor_min": 14 }
+      ]
+    },
+    "bomb_lobber_lv1": {
+      "exp": 55,
+      "gold": { "min": 25, "max": 45 },
+      "drops": [
+        { "item_id": "scrap_metal",      "type": "item",   "weight": 32, "floor_min": 12 },
+        { "item_id": "repair_kit_medium","type": "item",   "weight": 28, "floor_min": 12 },
+        { "item_id": "flash_grenade",    "type": "item",   "weight": 22, "floor_min": 12 },
+        { "item_id": "upgrade_core_ii",  "type": "item",   "weight": 18, "floor_min": 12 }
+      ]
+    },
+    "bomb_lobber_lv2": {
+      "exp": 83,
+      "gold": { "min": 38, "max": 65 },
+      "drops": [
+        { "item_id": "repair_kit_medium","type": "item",   "weight": 28, "floor_min": 12 },
+        { "item_id": "flash_grenade",    "type": "item",   "weight": 25, "floor_min": 12 },
+        { "item_id": "upgrade_core_ii",  "type": "item",   "weight": 22, "floor_min": 12 },
+        { "item_id": "emp_grenade",      "type": "item",   "weight": 15, "floor_min": 12 },
+        { "item_id": "missile_pod",      "type": "weapon", "weight": 10, "floor_min": 12 }
+      ]
+    },
+    "bomb_lobber_lv3": {
+      "exp": 127,
+      "gold": { "min": 58, "max": 98 },
+      "drops": [
+        { "item_id": "flash_grenade",    "type": "item",   "weight": 25, "floor_min": 12 },
+        { "item_id": "upgrade_core_ii",  "type": "item",   "weight": 22, "floor_min": 12 },
+        { "item_id": "emp_grenade",      "type": "item",   "weight": 20, "floor_min": 12 },
+        { "item_id": "missile_pod",      "type": "weapon", "weight": 18, "floor_min": 12 },
+        { "item_id": "repair_kit_medium","type": "item",   "weight": 10, "floor_min": 12 },
+        { "item_id": "frame_upgrade_i",  "type": "item",   "weight": 5,  "floor_min": 12 }
+      ]
+    },
+    "bomb_lobber_lv4": {
+      "exp": 193,
+      "gold": { "min": 88, "max": 145 },
+      "drops": [
+        { "item_id": "missile_pod",      "type": "weapon", "weight": 25, "floor_min": 12 },
+        { "item_id": "upgrade_core_ii",  "type": "item",   "weight": 22, "floor_min": 12 },
+        { "item_id": "emp_grenade",      "type": "item",   "weight": 18, "floor_min": 12 },
+        { "item_id": "frame_upgrade_i",  "type": "item",   "weight": 18, "floor_min": 12 },
+        { "item_id": "repair_kit_large", "type": "item",   "weight": 10, "floor_min": 14 },
+        { "item_id": "rare_circuit",     "type": "item",   "weight": 7,  "floor_min": 14 }
+      ]
+    },
+    "acid_spitter_lv1": {
+      "exp": 48,
+      "gold": { "min": 22, "max": 40 },
+      "drops": [
+        { "item_id": "rare_circuit",     "type": "item",   "weight": 32, "floor_min": 14 },
+        { "item_id": "repair_kit_large", "type": "item",   "weight": 28, "floor_min": 14 },
+        { "item_id": "upgrade_core_ii",  "type": "item",   "weight": 25, "floor_min": 14 },
+        { "item_id": "barrier_capsule",  "type": "item",   "weight": 15, "floor_min": 14 }
+      ]
+    },
+    "acid_spitter_lv2": {
+      "exp": 72,
+      "gold": { "min": 32, "max": 58 },
+      "drops": [
+        { "item_id": "rare_circuit",     "type": "item",   "weight": 28, "floor_min": 14 },
+        { "item_id": "repair_kit_large", "type": "item",   "weight": 25, "floor_min": 14 },
+        { "item_id": "upgrade_core_ii",  "type": "item",   "weight": 22, "floor_min": 14 },
+        { "item_id": "barrier_capsule",  "type": "item",   "weight": 15, "floor_min": 14 },
+        { "item_id": "armor_plate_ii",   "type": "item",   "weight": 10, "floor_min": 14 }
+      ]
+    },
+    "acid_spitter_lv3": {
+      "exp": 110,
+      "gold": { "min": 48, "max": 85 },
+      "drops": [
+        { "item_id": "rare_circuit",     "type": "item",   "weight": 25, "floor_min": 14 },
+        { "item_id": "upgrade_core_ii",  "type": "item",   "weight": 22, "floor_min": 14 },
+        { "item_id": "repair_kit_large", "type": "item",   "weight": 20, "floor_min": 14 },
+        { "item_id": "armor_plate_ii",   "type": "item",   "weight": 18, "floor_min": 14 },
+        { "item_id": "homing_missile",   "type": "weapon", "weight": 10, "floor_min": 14 },
+        { "item_id": "unknown_part_b",   "type": "item",   "weight": 5,  "floor_min": 14 }
+      ]
+    },
+    "acid_spitter_lv4": {
+      "exp": 168,
+      "gold": { "min": 72, "max": 120 },
+      "drops": [
+        { "item_id": "rare_circuit",     "type": "item",   "weight": 28, "floor_min": 14 },
+        { "item_id": "armor_plate_ii",   "type": "item",   "weight": 22, "floor_min": 14 },
+        { "item_id": "upgrade_core_ii",  "type": "item",   "weight": 20, "floor_min": 14 },
+        { "item_id": "homing_missile",   "type": "weapon", "weight": 18, "floor_min": 14 },
+        { "item_id": "repair_kit_large", "type": "item",   "weight": 8,  "floor_min": 14 },
+        { "item_id": "unknown_part_b",   "type": "item",   "weight": 4,  "floor_min": 14 }
+      ]
+    },
+    "cannon_turtle_lv1": {
+      "exp": 90,
+      "gold": { "min": 42, "max": 72 },
+      "drops": [
+        { "item_id": "rare_circuit",     "type": "item",   "weight": 30, "floor_min": 16 },
+        { "item_id": "repair_kit_large", "type": "item",   "weight": 28, "floor_min": 16 },
+        { "item_id": "upgrade_core_ii",  "type": "item",   "weight": 25, "floor_min": 16 },
+        { "item_id": "barrier_capsule",  "type": "item",   "weight": 17, "floor_min": 16 }
+      ]
+    },
+    "cannon_turtle_lv2": {
+      "exp": 135,
+      "gold": { "min": 62, "max": 105 },
+      "drops": [
+        { "item_id": "rare_circuit",     "type": "item",   "weight": 28, "floor_min": 16 },
+        { "item_id": "repair_kit_large", "type": "item",   "weight": 25, "floor_min": 16 },
+        { "item_id": "upgrade_core_ii",  "type": "item",   "weight": 22, "floor_min": 16 },
+        { "item_id": "frame_upgrade_ii", "type": "item",   "weight": 15, "floor_min": 16 },
+        { "item_id": "sniper_rifle",     "type": "weapon", "weight": 10, "floor_min": 16 }
+      ]
+    },
+    "cannon_turtle_lv3": {
+      "exp": 207,
+      "gold": { "min": 95, "max": 155 },
+      "drops": [
+        { "item_id": "rare_circuit",     "type": "item",   "weight": 25, "floor_min": 16 },
+        { "item_id": "frame_upgrade_ii", "type": "item",   "weight": 22, "floor_min": 16 },
+        { "item_id": "upgrade_core_ii",  "type": "item",   "weight": 20, "floor_min": 16 },
+        { "item_id": "sniper_rifle",     "type": "weapon", "weight": 18, "floor_min": 16 },
+        { "item_id": "repair_kit_large", "type": "item",   "weight": 10, "floor_min": 16 },
+        { "item_id": "upgrade_core_iii", "type": "item",   "weight": 5,  "floor_min": 18 }
+      ]
+    },
+    "cannon_turtle_lv4": {
+      "exp": 315,
+      "gold": { "min": 145, "max": 230 },
+      "drops": [
+        { "item_id": "upgrade_core_iii", "type": "item",   "weight": 28, "floor_min": 18 },
+        { "item_id": "rare_circuit",     "type": "item",   "weight": 22, "floor_min": 16 },
+        { "item_id": "frame_upgrade_ii", "type": "item",   "weight": 20, "floor_min": 16 },
+        { "item_id": "laser_cannon",     "type": "weapon", "weight": 15, "floor_min": 18 },
+        { "item_id": "repair_kit_large", "type": "item",   "weight": 10, "floor_min": 16 },
+        { "item_id": "barrier_capsule",  "type": "item",   "weight": 5,  "floor_min": 16 }
+      ]
+    },
+    "phase_ghost_lv1": {
+      "exp": 70,
+      "gold": { "min": 32, "max": 55 },
+      "drops": [
+        { "item_id": "rare_circuit",     "type": "item",   "weight": 30, "floor_min": 17 },
+        { "item_id": "teleport_beacon",  "type": "item",   "weight": 28, "floor_min": 17 },
+        { "item_id": "repair_kit_large", "type": "item",   "weight": 25, "floor_min": 17 },
+        { "item_id": "upgrade_core_ii",  "type": "item",   "weight": 17, "floor_min": 17 }
+      ]
+    },
+    "phase_ghost_lv2": {
+      "exp": 105,
+      "gold": { "min": 48, "max": 80 },
+      "drops": [
+        { "item_id": "rare_circuit",     "type": "item",   "weight": 28, "floor_min": 17 },
+        { "item_id": "teleport_beacon",  "type": "item",   "weight": 25, "floor_min": 17 },
+        { "item_id": "repair_kit_large", "type": "item",   "weight": 22, "floor_min": 17 },
+        { "item_id": "upgrade_core_ii",  "type": "item",   "weight": 18, "floor_min": 17 },
+        { "item_id": "freeze_ray",       "type": "weapon", "weight": 7,  "floor_min": 17 }
+      ]
+    },
+    "phase_ghost_lv3": {
+      "exp": 161,
+      "gold": { "min": 72, "max": 118 },
+      "drops": [
+        { "item_id": "rare_circuit",     "type": "item",   "weight": 25, "floor_min": 17 },
+        { "item_id": "teleport_beacon",  "type": "item",   "weight": 22, "floor_min": 17 },
+        { "item_id": "upgrade_core_ii",  "type": "item",   "weight": 20, "floor_min": 17 },
+        { "item_id": "freeze_ray",       "type": "weapon", "weight": 18, "floor_min": 17 },
+        { "item_id": "repair_kit_large", "type": "item",   "weight": 10, "floor_min": 17 },
+        { "item_id": "unknown_part_b",   "type": "item",   "weight": 5,  "floor_min": 17 }
+      ]
+    },
+    "phase_ghost_lv4": {
+      "exp": 245,
+      "gold": { "min": 108, "max": 175 },
+      "drops": [
+        { "item_id": "rare_circuit",     "type": "item",   "weight": 25, "floor_min": 17 },
+        { "item_id": "upgrade_core_iii", "type": "item",   "weight": 22, "floor_min": 18 },
+        { "item_id": "freeze_ray",       "type": "weapon", "weight": 20, "floor_min": 17 },
+        { "item_id": "teleport_beacon",  "type": "item",   "weight": 18, "floor_min": 17 },
+        { "item_id": "repair_kit_large", "type": "item",   "weight": 10, "floor_min": 17 },
+        { "item_id": "escape_module",    "type": "item",   "weight": 5,  "floor_min": 17 }
+      ]
+    },
+    "phase_ghost_lv5": {
+      "exp": 350,
+      "gold": { "min": 162, "max": 255 },
+      "drops": [
+        { "item_id": "upgrade_core_iii", "type": "item",   "weight": 28, "floor_min": 18 },
+        { "item_id": "rare_circuit",     "type": "item",   "weight": 22, "floor_min": 17 },
+        { "item_id": "freeze_ray",       "type": "weapon", "weight": 20, "floor_min": 17 },
+        { "item_id": "escape_module",    "type": "item",   "weight": 18, "floor_min": 17 },
+        { "item_id": "full_repair_kit",  "type": "item",   "weight": 8,  "floor_min": 18 },
+        { "item_id": "unknown_part_b",   "type": "item",   "weight": 4,  "floor_min": 17 }
+      ]
+    },
+    "mimic_lv1": {
+      "exp": 85,
+      "gold": { "min": 50, "max": 85 },
+      "drops": [
+        { "item_id": "rare_circuit",     "type": "item",   "weight": 30, "floor_min": 18 },
+        { "item_id": "upgrade_core_ii",  "type": "item",   "weight": 28, "floor_min": 18 },
+        { "item_id": "full_repair_kit",  "type": "item",   "weight": 25, "floor_min": 18 },
+        { "item_id": "holy_oil",         "type": "item",   "weight": 17, "floor_min": 18 }
+      ]
+    },
+    "mimic_lv2": {
+      "exp": 128,
+      "gold": { "min": 75, "max": 120 },
+      "drops": [
+        { "item_id": "rare_circuit",     "type": "item",   "weight": 28, "floor_min": 18 },
+        { "item_id": "upgrade_core_iii", "type": "item",   "weight": 22, "floor_min": 18 },
+        { "item_id": "full_repair_kit",  "type": "item",   "weight": 20, "floor_min": 18 },
+        { "item_id": "holy_oil",         "type": "item",   "weight": 18, "floor_min": 18 },
+        { "item_id": "frame_upgrade_ii", "type": "item",   "weight": 12, "floor_min": 18 }
+      ]
+    },
+    "mimic_lv3": {
+      "exp": 196,
+      "gold": { "min": 112, "max": 178 },
+      "drops": [
+        { "item_id": "rare_circuit",     "type": "item",   "weight": 25, "floor_min": 18 },
+        { "item_id": "upgrade_core_iii", "type": "item",   "weight": 22, "floor_min": 18 },
+        { "item_id": "full_repair_kit",  "type": "item",   "weight": 18, "floor_min": 18 },
+        { "item_id": "laser_cannon",     "type": "weapon", "weight": 18, "floor_min": 18 },
+        { "item_id": "holy_oil",         "type": "item",   "weight": 12, "floor_min": 18 },
+        { "item_id": "frame_upgrade_ii", "type": "item",   "weight": 5,  "floor_min": 18 }
+      ]
+    },
+    "mimic_lv4": {
+      "exp": 298,
+      "gold": { "min": 170, "max": 265 },
+      "drops": [
+        { "item_id": "upgrade_core_iii", "type": "item",   "weight": 28, "floor_min": 18 },
+        { "item_id": "rare_circuit",     "type": "item",   "weight": 22, "floor_min": 18 },
+        { "item_id": "laser_cannon",     "type": "weapon", "weight": 20, "floor_min": 18 },
+        { "item_id": "full_repair_kit",  "type": "item",   "weight": 15, "floor_min": 18 },
+        { "item_id": "frame_upgrade_ii", "type": "item",   "weight": 10, "floor_min": 18 },
+        { "item_id": "holy_oil",         "type": "item",   "weight": 5,  "floor_min": 18 }
+      ]
+    },
+    "berserker_lv1": {
+      "exp": 80,
+      "gold": { "min": 38, "max": 65 },
+      "drops": [
+        { "item_id": "rare_circuit",     "type": "item",   "weight": 32, "floor_min": 19 },
+        { "item_id": "repair_kit_large", "type": "item",   "weight": 28, "floor_min": 19 },
+        { "item_id": "upgrade_core_ii",  "type": "item",   "weight": 25, "floor_min": 19 },
+        { "item_id": "barrier_capsule",  "type": "item",   "weight": 15, "floor_min": 19 }
+      ]
+    },
+    "berserker_lv2": {
+      "exp": 120,
+      "gold": { "min": 56, "max": 95 },
+      "drops": [
+        { "item_id": "rare_circuit",     "type": "item",   "weight": 28, "floor_min": 19 },
+        { "item_id": "repair_kit_large", "type": "item",   "weight": 25, "floor_min": 19 },
+        { "item_id": "upgrade_core_ii",  "type": "item",   "weight": 22, "floor_min": 19 },
+        { "item_id": "barrier_capsule",  "type": "item",   "weight": 15, "floor_min": 19 },
+        { "item_id": "plasma_blade",     "type": "weapon", "weight": 10, "floor_min": 19 }
+      ]
+    },
+    "berserker_lv3": {
+      "exp": 184,
+      "gold": { "min": 85, "max": 140 },
+      "drops": [
+        { "item_id": "rare_circuit",     "type": "item",   "weight": 25, "floor_min": 19 },
+        { "item_id": "upgrade_core_ii",  "type": "item",   "weight": 22, "floor_min": 19 },
+        { "item_id": "plasma_blade",     "type": "weapon", "weight": 20, "floor_min": 19 },
+        { "item_id": "barrier_capsule",  "type": "item",   "weight": 18, "floor_min": 19 },
+        { "item_id": "boost_engine_i",   "type": "item",   "weight": 10, "floor_min": 19 },
+        { "item_id": "upgrade_core_iii", "type": "item",   "weight": 5,  "floor_min": 19 }
+      ]
+    },
+    "berserker_lv4": {
+      "exp": 280,
+      "gold": { "min": 128, "max": 205 },
+      "drops": [
+        { "item_id": "upgrade_core_iii", "type": "item",   "weight": 28, "floor_min": 19 },
+        { "item_id": "rare_circuit",     "type": "item",   "weight": 22, "floor_min": 19 },
+        { "item_id": "plasma_blade",     "type": "weapon", "weight": 20, "floor_min": 19 },
+        { "item_id": "boost_engine_i",   "type": "item",   "weight": 18, "floor_min": 19 },
+        { "item_id": "repair_kit_large", "type": "item",   "weight": 8,  "floor_min": 19 },
+        { "item_id": "barrier_capsule",  "type": "item",   "weight": 4,  "floor_min": 19 }
+      ]
+    },
+    "berserker_lv5": {
+      "exp": 400,
+      "gold": { "min": 188, "max": 295 },
+      "drops": [
+        { "item_id": "upgrade_core_iii", "type": "item",   "weight": 30, "floor_min": 19 },
+        { "item_id": "plasma_blade",     "type": "weapon", "weight": 22, "floor_min": 19 },
+        { "item_id": "rare_circuit",     "type": "item",   "weight": 20, "floor_min": 19 },
+        { "item_id": "boost_engine_i",   "type": "item",   "weight": 18, "floor_min": 19 },
+        { "item_id": "full_repair_kit",  "type": "item",   "weight": 6,  "floor_min": 19 },
+        { "item_id": "boost_engine_ii",  "type": "item",   "weight": 4,  "floor_min": 22 }
+      ]
+    },
+    "teleporter_lv1": {
+      "exp": 75,
+      "gold": { "min": 35, "max": 58 },
+      "drops": [
+        { "item_id": "rare_circuit",     "type": "item",   "weight": 30, "floor_min": 20 },
+        { "item_id": "teleport_beacon",  "type": "item",   "weight": 28, "floor_min": 20 },
+        { "item_id": "repair_kit_large", "type": "item",   "weight": 25, "floor_min": 20 },
+        { "item_id": "upgrade_core_ii",  "type": "item",   "weight": 17, "floor_min": 20 }
+      ]
+    },
+    "teleporter_lv2": {
+      "exp": 113,
+      "gold": { "min": 52, "max": 85 },
+      "drops": [
+        { "item_id": "rare_circuit",     "type": "item",   "weight": 28, "floor_min": 20 },
+        { "item_id": "teleport_beacon",  "type": "item",   "weight": 25, "floor_min": 20 },
+        { "item_id": "repair_kit_large", "type": "item",   "weight": 22, "floor_min": 20 },
+        { "item_id": "upgrade_core_iii", "type": "item",   "weight": 15, "floor_min": 20 },
+        { "item_id": "escape_module",    "type": "item",   "weight": 10, "floor_min": 20 }
+      ]
+    },
+    "teleporter_lv3": {
+      "exp": 173,
+      "gold": { "min": 78, "max": 128 },
+      "drops": [
+        { "item_id": "rare_circuit",     "type": "item",   "weight": 25, "floor_min": 20 },
+        { "item_id": "upgrade_core_iii", "type": "item",   "weight": 22, "floor_min": 20 },
+        { "item_id": "teleport_beacon",  "type": "item",   "weight": 20, "floor_min": 20 },
+        { "item_id": "escape_module",    "type": "item",   "weight": 18, "floor_min": 20 },
+        { "item_id": "thunder_hammer",   "type": "weapon", "weight": 10, "floor_min": 20 },
+        { "item_id": "frame_upgrade_ii", "type": "item",   "weight": 5,  "floor_min": 20 }
+      ]
+    },
+    "teleporter_lv4": {
+      "exp": 263,
+      "gold": { "min": 118, "max": 190 },
+      "drops": [
+        { "item_id": "upgrade_core_iii", "type": "item",   "weight": 28, "floor_min": 20 },
+        { "item_id": "rare_circuit",     "type": "item",   "weight": 22, "floor_min": 20 },
+        { "item_id": "thunder_hammer",   "type": "weapon", "weight": 20, "floor_min": 20 },
+        { "item_id": "escape_module",    "type": "item",   "weight": 18, "floor_min": 20 },
+        { "item_id": "frame_upgrade_ii", "type": "item",   "weight": 8,  "floor_min": 20 },
+        { "item_id": "full_repair_kit",  "type": "item",   "weight": 4,  "floor_min": 20 }
+      ]
+    },
+    "commander_lv1": {
+      "exp": 80,
+      "gold": { "min": 45, "max": 75 },
+      "drops": [
+        { "item_id": "rare_circuit",     "type": "item",   "weight": 30, "floor_min": 22 },
+        { "item_id": "upgrade_core_iii", "type": "item",   "weight": 28, "floor_min": 22 },
+        { "item_id": "full_repair_kit",  "type": "item",   "weight": 25, "floor_min": 22 },
+        { "item_id": "holy_oil",         "type": "item",   "weight": 17, "floor_min": 22 }
+      ]
+    },
+    "commander_lv2": {
+      "exp": 120,
+      "gold": { "min": 67, "max": 108 },
+      "drops": [
+        { "item_id": "rare_circuit",     "type": "item",   "weight": 28, "floor_min": 22 },
+        { "item_id": "upgrade_core_iii", "type": "item",   "weight": 25, "floor_min": 22 },
+        { "item_id": "full_repair_kit",  "type": "item",   "weight": 22, "floor_min": 22 },
+        { "item_id": "holy_oil",         "type": "item",   "weight": 15, "floor_min": 22 },
+        { "item_id": "armor_plate_ii",   "type": "item",   "weight": 10, "floor_min": 22 }
+      ]
+    },
+    "commander_lv3": {
+      "exp": 184,
+      "gold": { "min": 102, "max": 162 },
+      "drops": [
+        { "item_id": "command_baton",    "type": "weapon", "weight": 65, "floor_min": 22 },
+        { "item_id": "rare_circuit",     "type": "item",   "weight": 15, "floor_min": 22 },
+        { "item_id": "upgrade_core_iii", "type": "item",   "weight": 12, "floor_min": 22 },
+        { "item_id": "full_repair_kit",  "type": "item",   "weight": 8,  "floor_min": 22 }
+      ]
+    },
+    "commander_lv4": {
+      "exp": 280,
+      "gold": { "min": 155, "max": 242 },
+      "drops": [
+        { "item_id": "command_baton",    "type": "weapon", "weight": 60, "floor_min": 22 },
+        { "item_id": "commander_coat",   "type": "item",   "weight": 20, "floor_min": 22 },
+        { "item_id": "rare_circuit",     "type": "item",   "weight": 10, "floor_min": 22 },
+        { "item_id": "boost_engine_ii",  "type": "item",   "weight": 6,  "floor_min": 22 },
+        { "item_id": "plasma_cannon",    "type": "weapon", "weight": 4,  "floor_min": 25 }
+      ]
+    },
+    "commander_lv5": {
+      "exp": 400,
+      "gold": { "min": 220, "max": 342 },
+      "drops": [
+        { "item_id": "command_baton",    "type": "weapon", "weight": 55, "floor_min": 22 },
+        { "item_id": "commander_coat",   "type": "item",   "weight": 20, "floor_min": 22 },
+        { "item_id": "tactical_shield",  "type": "item",   "weight": 15, "floor_min": 22 },
+        { "item_id": "boost_engine_ii",  "type": "item",   "weight": 6,  "floor_min": 22 },
+        { "item_id": "plasma_cannon",    "type": "weapon", "weight": 4,  "floor_min": 25 }
+      ]
+    },
+    "mag_sniper_lv1": {
+      "exp": 95,
+      "gold": { "min": 52, "max": 85 },
+      "drops": [
+        { "item_id": "rare_circuit",     "type": "item",   "weight": 30, "floor_min": 24 },
+        { "item_id": "upgrade_core_iii", "type": "item",   "weight": 28, "floor_min": 24 },
+        { "item_id": "repair_kit_large", "type": "item",   "weight": 25, "floor_min": 24 },
+        { "item_id": "barrier_capsule",  "type": "item",   "weight": 17, "floor_min": 24 }
+      ]
+    },
+    "mag_sniper_lv2": {
+      "exp": 143,
+      "gold": { "min": 78, "max": 125 },
+      "drops": [
+        { "item_id": "rare_circuit",     "type": "item",   "weight": 28, "floor_min": 24 },
+        { "item_id": "upgrade_core_iii", "type": "item",   "weight": 25, "floor_min": 24 },
+        { "item_id": "repair_kit_large", "type": "item",   "weight": 22, "floor_min": 24 },
+        { "item_id": "armor_plate_iii",  "type": "item",   "weight": 15, "floor_min": 24 },
+        { "item_id": "sniper_rifle",     "type": "weapon", "weight": 10, "floor_min": 24 }
+      ]
+    },
+    "mag_sniper_lv3": {
+      "exp": 219,
+      "gold": { "min": 118, "max": 188 },
+      "drops": [
+        { "item_id": "mag_rifle",        "type": "weapon", "weight": 65, "floor_min": 24 },
+        { "item_id": "rare_circuit",     "type": "item",   "weight": 15, "floor_min": 24 },
+        { "item_id": "upgrade_core_iii", "type": "item",   "weight": 12, "floor_min": 24 },
+        { "item_id": "armor_plate_iii",  "type": "item",   "weight": 8,  "floor_min": 24 }
+      ]
+    },
+    "mag_sniper_lv4": {
+      "exp": 333,
+      "gold": { "min": 178, "max": 278 },
+      "drops": [
+        { "item_id": "mag_rifle",        "type": "weapon", "weight": 60, "floor_min": 24 },
+        { "item_id": "sniper_cloak",     "type": "item",   "weight": 22, "floor_min": 24 },
+        { "item_id": "rare_circuit",     "type": "item",   "weight": 10, "floor_min": 24 },
+        { "item_id": "upgrade_core_iii", "type": "item",   "weight": 5,  "floor_min": 24 },
+        { "item_id": "plasma_cannon",    "type": "weapon", "weight": 3,  "floor_min": 25 }
+      ]
+    },
+    "mag_sniper_lv5": {
+      "exp": 475,
+      "gold": { "min": 258, "max": 395 },
+      "drops": [
+        { "item_id": "mag_rifle",        "type": "weapon", "weight": 55, "floor_min": 24 },
+        { "item_id": "sniper_cloak",     "type": "item",   "weight": 20, "floor_min": 24 },
+        { "item_id": "upgrade_core_iii", "type": "item",   "weight": 12, "floor_min": 24 },
+        { "item_id": "rare_circuit",     "type": "item",   "weight": 8,  "floor_min": 24 },
+        { "item_id": "plasma_cannon",    "type": "weapon", "weight": 5,  "floor_min": 25 }
+      ]
+    },
+    "death_machine_lv1": {
+      "exp": 180,
+      "gold": { "min": 95, "max": 148 },
+      "drops": [
+        { "item_id": "rare_circuit",     "type": "item",   "weight": 28, "floor_min": 26 },
+        { "item_id": "upgrade_core_iii", "type": "item",   "weight": 25, "floor_min": 26 },
+        { "item_id": "full_repair_kit",  "type": "item",   "weight": 22, "floor_min": 26 },
+        { "item_id": "frame_upgrade_iii","type": "item",   "weight": 15, "floor_min": 26 },
+        { "item_id": "armor_plate_iii",  "type": "item",   "weight": 10, "floor_min": 26 }
+      ]
+    },
+    "death_machine_lv2": {
+      "exp": 270,
+      "gold": { "min": 145, "max": 222 },
+      "drops": [
+        { "item_id": "rare_circuit",     "type": "item",   "weight": 25, "floor_min": 26 },
+        { "item_id": "upgrade_core_iii", "type": "item",   "weight": 22, "floor_min": 26 },
+        { "item_id": "full_repair_kit",  "type": "item",   "weight": 20, "floor_min": 26 },
+        { "item_id": "frame_upgrade_iii","type": "item",   "weight": 18, "floor_min": 26 },
+        { "item_id": "armor_plate_iii",  "type": "item",   "weight": 10, "floor_min": 26 },
+        { "item_id": "boost_engine_ii",  "type": "item",   "weight": 5,  "floor_min": 26 }
+      ]
+    },
+    "death_machine_lv3": {
+      "exp": 414,
+      "gold": { "min": 222, "max": 338 },
+      "drops": [
+        { "item_id": "plasma_cannon",    "type": "weapon", "weight": 65, "floor_min": 26 },
+        { "item_id": "rare_circuit",     "type": "item",   "weight": 15, "floor_min": 26 },
+        { "item_id": "upgrade_core_iii", "type": "item",   "weight": 12, "floor_min": 26 },
+        { "item_id": "frame_upgrade_iii","type": "item",   "weight": 8,  "floor_min": 26 }
+      ]
+    },
+    "death_machine_lv4": {
+      "exp": 630,
+      "gold": { "min": 338, "max": 510 },
+      "drops": [
+        { "item_id": "plasma_cannon",    "type": "weapon", "weight": 60, "floor_min": 26 },
+        { "item_id": "heavy_plating",    "type": "item",   "weight": 22, "floor_min": 26 },
+        { "item_id": "rare_circuit",     "type": "item",   "weight": 10, "floor_min": 26 },
+        { "item_id": "upgrade_core_iii", "type": "item",   "weight": 5,  "floor_min": 26 },
+        { "item_id": "meteor_launcher",  "type": "weapon", "weight": 3,  "floor_min": 28 }
+      ]
+    },
+    "death_machine_lv5": {
+      "exp": 900,
+      "gold": { "min": 480, "max": 720 },
+      "drops": [
+        { "item_id": "plasma_cannon",    "type": "weapon", "weight": 50, "floor_min": 26 },
+        { "item_id": "heavy_plating",    "type": "item",   "weight": 20, "floor_min": 26 },
+        { "item_id": "deflector_array",  "type": "item",   "weight": 16, "floor_min": 26 },
+        { "item_id": "upgrade_core_iii", "type": "item",   "weight": 8,  "floor_min": 26 },
+        { "item_id": "meteor_launcher",  "type": "weapon", "weight": 6,  "floor_min": 28 }
+      ]
+    },
+    "reflector_lv1": {
+      "exp": 100,
+      "gold": { "min": 52, "max": 82 },
+      "drops": [
+        { "item_id": "rare_circuit",     "type": "item",   "weight": 30, "floor_min": 27 },
+        { "item_id": "upgrade_core_iii", "type": "item",   "weight": 28, "floor_min": 27 },
+        { "item_id": "repair_kit_large", "type": "item",   "weight": 25, "floor_min": 27 },
+        { "item_id": "barrier_capsule",  "type": "item",   "weight": 17, "floor_min": 27 }
+      ]
+    },
+    "reflector_lv2": {
+      "exp": 150,
+      "gold": { "min": 78, "max": 122 },
+      "drops": [
+        { "item_id": "rare_circuit",     "type": "item",   "weight": 28, "floor_min": 27 },
+        { "item_id": "upgrade_core_iii", "type": "item",   "weight": 25, "floor_min": 27 },
+        { "item_id": "repair_kit_large", "type": "item",   "weight": 22, "floor_min": 27 },
+        { "item_id": "armor_plate_iii",  "type": "item",   "weight": 15, "floor_min": 27 },
+        { "item_id": "drain_lance",      "type": "weapon", "weight": 10, "floor_min": 27 }
+      ]
+    },
+    "reflector_lv3": {
+      "exp": 230,
+      "gold": { "min": 118, "max": 182 },
+      "drops": [
+        { "item_id": "rare_circuit",     "type": "item",   "weight": 25, "floor_min": 27 },
+        { "item_id": "upgrade_core_iii", "type": "item",   "weight": 22, "floor_min": 27 },
+        { "item_id": "armor_plate_iii",  "type": "item",   "weight": 20, "floor_min": 27 },
+        { "item_id": "drain_lance",      "type": "weapon", "weight": 18, "floor_min": 27 },
+        { "item_id": "barrier_capsule",  "type": "item",   "weight": 10, "floor_min": 27 },
+        { "item_id": "frame_upgrade_ii", "type": "item",   "weight": 5,  "floor_min": 27 }
+      ]
+    },
+    "reflector_lv4": {
+      "exp": 350,
+      "gold": { "min": 178, "max": 272 },
+      "drops": [
+        { "item_id": "upgrade_core_iii", "type": "item",   "weight": 28, "floor_min": 27 },
+        { "item_id": "rare_circuit",     "type": "item",   "weight": 22, "floor_min": 27 },
+        { "item_id": "drain_lance",      "type": "weapon", "weight": 22, "floor_min": 27 },
+        { "item_id": "armor_plate_iii",  "type": "item",   "weight": 18, "floor_min": 27 },
+        { "item_id": "frame_upgrade_iii","type": "item",   "weight": 6,  "floor_min": 27 },
+        { "item_id": "barrier_capsule",  "type": "item",   "weight": 4,  "floor_min": 27 }
+      ]
+    },
+    "abyss_worm_lv1": {
+      "exp": 160,
+      "gold": { "min": 75, "max": 118 },
+      "drops": [
+        { "item_id": "rare_circuit",     "type": "item",   "weight": 28, "floor_min": 28 },
+        { "item_id": "upgrade_core_iii", "type": "item",   "weight": 25, "floor_min": 28 },
+        { "item_id": "full_repair_kit",  "type": "item",   "weight": 25, "floor_min": 28 },
+        { "item_id": "frame_upgrade_iii","type": "item",   "weight": 15, "floor_min": 28 },
+        { "item_id": "escape_module",    "type": "item",   "weight": 7,  "floor_min": 28 }
+      ]
+    },
+    "abyss_worm_lv2": {
+      "exp": 240,
+      "gold": { "min": 112, "max": 175 },
+      "drops": [
+        { "item_id": "rare_circuit",     "type": "item",   "weight": 25, "floor_min": 28 },
+        { "item_id": "upgrade_core_iii", "type": "item",   "weight": 22, "floor_min": 28 },
+        { "item_id": "full_repair_kit",  "type": "item",   "weight": 22, "floor_min": 28 },
+        { "item_id": "frame_upgrade_iii","type": "item",   "weight": 18, "floor_min": 28 },
+        { "item_id": "meteor_launcher",  "type": "weapon", "weight": 8,  "floor_min": 28 },
+        { "item_id": "escape_module",    "type": "item",   "weight": 5,  "floor_min": 28 }
+      ]
+    },
+    "abyss_worm_lv3": {
+      "exp": 368,
+      "gold": { "min": 172, "max": 265 },
+      "drops": [
+        { "item_id": "rare_circuit",     "type": "item",   "weight": 25, "floor_min": 28 },
+        { "item_id": "upgrade_core_iii", "type": "item",   "weight": 22, "floor_min": 28 },
+        { "item_id": "frame_upgrade_iii","type": "item",   "weight": 20, "floor_min": 28 },
+        { "item_id": "meteor_launcher",  "type": "weapon", "weight": 18, "floor_min": 28 },
+        { "item_id": "full_repair_kit",  "type": "item",   "weight": 10, "floor_min": 28 },
+        { "item_id": "boost_engine_ii",  "type": "item",   "weight": 5,  "floor_min": 28 }
+      ]
+    },
+    "abyss_worm_lv4": {
+      "exp": 560,
+      "gold": { "min": 262, "max": 398 },
+      "drops": [
+        { "item_id": "upgrade_core_iii", "type": "item",   "weight": 28, "floor_min": 28 },
+        { "item_id": "rare_circuit",     "type": "item",   "weight": 22, "floor_min": 28 },
+        { "item_id": "meteor_launcher",  "type": "weapon", "weight": 20, "floor_min": 28 },
+        { "item_id": "frame_upgrade_iii","type": "item",   "weight": 18, "floor_min": 28 },
+        { "item_id": "boost_engine_ii",  "type": "item",   "weight": 8,  "floor_min": 28 },
+        { "item_id": "full_repair_kit",  "type": "item",   "weight": 4,  "floor_min": 28 }
+      ]
+    },
+    "abyss_worm_lv5": {
+      "exp": 800,
+      "gold": { "min": 375, "max": 562 },
+      "drops": [
+        { "item_id": "upgrade_core_iii", "type": "item",   "weight": 28, "floor_min": 28 },
+        { "item_id": "meteor_launcher",  "type": "weapon", "weight": 25, "floor_min": 28 },
+        { "item_id": "rare_circuit",     "type": "item",   "weight": 20, "floor_min": 28 },
+        { "item_id": "boost_engine_ii",  "type": "item",   "weight": 18, "floor_min": 28 },
+        { "item_id": "frame_upgrade_iii","type": "item",   "weight": 6,  "floor_min": 28 },
+        { "item_id": "full_repair_kit",  "type": "item",   "weight": 3,  "floor_min": 28 }
+      ]
+    },
+    "chrono_shifter_lv1": {
+      "exp": 140,
+      "gold": { "min": 68, "max": 108 },
+      "drops": [
+        { "item_id": "rare_circuit",     "type": "item",   "weight": 28, "floor_min": 30 },
+        { "item_id": "upgrade_core_iii", "type": "item",   "weight": 25, "floor_min": 30 },
+        { "item_id": "full_repair_kit",  "type": "item",   "weight": 25, "floor_min": 30 },
+        { "item_id": "escape_module",    "type": "item",   "weight": 22, "floor_min": 30 }
+      ]
+    },
+    "chrono_shifter_lv2": {
+      "exp": 210,
+      "gold": { "min": 102, "max": 158 },
+      "drops": [
+        { "item_id": "rare_circuit",     "type": "item",   "weight": 25, "floor_min": 30 },
+        { "item_id": "upgrade_core_iii", "type": "item",   "weight": 22, "floor_min": 30 },
+        { "item_id": "full_repair_kit",  "type": "item",   "weight": 22, "floor_min": 30 },
+        { "item_id": "escape_module",    "type": "item",   "weight": 20, "floor_min": 30 },
+        { "item_id": "frame_upgrade_iii","type": "item",   "weight": 11, "floor_min": 30 }
+      ]
+    },
+    "chrono_shifter_lv3": {
+      "exp": 322,
+      "gold": { "min": 155, "max": 238 },
+      "drops": [
+        { "item_id": "rare_circuit",     "type": "item",   "weight": 25, "floor_min": 30 },
+        { "item_id": "upgrade_core_iii", "type": "item",   "weight": 22, "floor_min": 30 },
+        { "item_id": "escape_module",    "type": "item",   "weight": 20, "floor_min": 30 },
+        { "item_id": "muramasa_blade",   "type": "weapon", "weight": 18, "floor_min": 30 },
+        { "item_id": "full_repair_kit",  "type": "item",   "weight": 10, "floor_min": 30 },
+        { "item_id": "frame_upgrade_iii","type": "item",   "weight": 5,  "floor_min": 30 }
+      ]
+    },
+    "chrono_shifter_lv4": {
+      "exp": 490,
+      "gold": { "min": 235, "max": 355 },
+      "drops": [
+        { "item_id": "upgrade_core_iii", "type": "item",   "weight": 28, "floor_min": 30 },
+        { "item_id": "rare_circuit",     "type": "item",   "weight": 22, "floor_min": 30 },
+        { "item_id": "muramasa_blade",   "type": "weapon", "weight": 20, "floor_min": 30 },
+        { "item_id": "escape_module",    "type": "item",   "weight": 18, "floor_min": 30 },
+        { "item_id": "boost_engine_ii",  "type": "item",   "weight": 8,  "floor_min": 30 },
+        { "item_id": "meteor_launcher",  "type": "weapon", "weight": 4,  "floor_min": 30 }
+      ]
+    },
+    "chrono_shifter_lv5": {
+      "exp": 700,
+      "gold": { "min": 338, "max": 505 },
+      "drops": [
+        { "item_id": "upgrade_core_iii", "type": "item",   "weight": 28, "floor_min": 30 },
+        { "item_id": "muramasa_blade",   "type": "weapon", "weight": 25, "floor_min": 30 },
+        { "item_id": "rare_circuit",     "type": "item",   "weight": 20, "floor_min": 30 },
+        { "item_id": "boost_engine_ii",  "type": "item",   "weight": 18, "floor_min": 30 },
+        { "item_id": "meteor_launcher",  "type": "weapon", "weight": 6,  "floor_min": 30 },
+        { "item_id": "full_repair_kit",  "type": "item",   "weight": 3,  "floor_min": 30 }
+      ]
+    },
+    "nano_swarm_lv1": {
+      "exp": 220,
+      "gold": { "min": 118, "max": 182 },
+      "drops": [
+        { "item_id": "rare_circuit",     "type": "item",   "weight": 28, "floor_min": 33 },
+        { "item_id": "upgrade_core_iii", "type": "item",   "weight": 25, "floor_min": 33 },
+        { "item_id": "full_repair_kit",  "type": "item",   "weight": 25, "floor_min": 33 },
+        { "item_id": "frame_upgrade_iii","type": "item",   "weight": 15, "floor_min": 33 },
+        { "item_id": "armor_plate_iii",  "type": "item",   "weight": 7,  "floor_min": 33 }
+      ]
+    },
+    "nano_swarm_lv2": {
+      "exp": 330,
+      "gold": { "min": 178, "max": 270 },
+      "drops": [
+        { "item_id": "rare_circuit",     "type": "item",   "weight": 25, "floor_min": 33 },
+        { "item_id": "upgrade_core_iii", "type": "item",   "weight": 22, "floor_min": 33 },
+        { "item_id": "full_repair_kit",  "type": "item",   "weight": 22, "floor_min": 33 },
+        { "item_id": "frame_upgrade_iii","type": "item",   "weight": 18, "floor_min": 33 },
+        { "item_id": "muramasa_blade",   "type": "weapon", "weight": 8,  "floor_min": 33 },
+        { "item_id": "armor_plate_iii",  "type": "item",   "weight": 5,  "floor_min": 33 }
+      ]
+    },
+    "nano_swarm_lv3": {
+      "exp": 506,
+      "gold": { "min": 272, "max": 408 },
+      "drops": [
+        { "item_id": "upgrade_core_iii", "type": "item",   "weight": 25, "floor_min": 33 },
+        { "item_id": "rare_circuit",     "type": "item",   "weight": 22, "floor_min": 33 },
+        { "item_id": "muramasa_blade",   "type": "weapon", "weight": 20, "floor_min": 33 },
+        { "item_id": "frame_upgrade_iii","type": "item",   "weight": 18, "floor_min": 33 },
+        { "item_id": "full_repair_kit",  "type": "item",   "weight": 10, "floor_min": 33 },
+        { "item_id": "boost_engine_ii",  "type": "item",   "weight": 5,  "floor_min": 33 }
+      ]
+    },
+    "nano_swarm_lv4": {
+      "exp": 770,
+      "gold": { "min": 412, "max": 615 },
+      "drops": [
+        { "item_id": "upgrade_core_iii", "type": "item",   "weight": 28, "floor_min": 33 },
+        { "item_id": "muramasa_blade",   "type": "weapon", "weight": 22, "floor_min": 33 },
+        { "item_id": "rare_circuit",     "type": "item",   "weight": 20, "floor_min": 33 },
+        { "item_id": "boost_engine_ii",  "type": "item",   "weight": 18, "floor_min": 33 },
+        { "item_id": "frame_upgrade_iii","type": "item",   "weight": 8,  "floor_min": 33 },
+        { "item_id": "armor_plate_iii",  "type": "item",   "weight": 4,  "floor_min": 33 }
+      ]
+    },
+    "nano_swarm_lv5": {
+      "exp": 1100,
+      "gold": { "min": 588, "max": 875 },
+      "drops": [
+        { "item_id": "upgrade_core_iii", "type": "item",   "weight": 28, "floor_min": 33 },
+        { "item_id": "muramasa_blade",   "type": "weapon", "weight": 25, "floor_min": 33 },
+        { "item_id": "rare_circuit",     "type": "item",   "weight": 20, "floor_min": 33 },
+        { "item_id": "boost_engine_ii",  "type": "item",   "weight": 18, "floor_min": 33 },
+        { "item_id": "full_repair_kit",  "type": "item",   "weight": 6,  "floor_min": 33 },
+        { "item_id": "frame_upgrade_iii","type": "item",   "weight": 3,  "floor_min": 33 }
+      ]
+    },
+    "void_stalker_lv1": {
+      "exp": 300,
+      "gold": { "min": 152, "max": 232 },
+      "drops": [
+        { "item_id": "rare_circuit",     "type": "item",   "weight": 28, "floor_min": 36 },
+        { "item_id": "upgrade_core_iii", "type": "item",   "weight": 25, "floor_min": 36 },
+        { "item_id": "full_repair_kit",  "type": "item",   "weight": 25, "floor_min": 36 },
+        { "item_id": "frame_upgrade_iii","type": "item",   "weight": 15, "floor_min": 36 },
+        { "item_id": "armor_plate_iii",  "type": "item",   "weight": 7,  "floor_min": 36 }
+      ]
+    },
+    "void_stalker_lv2": {
+      "exp": 450,
+      "gold": { "min": 228, "max": 345 },
+      "drops": [
+        { "item_id": "rare_circuit",     "type": "item",   "weight": 25, "floor_min": 36 },
+        { "item_id": "upgrade_core_iii", "type": "item",   "weight": 22, "floor_min": 36 },
+        { "item_id": "full_repair_kit",  "type": "item",   "weight": 22, "floor_min": 36 },
+        { "item_id": "frame_upgrade_iii","type": "item",   "weight": 18, "floor_min": 36 },
+        { "item_id": "muramasa_blade",   "type": "weapon", "weight": 8,  "floor_min": 36 },
+        { "item_id": "boost_engine_ii",  "type": "item",   "weight": 5,  "floor_min": 36 }
+      ]
+    },
+    "void_stalker_lv3": {
+      "exp": 690,
+      "gold": { "min": 348, "max": 522 },
+      "drops": [
+        { "item_id": "void_blade",       "type": "weapon", "weight": 65, "floor_min": 36 },
+        { "item_id": "rare_circuit",     "type": "item",   "weight": 15, "floor_min": 36 },
+        { "item_id": "upgrade_core_iii", "type": "item",   "weight": 12, "floor_min": 36 },
+        { "item_id": "frame_upgrade_iii","type": "item",   "weight": 8,  "floor_min": 36 }
+      ]
+    },
+    "void_stalker_lv4": {
+      "exp": 1050,
+      "gold": { "min": 530, "max": 792 },
+      "drops": [
+        { "item_id": "void_blade",       "type": "weapon", "weight": 60, "floor_min": 36 },
+        { "item_id": "shadow_mantle",    "type": "item",   "weight": 22, "floor_min": 36 },
+        { "item_id": "rare_circuit",     "type": "item",   "weight": 10, "floor_min": 36 },
+        { "item_id": "upgrade_core_iii", "type": "item",   "weight": 5,  "floor_min": 36 },
+        { "item_id": "muramasa_blade",   "type": "weapon", "weight": 3,  "floor_min": 36 }
+      ]
+    },
+    "void_stalker_lv5": {
+      "exp": 1500,
+      "gold": { "min": 758, "max": 1125 },
+      "drops": [
+        { "item_id": "void_blade",       "type": "weapon", "weight": 50, "floor_min": 36 },
+        { "item_id": "shadow_mantle",    "type": "item",   "weight": 20, "floor_min": 36 },
+        { "item_id": "void_aegis",       "type": "item",   "weight": 18, "floor_min": 36 },
+        { "item_id": "upgrade_core_iii", "type": "item",   "weight": 8,  "floor_min": 36 },
+        { "item_id": "muramasa_blade",   "type": "weapon", "weight": 4,  "floor_min": 36 }
+      ]
+    },
+    "last_boss_shadow_lv1": {
+      "exp": 400,
+      "gold": { "min": 210, "max": 318 },
+      "drops": [
+        { "item_id": "rare_circuit",     "type": "item",   "weight": 28, "floor_min": 40 },
+        { "item_id": "upgrade_core_iii", "type": "item",   "weight": 25, "floor_min": 40 },
+        { "item_id": "full_repair_kit",  "type": "item",   "weight": 25, "floor_min": 40 },
+        { "item_id": "frame_upgrade_iii","type": "item",   "weight": 15, "floor_min": 40 },
+        { "item_id": "armor_plate_iii",  "type": "item",   "weight": 7,  "floor_min": 40 }
+      ]
+    },
+    "last_boss_shadow_lv2": {
+      "exp": 600,
+      "gold": { "min": 315, "max": 472 },
+      "drops": [
+        { "item_id": "rare_circuit",     "type": "item",   "weight": 25, "floor_min": 40 },
+        { "item_id": "upgrade_core_iii", "type": "item",   "weight": 22, "floor_min": 40 },
+        { "item_id": "full_repair_kit",  "type": "item",   "weight": 22, "floor_min": 40 },
+        { "item_id": "frame_upgrade_iii","type": "item",   "weight": 18, "floor_min": 40 },
+        { "item_id": "muramasa_blade",   "type": "weapon", "weight": 8,  "floor_min": 40 },
+        { "item_id": "armor_plate_iii",  "type": "item",   "weight": 5,  "floor_min": 40 }
+      ]
+    },
+    "last_boss_shadow_lv3": {
+      "exp": 920,
+      "gold": { "min": 485, "max": 722 },
+      "drops": [
+        { "item_id": "upgrade_core_iii", "type": "item",   "weight": 25, "floor_min": 40 },
+        { "item_id": "rare_circuit",     "type": "item",   "weight": 22, "floor_min": 40 },
+        { "item_id": "muramasa_blade",   "type": "weapon", "weight": 20, "floor_min": 40 },
+        { "item_id": "frame_upgrade_iii","type": "item",   "weight": 18, "floor_min": 40 },
+        { "item_id": "full_repair_kit",  "type": "item",   "weight": 10, "floor_min": 40 },
+        { "item_id": "boost_engine_ii",  "type": "item",   "weight": 5,  "floor_min": 40 }
+      ]
+    },
+    "last_boss_shadow_lv4": {
+      "exp": 1400,
+      "gold": { "min": 738, "max": 1095 },
+      "drops": [
+        { "item_id": "upgrade_core_iii", "type": "item",   "weight": 28, "floor_min": 40 },
+        { "item_id": "muramasa_blade",   "type": "weapon", "weight": 22, "floor_min": 40 },
+        { "item_id": "rare_circuit",     "type": "item",   "weight": 20, "floor_min": 40 },
+        { "item_id": "meteor_launcher",  "type": "weapon", "weight": 18, "floor_min": 40 },
+        { "item_id": "boost_engine_ii",  "type": "item",   "weight": 8,  "floor_min": 40 },
+        { "item_id": "frame_upgrade_iii","type": "item",   "weight": 4,  "floor_min": 40 }
+      ]
+    },
+    "last_boss_shadow_lv5": {
+      "exp": 2000,
+      "gold": { "min": 1055, "max": 1562 },
+      "drops": [
+        { "item_id": "upgrade_core_iii", "type": "item",   "weight": 28, "floor_min": 40 },
+        { "item_id": "muramasa_blade",   "type": "weapon", "weight": 25, "floor_min": 40 },
+        { "item_id": "meteor_launcher",  "type": "weapon", "weight": 22, "floor_min": 40 },
+        { "item_id": "rare_circuit",     "type": "item",   "weight": 15, "floor_min": 40 },
+        { "item_id": "boost_engine_ii",  "type": "item",   "weight": 7,  "floor_min": 40 },
+        { "item_id": "frame_upgrade_iii","type": "item",   "weight": 3,  "floor_min": 40 }
+      ]
+    }
+  },
+  "floor_bonus": {
+    "description": "フロア番号に応じてドロップ率に乗じる係数",
+    "formula": "1.0 + floor_number * 0.05"
+  }
+}

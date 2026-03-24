@@ -1,0 +1,1836 @@
+{
+  "tiles": {
+    "wall": {
+      "file": "public/sprites/tiles/wall.png",
+      "width": 32,
+      "height": 32
+    },
+    "floor": {
+      "file": "public/sprites/tiles/floor.png",
+      "width": 32,
+      "height": 32
+    },
+    "stairs": {
+      "file": "public/sprites/tiles/stairs.png",
+      "width": 32,
+      "height": 32
+    },
+    "lava": {
+      "file": "public/sprites/tiles/lava.png",
+      "width": 32,
+      "height": 32
+    },
+    "ice": {
+      "file": "public/sprites/tiles/ice.png",
+      "width": 32,
+      "height": 32
+    },
+    "warp": {
+      "file": "public/sprites/tiles/warp.png",
+      "width": 32,
+      "height": 32
+    },
+    "trap": {
+      "file": "public/sprites/tiles/trap.png",
+      "width": 32,
+      "height": 32
+    },
+    "hint": {
+      "file": "public/sprites/tiles/hint.png",
+      "width": 32,
+      "height": 32
+    }
+  },
+  "player": {
+    "idle": [
+      {
+        "file": "public/sprites/player/idle_0.png",
+        "width": 32,
+        "height": 32
+      },
+      {
+        "file": "public/sprites/player/idle_1.png",
+        "width": 32,
+        "height": 32
+      }
+    ],
+    "move": [
+      {
+        "file": "public/sprites/player/move_0.png",
+        "width": 32,
+        "height": 32
+      },
+      {
+        "file": "public/sprites/player/move_1.png",
+        "width": 32,
+        "height": 32
+      }
+    ],
+    "idle_down": [
+      {
+        "file": "public/sprites/player/idle_down_0.png",
+        "width": 32,
+        "height": 32
+      },
+      {
+        "file": "public/sprites/player/idle_down_1.png",
+        "width": 32,
+        "height": 32
+      }
+    ],
+    "move_down": [
+      {
+        "file": "public/sprites/player/move_down_0.png",
+        "width": 32,
+        "height": 32
+      },
+      {
+        "file": "public/sprites/player/move_down_1.png",
+        "width": 32,
+        "height": 32
+      }
+    ],
+    "attack_down": [
+      {
+        "file": "public/sprites/player/attack_down_0.png",
+        "width": 32,
+        "height": 32
+      },
+      {
+        "file": "public/sprites/player/attack_down_1.png",
+        "width": 32,
+        "height": 32
+      },
+      {
+        "file": "public/sprites/player/attack_down_2.png",
+        "width": 32,
+        "height": 32
+      }
+    ],
+    "hit_down": [
+      {
+        "file": "public/sprites/player/hit_down_0.png",
+        "width": 32,
+        "height": 32
+      },
+      {
+        "file": "public/sprites/player/hit_down_1.png",
+        "width": 32,
+        "height": 32
+      }
+    ],
+    "idle_up": [
+      {
+        "file": "public/sprites/player/idle_up_0.png",
+        "width": 32,
+        "height": 32
+      },
+      {
+        "file": "public/sprites/player/idle_up_1.png",
+        "width": 32,
+        "height": 32
+      }
+    ],
+    "move_up": [
+      {
+        "file": "public/sprites/player/move_up_0.png",
+        "width": 32,
+        "height": 32
+      },
+      {
+        "file": "public/sprites/player/move_up_1.png",
+        "width": 32,
+        "height": 32
+      }
+    ],
+    "attack_up": [
+      {
+        "file": "public/sprites/player/attack_up_0.png",
+        "width": 32,
+        "height": 32
+      },
+      {
+        "file": "public/sprites/player/attack_up_1.png",
+        "width": 32,
+        "height": 32
+      },
+      {
+        "file": "public/sprites/player/attack_up_2.png",
+        "width": 32,
+        "height": 32
+      }
+    ],
+    "hit_up": [
+      {
+        "file": "public/sprites/player/hit_up_0.png",
+        "width": 32,
+        "height": 32
+      },
+      {
+        "file": "public/sprites/player/hit_up_1.png",
+        "width": 32,
+        "height": 32
+      }
+    ],
+    "idle_left": [
+      {
+        "file": "public/sprites/player/idle_left_0.png",
+        "width": 32,
+        "height": 32
+      },
+      {
+        "file": "public/sprites/player/idle_left_1.png",
+        "width": 32,
+        "height": 32
+      }
+    ],
+    "move_left": [
+      {
+        "file": "public/sprites/player/move_left_0.png",
+        "width": 32,
+        "height": 32
+      },
+      {
+        "file": "public/sprites/player/move_left_1.png",
+        "width": 32,
+        "height": 32
+      }
+    ],
+    "attack_left": [
+      {
+        "file": "public/sprites/player/attack_left_0.png",
+        "width": 32,
+        "height": 32
+      },
+      {
+        "file": "public/sprites/player/attack_left_1.png",
+        "width": 32,
+        "height": 32
+      },
+      {
+        "file": "public/sprites/player/attack_left_2.png",
+        "width": 32,
+        "height": 32
+      }
+    ],
+    "hit_left": [
+      {
+        "file": "public/sprites/player/hit_left_0.png",
+        "width": 32,
+        "height": 32
+      },
+      {
+        "file": "public/sprites/player/hit_left_1.png",
+        "width": 32,
+        "height": 32
+      }
+    ],
+    "idle_right": [
+      {
+        "file": "public/sprites/player/idle_right_0.png",
+        "width": 32,
+        "height": 32
+      },
+      {
+        "file": "public/sprites/player/idle_right_1.png",
+        "width": 32,
+        "height": 32
+      }
+    ],
+    "move_right": [
+      {
+        "file": "public/sprites/player/move_right_0.png",
+        "width": 32,
+        "height": 32
+      },
+      {
+        "file": "public/sprites/player/move_right_1.png",
+        "width": 32,
+        "height": 32
+      }
+    ],
+    "attack_right": [
+      {
+        "file": "public/sprites/player/attack_right_0.png",
+        "width": 32,
+        "height": 32
+      },
+      {
+        "file": "public/sprites/player/attack_right_1.png",
+        "width": 32,
+        "height": 32
+      },
+      {
+        "file": "public/sprites/player/attack_right_2.png",
+        "width": 32,
+        "height": 32
+      }
+    ],
+    "hit_right": [
+      {
+        "file": "public/sprites/player/hit_right_0.png",
+        "width": 32,
+        "height": 32
+      },
+      {
+        "file": "public/sprites/player/hit_right_1.png",
+        "width": 32,
+        "height": 32
+      }
+    ],
+    "item_use": [
+      {
+        "file": "public/sprites/player/item_use_0.png",
+        "width": 32,
+        "height": 32
+      },
+      {
+        "file": "public/sprites/player/item_use_1.png",
+        "width": 32,
+        "height": 32
+      }
+    ],
+    "near_death": [
+      {
+        "file": "public/sprites/player/near_death_0.png",
+        "width": 32,
+        "height": 32
+      },
+      {
+        "file": "public/sprites/player/near_death_1.png",
+        "width": 32,
+        "height": 32
+      }
+    ]
+  },
+  "enemies": {
+    "scout_drone": [
+      {
+        "file": "public/sprites/enemies/scout_drone_0.png",
+        "width": 32,
+        "height": 32
+      },
+      {
+        "file": "public/sprites/enemies/scout_drone_1.png",
+        "width": 32,
+        "height": 32
+      }
+    ],
+    "guard_bot": [
+      {
+        "file": "public/sprites/enemies/guard_bot_0.png",
+        "width": 32,
+        "height": 32
+      },
+      {
+        "file": "public/sprites/enemies/guard_bot_1.png",
+        "width": 32,
+        "height": 32
+      }
+    ],
+    "spark": [
+      {
+        "file": "public/sprites/enemies/spark_0.png",
+        "width": 32,
+        "height": 32
+      },
+      {
+        "file": "public/sprites/enemies/spark_1.png",
+        "width": 32,
+        "height": 32
+      }
+    ],
+    "scout_drone_hit": [
+      {
+        "file": "public/sprites/enemies/scout_drone_hit_0.png",
+        "width": 32,
+        "height": 32
+      },
+      {
+        "file": "public/sprites/enemies/scout_drone_hit_1.png",
+        "width": 32,
+        "height": 32
+      }
+    ],
+    "guard_bot_hit": [
+      {
+        "file": "public/sprites/enemies/guard_bot_hit_0.png",
+        "width": 32,
+        "height": 32
+      },
+      {
+        "file": "public/sprites/enemies/guard_bot_hit_1.png",
+        "width": 32,
+        "height": 32
+      }
+    ],
+    "mine_beetle": [
+      {
+        "file": "public/sprites/enemies/mine_beetle_0.png",
+        "width": 32,
+        "height": 32
+      },
+      {
+        "file": "public/sprites/enemies/mine_beetle_1.png",
+        "width": 32,
+        "height": 32
+      }
+    ],
+    "slime_x": [
+      {
+        "file": "public/sprites/enemies/slime_x_0.png",
+        "width": 32,
+        "height": 32
+      },
+      {
+        "file": "public/sprites/enemies/slime_x_1.png",
+        "width": 32,
+        "height": 32
+      }
+    ],
+    "mini_slime": [
+      {
+        "file": "public/sprites/enemies/mini_slime_0.png",
+        "width": 32,
+        "height": 32
+      },
+      {
+        "file": "public/sprites/enemies/mini_slime_1.png",
+        "width": 32,
+        "height": 32
+      }
+    ],
+    "rust_hound": [
+      {
+        "file": "public/sprites/enemies/rust_hound_0.png",
+        "width": 32,
+        "height": 32
+      },
+      {
+        "file": "public/sprites/enemies/rust_hound_1.png",
+        "width": 32,
+        "height": 32
+      }
+    ],
+    "assault_mecha": [
+      {
+        "file": "public/sprites/enemies/assault_mecha_0.png",
+        "width": 32,
+        "height": 32
+      },
+      {
+        "file": "public/sprites/enemies/assault_mecha_1.png",
+        "width": 32,
+        "height": 32
+      }
+    ],
+    "stealth_killer": [
+      {
+        "file": "public/sprites/enemies/stealth_killer_0.png",
+        "width": 32,
+        "height": 32
+      },
+      {
+        "file": "public/sprites/enemies/stealth_killer_1.png",
+        "width": 32,
+        "height": 32
+      }
+    ],
+    "shield_knight": [
+      {
+        "file": "public/sprites/enemies/shield_knight_0.png",
+        "width": 32,
+        "height": 32
+      },
+      {
+        "file": "public/sprites/enemies/shield_knight_1.png",
+        "width": 32,
+        "height": 32
+      }
+    ],
+    "mine_layer": [
+      {
+        "file": "public/sprites/enemies/mine_layer_0.png",
+        "width": 32,
+        "height": 32
+      },
+      {
+        "file": "public/sprites/enemies/mine_layer_1.png",
+        "width": 32,
+        "height": 32
+      }
+    ],
+    "healer_drone": [
+      {
+        "file": "public/sprites/enemies/healer_drone_0.png",
+        "width": 32,
+        "height": 32
+      },
+      {
+        "file": "public/sprites/enemies/healer_drone_1.png",
+        "width": 32,
+        "height": 32
+      }
+    ],
+    "metal_wolf": [
+      {
+        "file": "public/sprites/enemies/metal_wolf_0.png",
+        "width": 32,
+        "height": 32
+      },
+      {
+        "file": "public/sprites/enemies/metal_wolf_1.png",
+        "width": 32,
+        "height": 32
+      }
+    ],
+    "bomb_lobber": [
+      {
+        "file": "public/sprites/enemies/bomb_lobber_0.png",
+        "width": 32,
+        "height": 32
+      },
+      {
+        "file": "public/sprites/enemies/bomb_lobber_1.png",
+        "width": 32,
+        "height": 32
+      }
+    ],
+    "acid_spitter": [
+      {
+        "file": "public/sprites/enemies/acid_spitter_0.png",
+        "width": 32,
+        "height": 32
+      },
+      {
+        "file": "public/sprites/enemies/acid_spitter_1.png",
+        "width": 32,
+        "height": 32
+      }
+    ],
+    "cannon_turtle": [
+      {
+        "file": "public/sprites/enemies/cannon_turtle_0.png",
+        "width": 32,
+        "height": 32
+      },
+      {
+        "file": "public/sprites/enemies/cannon_turtle_1.png",
+        "width": 32,
+        "height": 32
+      }
+    ],
+    "phase_ghost": [
+      {
+        "file": "public/sprites/enemies/phase_ghost_0.png",
+        "width": 32,
+        "height": 32
+      },
+      {
+        "file": "public/sprites/enemies/phase_ghost_1.png",
+        "width": 32,
+        "height": 32
+      }
+    ],
+    "mimic": [
+      {
+        "file": "public/sprites/enemies/mimic_0.png",
+        "width": 32,
+        "height": 32
+      },
+      {
+        "file": "public/sprites/enemies/mimic_1.png",
+        "width": 32,
+        "height": 32
+      }
+    ],
+    "berserker": [
+      {
+        "file": "public/sprites/enemies/berserker_0.png",
+        "width": 32,
+        "height": 32
+      },
+      {
+        "file": "public/sprites/enemies/berserker_1.png",
+        "width": 32,
+        "height": 32
+      }
+    ],
+    "teleporter": [
+      {
+        "file": "public/sprites/enemies/teleporter_0.png",
+        "width": 32,
+        "height": 32
+      },
+      {
+        "file": "public/sprites/enemies/teleporter_1.png",
+        "width": 32,
+        "height": 32
+      }
+    ],
+    "commander": [
+      {
+        "file": "public/sprites/enemies/commander_0.png",
+        "width": 32,
+        "height": 32
+      },
+      {
+        "file": "public/sprites/enemies/commander_1.png",
+        "width": 32,
+        "height": 32
+      }
+    ],
+    "mag_sniper": [
+      {
+        "file": "public/sprites/enemies/mag_sniper_0.png",
+        "width": 32,
+        "height": 32
+      },
+      {
+        "file": "public/sprites/enemies/mag_sniper_1.png",
+        "width": 32,
+        "height": 32
+      }
+    ],
+    "death_machine": [
+      {
+        "file": "public/sprites/enemies/death_machine_move_0.png",
+        "width": 64,
+        "height": 64
+      },
+      {
+        "file": "public/sprites/enemies/death_machine_move_1.png",
+        "width": 64,
+        "height": 64
+      },
+      {
+        "file": "public/sprites/enemies/death_machine_atk_0.png",
+        "width": 64,
+        "height": 64
+      },
+      {
+        "file": "public/sprites/enemies/death_machine_atk_1.png",
+        "width": 64,
+        "height": 64
+      },
+      {
+        "file": "public/sprites/enemies/death_machine_atk_2.png",
+        "width": 64,
+        "height": 64
+      },
+      {
+        "file": "public/sprites/enemies/death_machine_dmg_0.png",
+        "width": 64,
+        "height": 64
+      },
+      {
+        "file": "public/sprites/enemies/death_machine_dmg_1.png",
+        "width": 64,
+        "height": 64
+      },
+      {
+        "file": "public/sprites/enemies/death_machine_dead_0.png",
+        "width": 64,
+        "height": 64
+      },
+      {
+        "file": "public/sprites/enemies/death_machine_dead_1.png",
+        "width": 64,
+        "height": 64
+      },
+      {
+        "file": "public/sprites/enemies/death_machine_dead_2.png",
+        "width": 64,
+        "height": 64
+      }
+    ],
+    "reflector": [
+      {
+        "file": "public/sprites/enemies/reflector_0.png",
+        "width": 32,
+        "height": 32
+      },
+      {
+        "file": "public/sprites/enemies/reflector_1.png",
+        "width": 32,
+        "height": 32
+      }
+    ],
+    "abyss_worm": [
+      {
+        "file": "public/sprites/enemies/abyss_worm_0.png",
+        "width": 32,
+        "height": 32
+      },
+      {
+        "file": "public/sprites/enemies/abyss_worm_1.png",
+        "width": 32,
+        "height": 32
+      }
+    ],
+    "chrono_shifter": [
+      {
+        "file": "public/sprites/enemies/chrono_shifter_0.png",
+        "width": 32,
+        "height": 32
+      },
+      {
+        "file": "public/sprites/enemies/chrono_shifter_1.png",
+        "width": 32,
+        "height": 32
+      }
+    ],
+    "nano_swarm": [
+      {
+        "file": "public/sprites/enemies/nano_swarm_0.png",
+        "width": 32,
+        "height": 32
+      },
+      {
+        "file": "public/sprites/enemies/nano_swarm_1.png",
+        "width": 32,
+        "height": 32
+      }
+    ],
+    "void_stalker": [
+      {
+        "file": "public/sprites/enemies/void_stalker_0.png",
+        "width": 32,
+        "height": 32
+      },
+      {
+        "file": "public/sprites/enemies/void_stalker_1.png",
+        "width": 32,
+        "height": 32
+      }
+    ],
+    "last_boss_shadow": [
+      {
+        "file": "public/sprites/enemies/last_boss_shadow_move_0.png",
+        "width": 64,
+        "height": 64
+      },
+      {
+        "file": "public/sprites/enemies/last_boss_shadow_move_1.png",
+        "width": 64,
+        "height": 64
+      },
+      {
+        "file": "public/sprites/enemies/last_boss_shadow_atk_0.png",
+        "width": 64,
+        "height": 64
+      },
+      {
+        "file": "public/sprites/enemies/last_boss_shadow_atk_1.png",
+        "width": 64,
+        "height": 64
+      },
+      {
+        "file": "public/sprites/enemies/last_boss_shadow_atk_2.png",
+        "width": 64,
+        "height": 64
+      },
+      {
+        "file": "public/sprites/enemies/last_boss_shadow_dmg_0.png",
+        "width": 64,
+        "height": 64
+      },
+      {
+        "file": "public/sprites/enemies/last_boss_shadow_dmg_1.png",
+        "width": 64,
+        "height": 64
+      },
+      {
+        "file": "public/sprites/enemies/last_boss_shadow_dead_0.png",
+        "width": 64,
+        "height": 64
+      },
+      {
+        "file": "public/sprites/enemies/last_boss_shadow_dead_1.png",
+        "width": 64,
+        "height": 64
+      },
+      {
+        "file": "public/sprites/enemies/last_boss_shadow_dead_2.png",
+        "width": 64,
+        "height": 64
+      }
+    ],
+    "scout_drone_dir_down_idle": [
+      {
+        "file": "public/sprites/enemies/scout_drone_dir_down_idle_0.png",
+        "width": 32,
+        "height": 32
+      },
+      {
+        "file": "public/sprites/enemies/scout_drone_dir_down_idle_1.png",
+        "width": 32,
+        "height": 32
+      }
+    ],
+    "scout_drone_dir_down_attack": [
+      {
+        "file": "public/sprites/enemies/scout_drone_dir_down_attack_0.png",
+        "width": 32,
+        "height": 32
+      },
+      {
+        "file": "public/sprites/enemies/scout_drone_dir_down_attack_1.png",
+        "width": 32,
+        "height": 32
+      },
+      {
+        "file": "public/sprites/enemies/scout_drone_dir_down_attack_2.png",
+        "width": 32,
+        "height": 32
+      }
+    ],
+    "scout_drone_dir_left_idle": [
+      {
+        "file": "public/sprites/enemies/scout_drone_dir_left_idle_0.png",
+        "width": 32,
+        "height": 32
+      },
+      {
+        "file": "public/sprites/enemies/scout_drone_dir_left_idle_1.png",
+        "width": 32,
+        "height": 32
+      }
+    ],
+    "scout_drone_dir_left_attack": [
+      {
+        "file": "public/sprites/enemies/scout_drone_dir_left_attack_0.png",
+        "width": 32,
+        "height": 32
+      },
+      {
+        "file": "public/sprites/enemies/scout_drone_dir_left_attack_1.png",
+        "width": 32,
+        "height": 32
+      },
+      {
+        "file": "public/sprites/enemies/scout_drone_dir_left_attack_2.png",
+        "width": 32,
+        "height": 32
+      }
+    ],
+    "guard_bot_dir_down_idle": [
+      {
+        "file": "public/sprites/enemies/guard_bot_dir_down_idle_0.png",
+        "width": 32,
+        "height": 32
+      },
+      {
+        "file": "public/sprites/enemies/guard_bot_dir_down_idle_1.png",
+        "width": 32,
+        "height": 32
+      }
+    ],
+    "guard_bot_dir_down_attack": [
+      {
+        "file": "public/sprites/enemies/guard_bot_dir_down_attack_0.png",
+        "width": 32,
+        "height": 32
+      },
+      {
+        "file": "public/sprites/enemies/guard_bot_dir_down_attack_1.png",
+        "width": 32,
+        "height": 32
+      },
+      {
+        "file": "public/sprites/enemies/guard_bot_dir_down_attack_2.png",
+        "width": 32,
+        "height": 32
+      }
+    ],
+    "guard_bot_dir_left_idle": [
+      {
+        "file": "public/sprites/enemies/guard_bot_dir_left_idle_0.png",
+        "width": 32,
+        "height": 32
+      },
+      {
+        "file": "public/sprites/enemies/guard_bot_dir_left_idle_1.png",
+        "width": 32,
+        "height": 32
+      }
+    ],
+    "guard_bot_dir_left_attack": [
+      {
+        "file": "public/sprites/enemies/guard_bot_dir_left_attack_0.png",
+        "width": 32,
+        "height": 32
+      },
+      {
+        "file": "public/sprites/enemies/guard_bot_dir_left_attack_1.png",
+        "width": 32,
+        "height": 32
+      },
+      {
+        "file": "public/sprites/enemies/guard_bot_dir_left_attack_2.png",
+        "width": 32,
+        "height": 32
+      }
+    ],
+    "rust_hound_dir_down_idle": [
+      {
+        "file": "public/sprites/enemies/rust_hound_dir_down_idle_0.png",
+        "width": 32,
+        "height": 32
+      },
+      {
+        "file": "public/sprites/enemies/rust_hound_dir_down_idle_1.png",
+        "width": 32,
+        "height": 32
+      }
+    ],
+    "rust_hound_dir_down_attack": [
+      {
+        "file": "public/sprites/enemies/rust_hound_dir_down_attack_0.png",
+        "width": 32,
+        "height": 32
+      },
+      {
+        "file": "public/sprites/enemies/rust_hound_dir_down_attack_1.png",
+        "width": 32,
+        "height": 32
+      },
+      {
+        "file": "public/sprites/enemies/rust_hound_dir_down_attack_2.png",
+        "width": 32,
+        "height": 32
+      }
+    ],
+    "rust_hound_dir_left_idle": [
+      {
+        "file": "public/sprites/enemies/rust_hound_dir_left_idle_0.png",
+        "width": 32,
+        "height": 32
+      },
+      {
+        "file": "public/sprites/enemies/rust_hound_dir_left_idle_1.png",
+        "width": 32,
+        "height": 32
+      }
+    ],
+    "rust_hound_dir_left_attack": [
+      {
+        "file": "public/sprites/enemies/rust_hound_dir_left_attack_0.png",
+        "width": 32,
+        "height": 32
+      },
+      {
+        "file": "public/sprites/enemies/rust_hound_dir_left_attack_1.png",
+        "width": 32,
+        "height": 32
+      },
+      {
+        "file": "public/sprites/enemies/rust_hound_dir_left_attack_2.png",
+        "width": 32,
+        "height": 32
+      }
+    ],
+    "bug_swarm": [
+      {
+        "file": "public/sprites/enemies/bug_swarm_move_0.png",
+        "width": 64,
+        "height": 64
+      },
+      {
+        "file": "public/sprites/enemies/bug_swarm_move_1.png",
+        "width": 64,
+        "height": 64
+      },
+      {
+        "file": "public/sprites/enemies/bug_swarm_atk_0.png",
+        "width": 64,
+        "height": 64
+      },
+      {
+        "file": "public/sprites/enemies/bug_swarm_atk_1.png",
+        "width": 64,
+        "height": 64
+      },
+      {
+        "file": "public/sprites/enemies/bug_swarm_atk_2.png",
+        "width": 64,
+        "height": 64
+      },
+      {
+        "file": "public/sprites/enemies/bug_swarm_dmg_0.png",
+        "width": 64,
+        "height": 64
+      },
+      {
+        "file": "public/sprites/enemies/bug_swarm_dmg_1.png",
+        "width": 64,
+        "height": 64
+      },
+      {
+        "file": "public/sprites/enemies/bug_swarm_dead_0.png",
+        "width": 64,
+        "height": 64
+      },
+      {
+        "file": "public/sprites/enemies/bug_swarm_dead_1.png",
+        "width": 64,
+        "height": 64
+      },
+      {
+        "file": "public/sprites/enemies/bug_swarm_dead_2.png",
+        "width": 64,
+        "height": 64
+      }
+    ],
+    "mach_runner": [
+      {
+        "file": "public/sprites/enemies/mach_runner_move_0.png",
+        "width": 64,
+        "height": 64
+      },
+      {
+        "file": "public/sprites/enemies/mach_runner_move_1.png",
+        "width": 64,
+        "height": 64
+      },
+      {
+        "file": "public/sprites/enemies/mach_runner_atk_0.png",
+        "width": 64,
+        "height": 64
+      },
+      {
+        "file": "public/sprites/enemies/mach_runner_atk_1.png",
+        "width": 64,
+        "height": 64
+      },
+      {
+        "file": "public/sprites/enemies/mach_runner_atk_2.png",
+        "width": 64,
+        "height": 64
+      },
+      {
+        "file": "public/sprites/enemies/mach_runner_dmg_0.png",
+        "width": 64,
+        "height": 64
+      },
+      {
+        "file": "public/sprites/enemies/mach_runner_dmg_1.png",
+        "width": 64,
+        "height": 64
+      },
+      {
+        "file": "public/sprites/enemies/mach_runner_dead_0.png",
+        "width": 64,
+        "height": 64
+      },
+      {
+        "file": "public/sprites/enemies/mach_runner_dead_1.png",
+        "width": 64,
+        "height": 64
+      },
+      {
+        "file": "public/sprites/enemies/mach_runner_dead_2.png",
+        "width": 64,
+        "height": 64
+      }
+    ],
+    "junk_king": [
+      {
+        "file": "public/sprites/enemies/junk_king_move_0.png",
+        "width": 64,
+        "height": 64
+      },
+      {
+        "file": "public/sprites/enemies/junk_king_move_1.png",
+        "width": 64,
+        "height": 64
+      },
+      {
+        "file": "public/sprites/enemies/junk_king_atk_0.png",
+        "width": 64,
+        "height": 64
+      },
+      {
+        "file": "public/sprites/enemies/junk_king_atk_1.png",
+        "width": 64,
+        "height": 64
+      },
+      {
+        "file": "public/sprites/enemies/junk_king_atk_2.png",
+        "width": 64,
+        "height": 64
+      },
+      {
+        "file": "public/sprites/enemies/junk_king_dmg_0.png",
+        "width": 64,
+        "height": 64
+      },
+      {
+        "file": "public/sprites/enemies/junk_king_dmg_1.png",
+        "width": 64,
+        "height": 64
+      },
+      {
+        "file": "public/sprites/enemies/junk_king_dead_0.png",
+        "width": 64,
+        "height": 64
+      },
+      {
+        "file": "public/sprites/enemies/junk_king_dead_1.png",
+        "width": 64,
+        "height": 64
+      },
+      {
+        "file": "public/sprites/enemies/junk_king_dead_2.png",
+        "width": 64,
+        "height": 64
+      }
+    ],
+    "phantom": [
+      {
+        "file": "public/sprites/enemies/phantom_move_0.png",
+        "width": 64,
+        "height": 64
+      },
+      {
+        "file": "public/sprites/enemies/phantom_move_1.png",
+        "width": 64,
+        "height": 64
+      },
+      {
+        "file": "public/sprites/enemies/phantom_atk_0.png",
+        "width": 64,
+        "height": 64
+      },
+      {
+        "file": "public/sprites/enemies/phantom_atk_1.png",
+        "width": 64,
+        "height": 64
+      },
+      {
+        "file": "public/sprites/enemies/phantom_atk_2.png",
+        "width": 64,
+        "height": 64
+      },
+      {
+        "file": "public/sprites/enemies/phantom_dmg_0.png",
+        "width": 64,
+        "height": 64
+      },
+      {
+        "file": "public/sprites/enemies/phantom_dmg_1.png",
+        "width": 64,
+        "height": 64
+      },
+      {
+        "file": "public/sprites/enemies/phantom_dead_0.png",
+        "width": 64,
+        "height": 64
+      },
+      {
+        "file": "public/sprites/enemies/phantom_dead_1.png",
+        "width": 64,
+        "height": 64
+      },
+      {
+        "file": "public/sprites/enemies/phantom_dead_2.png",
+        "width": 64,
+        "height": 64
+      }
+    ],
+    "iron_fortress": [
+      {
+        "file": "public/sprites/enemies/iron_fortress_move_0.png",
+        "width": 64,
+        "height": 64
+      },
+      {
+        "file": "public/sprites/enemies/iron_fortress_move_1.png",
+        "width": 64,
+        "height": 64
+      },
+      {
+        "file": "public/sprites/enemies/iron_fortress_atk_0.png",
+        "width": 64,
+        "height": 64
+      },
+      {
+        "file": "public/sprites/enemies/iron_fortress_atk_1.png",
+        "width": 64,
+        "height": 64
+      },
+      {
+        "file": "public/sprites/enemies/iron_fortress_atk_2.png",
+        "width": 64,
+        "height": 64
+      },
+      {
+        "file": "public/sprites/enemies/iron_fortress_dmg_0.png",
+        "width": 64,
+        "height": 64
+      },
+      {
+        "file": "public/sprites/enemies/iron_fortress_dmg_1.png",
+        "width": 64,
+        "height": 64
+      },
+      {
+        "file": "public/sprites/enemies/iron_fortress_dead_0.png",
+        "width": 64,
+        "height": 64
+      },
+      {
+        "file": "public/sprites/enemies/iron_fortress_dead_1.png",
+        "width": 64,
+        "height": 64
+      },
+      {
+        "file": "public/sprites/enemies/iron_fortress_dead_2.png",
+        "width": 64,
+        "height": 64
+      }
+    ],
+    "samurai_master": [
+      {
+        "file": "public/sprites/enemies/samurai_master_move_0.png",
+        "width": 64,
+        "height": 64
+      },
+      {
+        "file": "public/sprites/enemies/samurai_master_move_1.png",
+        "width": 64,
+        "height": 64
+      },
+      {
+        "file": "public/sprites/enemies/samurai_master_atk_0.png",
+        "width": 64,
+        "height": 64
+      },
+      {
+        "file": "public/sprites/enemies/samurai_master_atk_1.png",
+        "width": 64,
+        "height": 64
+      },
+      {
+        "file": "public/sprites/enemies/samurai_master_atk_2.png",
+        "width": 64,
+        "height": 64
+      },
+      {
+        "file": "public/sprites/enemies/samurai_master_dmg_0.png",
+        "width": 64,
+        "height": 64
+      },
+      {
+        "file": "public/sprites/enemies/samurai_master_dmg_1.png",
+        "width": 64,
+        "height": 64
+      },
+      {
+        "file": "public/sprites/enemies/samurai_master_dead_0.png",
+        "width": 64,
+        "height": 64
+      },
+      {
+        "file": "public/sprites/enemies/samurai_master_dead_1.png",
+        "width": 64,
+        "height": 64
+      },
+      {
+        "file": "public/sprites/enemies/samurai_master_dead_2.png",
+        "width": 64,
+        "height": 64
+      }
+    ],
+    "shadow_twin": [
+      {
+        "file": "public/sprites/enemies/shadow_twin_move_0.png",
+        "width": 64,
+        "height": 64
+      },
+      {
+        "file": "public/sprites/enemies/shadow_twin_move_1.png",
+        "width": 64,
+        "height": 64
+      },
+      {
+        "file": "public/sprites/enemies/shadow_twin_atk_0.png",
+        "width": 64,
+        "height": 64
+      },
+      {
+        "file": "public/sprites/enemies/shadow_twin_atk_1.png",
+        "width": 64,
+        "height": 64
+      },
+      {
+        "file": "public/sprites/enemies/shadow_twin_atk_2.png",
+        "width": 64,
+        "height": 64
+      },
+      {
+        "file": "public/sprites/enemies/shadow_twin_dmg_0.png",
+        "width": 64,
+        "height": 64
+      },
+      {
+        "file": "public/sprites/enemies/shadow_twin_dmg_1.png",
+        "width": 64,
+        "height": 64
+      },
+      {
+        "file": "public/sprites/enemies/shadow_twin_dead_0.png",
+        "width": 64,
+        "height": 64
+      },
+      {
+        "file": "public/sprites/enemies/shadow_twin_dead_1.png",
+        "width": 64,
+        "height": 64
+      },
+      {
+        "file": "public/sprites/enemies/shadow_twin_dead_2.png",
+        "width": 64,
+        "height": 64
+      }
+    ],
+    "queen_of_shadow": [
+      {
+        "file": "public/sprites/enemies/queen_of_shadow_move_0.png",
+        "width": 64,
+        "height": 64
+      },
+      {
+        "file": "public/sprites/enemies/queen_of_shadow_move_1.png",
+        "width": 64,
+        "height": 64
+      },
+      {
+        "file": "public/sprites/enemies/queen_of_shadow_atk_0.png",
+        "width": 64,
+        "height": 64
+      },
+      {
+        "file": "public/sprites/enemies/queen_of_shadow_atk_1.png",
+        "width": 64,
+        "height": 64
+      },
+      {
+        "file": "public/sprites/enemies/queen_of_shadow_atk_2.png",
+        "width": 64,
+        "height": 64
+      },
+      {
+        "file": "public/sprites/enemies/queen_of_shadow_dmg_0.png",
+        "width": 64,
+        "height": 64
+      },
+      {
+        "file": "public/sprites/enemies/queen_of_shadow_dmg_1.png",
+        "width": 64,
+        "height": 64
+      },
+      {
+        "file": "public/sprites/enemies/queen_of_shadow_dead_0.png",
+        "width": 64,
+        "height": 64
+      },
+      {
+        "file": "public/sprites/enemies/queen_of_shadow_dead_1.png",
+        "width": 64,
+        "height": 64
+      },
+      {
+        "file": "public/sprites/enemies/queen_of_shadow_dead_2.png",
+        "width": 64,
+        "height": 64
+      }
+    ],
+    "mind_controller": [
+      {
+        "file": "public/sprites/enemies/mind_controller_move_0.png",
+        "width": 64,
+        "height": 64
+      },
+      {
+        "file": "public/sprites/enemies/mind_controller_move_1.png",
+        "width": 64,
+        "height": 64
+      },
+      {
+        "file": "public/sprites/enemies/mind_controller_atk_0.png",
+        "width": 64,
+        "height": 64
+      },
+      {
+        "file": "public/sprites/enemies/mind_controller_atk_1.png",
+        "width": 64,
+        "height": 64
+      },
+      {
+        "file": "public/sprites/enemies/mind_controller_atk_2.png",
+        "width": 64,
+        "height": 64
+      },
+      {
+        "file": "public/sprites/enemies/mind_controller_dmg_0.png",
+        "width": 64,
+        "height": 64
+      },
+      {
+        "file": "public/sprites/enemies/mind_controller_dmg_1.png",
+        "width": 64,
+        "height": 64
+      },
+      {
+        "file": "public/sprites/enemies/mind_controller_dead_0.png",
+        "width": 64,
+        "height": 64
+      },
+      {
+        "file": "public/sprites/enemies/mind_controller_dead_1.png",
+        "width": 64,
+        "height": 64
+      },
+      {
+        "file": "public/sprites/enemies/mind_controller_dead_2.png",
+        "width": 64,
+        "height": 64
+      }
+    ],
+    "overload": [
+      {
+        "file": "public/sprites/enemies/overload_move_0.png",
+        "width": 64,
+        "height": 64
+      },
+      {
+        "file": "public/sprites/enemies/overload_move_1.png",
+        "width": 64,
+        "height": 64
+      },
+      {
+        "file": "public/sprites/enemies/overload_atk_0.png",
+        "width": 64,
+        "height": 64
+      },
+      {
+        "file": "public/sprites/enemies/overload_atk_1.png",
+        "width": 64,
+        "height": 64
+      },
+      {
+        "file": "public/sprites/enemies/overload_atk_2.png",
+        "width": 64,
+        "height": 64
+      },
+      {
+        "file": "public/sprites/enemies/overload_dmg_0.png",
+        "width": 64,
+        "height": 64
+      },
+      {
+        "file": "public/sprites/enemies/overload_dmg_1.png",
+        "width": 64,
+        "height": 64
+      },
+      {
+        "file": "public/sprites/enemies/overload_dead_0.png",
+        "width": 64,
+        "height": 64
+      },
+      {
+        "file": "public/sprites/enemies/overload_dead_1.png",
+        "width": 64,
+        "height": 64
+      },
+      {
+        "file": "public/sprites/enemies/overload_dead_2.png",
+        "width": 64,
+        "height": 64
+      }
+    ],
+    "time_eater": [
+      {
+        "file": "public/sprites/enemies/time_eater_move_0.png",
+        "width": 64,
+        "height": 64
+      },
+      {
+        "file": "public/sprites/enemies/time_eater_move_1.png",
+        "width": 64,
+        "height": 64
+      },
+      {
+        "file": "public/sprites/enemies/time_eater_atk_0.png",
+        "width": 64,
+        "height": 64
+      },
+      {
+        "file": "public/sprites/enemies/time_eater_atk_1.png",
+        "width": 64,
+        "height": 64
+      },
+      {
+        "file": "public/sprites/enemies/time_eater_atk_2.png",
+        "width": 64,
+        "height": 64
+      },
+      {
+        "file": "public/sprites/enemies/time_eater_dmg_0.png",
+        "width": 64,
+        "height": 64
+      },
+      {
+        "file": "public/sprites/enemies/time_eater_dmg_1.png",
+        "width": 64,
+        "height": 64
+      },
+      {
+        "file": "public/sprites/enemies/time_eater_dead_0.png",
+        "width": 64,
+        "height": 64
+      },
+      {
+        "file": "public/sprites/enemies/time_eater_dead_1.png",
+        "width": 64,
+        "height": 64
+      },
+      {
+        "file": "public/sprites/enemies/time_eater_dead_2.png",
+        "width": 64,
+        "height": 64
+      }
+    ],
+    "eternal_core": [
+      {
+        "file": "public/sprites/enemies/eternal_core_move_0.png",
+        "width": 64,
+        "height": 64
+      },
+      {
+        "file": "public/sprites/enemies/eternal_core_move_1.png",
+        "width": 64,
+        "height": 64
+      },
+      {
+        "file": "public/sprites/enemies/eternal_core_atk_0.png",
+        "width": 64,
+        "height": 64
+      },
+      {
+        "file": "public/sprites/enemies/eternal_core_atk_1.png",
+        "width": 64,
+        "height": 64
+      },
+      {
+        "file": "public/sprites/enemies/eternal_core_atk_2.png",
+        "width": 64,
+        "height": 64
+      },
+      {
+        "file": "public/sprites/enemies/eternal_core_dmg_0.png",
+        "width": 64,
+        "height": 64
+      },
+      {
+        "file": "public/sprites/enemies/eternal_core_dmg_1.png",
+        "width": 64,
+        "height": 64
+      },
+      {
+        "file": "public/sprites/enemies/eternal_core_dead_0.png",
+        "width": 64,
+        "height": 64
+      },
+      {
+        "file": "public/sprites/enemies/eternal_core_dead_1.png",
+        "width": 64,
+        "height": 64
+      },
+      {
+        "file": "public/sprites/enemies/eternal_core_dead_2.png",
+        "width": 64,
+        "height": 64
+      }
+    ],
+    "final_boss": [
+      {
+        "file": "public/sprites/enemies/final_boss_move_0.png",
+        "width": 64,
+        "height": 64
+      },
+      {
+        "file": "public/sprites/enemies/final_boss_move_1.png",
+        "width": 64,
+        "height": 64
+      },
+      {
+        "file": "public/sprites/enemies/final_boss_atk_0.png",
+        "width": 64,
+        "height": 64
+      },
+      {
+        "file": "public/sprites/enemies/final_boss_atk_1.png",
+        "width": 64,
+        "height": 64
+      },
+      {
+        "file": "public/sprites/enemies/final_boss_atk_2.png",
+        "width": 64,
+        "height": 64
+      },
+      {
+        "file": "public/sprites/enemies/final_boss_dmg_0.png",
+        "width": 64,
+        "height": 64
+      },
+      {
+        "file": "public/sprites/enemies/final_boss_dmg_1.png",
+        "width": 64,
+        "height": 64
+      },
+      {
+        "file": "public/sprites/enemies/final_boss_dead_0.png",
+        "width": 64,
+        "height": 64
+      },
+      {
+        "file": "public/sprites/enemies/final_boss_dead_1.png",
+        "width": 64,
+        "height": 64
+      },
+      {
+        "file": "public/sprites/enemies/final_boss_dead_2.png",
+        "width": 64,
+        "height": 64
+      }
+    ]
+  },
+  "weapons": {
+    "machine_punch": {
+      "file": "public/sprites/weapons/machine_punch.png",
+      "width": 16,
+      "height": 16
+    },
+    "blade_arm": {
+      "file": "public/sprites/weapons/blade_arm.png",
+      "width": 16,
+      "height": 16
+    },
+    "double_blade": {
+      "file": "public/sprites/weapons/double_blade.png",
+      "width": 16,
+      "height": 16
+    },
+    "tri_cutter": {
+      "file": "public/sprites/weapons/tri_cutter.png",
+      "width": 16,
+      "height": 16
+    },
+    "heavy_axe": {
+      "file": "public/sprites/weapons/heavy_axe.png",
+      "width": 16,
+      "height": 16
+    },
+    "chainsaw": {
+      "file": "public/sprites/weapons/chainsaw.png",
+      "width": 16,
+      "height": 16
+    },
+    "plasma_blade": {
+      "file": "public/sprites/weapons/plasma_blade.png",
+      "width": 16,
+      "height": 16
+    },
+    "thunder_hammer": {
+      "file": "public/sprites/weapons/thunder_hammer.png",
+      "width": 16,
+      "height": 16
+    },
+    "muramasa_blade": {
+      "file": "public/sprites/weapons/muramasa_blade.png",
+      "width": 16,
+      "height": 16
+    },
+    "machine_gun": {
+      "file": "public/sprites/weapons/machine_gun.png",
+      "width": 16,
+      "height": 16
+    },
+    "shotgun": {
+      "file": "public/sprites/weapons/shotgun.png",
+      "width": 16,
+      "height": 16
+    },
+    "sniper_rifle": {
+      "file": "public/sprites/weapons/sniper_rifle.png",
+      "width": 16,
+      "height": 16
+    },
+    "missile_pod": {
+      "file": "public/sprites/weapons/missile_pod.png",
+      "width": 16,
+      "height": 16
+    },
+    "homing_missile": {
+      "file": "public/sprites/weapons/homing_missile.png",
+      "width": 16,
+      "height": 16
+    },
+    "laser_cannon": {
+      "file": "public/sprites/weapons/laser_cannon.png",
+      "width": 16,
+      "height": 16
+    },
+    "plasma_cannon": {
+      "file": "public/sprites/weapons/plasma_cannon.png",
+      "width": 16,
+      "height": 16
+    },
+    "meteor_launcher": {
+      "file": "public/sprites/weapons/meteor_launcher.png",
+      "width": 16,
+      "height": 16
+    },
+    "emp_pulse": {
+      "file": "public/sprites/weapons/emp_pulse.png",
+      "width": 16,
+      "height": 16
+    },
+    "gravity_well": {
+      "file": "public/sprites/weapons/gravity_well.png",
+      "width": 16,
+      "height": 16
+    },
+    "freeze_ray": {
+      "file": "public/sprites/weapons/freeze_ray.png",
+      "width": 16,
+      "height": 16
+    },
+    "shield_bash": {
+      "file": "public/sprites/weapons/shield_bash.png",
+      "width": 16,
+      "height": 16
+    },
+    "drain_lance": {
+      "file": "public/sprites/weapons/drain_lance.png",
+      "width": 16,
+      "height": 16
+    },
+    "time_bomb": {
+      "file": "public/sprites/weapons/time_bomb.png",
+      "width": 16,
+      "height": 16
+    }
+  },
+  "items": {
+    "recovery": {
+      "file": "public/sprites/items/recovery.png",
+      "width": 16,
+      "height": 16
+    },
+    "weapon": {
+      "file": "public/sprites/items/weapon.png",
+      "width": 16,
+      "height": 16
+    },
+    "exploration": {
+      "file": "public/sprites/items/exploration.png",
+      "width": 16,
+      "height": 16
+    },
+    "combat": {
+      "file": "public/sprites/items/combat.png",
+      "width": 16,
+      "height": 16
+    },
+    "special": {
+      "file": "public/sprites/items/special.png",
+      "width": 16,
+      "height": 16
+    },
+    "machine_upgrade": {
+      "file": "public/sprites/items/machine_upgrade.png",
+      "width": 16,
+      "height": 16
+    },
+    "unidentified": {
+      "file": "public/sprites/items/unidentified.png",
+      "width": 16,
+      "height": 16
+    },
+    "material": {
+      "file": "public/sprites/items/material.png",
+      "width": 16,
+      "height": 16
+    }
+  },
+  "effects": {
+    "slash": [
+      {
+        "file": "public/sprites/effects/slash_0.png",
+        "width": 32,
+        "height": 32
+      },
+      {
+        "file": "public/sprites/effects/slash_1.png",
+        "width": 32,
+        "height": 32
+      }
+    ],
+    "bullet": [
+      {
+        "file": "public/sprites/effects/bullet_0.png",
+        "width": 32,
+        "height": 32
+      },
+      {
+        "file": "public/sprites/effects/bullet_1.png",
+        "width": 32,
+        "height": 32
+      }
+    ],
+    "explosion": [
+      {
+        "file": "public/sprites/effects/explosion_0.png",
+        "width": 32,
+        "height": 32
+      },
+      {
+        "file": "public/sprites/effects/explosion_1.png",
+        "width": 32,
+        "height": 32
+      }
+    ]
+  },
+  "ui": {
+    "title_logo": {
+      "file": "public/sprites/ui/title_logo.png",
+      "width": 256,
+      "height": 64
+    },
+    "gameover": {
+      "file": "public/sprites/ui/gameover.png",
+      "width": 192,
+      "height": 48
+    }
+  },
+  "npc": {
+    "shop_npc": {
+      "file": "public/sprites/npc/shop_npc.png",
+      "width": 32,
+      "height": 32
+    },
+    "storage_npc": {
+      "file": "public/sprites/npc/storage_npc.png",
+      "width": 32,
+      "height": 32
+    },
+    "black_market_npc": {
+      "file": "public/sprites/npc/black_market_npc.png",
+      "width": 32,
+      "height": 32
+    }
+  }
+}

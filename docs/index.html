@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>メカローグ 開発者ドキュメント</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Segoe UI', 'Noto Sans JP', sans-serif;
+      background: #1a1a2e;
+      color: #e0e0e0;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 40px 20px;
+    }
+    h1 {
+      font-size: 2rem;
+      color: #7ecfff;
+      margin-bottom: 8px;
+      letter-spacing: 0.05em;
+    }
+    .subtitle {
+      color: #888;
+      margin-bottom: 40px;
+      font-size: 0.9rem;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 20px;
+      width: 100%;
+      max-width: 900px;
+    }
+    .card {
+      background: #16213e;
+      border: 1px solid #2a2a5e;
+      border-radius: 12px;
+      padding: 28px 24px;
+      text-decoration: none;
+      color: inherit;
+      transition: border-color 0.2s, transform 0.15s;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .card:hover {
+      border-color: #7ecfff;
+      transform: translateY(-2px);
+    }
+    .card-icon { font-size: 2rem; }
+    .card-title {
+      font-size: 1.1rem;
+      font-weight: bold;
+      color: #7ecfff;
+    }
+    .card-desc {
+      font-size: 0.85rem;
+      color: #aaa;
+      line-height: 1.5;
+    }
+    .card-meta {
+      font-size: 0.75rem;
+      color: #666;
+      margin-top: 4px;
+    }
+    footer {
+      margin-top: 60px;
+      color: #555;
+      font-size: 0.8rem;
+    }
+  </style>
+</head>
+<body>
+  <h1>メカローグ</h1>
+  <p class="subtitle">機甲迷宮探索記 - 開発者ドキュメント</p>
+  <div class="grid">
+    <a class="card" href="全敵.html">
+      <div class="card-icon">&#x2694;</div>
+      <div class="card-title">全敵一覧</div>
+      <div class="card-desc">122体の敵データ。ステータス、AI、派閥、装備ドロップ情報をフィルタリング表示。</div>
+      <div class="card-meta">enemies.json (122 entries)</div>
+    </a>
+    <a class="card" href="全ボス.html">
+      <div class="card-icon">&#x1F480;</div>
+      <div class="card-title">全ボス一覧</div>
+      <div class="card-desc">各フロアのボスデータ。特殊能力、弱点、攻略ヒントを確認できる。</div>
+      <div class="card-meta">bosses.json (14 entries)</div>
+    </a>
+    <a class="card" href="全アイテム.html">
+      <div class="card-icon">&#x1F4E6;</div>
+      <div class="card-title">全アイテム一覧</div>
+      <div class="card-desc">アイテム / 武器 / ツール・装備をタブで切り替えて確認。効果、価格、出現階情報付き。</div>
+      <div class="card-meta">items.json / weapons.json / tools-equipment.json</div>
+    </a>
+    <a class="card" href="全スプライト.html">
+      <div class="card-icon">&#x1F5BC;</div>
+      <div class="card-title">全スプライト確認</div>
+      <div class="card-desc">1643枚のスプライト画像をグリッド表示。敵名で絞り込み検索が可能。</div>
+      <div class="card-meta">public/sprites/enemies/ (1643 files)</div>
+    </a>
+    <a class="card" href="主人公.html">
+      <div class="card-icon">&#x1F916;</div>
+      <div class="card-title">主人公仕様</div>
+      <div class="card-desc">パイロット・マシンのステータス仕様。スキル一覧、パイロットスキル、レベルアップ経験値表。</div>
+      <div class="card-meta">game-state.ts / constants.ts / exp-table.json</div>
+    </a>
+    <a class="card" href="ショップ.html">
+      <div class="card-icon">&#x1F6D2;</div>
+      <div class="card-title">ショップ価格表</div>
+      <div class="card-desc">武器・アイテムの買値・売値一覧。非売品の区別、修理コスト確認。フィルター・ソート対応。</div>
+      <div class="card-meta">shop-prices.json / weapons.json / items.json</div>
+    </a>
+  </div>
+  <footer>mecha-rogue dev docs - generated 2026-03-23</footer>
+</body>
+</html>
