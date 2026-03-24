@@ -241,13 +241,18 @@ function directionToDelta(dir: Direction): { dx: number; dy: number } {
 
 /**
  * 指定座標に敵がいるか確認し、いれば返す。
+ * bossSize を持つ多タイルボスは、占有する全タイルで照合する。
  *
  * @param enemies - 敵リスト
  * @param pos - 確認する座標
  * @returns 敵がいれば Enemy、いなければ undefined
  */
 function enemyAt(enemies: Enemy[], pos: Position): Enemy | undefined {
-  return enemies.find((e) => e.pos.x === pos.x && e.pos.y === pos.y);
+  return enemies.find((e) => {
+    const size = e.bossSize ?? 1;
+    return pos.x >= e.pos.x && pos.x < e.pos.x + size &&
+           pos.y >= e.pos.y && pos.y < e.pos.y + size;
+  });
 }
 
 /**

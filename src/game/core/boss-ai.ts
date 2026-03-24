@@ -168,24 +168,47 @@ export function decideBossAction(
 // 汎用ヘルパー
 // ---------------------------------------------------------------------------
 
+/**
+ * ボスの占有タイル端からターゲットまでのマンハッタン距離を返す。
+ * 1×1 の通常敵でも bossSize=1 として正しく動作する。
+ */
+function bossEdgeDist(boss: Enemy, target: Position): number {
+  const size = boss.bossSize ?? 1;
+  const dx = Math.max(0, Math.max(boss.pos.x - target.x, target.x - (boss.pos.x + size - 1)));
+  const dy = Math.max(0, Math.max(boss.pos.y - target.y, target.y - (boss.pos.y + size - 1)));
+  return dx + dy;
+}
+
 /** 単純な追跡と隣接時の攻撃を決定する（boss-ai用） */
 function decideChaseWithAttack(
   enemy: Enemy,
   playerPos: Position,
   state: GameState,
 ): EnemyAction {
-  const dist = manhattanDistance(enemy.pos, playerPos);
-  if (dist === 1) return { type: 'attack', targetId: 'player' };
+  // 攻撃距離：ボス占有タイルのエッジからプレイヤーまで 1 マス
+  if (bossEdgeDist(enemy, playerPos) === 1) {
+    return { type: 'attack', targetId: 'player' };
+  }
 
+  const size = enemy.bossSize ?? 1;
   const map = state.map!;
   const step = nextStep(enemy.pos, playerPos, map);
 
-  // 衝突チェック
+  // 衝突チェック：size×size タイル全体が歩行可能かつ非占有かを確認
   if (step.x !== enemy.pos.x || step.y !== enemy.pos.y) {
     const otherEnemies = state.enemies.filter((e) => e.id !== enemy.id);
-    const blocked = otherEnemies.some(
-      (e) => e.pos.x === step.x && e.pos.y === step.y,
-    );
+    let blocked = false;
+    outer: for (let dx = 0; dx < size; dx++) {
+      for (let dy = 0; dy < size; dy++) {
+        const checkPos = { x: step.x + dx, y: step.y + dy };
+        if (!isWalkable(getTileAt(map, checkPos))) { blocked = true; break outer; }
+        if (otherEnemies.some((e) => {
+          const es = e.bossSize ?? 1;
+          return checkPos.x >= e.pos.x && checkPos.x < e.pos.x + es &&
+                 checkPos.y >= e.pos.y && checkPos.y < e.pos.y + es;
+        })) { blocked = true; break outer; }
+      }
+    }
     if (!blocked) return { type: 'move', to: step };
   }
 
