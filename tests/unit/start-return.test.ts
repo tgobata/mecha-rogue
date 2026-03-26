@@ -221,10 +221,10 @@ describe('applyStartReturn: 維持される情報', () => {
     expect(result.machine.appliedParts).toEqual(state.machine.appliedParts);
   });
 
-  it('pilot.level が維持されている', () => {
+  it('pilot.level が 1 にリセットされる', () => {
     const state = createDyingState();
     const result = applyStartReturn(state, 42);
-    expect(result.pilot.level).toBe(state.pilot.level);
+    expect(result.pilot.level).toBe(1);
   });
 
   it('pilot.allocatedSkills が維持されている', () => {

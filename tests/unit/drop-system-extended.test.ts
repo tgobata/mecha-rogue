@@ -34,7 +34,7 @@ describe('ドロップ確率: gold の統計的検証（10000 回）', () => {
     // ±20% → 5*0.8=4.0〜5*1.2=6.0, Math.round → 4〜6
     for (let i = 0; i < N; i++) {
       const rng = makeSeedRng(i * 31 + 7);
-      const drops = rollDrops('scout_drone', 1, rng);
+      const drops = rollDrops('scout_drone_lv1', 1, rng);
       const gold = drops.find((d) => d.type === 'gold');
       expect(gold).toBeDefined();
       expect(gold!.amount).toBeGreaterThanOrEqual(4);
@@ -46,7 +46,7 @@ describe('ドロップ確率: gold の統計的検証（10000 回）', () => {
     const N = 10000;
     for (let i = 0; i < N; i++) {
       const rng = makeSeedRng(i * 13 + 3);
-      const drops = rollDrops('death_machine', 26, rng);
+      const drops = rollDrops('death_machine_lv1', 26, rng);
       const gold = drops.find((d) => d.type === 'gold');
       expect(gold).toBeDefined();
       // 96〜144 の範囲
@@ -61,7 +61,7 @@ describe('ドロップ確率: gold の統計的検証（10000 回）', () => {
     const N = 10000;
     for (let i = 0; i < N; i++) {
       const rng = makeSeedRng(i * 17 + 5);
-      const drops = rollDrops('guard_bot', 2, rng);
+      const drops = rollDrops('guard_bot_lv1', 2, rng);
       const gold = drops.find((d) => d.type === 'gold');
       expect(gold).toBeDefined();
       expect(gold!.amount).toBeGreaterThanOrEqual(10);
@@ -75,7 +75,7 @@ describe('ドロップ確率: gold の統計的検証（10000 回）', () => {
     let total = 0;
     for (let i = 0; i < N; i++) {
       const rng = makeSeedRng(i * 23 + 11);
-      const drops = rollDrops('scout_drone', 1, rng);
+      const drops = rollDrops('scout_drone_lv1', 1, rng);
       const gold = drops.find((d) => d.type === 'gold');
       total += gold!.amount!;
     }
@@ -98,7 +98,7 @@ describe('ドロップ確率: enemy_drop_rate 統計的検証（10000 回）', (
     let dropCount = 0;
     for (let i = 0; i < N; i++) {
       const rng = makeSeedRng(i * 41 + 19);
-      const drops = rollDrops('scout_drone', 1, rng);
+      const drops = rollDrops('scout_drone_lv1', 1, rng);
       const hasItem = drops.some((d) => d.type !== 'gold');
       if (hasItem) dropCount++;
     }
@@ -111,7 +111,7 @@ describe('ドロップ確率: enemy_drop_rate 統計的検証（10000 回）', (
     const validTypes = new Set(['weapon', 'item', 'tool']);
     for (let i = 0; i < 1000; i++) {
       const rng = makeSeedRng(i);
-      const drops = rollDrops('scout_drone', 1, rng);
+      const drops = rollDrops('scout_drone_lv1', 1, rng);
       for (const drop of drops) {
         if (drop.type !== 'gold') {
           expect(validTypes.has(drop.type)).toBe(true);
@@ -121,13 +121,14 @@ describe('ドロップ確率: enemy_drop_rate 統計的検証（10000 回）', (
   });
 
   it('weapon/item/tool の比率が drop-tables.json の重みに概ね対応している（5000 回）', () => {
-    // scout_drone のドロップ重み: item x4(合計90), weapon x1(10), tool 0
-    // 実際の比率: weapon≈10%, item≈90%, tool=0%
+    // scout_drone_lv3 のドロップ重み: item x4(合計88), weapon x1(12), tool 0
+    // 実際の比率: weapon≈12%, item≈88%, tool=0%
+    // appearsFrom=8 なのでフロア8で検証
     const counts = { weapon: 0, item: 0, tool: 0 };
     let itemTotal = 0;
     for (let i = 0; i < 5000; i++) {
       const rng = makeSeedRng(i * 7 + 3);
-      const drops = rollDrops('scout_drone', 1, rng);
+      const drops = rollDrops('scout_drone_lv3', 8, rng);
       for (const drop of drops) {
         if (drop.type === 'weapon' || drop.type === 'item' || drop.type === 'tool') {
           counts[drop.type]++;
@@ -138,10 +139,10 @@ describe('ドロップ確率: enemy_drop_rate 統計的検証（10000 回）', (
     if (itemTotal > 0) {
       const weaponRate = counts.weapon / itemTotal;
       const itemRate = counts.item / itemTotal;
-      // scout_drone: weapon weight=10/100=10%, item weight=90/100=90%
+      // scout_drone_lv3: weapon weight=12/100=12%, item weight=88/100=88%
       expect(weaponRate).toBeGreaterThanOrEqual(0.05);
-      expect(weaponRate).toBeLessThanOrEqual(0.20);
-      expect(itemRate).toBeGreaterThanOrEqual(0.80);
+      expect(weaponRate).toBeLessThanOrEqual(0.25);
+      expect(itemRate).toBeGreaterThanOrEqual(0.75);
       expect(itemRate).toBeLessThanOrEqual(0.95);
     }
   });
@@ -155,8 +156,8 @@ describe('ドロップ再現性: 同一シードで同一結果', () => {
   it('同じシードの RNG で rollDrops を呼ぶと同じ結果になる', () => {
     const rng1 = makeSeedRng(12345);
     const rng2 = makeSeedRng(12345);
-    const result1 = rollDrops('scout_drone', 1, rng1);
-    const result2 = rollDrops('scout_drone', 1, rng2);
+    const result1 = rollDrops('scout_drone_lv1', 1, rng1);
+    const result2 = rollDrops('scout_drone_lv1', 1, rng2);
     expect(result1).toEqual(result2);
   });
 
@@ -166,8 +167,8 @@ describe('ドロップ再現性: 同一シードで同一結果', () => {
     for (let i = 0; i < N; i++) {
       const rng1 = makeSeedRng(i * 1000);
       const rng2 = makeSeedRng(i * 1000 + 1);
-      const r1 = rollDrops('scout_drone', 1, rng1);
-      const r2 = rollDrops('scout_drone', 1, rng2);
+      const r1 = rollDrops('scout_drone_lv1', 1, rng1);
+      const r2 = rollDrops('scout_drone_lv1', 1, rng2);
       if (JSON.stringify(r1) === JSON.stringify(r2)) sameCount++;
     }
     // 偶然一致する確率は低い（gold だけなら近い値になりやすいが、gold ±20% の範囲が狭いため完全一致も起こる）
@@ -217,7 +218,7 @@ describe('フロア別 gold は常に正値', () => {
     const floors = [1, 5, 6, 10, 11, 20, 21, 30, 31, 40];
     for (const floor of floors) {
       const rng = makeSeedRng(floor * 137);
-      const drops = rollDrops('scout_drone', floor, rng);
+      const drops = rollDrops('scout_drone_lv1', floor, rng);
       const gold = drops.find((d) => d.type === 'gold');
       expect(gold).toBeDefined();
       expect(gold!.amount).toBeGreaterThan(0);

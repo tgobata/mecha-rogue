@@ -860,6 +860,9 @@ function processEnemyActions(
                 const updatedShieldSlots = broke
                   ? (newPlayer.shieldSlots ?? []).filter(s => s.shieldId !== newPlayer.equippedShield!.shieldId)
                   : (newPlayer.shieldSlots ?? []).map(s => s.shieldId === newPlayer.equippedShield!.shieldId ? { ...s, durability: newDur } : s);
+                if (broke) {
+                  enemyEventMessages.push(`盾「${newPlayer.equippedShield.name}」が壊れた！`);
+                }
                 newPlayer = { ...newPlayer, equippedShield: updatedShield, shieldSlots: updatedShieldSlots };
               }
               if (newPlayer.equippedArmor && newPlayer.equippedArmor.durability > 0 && Math.random() < 0.5) {
@@ -869,6 +872,9 @@ function processEnemyActions(
                 const updatedArmorSlots = broke
                   ? (newPlayer.armorSlots ?? []).filter(a => a.armorId !== newPlayer.equippedArmor!.armorId)
                   : (newPlayer.armorSlots ?? []).map(a => a.armorId === newPlayer.equippedArmor!.armorId ? { ...a, durability: newDur } : a);
+                if (broke) {
+                  enemyEventMessages.push(`防具「${newPlayer.equippedArmor.name}」が壊れた！`);
+                }
                 newPlayer = { ...newPlayer, equippedArmor: updatedArmor, armorSlots: updatedArmorSlots };
               }
             }
@@ -1238,10 +1244,22 @@ function processDefeatedEnemies(
     inventory = { ...inventory, gold: inventory.gold + goldGained };
   }
   if (droppedItems.length > 0) {
-    inventory = { ...inventory, items: [...inventory.items, ...droppedItems] };
+    // ポーチ容量を超えないようにドロップアイテムを制限する
+    const maxPouch = stateAfterExp.machine.itemPouch;
+    const freeSlots = Math.max(0, maxPouch - inventory.items.length);
+    const itemsToAdd = droppedItems.slice(0, freeSlots);
+    if (itemsToAdd.length > 0) {
+      inventory = { ...inventory, items: [...inventory.items, ...itemsToAdd] };
+    }
   }
   if (droppedWeapons.length > 0) {
-    inventory = { ...inventory, equippedWeapons: [...inventory.equippedWeapons, ...droppedWeapons] };
+    // 武器スロット容量を超えないようにドロップ武器を制限する
+    const maxWeaponSlots = stateAfterExp.machine.weaponSlots;
+    const freeWeaponSlots = Math.max(0, maxWeaponSlots - inventory.equippedWeapons.length);
+    const weaponsToAdd = droppedWeapons.slice(0, freeWeaponSlots);
+    if (weaponsToAdd.length > 0) {
+      inventory = { ...inventory, equippedWeapons: [...inventory.equippedWeapons, ...weaponsToAdd] };
+    }
   }
 
   return {

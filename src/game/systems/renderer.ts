@@ -216,7 +216,13 @@ export function getDefaultSpriteList(): Array<[name: string, url: string]> {
     }
   }
 
-  return list;
+  // 重複エントリを除去（先勝ち）
+  const seen = new Set<string>();
+  return list.filter(([name]) => {
+    if (seen.has(name)) return false;
+    seen.add(name);
+    return true;
+  });
 }
 
 // ---------------------------------------------------------------------------
@@ -552,11 +558,18 @@ export function renderGame(
         const normalOffset   = (normalDrawSize - tileSize) / 2;
         ctx.drawImage(enemySprite, drawX - normalOffset, drawY - normalOffset, normalDrawSize, normalDrawSize);
       }
-      // hit 状態のとき赤フラッシュオーバーレイを重ねる
+      // hit 状態のとき赤フラッシュオーバーレイを重ねる（ボスは占有全タイルに適用）
       if (enemyAnim === 'hit') {
         ctx.shadowBlur = 0;
         ctx.fillStyle = 'rgba(255, 34, 0, 0.45)';
-        ctx.fillRect(drawX, drawY, tileSize, tileSize);
+        if (isBoss) {
+          const bossTileCount2 = enemy.bossSize ?? 2;
+          const bossDrawSize2  = tileSize * bossTileCount2;
+          const bossOffset2    = (bossDrawSize2 - tileSize) / 2;
+          ctx.fillRect(drawX - bossOffset2, drawY - bossOffset2, bossDrawSize2, bossDrawSize2);
+        } else {
+          ctx.fillRect(drawX, drawY, tileSize, tileSize);
+        }
       }
     } else {
       // フォールバック: 赤の丸（視認しやすい）
@@ -581,12 +594,14 @@ export function renderGame(
       ctx.shadowBlur = 0;
     }
 
-    // 敵HPバー（視認性向上）
+    // 敵HPバー（視認性向上）ボスは bossSize 分の幅で描画
     const hpRatio = enemy.hp / enemy.maxHp;
-    const barW    = tileSize - 2;
+    const hpBarTiles = isBoss ? (enemy.bossSize ?? 2) : 1;
+    const hpBossOffset = isBoss ? ((hpBarTiles * tileSize - tileSize) / 2) : 0;
+    const barW    = hpBarTiles * tileSize - 2;
     const barH    = Math.max(3, Math.floor(tileSize * 0.12));
-    const barX    = drawX + 1;
-    const barY    = drawY + 1;
+    const barX    = drawX - hpBossOffset + 1;
+    const barY    = drawY - hpBossOffset + 1;
 
     ctx.fillStyle = '#440000';
     ctx.fillRect(barX, barY, barW, barH);

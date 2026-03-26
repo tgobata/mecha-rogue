@@ -207,8 +207,8 @@ describe('AI: guard（守衛）', () => {
 
 describe('AI: sniper（遠距離）', () => {
   it('視線が通っていれば attack を返す', () => {
-    const enemy = makeEnemy({ x: 1, y: 4 }, 'sniper');
-    const state = makeState(enemy, { x: 5, y: 4 }); // 同じ行、視線あり
+    const enemy = makeEnemy({ x: 1, y: 4 }, 'sniper', { attackRange: 5 } as any);
+    const state = makeState(enemy, { x: 5, y: 4 }); // 同じ行、視線あり、距離4≤range5
     const action = decideEnemyAction(enemy, state, rngFixed05);
     expect(action.type).toBe('attack');
   });

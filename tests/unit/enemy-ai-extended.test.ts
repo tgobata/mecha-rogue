@@ -245,8 +245,8 @@ describe('AI: guard（守衛）詳細検証', () => {
 describe('AI: sniper（遠距離）詳細検証', () => {
   it('視線が通っていれば遠距離でも attack', () => {
     const floor = makeOpenFloor();
-    const enemy = makeEnemy({ x: 1, y: 5 }, 'sniper');
-    const state = makeState(enemy, { x: 8, y: 5 }, floor); // 同行・視線あり
+    const enemy = makeEnemy({ x: 1, y: 5 }, 'sniper', { attackRange: 8 } as any);
+    const state = makeState(enemy, { x: 8, y: 5 }, floor); // 同行・視線あり、距離7≤range8
     const action = decideEnemyAction(enemy, state, () => 0.5);
     expect(action.type).toBe('attack');
     if (action.type === 'attack') {
