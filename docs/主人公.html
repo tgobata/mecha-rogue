@@ -234,58 +234,103 @@
   <!-- スキル一覧（battle skills）-->
   <div class="content" id="tab-skills">
     <h2>バトルスキル一覧</h2>
+
+    <h3>スキルシステム概要</h3>
     <div class="note">
-      レベルアップ時に1つ習得（選択式）。アクティブスキルはエネルギー・クールダウン有り。
-      パッシブスキルは常時発動。同一スキルは1回のみ習得可能。
+      スキルは <strong>レベルアップ時に1つ選んで習得</strong>する。<br>
+      同じスキルを2回習得することはできない。ボス撃破と同時にレベルアップした場合は、<strong>ボス撃破演出が終わってからダイアログが表示</strong>される。
     </div>
+
+    <h3>2種類のスキル</h3>
+    <table>
+      <thead>
+        <tr><th>種別</th><th>説明</th><th>操作方法</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><span class="badge badge-active">アクティブ</span></td>
+          <td>手動で使う。使うとクールダウン(CD)がセットされ、0になるまで再使用不可。<br>CDは<strong>毎ターン末に-1</strong>ずつ減る。</td>
+          <td>PC: 数字キー <code>1</code>/<code>2</code>/<code>3</code>…（スロット順）<br>スマホ: 仮想コントローラーのスキルボタン（CD残数表示あり）</td>
+        </tr>
+        <tr>
+          <td><span class="badge badge-passive">パッシブ</span></td>
+          <td>習得するだけで<strong>常時自動発動</strong>。操作は不要。</td>
+          <td>なし（自動）</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <h3>スキル詳細</h3>
     <table>
       <thead>
         <tr>
-          <th>スキルID</th>
+          <th>スキル名</th>
           <th>種別</th>
-          <th>クールダウン</th>
-          <th>効果</th>
+          <th>解放Lv</th>
+          <th>CD</th>
+          <th>効果詳細</th>
         </tr>
       </thead>
       <tbody>
         <tr class="skill-row-active">
-          <td class="id-cell">power_strike</td>
+          <td class="param">バリア<br><span class="id-cell">barrier</span></td>
           <td><span class="badge badge-active">アクティブ</span></td>
-          <td class="val">5ターン</td>
-          <td class="effect-cell">ATK×2の一撃を与える。</td>
-        </tr>
-        <tr class="skill-row-active">
-          <td class="id-cell">barrier</td>
-          <td><span class="badge badge-active">アクティブ</span></td>
+          <td class="val">Lv 2</td>
           <td class="val">4ターン</td>
-          <td class="effect-cell">1ターン DEF+10のバリアを張る。</td>
+          <td class="effect-cell"><code>shielded</code>状態を1ターン付与。その間 DEF+10。<br>
+            ※ DEF+10は被ダメージ計算で参照される。攻撃を受けないと恩恵なし。</td>
         </tr>
         <tr class="skill-row-active">
-          <td class="id-cell">overcharge</td>
+          <td class="param">パワーストライク<br><span class="id-cell">power_strike</span></td>
           <td><span class="badge badge-active">アクティブ</span></td>
+          <td class="val">Lv 3</td>
+          <td class="val">5ターン</td>
+          <td class="effect-cell">使用した瞬間に <code>player.atk</code> を×2にする。<br>
+            ⚠️ <strong>使用後すぐ（同ターン内）に攻撃しないと恩恵が薄い</strong>。<br>
+            スキル使用 → 移動 → 攻撃 の順より、スキル使用 → 攻撃 が望ましい。</td>
+        </tr>
+        <tr class="skill-row-passive">
+          <td class="param">リジェネ<br><span class="id-cell">passive_regen</span></td>
+          <td><span class="badge badge-passive">パッシブ</span></td>
+          <td class="val">Lv 4</td>
+          <td class="val">-</td>
+          <td class="effect-cell">毎ターン開始時に HP+1 自動回復（上限: maxHP）。<br>
+            機体HPも同様に+1回復する。</td>
+        </tr>
+        <tr class="skill-row-active">
+          <td class="param">オーバーチャージ<br><span class="id-cell">overcharge</span></td>
+          <td><span class="badge badge-active">アクティブ</span></td>
+          <td class="val">Lv 5</td>
           <td class="val">6ターン</td>
-          <td class="effect-cell">前方3マスの範囲攻撃を行う。</td>
+          <td class="effect-cell">今向いている方向の<strong>前方3マス全ての敵</strong>にダメージを与える。<br>
+            壁を貫通しない。複数の敵がいれば全員に当たる。</td>
         </tr>
         <tr class="skill-row-passive">
-          <td class="id-cell">passive_regen</td>
+          <td class="param">タフネス<br><span class="id-cell">passive_tough</span></td>
           <td><span class="badge badge-passive">パッシブ</span></td>
+          <td class="val">Lv 6</td>
           <td class="val">-</td>
-          <td class="effect-cell">毎ターン HP+1 自動回復する。</td>
+          <td class="effect-cell">受けるダメージを常時<strong>-2軽減</strong>（ダメージ下限は1）。<br>
+            DEFとは別に計算される追加軽減。</td>
         </tr>
         <tr class="skill-row-passive">
-          <td class="id-cell">passive_tough</td>
+          <td class="param">スカベンジャー<br><span class="id-cell">passive_scavenger</span></td>
           <td><span class="badge badge-passive">パッシブ</span></td>
+          <td class="val">Lv 8</td>
           <td class="val">-</td>
-          <td class="effect-cell">受けるダメージを2軽減する（下限1）。</td>
-        </tr>
-        <tr class="skill-row-passive">
-          <td class="id-cell">passive_scavenger</td>
-          <td><span class="badge badge-passive">パッシブ</span></td>
-          <td class="val">-</td>
-          <td class="effect-cell">アイテムドロップ率が+20%になる。</td>
+          <td class="effect-cell">敵撃破時のアイテムドロップ率が<strong>+20%</strong>（加算ボーナス）。<br>
+            パイロットスキル「トレジャーハンター」との重複加算あり。</td>
         </tr>
       </tbody>
     </table>
+
+    <h3>スキル習得の流れ</h3>
+    <div class="note" style="line-height:1.9">
+      1. レベルアップ → ダイアログが開く<br>
+      2. 現在のレベルで<strong>解放条件(unlockLevel)を満たすスキル</strong>のうち、<strong>未習得のもの</strong>だけが選択肢に表示される<br>
+      3. 1つ選んで習得。選ばなかったスキルは次回レベルアップ時に再び選択肢に現れる<br>
+      4. 全スキルを習得済みの場合、ダイアログは表示されない
+    </div>
   </div>
 
   <!-- パイロットスキル（SP割り振り型）-->

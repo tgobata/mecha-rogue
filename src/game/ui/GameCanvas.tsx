@@ -2267,40 +2267,11 @@ export default function GameCanvas() {
               }}
             >
               {/* キーボード操作ガイド */}
-              <div style={{ minWidth: 170, flexShrink: 0 }}>
-                <div
-                  style={{
-                    display: "flex",
-                    alignItems: "baseline",
-                    gap: 8,
-                    marginBottom: 3,
-                  }}
-                >
-                  <span style={{ color: "#ffee88", fontWeight: "bold", fontSize: 11, flexShrink: 0 }}>
+              <div style={{ width: 170, flexShrink: 0 }}>
+                <div style={{ marginBottom: 3 }}>
+                  <span style={{ color: "#ffee88", fontWeight: "bold", fontSize: 11 }}>
                     キーボード操作
                   </span>
-                  {/* スキル習得済み表示（タイトル行に埋め込み） */}
-                  {gameState.skills.length > 0 && (
-                    <span style={{ fontSize: 9, color: "#aaaacc", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", maxWidth: 200 }}>
-                      {gameState.skills.filter(sk => getSkillDefinition(sk.id)?.type === "active").slice(0, 3).map((sk, i) => {
-                        const def = getSkillDefinition(sk.id);
-                        const ready = sk.cooldownRemaining === 0;
-                        return (
-                          <span key={sk.id}>
-                            {i > 0 && "  "}
-                            <span style={{ color: "#ffdd88" }}>[{i + 1}]</span>
-                            <span style={{ color: ready ? "#ccbbff" : "#666688" }}>{def?.name ?? sk.id}</span>
-                            {!ready && <span style={{ color: "#ff8866" }}>CD:{sk.cooldownRemaining}</span>}
-                          </span>
-                        );
-                      })}
-                      {gameState.skills.filter(sk => getSkillDefinition(sk.id)?.type === "passive").map(sk => (
-                        <span key={sk.id} style={{ color: "#7799bb" }}>
-                          {" "}✦{getSkillDefinition(sk.id)?.name ?? sk.id}
-                        </span>
-                      ))}
-                    </span>
-                  )}
                 </div>
                 <table style={{ borderCollapse: "collapse", width: "100%" }}>
                   <thead>
@@ -2381,6 +2352,56 @@ export default function GameCanvas() {
                     ))}
                   </tbody>
                 </table>
+
+                {/* スキル一覧（縦並び・固定幅内） */}
+                {gameState.skills.length > 0 && (
+                  <div style={{ marginTop: 4, borderTop: "1px solid rgba(80,80,120,0.4)", paddingTop: 3 }}>
+                    {gameState.skills
+                      .filter(sk => getSkillDefinition(sk.id)?.type === "active")
+                      .slice(0, 3)
+                      .map((sk, i) => {
+                        const def = getSkillDefinition(sk.id);
+                        const ready = sk.cooldownRemaining === 0;
+                        return (
+                          <div key={sk.id} style={{ display: "flex", alignItems: "center", gap: 3, marginBottom: 2 }}>
+                            <span style={{ color: "#ffdd88", fontSize: 9, minWidth: 14, flexShrink: 0 }}>[{i + 1}]</span>
+                            <span style={{
+                              fontSize: 9,
+                              color: ready ? "#eeeeff" : "#44445a",
+                              fontWeight: ready ? "bold" : "normal",
+                              flexShrink: 1,
+                              overflow: "hidden",
+                              textOverflow: "ellipsis",
+                              whiteSpace: "nowrap",
+                            }}>{def?.name ?? sk.id}</span>
+                            {ready ? (
+                              <span style={{
+                                fontSize: 8,
+                                background: "rgba(0,180,60,0.25)",
+                                border: "1px solid #00cc44",
+                                color: "#00ff88",
+                                borderRadius: 3,
+                                padding: "0 3px",
+                                flexShrink: 0,
+                              }}>▶可</span>
+                            ) : (
+                              <span style={{ fontSize: 8, color: "#aa5533", flexShrink: 0 }}>
+                                CD:{sk.cooldownRemaining}
+                              </span>
+                            )}
+                          </div>
+                        );
+                      })}
+                    {gameState.skills.filter(sk => getSkillDefinition(sk.id)?.type === "passive").length > 0 && (
+                      <div style={{ fontSize: 8, color: "#556677", marginTop: 1, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                        ✦ {gameState.skills
+                          .filter(sk => getSkillDefinition(sk.id)?.type === "passive")
+                          .map(sk => getSkillDefinition(sk.id)?.name ?? sk.id)
+                          .join(" / ")}
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
 
               {/* 装備中武器 */}
