@@ -517,7 +517,14 @@
       主人公スプライトはアルファベット文字をモチーフにしたデザイン。ステータスに応じて表示文字が変わる。<br>
       ファイルパス: <code>public/sprites/player/</code><br>
       優先順: <strong>瀕死(D)</strong> &gt; <strong>攻撃バフ(A)</strong> &gt; <strong>防御バフ(B)</strong> &gt; <strong>スピードバフ(S)</strong> &gt; <strong>HP満タン(F)</strong> &gt; <strong>通常(H)</strong><br>
-      ※ F = HP 100%時に表示。ゴールドカラーのフルパワー状態。
+      ※ F = HP 100%時に表示。ゴールドカラーのフルパワー状態。<br>
+      ※ D = 瀕死。明るい青灰系カラー（旧暗色から更新）。<br>
+      <strong>方向表現:</strong>
+      下↓=正面（目/鼻/口 大きく表示）・
+      上↑=背面（顔パーツ非表示）・
+      左右←→=シアー変形（上部が斜めにオフセット）+顔パーツが左右端に大きくずれた表示<br>
+      <strong>攻撃:</strong> frame1でキャラが攻撃方向に大きくオフセット＋衝撃波エフェクト<br>
+      <strong>被弾:</strong> frame0でキャラが左上に吹き飛び＋フラッシュ＋亀裂
     </div>
 
     <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px;">

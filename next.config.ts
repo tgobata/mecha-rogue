@@ -1,6 +1,18 @@
 import type { NextConfig } from 'next';
+import { execSync } from 'child_process';
+
+function getGitCommitDate(): string {
+  try {
+    return execSync('git log -1 --format="%ad" --date=format:"%Y.%m.%d.%H.%M.%S"', { encoding: 'utf8' }).trim();
+  } catch {
+    return new Date().toISOString().replace(/[-T:.Z]/g, '.').slice(0, 19).replace(/\./g, '.');
+  }
+}
 
 const nextConfig: NextConfig = {
+  env: {
+    NEXT_PUBLIC_BUILD_VERSION: getGitCommitDate(),
+  },
   reactCompiler: true,
   turbopack: {
     resolveExtensions: ['.tsx', '.ts', '.jsx', '.js', '.mjs', '.json'],

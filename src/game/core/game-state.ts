@@ -109,6 +109,8 @@ export interface WeaponInstance {
  * weapons.json の category === 'shield' エントリから生成する。
  */
 export interface EquippedShield {
+  /** ユニークインスタンスID（重複アイテム識別用） */
+  instanceId?: string;
   /** weapons.json の id */
   shieldId: string;
   /** 現在耐久度 */
@@ -128,6 +130,8 @@ export interface EquippedShield {
  * weapons.json の category === 'armor' エントリから生成する。
  */
 export interface EquippedArmor {
+  /** ユニークインスタンスID（重複アイテム識別用） */
+  instanceId?: string;
   /** weapons.json の id */
   armorId: string;
   /** 現在耐久度 */
@@ -592,6 +596,8 @@ export interface InventoryItem {
  * 耐久度は実行時に変化するためここで管理する。
  */
 export interface EquippedWeapon {
+  /** ユニークインスタンスID（重複アイテム識別用） */
+  instanceId?: string;
   /** 武器ID（JSON データと対応） */
   weaponId: string;
   /** 現在の耐久度 */

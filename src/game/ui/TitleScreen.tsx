@@ -340,7 +340,7 @@ const TitleScreen: React.FC<TitleScreenProps> = ({
       </div>
 
       <div className="absolute bottom-4 text-[10px] text-gray-600 tracking-tighter">
-        © 2026 ANTIGRAVITY ENGINE / VER 1.5.0-ALPHA
+        © 2026 o77bata / VER 0.1.{process.env.NEXT_PUBLIC_BUILD_VERSION ?? '0000.00.00.00.00.00'}
       </div>
     </div>
   );

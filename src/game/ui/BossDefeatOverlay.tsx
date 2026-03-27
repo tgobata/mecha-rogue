@@ -14,8 +14,8 @@ export default function BossDefeatOverlay({ bossType, onFinish }: Props) {
   const [visible, setVisible] = useState(true);
 
   useEffect(() => {
-    const t1 = setTimeout(() => setVisible(false), 2500);
-    const t2 = setTimeout(onFinish, 3000);
+    const t1 = setTimeout(() => setVisible(false), 1200);
+    const t2 = setTimeout(onFinish, 1700);
     return () => {
       clearTimeout(t1);
       clearTimeout(t2);

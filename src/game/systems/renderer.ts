@@ -497,7 +497,14 @@ export function renderGame(
         const spriteKey = tileToSpriteKey(cell.tile);
         const sprite    = spriteKey ? sprites.get(spriteKey) : undefined;
         if (sprite) {
-          ctx.drawImage(sprite, drawX, drawY, tileSize, tileSize);
+          if (cell.tile === TILE_STAIRS_DOWN) {
+            // 階段は 150% サイズではみ出し表示（中央揃え）
+            const drawSize = tileSize * 1.5;
+            const ofs = (tileSize - drawSize) / 2;
+            ctx.drawImage(sprite, drawX + ofs, drawY + ofs, drawSize, drawSize);
+          } else {
+            ctx.drawImage(sprite, drawX, drawY, tileSize, tileSize);
+          }
         } else {
           const color = TILE_FALLBACK_COLORS[cell.tile] ?? '#0a0a0a';
           ctx.fillStyle = color;

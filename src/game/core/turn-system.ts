@@ -910,9 +910,18 @@ function processEnemyActions(
                 const newDur = newPlayer.equippedShield.durability - 1;
                 const broke = newDur <= 0;
                 const updatedShield = broke ? null : { ...newPlayer.equippedShield, durability: newDur };
+                const _eqSh = newPlayer.equippedShield!;
+                let _shieldMatchDone = false;
                 const updatedShieldSlots = broke
-                  ? (newPlayer.shieldSlots ?? []).filter(s => s.shieldId !== newPlayer.equippedShield!.shieldId)
-                  : (newPlayer.shieldSlots ?? []).map(s => s.shieldId === newPlayer.equippedShield!.shieldId ? { ...s, durability: newDur } : s);
+                  ? (newPlayer.shieldSlots ?? []).filter(s =>
+                      (_eqSh.instanceId && s.instanceId) ? s.instanceId !== _eqSh.instanceId : s.shieldId !== _eqSh.shieldId)
+                  : (newPlayer.shieldSlots ?? []).map(s => {
+                      const match = (_eqSh.instanceId && s.instanceId)
+                        ? s.instanceId === _eqSh.instanceId
+                        : (s.shieldId === _eqSh.shieldId && !_shieldMatchDone);
+                      if (match && !(_eqSh.instanceId && s.instanceId)) _shieldMatchDone = true;
+                      return match ? { ...s, durability: newDur } : s;
+                    });
                 if (broke) {
                   enemyEventMessages.push(`盾「${newPlayer.equippedShield.name}」が壊れた！`);
                 }
@@ -922,9 +931,18 @@ function processEnemyActions(
                 const newDur = newPlayer.equippedArmor.durability - 1;
                 const broke = newDur <= 0;
                 const updatedArmor = broke ? null : { ...newPlayer.equippedArmor, durability: newDur };
+                const _eqAr = newPlayer.equippedArmor!;
+                let _armorMatchDone = false;
                 const updatedArmorSlots = broke
-                  ? (newPlayer.armorSlots ?? []).filter(a => a.armorId !== newPlayer.equippedArmor!.armorId)
-                  : (newPlayer.armorSlots ?? []).map(a => a.armorId === newPlayer.equippedArmor!.armorId ? { ...a, durability: newDur } : a);
+                  ? (newPlayer.armorSlots ?? []).filter(a =>
+                      (_eqAr.instanceId && a.instanceId) ? a.instanceId !== _eqAr.instanceId : a.armorId !== _eqAr.armorId)
+                  : (newPlayer.armorSlots ?? []).map(a => {
+                      const match = (_eqAr.instanceId && a.instanceId)
+                        ? a.instanceId === _eqAr.instanceId
+                        : (a.armorId === _eqAr.armorId && !_armorMatchDone);
+                      if (match && !(_eqAr.instanceId && a.instanceId)) _armorMatchDone = true;
+                      return match ? { ...a, durability: newDur } : a;
+                    });
                 if (broke) {
                   enemyEventMessages.push(`防具「${newPlayer.equippedArmor.name}」が壊れた！`);
                 }
@@ -1043,18 +1061,36 @@ function processEnemyActions(
               const newDur = newPlayer.equippedShield.durability - 1;
               const broke = newDur <= 0;
               const updatedShield = broke ? null : { ...newPlayer.equippedShield, durability: newDur };
+              const _eqSh2 = newPlayer.equippedShield!;
+              let _shieldMatchDone2 = false;
               const updatedShieldSlots = broke
-                ? (newPlayer.shieldSlots ?? []).filter(s => s.shieldId !== newPlayer.equippedShield!.shieldId)
-                : (newPlayer.shieldSlots ?? []).map(s => s.shieldId === newPlayer.equippedShield!.shieldId ? { ...s, durability: newDur } : s);
+                ? (newPlayer.shieldSlots ?? []).filter(s =>
+                    (_eqSh2.instanceId && s.instanceId) ? s.instanceId !== _eqSh2.instanceId : s.shieldId !== _eqSh2.shieldId)
+                : (newPlayer.shieldSlots ?? []).map(s => {
+                    const match = (_eqSh2.instanceId && s.instanceId)
+                      ? s.instanceId === _eqSh2.instanceId
+                      : (s.shieldId === _eqSh2.shieldId && !_shieldMatchDone2);
+                    if (match && !(_eqSh2.instanceId && s.instanceId)) _shieldMatchDone2 = true;
+                    return match ? { ...s, durability: newDur } : s;
+                  });
               newPlayer = { ...newPlayer, equippedShield: updatedShield, shieldSlots: updatedShieldSlots };
             }
             if (newPlayer.equippedArmor && newPlayer.equippedArmor.durability > 0 && Math.random() < 0.5) {
               const newDur = newPlayer.equippedArmor.durability - 1;
               const broke = newDur <= 0;
               const updatedArmor = broke ? null : { ...newPlayer.equippedArmor, durability: newDur };
+              const _eqAr2 = newPlayer.equippedArmor!;
+              let _armorMatchDone2 = false;
               const updatedArmorSlots = broke
-                ? (newPlayer.armorSlots ?? []).filter(a => a.armorId !== newPlayer.equippedArmor!.armorId)
-                : (newPlayer.armorSlots ?? []).map(a => a.armorId === newPlayer.equippedArmor!.armorId ? { ...a, durability: newDur } : a);
+                ? (newPlayer.armorSlots ?? []).filter(a =>
+                    (_eqAr2.instanceId && a.instanceId) ? a.instanceId !== _eqAr2.instanceId : a.armorId !== _eqAr2.armorId)
+                : (newPlayer.armorSlots ?? []).map(a => {
+                    const match = (_eqAr2.instanceId && a.instanceId)
+                      ? a.instanceId === _eqAr2.instanceId
+                      : (a.armorId === _eqAr2.armorId && !_armorMatchDone2);
+                    if (match && !(_eqAr2.instanceId && a.instanceId)) _armorMatchDone2 = true;
+                    return match ? { ...a, durability: newDur } : a;
+                  });
               newPlayer = { ...newPlayer, equippedArmor: updatedArmor, armorSlots: updatedArmorSlots };
             }
           }
@@ -1282,6 +1318,7 @@ function processDefeatedEnemies(
         try {
           const wi = createWeaponInstance(drop.id);
           droppedWeapons.push({
+            instanceId: wi.instanceId,
             weaponId: wi.id,
             durability: wi.durability ?? 999,
             weaponLevel: 1,
@@ -1564,6 +1601,7 @@ export function processTurn(state: GameState, action: PlayerAction): GameState {
           const shieldDef = weaponDef;
           if (shieldDef) {
             const newShield: EquippedShield = {
+              instanceId: `sh_${Date.now()}_${Math.floor(Math.random()*1e9)}`,
               shieldId: shieldDef.id,
               durability: shieldDef.durability ?? 30,
               maxDurability: shieldDef.durability ?? 30,
@@ -1598,6 +1636,7 @@ export function processTurn(state: GameState, action: PlayerAction): GameState {
           const armorDef = weaponDef;
           if (armorDef) {
             const newArmor: EquippedArmor = {
+              instanceId: `ar_${Date.now()}_${Math.floor(Math.random()*1e9)}`,
               armorId: armorDef.id,
               durability: armorDef.durability ?? 40,
               maxDurability: armorDef.durability ?? 40,
@@ -1633,6 +1672,7 @@ export function processTurn(state: GameState, action: PlayerAction): GameState {
           try {
             const wi = createWeaponInstance(pickup.weaponId);
             const newWeapon: EquippedWeapon = {
+              instanceId: wi.instanceId,
               weaponId: wi.id,
               durability: wi.durability ?? 999,
               weaponLevel: 1,
@@ -1725,11 +1765,14 @@ export function processTurn(state: GameState, action: PlayerAction): GameState {
         : w.id === ew.id ? ew : w,
     );
     playerAfterTrap = { ...playerAfterTrap, weaponSlots: newWeaponSlots };
-    const newEquippedWeapons = stateWithPickup.inventory.equippedWeapons.map((entry) =>
-      entry.weaponId === ew.id
-        ? { ...entry, durability: ew.durability ?? entry.durability }
-        : entry,
-    );
+    let _weaponMatchDone = false;
+    const newEquippedWeapons = stateWithPickup.inventory.equippedWeapons.map((entry) => {
+      const match = (ew.instanceId && entry.instanceId)
+        ? entry.instanceId === ew.instanceId
+        : (entry.weaponId === ew.id && !_weaponMatchDone);
+      if (match && !(ew.instanceId && entry.instanceId)) _weaponMatchDone = true;
+      return match ? { ...entry, durability: ew.durability ?? entry.durability } : entry;
+    });
     stateWithPickup = {
       ...stateWithPickup,
       inventory: { ...stateWithPickup.inventory, equippedWeapons: newEquippedWeapons },
@@ -1738,11 +1781,16 @@ export function processTurn(state: GameState, action: PlayerAction): GameState {
     // 武器が壊れて null になった場合: weaponSlots から除去し equippedWeapons も同期
     const prevEquippedId = stateForAction.player?.equippedWeapon?.id;
     if (prevEquippedId) {
-      const newWeaponSlots = (playerAfterTrap.weaponSlots ?? []).filter(
-        (w) => w.id !== prevEquippedId,
+      const prevEquippedInstanceId = stateForAction.player?.equippedWeapon?.instanceId;
+      const newWeaponSlots = (playerAfterTrap.weaponSlots ?? []).filter((w) =>
+        prevEquippedInstanceId && w.instanceId
+          ? w.instanceId !== prevEquippedInstanceId
+          : w.id !== prevEquippedId,
       );
-      const newEquippedWeapons = stateWithPickup.inventory.equippedWeapons.filter(
-        (entry) => entry.weaponId !== prevEquippedId,
+      const newEquippedWeapons = stateWithPickup.inventory.equippedWeapons.filter((entry) =>
+        prevEquippedInstanceId && entry.instanceId
+          ? entry.instanceId !== prevEquippedInstanceId
+          : entry.weaponId !== prevEquippedId,
       );
       playerAfterTrap = { ...playerAfterTrap, weaponSlots: newWeaponSlots };
       stateWithPickup = {

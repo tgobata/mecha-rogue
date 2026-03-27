@@ -305,12 +305,12 @@ async function generateStairsTile(outDir: string): Promise<SpriteFrame> {
   const buf = createBuffer(S, S);
 
   const bg       = hexToRGBA('#0a0e14');
-  const stepTop1 = hexToRGBA('#7a9ab0');
-  const stepTop2 = hexToRGBA('#6688a0');
-  const stepFace = hexToRGBA('#3d5566');
-  const shadow   = hexToRGBA('#1e2d38');
-  const border   = hexToRGBA('#9ac0d8');
-  const glow     = hexToRGBA('#c8e8ff');
+  const stepTop1 = hexToRGBA('#c8eeff');
+  const stepTop2 = hexToRGBA('#a0d4f0');
+  const stepFace = hexToRGBA('#6699bb');
+  const shadow   = hexToRGBA('#223344');
+  const border   = hexToRGBA('#ffffff');
+  const glow     = hexToRGBA('#ffffff');
 
   // 背景
   clearBuffer(buf, S, S, bg);
@@ -525,13 +525,13 @@ function getLetterPalette(letter: PlayerLetter): LetterPalette {
       };
     case 'D':
       return {
-        main:   hexToRGBA('#2a3a54'),
-        mid:    hexToRGBA('#1a2a44'),
-        dark:   hexToRGBA('#0f1a2e'),
-        edge:   hexToRGBA('#aabbcc'),
-        accent: hexToRGBA('#ff2222'),
-        sensor: hexToRGBA('#cc1111'),
-        core:   hexToRGBA('#ff2222'),
+        main:   hexToRGBA('#5588aa'),
+        mid:    hexToRGBA('#3a6680'),
+        dark:   hexToRGBA('#1a3a55'),
+        edge:   hexToRGBA('#ccddee'),
+        accent: hexToRGBA('#ff4444'),
+        sensor: hexToRGBA('#ff3333'),
+        core:   hexToRGBA('#ff5555'),
       };
     case 'A':
       return {
@@ -574,6 +574,62 @@ function getLetterPalette(letter: PlayerLetter): LetterPalette {
         core:   hexToRGBA('#ffffff'),  // 白コア（フル充電）
       };
   }
+}
+
+/** 方向ごとのシアーX量を返す（y座標ベース）*/
+function dirShearX(y: number, dir: 'down' | 'up' | 'left' | 'right'): number {
+  const cy = 16;
+  if (dir === 'right') return Math.round((cy - y) * 0.5);
+  if (dir === 'left')  return Math.round((y - cy) * 0.5);
+  return 0;
+}
+
+/** シアー付きhLine（各行をシアーしながら水平線を描く）*/
+function hLineS(buf: Uint8Array, S: number, x: number, y: number, w: number, c: RGBA, dir: 'down' | 'up' | 'left' | 'right'): void {
+  hLine(buf, S, x + dirShearX(y, dir), y, w, c);
+}
+
+/** シアー付きfillRect（各行ごとにシアーを適用）*/
+function fillRectS(buf: Uint8Array, S: number, x: number, y: number, w: number, h: number, c: RGBA, dir: 'down' | 'up' | 'left' | 'right'): void {
+  for (let row = 0; row < h; row++) {
+    hLine(buf, S, x + dirShearX(y + row, dir), y + row, w, c);
+  }
+}
+
+/** シアー付きvLine（各ピクセルごとにシアーを適用）*/
+function vLineS(buf: Uint8Array, S: number, x: number, y: number, len: number, c: RGBA, dir: 'down' | 'up' | 'left' | 'right'): void {
+  for (let i = 0; i < len; i++) {
+    setPixel(buf, S, x + dirShearX(y + i, dir), y + i, c);
+  }
+}
+
+/** シアー付きsetPixel */
+function setPixelS(buf: Uint8Array, S: number, x: number, y: number, c: RGBA, dir: 'down' | 'up' | 'left' | 'right'): void {
+  setPixel(buf, S, x + dirShearX(y, dir), y, c);
+}
+
+/**
+ * 大きな顔パーツを描画する（目x2 + 鼻 + 口）
+ * @param faceX 顔中心X
+ * @param faceY 顔中心Y（目の行）
+ * @param eyeColor 目の色
+ * @param noseColor 鼻の色
+ * @param mouthColor 口の色
+ */
+function drawFace(
+  buf: Uint8Array, S: number,
+  faceX: number, faceY: number,
+  eyeColor: RGBA, noseColor: RGBA, mouthColor: RGBA,
+  dir: 'down' | 'up' | 'left' | 'right',
+): void {
+  // 左目: 3x2 ピクセル
+  fillRectS(buf, S, faceX - 5, faceY, 3, 2, eyeColor, dir);
+  // 右目: 3x2 ピクセル
+  fillRectS(buf, S, faceX + 2, faceY, 3, 2, eyeColor, dir);
+  // 鼻: 2x1 ピクセル（目の1px下）
+  fillRectS(buf, S, faceX - 1, faceY + 2, 2, 1, noseColor, dir);
+  // 口: 5x2 ピクセル（目の3px下）
+  fillRectS(buf, S, faceX - 3, faceY + 3, 6, 2, mouthColor, dir);
 }
 
 /**
@@ -801,74 +857,61 @@ function drawLetterH(
   frame: number,
 ): void {
   const pal = getLetterPalette('H');
-  const W = pal.edge;
-  const G = pal.accent; // gold
-  const M = pal.sensor; // magenta
-
+  const W = pal.edge; const G = pal.accent; const M = pal.sensor;
+  const dir = direction;
   const bY = (state === 'idle' && frame === 1) ? 1 : 0;
-  // move: 左足・右足を交互に1px下げる
   const leftFootY  = (state === 'move' && frame === 0) ? 1 : 0;
   const rightFootY = (state === 'move' && frame === 1) ? 1 : 0;
 
-  // 方向別オフセット
-  const offX = direction === 'left' ? -1 : direction === 'right' ? 1 : 0;
-  const showEyes = direction !== 'up';
+  const aX = state === 'attack' && frame >= 1
+    ? (dir === 'right' ? 5 : dir === 'left' ? -5 : 0) : 0;
+  const aY = state === 'attack' && frame >= 1
+    ? (dir === 'down' ? 4 : dir === 'up' ? -4 : 0) : 0;
+  const hX = state === 'hit' && frame === 0 ? -4 : 0;
+  const hY = state === 'hit' && frame === 0 ? -2 : 0;
+  const ox = aX + hX; const oy = aY + hY + bY;
 
-  // --- H の構造 ---
-  // 左柱: x=8..11, y=10..26
-  fillRect(buf, S, 8 + offX, 10 + bY, 4, 17, pal.main);
-  // 右柱: x=20..23, y=10..26
-  fillRect(buf, S, 20 + offX, 10 + bY, 4, 17, pal.main);
-  // 横棒: x=12..19, y=15..17
-  fillRect(buf, S, 12 + offX, 15 + bY, 8, 3, pal.mid);
-
-  // ゴールドライン（柱上端）
-  hLine(buf, S, 8 + offX,  11 + bY, 4, G);
-  hLine(buf, S, 20 + offX, 11 + bY, 4, G);
-
-  // 横棒上下ライン
-  hLine(buf, S, 12 + offX, 15 + bY, 8, W);
-  hLine(buf, S, 12 + offX, 17 + bY, 8, W);
-
-  // エッジハイライト（柱左右外辺）
-  vLine(buf, S, 8 + offX,  10 + bY, 17, W);
-  vLine(buf, S, 23 + offX, 10 + bY, 17, W);
-
-  // エネルギーコア（横棒中央）
-  setPixel(buf, S, 15 + offX, 16 + bY, pal.core);
-  setPixel(buf, S, 16 + offX, 16 + bY, pal.core);
-
-  // 左足: x=6..11, y=26..29
-  fillRect(buf, S, 6 + offX, 26 + bY + leftFootY,  6, 4, pal.mid);
-  hLine(buf,  S, 6 + offX, 26 + bY + leftFootY,    6, W);
-  // 右足: x=20..25, y=26..29
-  fillRect(buf, S, 20 + offX, 26 + bY + rightFootY, 6, 4, pal.mid);
-  hLine(buf,  S, 20 + offX, 26 + bY + rightFootY,   6, W);
-
-  // 頭部ボックス: x=12..19, y=2..8
-  fillRect(buf, S, 12 + offX, 2 + bY, 8, 7, pal.main);
-  hLine(buf, S, 12 + offX, 2 + bY, 8, W);
-  vLine(buf, S, 12 + offX, 2 + bY, 7, W);
-  vLine(buf, S, 19 + offX, 2 + bY, 7, W);
-
+  // 左柱
+  fillRectS(buf, S, 8+ox, 10+oy, 4, 17, pal.main, dir);
+  // 右柱
+  fillRectS(buf, S, 20+ox, 10+oy, 4, 17, pal.main, dir);
+  // 横棒
+  fillRectS(buf, S, 12+ox, 15+oy, 8, 3, pal.mid, dir);
+  // エッジ
+  hLineS(buf, S, 8+ox, 11+oy, 4, G, dir);
+  hLineS(buf, S, 20+ox, 11+oy, 4, G, dir);
+  hLineS(buf, S, 12+ox, 15+oy, 8, W, dir);
+  hLineS(buf, S, 12+ox, 17+oy, 8, W, dir);
+  vLineS(buf, S, 8+ox, 10+oy, 17, W, dir);
+  vLineS(buf, S, 23+ox, 10+oy, 17, W, dir);
+  // コア
+  setPixelS(buf, S, 15+ox, 16+oy, pal.core, dir);
+  setPixelS(buf, S, 16+ox, 16+oy, pal.core, dir);
+  // 左足
+  fillRectS(buf, S, 6+ox, 26+oy+leftFootY, 6, 4, pal.mid, dir);
+  hLineS(buf, S, 6+ox, 26+oy+leftFootY, 6, W, dir);
+  // 右足
+  fillRectS(buf, S, 20+ox, 26+oy+rightFootY, 6, 4, pal.mid, dir);
+  hLineS(buf, S, 20+ox, 26+oy+rightFootY, 6, W, dir);
+  // 頭部
+  fillRectS(buf, S, 12+ox, 2+oy, 8, 7, pal.main, dir);
+  hLineS(buf, S, 12+ox, 2+oy, 8, W, dir);
+  vLineS(buf, S, 12+ox, 2+oy, 7, W, dir);
+  vLineS(buf, S, 19+ox, 2+oy, 7, W, dir);
   // センサーバイザー
-  hLine(buf, S, 13 + offX, 6 + bY, 6, M);
-
-  // 目
-  if (showEyes) {
-    setPixel(buf, S, 14 + offX, 5 + bY, W);
-    setPixel(buf, S, 17 + offX, 5 + bY, W);
-  }
-
+  hLineS(buf, S, 13+ox, 6+oy, 6, M, dir);
   // アンテナ
-  setPixel(buf, S, 16 + offX, 1 + bY, G);
+  setPixelS(buf, S, 16+ox, 1+oy, G, dir);
 
-  // 攻撃/被ダメエフェクト
-  if (state === 'attack') {
-    drawAttackEffect(buf, S, direction, frame, pal);
-  } else if (state === 'hit') {
-    drawHitEffect(buf, S, frame, pal);
+  // 顔（down/left/right のみ）
+  if (direction !== 'up') {
+    const faceCX = direction === 'right' ? 22+ox : direction === 'left' ? 10+ox : 16+ox;
+    const faceCY = 5+oy;
+    drawFace(buf, S, faceCX, faceCY, W, M, pal.sensor, dir);
   }
+
+  if (state === 'attack') drawAttackEffect(buf, S, direction, frame, pal);
+  else if (state === 'hit') drawHitEffect(buf, S, frame, pal);
 }
 
 // ---------------------------------------------------------------------------
@@ -876,7 +919,7 @@ function drawLetterH(
 // ---------------------------------------------------------------------------
 
 /**
- * 文字 D キャラクターを描画する（瀕死・暗青灰系）。
+ * 文字 D キャラクターを描画する（瀕死・明るい青灰系）。
  */
 function drawLetterD(
   buf: Uint8Array,
@@ -887,68 +930,66 @@ function drawLetterD(
 ): void {
   const pal = getLetterPalette('D');
   const W = pal.edge;
-
+  const dir = direction;
   const bY = (state === 'idle' && frame === 1) ? 1 : 0;
   const leftFootY  = (state === 'move' && frame === 0) ? 1 : 0;
   const rightFootY = (state === 'move' && frame === 1) ? 1 : 0;
-  const offX = direction === 'left' ? -1 : direction === 'right' ? 1 : 0;
-  const showEyes = direction !== 'up';
+  const aX = state === 'attack' && frame >= 1
+    ? (dir === 'right' ? 5 : dir === 'left' ? -5 : 0) : 0;
+  const aY = state === 'attack' && frame >= 1
+    ? (dir === 'down' ? 4 : dir === 'up' ? -4 : 0) : 0;
+  const hX = state === 'hit' && frame === 0 ? -4 : 0;
+  const hY = state === 'hit' && frame === 0 ? -2 : 0;
+  const ox = aX + hX; const oy = aY + hY + bY;
 
-  // --- D の縦棒: x=8..11, y=6..26 ---
-  fillRect(buf, S, 8 + offX, 6 + bY, 4, 21, pal.main);
-
-  // D上キャップ: x=12..20, y=6..7
-  fillRect(buf, S, 12 + offX, 6 + bY, 9, 2, pal.mid);
-  // D下キャップ: x=12..20, y=25..26
-  fillRect(buf, S, 12 + offX, 25 + bY, 9, 2, pal.mid);
-
-  // D右カーブ近似
-  fillRect(buf, S, 21 + offX, 8 + bY,  2, 3, pal.mid);
-  fillRect(buf, S, 22 + offX, 11 + bY, 2, 10, pal.main);
-  fillRect(buf, S, 21 + offX, 21 + bY, 2, 3, pal.mid);
-  setPixel(buf, S, 23 + offX, 14 + bY, pal.dark);
-  setPixel(buf, S, 23 + offX, 15 + bY, pal.dark);
-  setPixel(buf, S, 23 + offX, 16 + bY, pal.dark);
-
+  // D縦棒
+  fillRectS(buf, S, 8+ox, 6+oy, 4, 21, pal.main, dir);
+  // Dキャップ
+  fillRectS(buf, S, 12+ox, 6+oy, 9, 2, pal.mid, dir);
+  fillRectS(buf, S, 12+ox, 25+oy, 9, 2, pal.mid, dir);
+  // Dカーブ
+  fillRectS(buf, S, 21+ox, 8+oy, 2, 3, pal.mid, dir);
+  fillRectS(buf, S, 22+ox, 11+oy, 2, 10, pal.main, dir);
+  fillRectS(buf, S, 21+ox, 21+oy, 2, 3, pal.mid, dir);
   // エッジ
-  vLine(buf, S, 8 + offX, 6 + bY, 21, W);
+  vLineS(buf, S, 8+ox, 6+oy, 21, W, dir);
+  // 頭部（左寄り）
+  fillRectS(buf, S, 8+ox, 1+oy, 7, 6, pal.main, dir);
+  hLineS(buf, S, 8+ox, 1+oy, 7, W, dir);
+  // アンテナ（壊れている感じ）
+  setPixelS(buf, S, 10+ox, 0+oy, pal.accent, dir);
+  // 足
+  fillRectS(buf, S, 7+ox, 25+oy+leftFootY, 5, 4, pal.mid, dir);
+  hLineS(buf, S, 7+ox, 25+oy+leftFootY, 5, W, dir);
+  fillRectS(buf, S, 18+ox, 26+oy+rightFootY, 4, 3, pal.mid, dir);
 
-  // 頭部（左寄り、小さめ）
-  fillRect(buf, S, 8 + offX, 1 + bY, 7, 6, pal.main);
-  hLine(buf, S, 8 + offX, 1 + bY, 7, W);
-
-  // 目（赤く弱く光る）
-  if (showEyes) {
-    setPixel(buf, S, 10 + offX, 4 + bY, pal.sensor);
-  }
-
-  // 足: 縦棒下部の延長
-  fillRect(buf, S, 7 + offX, 25 + bY + leftFootY, 5, 4, pal.mid);
-  hLine(buf,  S, 7 + offX, 25 + bY + leftFootY, 5, W);
-  // 右側の足（小さい）
-  fillRect(buf, S, 18 + offX, 26 + bY + rightFootY, 4, 3, pal.dark);
-
-  // エネルギー漏れ（赤ピクセル散布）
+  // エネルギー漏れ（赤ピクセル）
   const leakPts = frame === 0
     ? [[13,14],[15,18],[21,12],[22,20],[16,10]]
     : [[14,15],[16,19],[21,11],[23,18],[15,9]];
-  for (const [lx, ly] of leakPts) {
-    setPixel(buf, S, lx + offX, ly + bY, pal.accent);
-  }
+  for (const [lx, ly] of leakPts)
+    setPixelS(buf, S, lx+ox, ly+oy, pal.accent, dir);
 
-  // ダメージクラック
+  // クラック
   const crackPts = frame === 0
     ? [[12,12],[13,13],[13,15],[14,16],[11,18],[12,20]]
     : [[11,13],[12,14],[13,16],[12,18],[11,19],[13,21]];
-  for (const [cx2, cy2] of crackPts) {
-    setPixel(buf, S, cx2 + offX, cy2 + bY, hexToRGBA('#ff4444'));
+  for (const [cx2, cy2] of crackPts)
+    setPixelS(buf, S, cx2+ox, cy2+oy, hexToRGBA('#ff6666'), dir);
+
+  // 顔（ダメージ顔）
+  if (direction !== 'up') {
+    const faceCX = direction === 'right' ? 20+ox : direction === 'left' ? 8+ox : 13+ox;
+    const faceCY = 3+oy;
+    // 目（赤く弱く光る、つぶれた目）
+    fillRectS(buf, S, faceCX-4, faceCY, 3, 1, pal.sensor, dir); // 左目（細い）
+    fillRectS(buf, S, faceCX+1, faceCY, 3, 1, pal.sensor, dir); // 右目（細い）
+    // 口（歪んだ口）
+    fillRectS(buf, S, faceCX-3, faceCY+3, 5, 1, pal.accent, dir);
   }
 
-  if (state === 'attack') {
-    drawAttackEffect(buf, S, direction, frame, pal);
-  } else if (state === 'hit') {
-    drawHitEffect(buf, S, frame, pal);
-  }
+  if (state === 'attack') drawAttackEffect(buf, S, direction, frame, pal);
+  else if (state === 'hit') drawHitEffect(buf, S, frame, pal);
 }
 
 // ---------------------------------------------------------------------------
@@ -966,62 +1007,60 @@ function drawLetterA(
   frame: number,
 ): void {
   const pal = getLetterPalette('A');
-  const W = pal.edge;
-  const G = pal.accent;
-
+  const W = pal.edge; const G = pal.accent;
+  const dir = direction;
   const bY = (state === 'idle' && frame === 1) ? 1 : 0;
   const leftFootY  = (state === 'move' && frame === 0) ? 1 : 0;
   const rightFootY = (state === 'move' && frame === 1) ? 1 : 0;
-  const offX = direction === 'left' ? -1 : direction === 'right' ? 1 : 0;
-  const showEyes = direction !== 'up';
+  const aX = state === 'attack' && frame >= 1
+    ? (dir === 'right' ? 5 : dir === 'left' ? -5 : 0) : 0;
+  const aY = state === 'attack' && frame >= 1
+    ? (dir === 'down' ? 4 : dir === 'up' ? -4 : 0) : 0;
+  const hX = state === 'hit' && frame === 0 ? -4 : 0;
+  const hY = state === 'hit' && frame === 0 ? -2 : 0;
+  const ox = aX + hX; const oy = aY + hY + bY;
 
-  // --- A の対角線 ---
-  // 左対角線: (8,28) → (15,8)
+  // A左対角線
   for (let y = 8; y <= 28; y++) {
     const x = 8 + Math.round((28 - y) * 7 / 20);
-    fillRect(buf, S, x - 1 + offX, y + bY, 3, 1, pal.main);
+    const sx = dirShearX(y + oy, dir);
+    fillRect(buf, S, x - 1 + ox + sx, y + oy, 3, 1, pal.main);
   }
-  // 右対角線: (24,28) → (17,8) ミラー
+  // A右対角線
   for (let y = 8; y <= 28; y++) {
     const x = 24 - Math.round((28 - y) * 7 / 20);
-    fillRect(buf, S, x - 1 + offX, y + bY, 3, 1, pal.main);
+    const sx = dirShearX(y + oy, dir);
+    fillRect(buf, S, x - 1 + ox + sx, y + oy, 3, 1, pal.main);
   }
-
-  // A の横棒: x=11..20, y=17..19
-  fillRect(buf, S, 11 + offX, 17 + bY, 10, 3, pal.mid);
-  hLine(buf, S, 11 + offX, 17 + bY, 10, W);
-  hLine(buf, S, 11 + offX, 19 + bY, 10, G);
-
-  // 腕: 横棒より上
-  fillRect(buf, S, 6 + offX, 14 + bY, 4, 3, pal.mid);
-  fillRect(buf, S, 22 + offX, 14 + bY, 4, 3, pal.mid);
-
-  // 足（対角線下端）
-  fillRect(buf, S, 6 + offX,  28 + bY + leftFootY,  5, 3, pal.mid);
-  hLine(buf,  S, 6 + offX,  28 + bY + leftFootY,    5, W);
-  fillRect(buf, S, 21 + offX, 28 + bY + rightFootY, 5, 3, pal.mid);
-  hLine(buf,  S, 21 + offX, 28 + bY + rightFootY,   5, W);
-
-  // 頭部（頂点付近）
-  fillRect(buf, S, 13 + offX, 1 + bY, 6, 7, pal.main);
-  hLine(buf, S, 13 + offX, 1 + bY, 6, W);
-  vLine(buf, S, 13 + offX, 1 + bY, 7, W);
-  vLine(buf, S, 18 + offX, 1 + bY, 7, W);
-
-  // 目（赤/オレンジ発光）
-  if (showEyes) {
-    setPixel(buf, S, 14 + offX, 4 + bY, pal.sensor);
-    setPixel(buf, S, 17 + offX, 4 + bY, pal.sensor);
-  }
-
-  // 攻撃オーラ縁取り
+  // A横棒
+  fillRectS(buf, S, 11+ox, 17+oy, 10, 3, pal.mid, dir);
+  hLineS(buf, S, 11+ox, 17+oy, 10, W, dir);
+  hLineS(buf, S, 11+ox, 19+oy, 10, G, dir);
+  // 腕
+  fillRectS(buf, S, 6+ox, 14+oy, 4, 3, pal.mid, dir);
+  fillRectS(buf, S, 22+ox, 14+oy, 4, 3, pal.mid, dir);
+  // 足
+  fillRectS(buf, S, 6+ox, 28+oy+leftFootY, 5, 3, pal.mid, dir);
+  hLineS(buf, S, 6+ox, 28+oy+leftFootY, 5, W, dir);
+  fillRectS(buf, S, 21+ox, 28+oy+rightFootY, 5, 3, pal.mid, dir);
+  hLineS(buf, S, 21+ox, 28+oy+rightFootY, 5, W, dir);
+  // 頭部（頂点）
+  fillRectS(buf, S, 13+ox, 1+oy, 6, 7, pal.main, dir);
+  hLineS(buf, S, 13+ox, 1+oy, 6, W, dir);
+  vLineS(buf, S, 13+ox, 1+oy, 7, W, dir);
+  vLineS(buf, S, 18+ox, 1+oy, 7, W, dir);
+  // 攻撃オーラ
   drawOutline(buf, S, hexToRGBA('#ff6600', 180));
 
-  if (state === 'attack') {
-    drawAttackEffect(buf, S, direction, frame, pal);
-  } else if (state === 'hit') {
-    drawHitEffect(buf, S, frame, pal);
+  // 顔
+  if (direction !== 'up') {
+    const faceCX = direction === 'right' ? 23+ox : direction === 'left' ? 9+ox : 16+ox;
+    const faceCY = 4+oy;
+    drawFace(buf, S, faceCX, faceCY, pal.sensor, G, pal.sensor, dir);
   }
+
+  if (state === 'attack') drawAttackEffect(buf, S, direction, frame, pal);
+  else if (state === 'hit') drawHitEffect(buf, S, frame, pal);
 }
 
 // ---------------------------------------------------------------------------
@@ -1040,61 +1079,58 @@ function drawLetterB(
 ): void {
   const pal = getLetterPalette('B');
   const W = pal.edge;
-
+  const dir = direction;
   const bY = (state === 'idle' && frame === 1) ? 1 : 0;
   const leftFootY  = (state === 'move' && frame === 0) ? 1 : 0;
   const rightFootY = (state === 'move' && frame === 1) ? 1 : 0;
-  const offX = direction === 'left' ? -1 : direction === 'right' ? 1 : 0;
-  const showEyes = direction !== 'up';
+  const aX = state === 'attack' && frame >= 1
+    ? (dir === 'right' ? 5 : dir === 'left' ? -5 : 0) : 0;
+  const aY = state === 'attack' && frame >= 1
+    ? (dir === 'down' ? 4 : dir === 'up' ? -4 : 0) : 0;
+  const hX = state === 'hit' && frame === 0 ? -4 : 0;
+  const hY = state === 'hit' && frame === 0 ? -2 : 0;
+  const ox = aX + hX; const oy = aY + hY + bY;
 
-  // --- B の縦棒: x=8..11, y=6..26 ---
-  fillRect(buf, S, 8 + offX, 6 + bY, 4, 21, pal.main);
-  vLine(buf, S, 8 + offX, 6 + bY, 21, W);
-
+  // B縦棒
+  fillRectS(buf, S, 8+ox, 6+oy, 4, 21, pal.main, dir);
+  vLineS(buf, S, 8+ox, 6+oy, 21, W, dir);
   // 上バンプ
-  fillRect(buf, S, 12 + offX, 6 + bY, 9, 2, pal.mid);   // 上端
-  fillRect(buf, S, 21 + offX, 8 + bY, 2, 3, pal.mid);   // 右上
-  fillRect(buf, S, 22 + offX, 11 + bY, 1, 3, pal.dark); // 右中
-  setPixel(buf, S, 21 + offX, 14 + bY, pal.dark);       // 右下端
-  fillRect(buf, S, 12 + offX, 14 + bY, 9, 2, pal.mid);  // 中間バー
-
+  fillRectS(buf, S, 12+ox, 6+oy, 9, 2, pal.mid, dir);
+  fillRectS(buf, S, 21+ox, 8+oy, 2, 3, pal.mid, dir);
+  fillRectS(buf, S, 22+ox, 11+oy, 1, 3, pal.dark, dir);
+  setPixelS(buf, S, 21+ox, 14+oy, pal.dark, dir);
+  fillRectS(buf, S, 12+ox, 14+oy, 9, 2, pal.mid, dir);
   // 下バンプ
-  fillRect(buf, S, 12 + offX, 16 + bY, 9, 2, pal.mid);  // 中間バー下
-  fillRect(buf, S, 21 + offX, 18 + bY, 2, 4, pal.mid);  // 右下上
-  fillRect(buf, S, 22 + offX, 22 + bY, 1, 3, pal.dark); // 右下中
-  setPixel(buf, S, 21 + offX, 25 + bY, pal.dark);       // 右下端
-  fillRect(buf, S, 12 + offX, 25 + bY, 9, 2, pal.mid);  // 下端
-
-  // シールドグロー（右カーブの沿って青/紫の輝き）
+  fillRectS(buf, S, 12+ox, 16+oy, 9, 2, pal.mid, dir);
+  fillRectS(buf, S, 21+ox, 18+oy, 2, 4, pal.mid, dir);
+  fillRectS(buf, S, 22+ox, 22+oy, 1, 3, pal.dark, dir);
+  setPixelS(buf, S, 21+ox, 25+oy, pal.dark, dir);
+  fillRectS(buf, S, 12+ox, 25+oy, 9, 2, pal.mid, dir);
+  // グロー
   const glowC = hexToRGBA('#8800cc', 200);
-  setPixel(buf, S, 23 + offX, 12 + bY, glowC);
-  setPixel(buf, S, 23 + offX, 13 + bY, glowC);
-  setPixel(buf, S, 23 + offX, 22 + bY, glowC);
-  setPixel(buf, S, 23 + offX, 23 + bY, glowC);
-
-  // バリアオーラ（外周 青縁取り）
+  setPixelS(buf, S, 23+ox, 12+oy, glowC, dir);
+  setPixelS(buf, S, 23+ox, 13+oy, glowC, dir);
+  setPixelS(buf, S, 23+ox, 22+oy, glowC, dir);
+  setPixelS(buf, S, 23+ox, 23+oy, glowC, dir);
+  // バリアオーラ
   drawOutline(buf, S, hexToRGBA('#4488ff', 180));
-
-  // 頭部（左寄り）
-  fillRect(buf, S, 8 + offX, 1 + bY, 8, 6, pal.main);
-  hLine(buf, S, 8 + offX, 1 + bY, 8, W);
-
-  // 目（青く発光）
-  if (showEyes) {
-    setPixel(buf, S, 10 + offX, 3 + bY, pal.sensor);
-    setPixel(buf, S, 14 + offX, 3 + bY, pal.sensor);
-  }
-
+  // 頭部
+  fillRectS(buf, S, 8+ox, 1+oy, 8, 6, pal.main, dir);
+  hLineS(buf, S, 8+ox, 1+oy, 8, W, dir);
   // 足
-  fillRect(buf, S, 7 + offX,  25 + bY + leftFootY,  5, 4, pal.mid);
-  hLine(buf,  S, 7 + offX,  25 + bY + leftFootY,    5, W);
-  fillRect(buf, S, 18 + offX, 26 + bY + rightFootY, 4, 3, pal.dark);
+  fillRectS(buf, S, 7+ox, 25+oy+leftFootY, 5, 4, pal.mid, dir);
+  hLineS(buf, S, 7+ox, 25+oy+leftFootY, 5, W, dir);
+  fillRectS(buf, S, 18+ox, 26+oy+rightFootY, 4, 3, pal.dark, dir);
 
-  if (state === 'attack') {
-    drawAttackEffect(buf, S, direction, frame, pal);
-  } else if (state === 'hit') {
-    drawHitEffect(buf, S, frame, pal);
+  // 顔
+  if (direction !== 'up') {
+    const faceCX = direction === 'right' ? 20+ox : direction === 'left' ? 8+ox : 14+ox;
+    const faceCY = 3+oy;
+    drawFace(buf, S, faceCX, faceCY, pal.sensor, pal.sensor, W, dir);
   }
+
+  if (state === 'attack') drawAttackEffect(buf, S, direction, frame, pal);
+  else if (state === 'hit') drawHitEffect(buf, S, frame, pal);
 }
 
 // ---------------------------------------------------------------------------
@@ -1112,74 +1148,66 @@ function drawLetterS(
   frame: number,
 ): void {
   const pal = getLetterPalette('S');
-  const W = pal.edge;
-  const G = pal.accent;
-
+  const W = pal.edge; const G = pal.accent;
+  const dir = direction;
   const bY = (state === 'idle' && frame === 1) ? 1 : 0;
   const leftFootY  = (state === 'move' && frame === 0) ? 1 : 0;
   const rightFootY = (state === 'move' && frame === 1) ? 1 : 0;
-  const offX = direction === 'left' ? -1 : direction === 'right' ? 1 : 0;
-  const showEyes = direction !== 'up';
+  const aX = state === 'attack' && frame >= 1
+    ? (dir === 'right' ? 5 : dir === 'left' ? -5 : 0) : 0;
+  const aY = state === 'attack' && frame >= 1
+    ? (dir === 'down' ? 4 : dir === 'up' ? -4 : 0) : 0;
+  const hX = state === 'hit' && frame === 0 ? -4 : 0;
+  const hY = state === 'hit' && frame === 0 ? -2 : 0;
+  const ox = aX + hX; const oy = aY + hY + bY;
 
-  // --- S の構造 ---
-  // 上キャップ: x=12..21, y=6..7
-  fillRect(buf, S, 12 + offX, 6 + bY, 10, 2, pal.main);
-  hLine(buf, S, 12 + offX, 6 + bY, 10, W);
-
-  // S 上右部分: x=21..22, y=8..12
-  fillRect(buf, S, 21 + offX, 8 + bY, 2, 5, pal.main);
-
-  // S 上カーブ→左への折れ
-  setPixel(buf, S, 20 + offX, 12 + bY, pal.mid);
-  setPixel(buf, S, 19 + offX, 13 + bY, pal.mid);
-  setPixel(buf, S, 18 + offX, 14 + bY, pal.mid);
-  setPixel(buf, S, 17 + offX, 14 + bY, pal.mid);
-
-  // S 中間（クロスオーバー）: x=11..20, y=14..16
-  fillRect(buf, S, 11 + offX, 14 + bY, 10, 3, pal.mid);
-  hLine(buf, S, 11 + offX, 14 + bY, 10, G);
-  hLine(buf, S, 11 + offX, 16 + bY, 10, G);
-
-  // S 下カーブ→右への折れ
-  setPixel(buf, S, 13 + offX, 16 + bY, pal.mid);
-  setPixel(buf, S, 13 + offX, 17 + bY, pal.mid);
-  setPixel(buf, S, 14 + offX, 18 + bY, pal.mid);
-  setPixel(buf, S, 15 + offX, 18 + bY, pal.mid);
-
-  // S 下左部分: x=9..10, y=18..22
-  fillRect(buf, S, 9 + offX, 18 + bY, 2, 5, pal.main);
-
-  // 下キャップ: x=10..19, y=23..24
-  fillRect(buf, S, 10 + offX, 23 + bY, 10, 2, pal.main);
-  hLine(buf, S, 10 + offX, 24 + bY, 10, W);
-
-  // 足（下キャップ右寄り、スピード感）
-  fillRect(buf, S, 16 + offX, 25 + bY + leftFootY,  8, 4, pal.mid);
-  hLine(buf,  S, 16 + offX, 25 + bY + leftFootY,    8, W);
-  fillRect(buf, S, 8 + offX,  25 + bY + rightFootY, 4, 3, pal.dark);
-
-  // 頭部（上部中央）
-  fillRect(buf, S, 14 + offX, 1 + bY, 6, 5, pal.main);
-  hLine(buf, S, 14 + offX, 1 + bY, 6, W);
-
-  // 目（黄/緑発光）
-  if (showEyes) {
-    setPixel(buf, S, 15 + offX, 3 + bY, pal.sensor);
-    setPixel(buf, S, 18 + offX, 3 + bY, pal.sensor);
-  }
-
-  // スピードライン（左側ダッシュライン）
+  // S上キャップ
+  fillRectS(buf, S, 12+ox, 6+oy, 10, 2, pal.main, dir);
+  hLineS(buf, S, 12+ox, 6+oy, 10, W, dir);
+  // S上右部分
+  fillRectS(buf, S, 21+ox, 8+oy, 2, 5, pal.main, dir);
+  // S上カーブ
+  setPixelS(buf, S, 20+ox, 12+oy, pal.mid, dir);
+  setPixelS(buf, S, 19+ox, 13+oy, pal.mid, dir);
+  setPixelS(buf, S, 18+ox, 14+oy, pal.mid, dir);
+  setPixelS(buf, S, 17+ox, 14+oy, pal.mid, dir);
+  // S中間
+  fillRectS(buf, S, 11+ox, 14+oy, 10, 3, pal.mid, dir);
+  hLineS(buf, S, 11+ox, 14+oy, 10, G, dir);
+  hLineS(buf, S, 11+ox, 16+oy, 10, G, dir);
+  // S下カーブ
+  setPixelS(buf, S, 13+ox, 16+oy, pal.mid, dir);
+  setPixelS(buf, S, 13+ox, 17+oy, pal.mid, dir);
+  setPixelS(buf, S, 14+ox, 18+oy, pal.mid, dir);
+  setPixelS(buf, S, 15+ox, 18+oy, pal.mid, dir);
+  // S下左部分
+  fillRectS(buf, S, 9+ox, 18+oy, 2, 5, pal.main, dir);
+  // S下キャップ
+  fillRectS(buf, S, 10+ox, 23+oy, 10, 2, pal.main, dir);
+  hLineS(buf, S, 10+ox, 24+oy, 10, W, dir);
+  // 足
+  fillRectS(buf, S, 16+ox, 25+oy+leftFootY, 8, 4, pal.mid, dir);
+  hLineS(buf, S, 16+ox, 25+oy+leftFootY, 8, W, dir);
+  fillRectS(buf, S, 8+ox, 25+oy+rightFootY, 4, 3, pal.dark, dir);
+  // 頭部
+  fillRectS(buf, S, 14+ox, 1+oy, 6, 5, pal.main, dir);
+  hLineS(buf, S, 14+ox, 1+oy, 6, W, dir);
+  // スピードライン
   if (direction !== 'right') {
-    hLine(buf, S, 1, 10 + bY, 5, hexToRGBA('#ffdd00', 200));
-    hLine(buf, S, 1, 14 + bY, 4, hexToRGBA('#00ff88', 200));
-    hLine(buf, S, 1, 18 + bY, 5, hexToRGBA('#ffdd00', 200));
+    hLine(buf, S, 1, 10+oy, 5, hexToRGBA('#ffdd00', 200));
+    hLine(buf, S, 1, 14+oy, 4, hexToRGBA('#00ff88', 200));
+    hLine(buf, S, 1, 18+oy, 5, hexToRGBA('#ffdd00', 200));
   }
 
-  if (state === 'attack') {
-    drawAttackEffect(buf, S, direction, frame, pal);
-  } else if (state === 'hit') {
-    drawHitEffect(buf, S, frame, pal);
+  // 顔
+  if (direction !== 'up') {
+    const faceCX = direction === 'right' ? 23+ox : direction === 'left' ? 11+ox : 17+ox;
+    const faceCY = 3+oy;
+    drawFace(buf, S, faceCX, faceCY, pal.sensor, G, pal.sensor, dir);
   }
+
+  if (state === 'attack') drawAttackEffect(buf, S, direction, frame, pal);
+  else if (state === 'hit') drawHitEffect(buf, S, frame, pal);
 }
 
 // ---------------------------------------------------------------------------
@@ -1197,82 +1225,64 @@ function drawLetterF(
   frame: number,
 ): void {
   const pal = getLetterPalette('F');
-  const W = pal.edge;
-  const G = pal.accent; // white flash
-  const M = pal.sensor; // orange sensor
-
+  const W = pal.edge; const G = pal.accent; const M = pal.sensor;
+  const dir = direction;
   const bY = (state === 'idle' && frame === 1) ? 1 : 0;
   const leftFootY  = (state === 'move' && frame === 0) ? 1 : 0;
   const rightFootY = (state === 'move' && frame === 1) ? 1 : 0;
+  const aX = state === 'attack' && frame >= 1
+    ? (dir === 'right' ? 5 : dir === 'left' ? -5 : 0) : 0;
+  const aY = state === 'attack' && frame >= 1
+    ? (dir === 'down' ? 4 : dir === 'up' ? -4 : 0) : 0;
+  const hX = state === 'hit' && frame === 0 ? -4 : 0;
+  const hY = state === 'hit' && frame === 0 ? -2 : 0;
+  const ox = aX + hX; const oy = aY + hY + bY;
 
-  const offX = direction === 'left' ? -1 : direction === 'right' ? 1 : 0;
-  const showEyes = direction !== 'up';
+  // F縦棒
+  fillRectS(buf, S, 8+ox, 10+oy, 4, 17, pal.main, dir);
+  // F上横棒
+  fillRectS(buf, S, 12+ox, 10+oy, 11, 3, pal.mid, dir);
+  // F中横棒
+  fillRectS(buf, S, 12+ox, 15+oy, 7, 3, pal.mid, dir);
+  // エッジ
+  vLineS(buf, S, 8+ox, 10+oy, 17, W, dir);
+  hLineS(buf, S, 12+ox, 10+oy, 11, W, dir);
+  hLineS(buf, S, 12+ox, 12+oy, 11, W, dir);
+  hLineS(buf, S, 12+ox, 15+oy, 7, W, dir);
+  hLineS(buf, S, 12+ox, 17+oy, 7, W, dir);
+  hLineS(buf, S, 8+ox, 11+oy, 4, G, dir);
+  vLineS(buf, S, 11+ox, 10+oy, 17, pal.core, dir);
+  // コア
+  setPixelS(buf, S, 15+ox, 16+oy, pal.core, dir);
+  setPixelS(buf, S, 16+ox, 16+oy, pal.core, dir);
+  setPixelS(buf, S, 22+ox, 11+oy, pal.core, dir);
+  // 左足
+  fillRectS(buf, S, 6+ox, 26+oy+leftFootY, 6, 4, pal.mid, dir);
+  hLineS(buf, S, 6+ox, 26+oy+leftFootY, 6, W, dir);
+  // 右足
+  fillRectS(buf, S, 20+ox, 26+oy+rightFootY, 6, 4, pal.mid, dir);
+  hLineS(buf, S, 20+ox, 26+oy+rightFootY, 6, W, dir);
+  // 頭部
+  fillRectS(buf, S, 12+ox, 2+oy, 8, 7, pal.main, dir);
+  hLineS(buf, S, 12+ox, 2+oy, 8, W, dir);
+  vLineS(buf, S, 12+ox, 2+oy, 7, W, dir);
+  vLineS(buf, S, 19+ox, 2+oy, 7, W, dir);
+  hLineS(buf, S, 13+ox, 6+oy, 6, M, dir);
+  // アンテナ（ダブル）
+  setPixelS(buf, S, 15+ox, 1+oy, G, dir);
+  setPixelS(buf, S, 16+ox, 1+oy, G, dir);
+  setPixelS(buf, S, 15+ox, 0+oy, M, dir);
+  setPixelS(buf, S, 16+ox, 0+oy, M, dir);
 
-  // --- F の構造 ---
-  // 縦棒（左柱・ボディ）: x=8..11, y=10..26
-  fillRect(buf, S, 8 + offX, 10 + bY, 4, 17, pal.main);
-
-  // 上横棒（上腕）: x=12..22, y=10..12
-  fillRect(buf, S, 12 + offX, 10 + bY, 11, 3, pal.mid);
-
-  // 中横棒（中腕・短め）: x=12..18, y=15..17
-  fillRect(buf, S, 12 + offX, 15 + bY, 7, 3, pal.mid);
-
-  // エッジハイライト
-  vLine(buf, S, 8 + offX, 10 + bY, 17, W);
-  hLine(buf, S, 12 + offX, 10 + bY, 11, W);
-  hLine(buf, S, 12 + offX, 12 + bY, 11, W);
-  hLine(buf, S, 12 + offX, 15 + bY, 7, W);
-  hLine(buf, S, 12 + offX, 17 + bY, 7, W);
-
-  // ゴールドライン（縦棒上端）
-  hLine(buf, S, 8 + offX, 11 + bY, 4, G);
-
-  // フルパワーグロー（縦棒右辺に発光ライン）
-  vLine(buf, S, 11 + offX, 10 + bY, 17, pal.core);
-
-  // エネルギーコア（中横棒中央）
-  setPixel(buf, S, 15 + offX, 16 + bY, pal.core);
-  setPixel(buf, S, 16 + offX, 16 + bY, pal.core);
-
-  // 上横棒先端コア
-  setPixel(buf, S, 22 + offX, 11 + bY, pal.core);
-
-  // 左足: x=6..11, y=26..29
-  fillRect(buf, S, 6 + offX, 26 + bY + leftFootY,  6, 4, pal.mid);
-  hLine(buf,  S, 6 + offX, 26 + bY + leftFootY,    6, W);
-
-  // 右足: x=20..25, y=26..29 (F本体とは別の右足)
-  fillRect(buf, S, 20 + offX, 26 + bY + rightFootY, 6, 4, pal.mid);
-  hLine(buf,  S, 20 + offX, 26 + bY + rightFootY,   6, W);
-
-  // 頭部ボックス: x=12..19, y=2..8
-  fillRect(buf, S, 12 + offX, 2 + bY, 8, 7, pal.main);
-  hLine(buf, S, 12 + offX, 2 + bY, 8, W);
-  vLine(buf, S, 12 + offX, 2 + bY, 7, W);
-  vLine(buf, S, 19 + offX, 2 + bY, 7, W);
-
-  // センサーバイザー（オレンジ）
-  hLine(buf, S, 13 + offX, 6 + bY, 6, M);
-
-  // 目
-  if (showEyes) {
-    setPixel(buf, S, 14 + offX, 5 + bY, W);
-    setPixel(buf, S, 17 + offX, 5 + bY, W);
+  // 顔
+  if (direction !== 'up') {
+    const faceCX = direction === 'right' ? 23+ox : direction === 'left' ? 10+ox : 16+ox;
+    const faceCY = 4+oy;
+    drawFace(buf, S, faceCX, faceCY, W, M, G, dir);
   }
 
-  // アンテナ（フルパワー・ダブル）
-  setPixel(buf, S, 15 + offX, 1 + bY, G);
-  setPixel(buf, S, 16 + offX, 1 + bY, G);
-  setPixel(buf, S, 15 + offX, 0 + bY, M);
-  setPixel(buf, S, 16 + offX, 0 + bY, M);
-
-  // 攻撃/被ダメエフェクト
-  if (state === 'attack') {
-    drawAttackEffect(buf, S, direction, frame, pal);
-  } else if (state === 'hit') {
-    drawHitEffect(buf, S, frame, pal);
-  }
+  if (state === 'attack') drawAttackEffect(buf, S, direction, frame, pal);
+  else if (state === 'hit') drawHitEffect(buf, S, frame, pal);
 }
 
 // ---------------------------------------------------------------------------

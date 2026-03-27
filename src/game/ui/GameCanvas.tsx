@@ -314,6 +314,26 @@ function getLogType(l: string): string {
   return 'default';
 }
 
+/**
+ * prev → next のバトルログ差分を抽出する。
+ * processTurn 内で .slice(-50) トリムが発生しても正しく新規エントリを検出する。
+ * next = prev[trim:] + newEntries の構造を前提に、最長一致オーバーラップを探す。
+ */
+function findNewBattleLogEntries(prevLog: string[], nextLog: string[]): string[] {
+  const maxOverlap = Math.min(prevLog.length, nextLog.length);
+  for (let overlap = maxOverlap; overlap >= 0; overlap--) {
+    let match = true;
+    for (let i = 0; i < overlap; i++) {
+      if (nextLog[i] !== prevLog[prevLog.length - overlap + i]) {
+        match = false;
+        break;
+      }
+    }
+    if (match) return nextLog.slice(overlap);
+  }
+  return nextLog;
+}
+
 function BattleLogPanel({ battleLog }: { battleLog: string[] }) {
   const scrollRef = useRef<HTMLDivElement>(null);
   const isUserScrollingRef = useRef(false);
@@ -482,6 +502,8 @@ export default function GameCanvas() {
   const [skillSelectState, setSkillSelectState] = useState<{ level: number; available: Skill[] } | null>(null);
   /** レベルアップ検出用：前回のパイロットレベルを保持 */
   const prevPilotLevelRef = useRef<number>(1);
+  /** ボス撃破演出中に保留するスキル選択状態 */
+  const pendingSkillSelectRef = useRef<{ level: number; available: Skill[] } | null>(null);
   /** 敵VS敵撃破通知 */
   const [enemyKillNotif, setEnemyKillNotif] = useState<string | null>(null);
   const enemyKillNotifTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -673,6 +695,7 @@ export default function GameCanvas() {
   void addLog;
 
   // ── レベルアップ検出 → スキル選択ダイアログ ─────────────────
+  // ボス撃破演出中の場合は pendingSkillSelectRef に保留し、演出終了後に表示する
   useEffect(() => {
     const oldLevel = prevPilotLevelRef.current;
     const newLevel = gameState.pilot.level;
@@ -682,12 +705,25 @@ export default function GameCanvas() {
         (s) => !gameState.skills.some((sk) => sk.id === s.id),
       );
       if (available.length > 0) {
-        setSkillSelectState({ level: newLevel, available });
+        if (bossDefeatEffect !== null) {
+          // ボス撃破演出中: 演出終了後に表示するため保留
+          pendingSkillSelectRef.current = { level: newLevel, available };
+        } else {
+          setSkillSelectState({ level: newLevel, available });
+        }
       }
     } else {
       prevPilotLevelRef.current = newLevel;
     }
-  }, [gameState.pilot.level, gameState.skills]);
+  }, [gameState.pilot.level, gameState.skills, bossDefeatEffect]);
+
+  // ボス撃破演出が終了したとき、保留中のスキル選択があれば表示する
+  useEffect(() => {
+    if (bossDefeatEffect === null && pendingSkillSelectRef.current !== null) {
+      setSkillSelectState(pendingSkillSelectRef.current);
+      pendingSkillSelectRef.current = null;
+    }
+  }, [bossDefeatEffect]);
 
   // ── スキル習得ハンドラ ────────────────────────────────────────
   const handleLearnSkill = useCallback((skillId: string) => {
@@ -1054,8 +1090,9 @@ export default function GameCanvas() {
       const newLogs: string[] = [];
 
       // processTurn の battleLog に追記された新規エントリを同期（拾得・罠・武器破壊等）
-      const prevBattleLogLen = prev.battleLog?.length ?? 0;
-      const syncedLogs = (next.battleLog ?? []).slice(prevBattleLogLen);
+      // .slice(-50) トリムで prevLen > next.length になる場合も正しく検出するため
+      // findNewBattleLogEntries で最長オーバーラップを使って差分を取る
+      const syncedLogs = findNewBattleLogEntries(prev.battleLog ?? [], next.battleLog ?? []);
       newLogs.push(...syncedLogs);
 
       // 装備破損通知（目立つポップアップ）
