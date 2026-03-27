@@ -505,14 +505,6 @@ export function renderGame(
         }
       }
 
-      // 階段タイルに特別な表示を追加（常に表示）
-      if (cell.tile === TILE_STAIRS_DOWN) {
-        ctx.fillStyle = '#ffdd00';
-        ctx.font = `bold ${tileSize * 0.65}px monospace`;
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'middle';
-        ctx.fillText('▼', drawX + tileSize / 2, drawY + tileSize / 2);
-      }
 
       // アイテムタイル: 緑の★マーク
       if (cell.tile === TILE_ITEM) {
