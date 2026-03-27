@@ -19,6 +19,8 @@ import {
   TILE_TRAP,
   TILE_SHOP,
   TILE_HINT,
+  TILE_WATER,
+  TILE_MAGNETIC,
 } from '../core/constants';
 import spriteMetaRaw from '../assets/data/sprites.json';
 
@@ -229,6 +231,128 @@ export function getDefaultSpriteList(): Array<[name: string, url: string]> {
 // 内部ユーティリティ
 // ---------------------------------------------------------------------------
 
+// ---------------------------------------------------------------------------
+// SF フロアパレット（5F ごとに壁・床の配色を変更）
+// ---------------------------------------------------------------------------
+
+interface FloorPalette {
+  wallBase: string;
+  wallInner: string;
+  wallHL: string;
+  wallShadow: string;
+  wallAccent: string;
+  floorBase: string;
+  floorGrid: string;
+}
+
+/** 5F ごとに切り替わる 6 種のカラーパレット */
+const FLOOR_PALETTES: FloorPalette[] = [
+  // Band 0: 1-5F — コールドスチール（青灰）
+  { wallBase: '#283555', wallInner: '#3a4d7a', wallHL: '#7aadff', wallShadow: '#0d1528', wallAccent: '#5580dd', floorBase: '#0d1530', floorGrid: '#18233a' },
+  // Band 1: 6-10F — エレクトリックシアン
+  { wallBase: '#0a3a42', wallInner: '#125565', wallHL: '#40ffee', wallShadow: '#041520', wallAccent: '#20c8c0', floorBase: '#061828', floorGrid: '#0e2830' },
+  // Band 2: 11-15F — ヴォルカニックアンバー
+  { wallBase: '#3d2808', wallInner: '#58400c', wallHL: '#ffb030', wallShadow: '#1c1004', wallAccent: '#cc7a00', floorBase: '#120c04', floorGrid: '#201808' },
+  // Band 3: 16-20F — プラズマパープル
+  { wallBase: '#2a1042', wallInner: '#40186a', wallHL: '#cc55ff', wallShadow: '#10081e', wallAccent: '#9922cc', floorBase: '#0f0820', floorGrid: '#1a1032' },
+  // Band 4: 21-25F — トキシックグリーン
+  { wallBase: '#082c0a', wallInner: '#104415', wallHL: '#44ff55', wallShadow: '#040e04', wallAccent: '#22bb22', floorBase: '#041008', floorGrid: '#081a0a' },
+  // Band 5: 26-30F — デンジャーレッド
+  { wallBase: '#420a0a', wallInner: '#681010', wallHL: '#ff5555', wallShadow: '#1e0404', wallAccent: '#cc2020', floorBase: '#180405', floorGrid: '#260808' },
+];
+
+function getFloorPalette(floor: number): FloorPalette {
+  const band = Math.max(0, Math.floor((floor - 1) / 5)) % FLOOR_PALETTES.length;
+  return FLOOR_PALETTES[band];
+}
+
+/** SF スタイルの壁タイルを Canvas に描画する */
+function drawSFWall(
+  ctx: CanvasRenderingContext2D,
+  x: number, y: number, s: number,
+  p: FloorPalette,
+  cracked = false,
+): void {
+  // ベース塗り
+  ctx.fillStyle = p.wallBase;
+  ctx.fillRect(x, y, s, s);
+  // 内側パネル（2px インセット）
+  ctx.fillStyle = cracked ? p.wallShadow : p.wallInner;
+  ctx.fillRect(x + 2, y + 2, s - 4, s - 4);
+  // 上・左ハイライト
+  ctx.fillStyle = p.wallHL;
+  ctx.fillRect(x, y, s, 2);
+  ctx.fillRect(x, y + 2, 1, s - 2);
+  // 下・右シャドウ
+  ctx.fillStyle = p.wallShadow;
+  ctx.fillRect(x, y + s - 1, s, 1);
+  ctx.fillRect(x + s - 1, y, 1, s - 1);
+  // 回路ライン（横線 + 右端の端子ドット）
+  if (s >= 14) {
+    const ly = y + Math.floor(s * 0.55);
+    ctx.fillStyle = p.wallAccent;
+    ctx.fillRect(x + 3, ly, s - 7, 1);
+    ctx.fillRect(x + s - 5, ly - 1, 3, 3);
+  }
+  // ひび割れ: 斜め傷
+  if (cracked && s >= 10) {
+    ctx.fillStyle = p.wallHL + '88';
+    ctx.fillRect(x + 3, y + 3, 1, Math.floor(s * 0.4));
+    ctx.fillRect(x + 4, y + Math.floor(s * 0.4), Math.floor(s * 0.3), 1);
+  }
+}
+
+/** SF スタイルの床タイルを Canvas に描画する */
+function drawSFFloor(
+  ctx: CanvasRenderingContext2D,
+  x: number, y: number, s: number,
+  p: FloorPalette,
+): void {
+  ctx.fillStyle = p.floorBase;
+  ctx.fillRect(x, y, s, s);
+  // タイル境界グリッド線（隣接タイルと連続した格子を形成）
+  ctx.fillStyle = p.floorGrid;
+  ctx.fillRect(x, y, s, 1);
+  ctx.fillRect(x, y, 1, s);
+  // 大きなタイル（20px 以上）には内側グリッドも追加
+  if (s >= 20) {
+    const h = Math.floor(s / 2);
+    ctx.fillRect(x + h, y + 1, 1, s - 1);
+    ctx.fillRect(x + 1, y + h, s - 1, 1);
+  }
+}
+
+/** SF スタイルの水タイルを Canvas に描画する */
+function drawSFWater(
+  ctx: CanvasRenderingContext2D,
+  x: number, y: number, s: number,
+  p: FloorPalette,
+): void {
+  ctx.fillStyle = '#04101e';
+  ctx.fillRect(x, y, s, s);
+  // 水面ストライプ
+  for (let i = 0; i < s; i += 4) {
+    ctx.fillStyle = (Math.floor(i / 4) % 2 === 0) ? '#0a3060' : '#061e40';
+    ctx.fillRect(x, y + i, s, 2);
+  }
+  // 上部グリント
+  ctx.fillStyle = '#3080ff';
+  ctx.fillRect(x + 2, y + 1, Math.floor(s * 0.4), 1);
+  // グリッド境界
+  ctx.fillStyle = p.floorGrid;
+  ctx.fillRect(x, y, s, 1);
+  ctx.fillRect(x, y, 1, s);
+}
+
+/**
+ * SF 床として描画するタイルの集合（専用スプライトを持たない通行可能タイル）。
+ * これ以外は既存のスプライト/フォールバック描画を使用する。
+ */
+const SF_FLOOR_TILES = new Set<string>([
+  TILE_FLOOR, TILE_START,
+  'E', 'B', TILE_ITEM, TILE_GOLD, TILE_WEAPON, 'R', 'W', TILE_SHOP, TILE_MAGNETIC,
+]);
+
 /** タイルのフォールバック色マップ（#011: 全体的な明度を引き上げ視認性を改善） */
 const TILE_FALLBACK_COLORS: Record<string, string> = {
   [TILE_WALL]:        '#6a6a80', // 青みがかった明るいグレー（壁を視認しやすく）
@@ -337,6 +461,9 @@ export function renderGame(
   const startTileX = centerX - halfX;
   const startTileY = centerY - halfY;
 
+  // フロア番号に応じた SF カラーパレット（5F ごとに切り替わる）
+  const floorPalette = getFloorPalette(state.floor);
+
   // ─── 2. タイル層 ─────────────────────────────────────────────────────
   for (let screenY = 0; screenY < tilesY; screenY++) {
     for (let screenX = 0; screenX < tilesX; screenX++) {
@@ -358,34 +485,28 @@ export function renderGame(
       const drawX = screenX * tileSize;
       const drawY = screenY * tileSize;
 
-      // タイル描画（スプライト優先、なければ色ベタ塗り）
-      const spriteKey = tileToSpriteKey(cell.tile);
-      const sprite    = spriteKey ? sprites.get(spriteKey) : undefined;
-
-      if (sprite) {
-        ctx.drawImage(sprite, drawX, drawY, tileSize, tileSize);
+      // タイル描画: 壁・床・水は SF ドット絵、特殊タイルはスプライト優先
+      if (cell.tile === TILE_WALL || cell.tile === 'C') {
+        drawSFWall(ctx, drawX, drawY, tileSize, floorPalette, cell.tile === 'C');
+      } else if (cell.tile === TILE_WATER) {
+        drawSFWater(ctx, drawX, drawY, tileSize, floorPalette);
+      } else if (SF_FLOOR_TILES.has(cell.tile)) {
+        drawSFFloor(ctx, drawX, drawY, tileSize, floorPalette);
       } else {
-        const color = TILE_FALLBACK_COLORS[cell.tile] ?? '#0a0a0a';
-        ctx.fillStyle = color;
-        ctx.fillRect(drawX, drawY, tileSize, tileSize);
-      }
-
-      // 壁タイル: 上辺にハイライトを追加して立体感・区別を強化
-      if (cell.tile === TILE_WALL) {
-        ctx.strokeStyle = '#6a6a7e';
-        ctx.lineWidth = 1;
-        ctx.strokeRect(drawX + 0.5, drawY + 0.5, tileSize - 1, tileSize - 1);
-        // 上辺ハイライト（光が上から当たる演出）
-        ctx.fillStyle = '#7a7a90';
-        ctx.fillRect(drawX, drawY, tileSize, 2);
+        // 特殊タイル（溶岩・氷・ワープ・罠・ヒント・階段等）はスプライト優先
+        const spriteKey = tileToSpriteKey(cell.tile);
+        const sprite    = spriteKey ? sprites.get(spriteKey) : undefined;
+        if (sprite) {
+          ctx.drawImage(sprite, drawX, drawY, tileSize, tileSize);
+        } else {
+          const color = TILE_FALLBACK_COLORS[cell.tile] ?? '#0a0a0a';
+          ctx.fillStyle = color;
+          ctx.fillRect(drawX, drawY, tileSize, tileSize);
+        }
       }
 
       // 階段タイルに特別な表示を追加（常に表示）
       if (cell.tile === TILE_STAIRS_DOWN) {
-        if (!sprite) {
-          ctx.fillStyle = '#554400';
-          ctx.fillRect(drawX, drawY, tileSize, tileSize);
-        }
         ctx.fillStyle = '#ffdd00';
         ctx.font = `bold ${tileSize * 0.65}px monospace`;
         ctx.textAlign = 'center';

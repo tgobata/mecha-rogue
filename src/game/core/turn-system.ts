@@ -1696,11 +1696,10 @@ export function processTurn(state: GameState, action: PlayerAction): GameState {
       player: playerAfterTrap,
       enemies: enemiesAfterTrap,
     });
-    const isBossFloor = transitionFields.floor > 0 && BOSS_DEFS.some((def) => def.floor === transitionFields.floor);
     return {
       ...stateWithPickup,
       ...transitionFields,
-      phase: isBossFloor ? 'bossIntro' : 'exploring',
+      phase: 'exploring',
     };
   }
 

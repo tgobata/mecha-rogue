@@ -104,6 +104,7 @@ import VirtualController from "./VirtualController";
 import InventoryPanel from "./InventoryPanel";
 import WeaponPanel from "./WeaponPanel";
 import BossIntroOverlay from "./BossIntroOverlay";
+import BossDefeatOverlay from "./BossDefeatOverlay";
 import TitleScreen from "./TitleScreen";
 import GameOverOverlay from "./GameOverOverlay";
 import AchievementPanel from "./AchievementPanel";
@@ -465,6 +466,10 @@ export default function GameCanvas() {
   const [confirmDialog, setConfirmDialog] = useState<ConfirmDialog>(null);
   const [breakNotif, setBreakNotif] = useState<string | null>(null);
   const breakNotifTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  /** ボス演出を表示済みのフロア番号セット（同フロアで重複表示しない） */
+  const bossIntroShownRef = useRef<Set<number>>(new Set());
+  /** ボス撃破演出: 撃破したボスの enemyType。null = 非表示 */
+  const [bossDefeatEffect, setBossDefeatEffect] = useState<string | null>(null);
   /** スキル選択ダイアログの状態。null = 非表示 */
   const [skillSelectState, setSkillSelectState] = useState<{ level: number; available: Skill[] } | null>(null);
   /** レベルアップ検出用：前回のパイロットレベルを保持 */
@@ -873,11 +878,8 @@ export default function GameCanvas() {
   // ── 拠点 → 迷宮入口（ダンジョン開始） ──────────────────────
   const handleEnterDungeon = useCallback(() => {
     const floorNumber = 1; // Start at floor 1
-    if (floorNumber % 5 === 0) {
-      initAudio().then(() => playBGM(getBossBGMName(floorNumber)));
-    } else {
-      initAudio().then(() => playBGM(getExploreBGM(floorNumber)));
-    }
+    // 入場時は常に通常 BGM（ボス BGM はボスを視認した際に切り替え）
+    initAudio().then(() => playBGM(getExploreBGM(floorNumber)));
 
     const baseState = stateRef.current;
     const floor = generateFloor(floorNumber);
@@ -925,6 +927,7 @@ export default function GameCanvas() {
     setDeathFloor(null);
     setEnemiesDefeated(0);
     setGoldEarned(0);
+    bossIntroShownRef.current.clear();
     setGameState(newState);
     setMenuPanel(null);
     setBattleLog([`B${floorNumber}F へ潜入した`]);
@@ -976,12 +979,16 @@ export default function GameCanvas() {
       );
       if (defeatedEnemies.length > 0) {
         playSE("enemy_death");
-        const isBossFloor = prev.floor > 0 && prev.floor % 5 === 0;
-        if (
-          isBossFloor &&
-          defeatedEnemies.some((e) => e.enemyType === "last_boss_shadow")
-        ) {
-          playBGM("bossDefeat");
+        const defeatedBoss = defeatedEnemies.find((e) => e.isBoss === true);
+        if (defeatedBoss) {
+          // ボス撃破演出を表示
+          setBossDefeatEffect(defeatedBoss.enemyType);
+          // ラスボスは専用 BGM、それ以外は通常探索 BGM に戻す
+          if (defeatedBoss.enemyType === "last_boss_shadow") {
+            playBGM("bossDefeat");
+          } else {
+            playBGM(getExploreBGM(next.floor));
+          }
         }
       }
 
@@ -989,11 +996,8 @@ export default function GameCanvas() {
 
       if (next.floor > prevFloor) {
         playSE("floor_descend");
-        if (next.floor % 5 === 0) {
-          playBGM(getBossBGMName(next.floor));
-        } else {
-          playBGM(getExploreBGM(next.floor));
-        }
+        // ボスフロアでも入場時は通常 BGM（ボス BGM はボスを視認した際に切り替え）
+        playBGM(getExploreBGM(next.floor));
 
         // オートセーブ（フロア移動時）
         if (activeSaveSlot !== null) {
@@ -1008,9 +1012,8 @@ export default function GameCanvas() {
           );
           if (room?.type === RoomType.MONSTER_HOUSE) {
             playBGM("battle");
-          } else if (next.floor % 5 === 0) {
-            playBGM(getBossBGMName(next.floor));
-          } else {
+          } else if (next.floor % 5 !== 0) {
+            // ボスフロア以外: 通常探索 BGM（ボスフロアは視認トリガーで制御）
             playBGM(getExploreBGM(next.floor));
           }
         }
@@ -1110,6 +1113,19 @@ export default function GameCanvas() {
 
       setGameState(next);
       stateRef.current = next;
+
+      // ── ボス初視認演出 + BGM 切り替え ────────────────────────────
+      // ボスが初めてプレイヤーの視界に入ったタイミングで演出表示 & ボス BGM に切り替え
+      if (next.phase === 'exploring' && next.map) {
+        const bossFirstSeen = next.enemies.some(
+          (e) => e.isBoss === true && next.map!.cells[e.pos.y]?.[e.pos.x]?.isVisible === true,
+        );
+        if (bossFirstSeen && !bossIntroShownRef.current.has(next.floor)) {
+          bossIntroShownRef.current.add(next.floor);
+          playBGM(getBossBGMName(next.floor));
+          setGameState((s) => ({ ...s, phase: 'bossIntro' }));
+        }
+      }
 
       // ── animState 有効期限を登録 ──────────────────────────────
       // attack / hit / item_use など idle 以外の状態に ANIM_STATE_DURATION_MS の
@@ -1981,6 +1997,14 @@ export default function GameCanvas() {
               />
             )}
 
+            {/* ── ボス撃破演出 ── */}
+            {bossDefeatEffect && (
+              <BossDefeatOverlay
+                bossType={bossDefeatEffect}
+                onFinish={() => setBossDefeatEffect(null)}
+              />
+            )}
+
             {/* ── 装備破損通知 ── */}
             {breakNotif && (
               <div
@@ -2372,6 +2396,14 @@ export default function GameCanvas() {
           onFinish={() =>
             setGameState((prev) => ({ ...prev, phase: "exploring" }))
           }
+        />
+      )}
+
+      {/* ── ボス撃破演出（全画面レイヤー外） ── */}
+      {bossDefeatEffect && (
+        <BossDefeatOverlay
+          bossType={bossDefeatEffect}
+          onFinish={() => setBossDefeatEffect(null)}
         />
       )}
 
