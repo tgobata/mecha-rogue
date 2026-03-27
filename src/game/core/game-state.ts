@@ -683,6 +683,16 @@ export interface ExplorationState {
     buy: number;
     sell: number;
   }>;
+  /**
+   * フロア内の各ショップ座標ごとの在庫データ。
+   * キーは "x,y" 形式。同じショップに再訪しても在庫が変わらないよう保持。
+   */
+  shopInventories?: Record<string, Array<{
+    id: string;
+    type: 'weapon' | 'item';
+    buy: number;
+    sell: number;
+  }>>;
 }
 
 // ---------------------------------------------------------------------------

@@ -81,6 +81,10 @@ export interface Cell {
   tile: TileType;
   isVisible: boolean;
   isExplored: boolean;
+  /** TILE_ITEM タイル上に確定したアイテムID（再踏みで変わらないよう保持） */
+  itemId?: string;
+  /** TILE_WEAPON タイル上に確定した武器ID（再踏みで変わらないよう保持） */
+  weaponId?: string;
 }
 
 // ---------------------------------------------------------------------------

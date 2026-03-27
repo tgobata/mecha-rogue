@@ -735,12 +735,19 @@ function processPlayerAction(
 
         // アイテムピックアップ類
         if (slideTile === TILE_ITEM) {
-          const itemId = rollFloorItem(state.floor, Math.random);
-          if (itemId) { pickup = { type: 'item', pos: slidePos, itemId }; }
+          // 既に確定済みのIDがあればそれを使う（ポーチ満杯で一度失敗した場合も同じアイテム）
+          const slideCell = state.map!.cells[slidePos.y][slidePos.x];
+          const itemId = slideCell.itemId ?? rollFloorItem(state.floor, Math.random);
+          if (itemId) {
+            if (!slideCell.itemId) { slideCell.itemId = itemId; }
+            pickup = { type: 'item', pos: slidePos, itemId };
+          }
         }
         if (slideTile === TILE_WEAPON) {
-          const weaponId = rollFloorWeapon(state.floor, Math.random);
+          const slideCell = state.map!.cells[slidePos.y][slidePos.x];
+          const weaponId = slideCell.weaponId ?? rollFloorWeapon(state.floor, Math.random);
           if (weaponId) {
+            if (!slideCell.weaponId) { slideCell.weaponId = weaponId; }
             pickup = { type: 'weapon', pos: slidePos, weaponId };
           } else {
             // このフロアでは出現する武器がない（フロア1など）
@@ -1653,13 +1660,20 @@ export function processTurn(state: GameState, action: PlayerAction): GameState {
         }
       }
     } else if (pickup.type === 'shop') {
-      const shopInventory = getShopInventory(state.floor, Math.random);
+      // 同じショップに再訪しても在庫が変わらないよう、座標をキーに保持する
+      const shopKey = `${pickup.pos.x},${pickup.pos.y}`;
+      const existingInventories = state.exploration?.shopInventories ?? {};
+      const shopInventory = existingInventories[shopKey] ?? getShopInventory(state.floor, Math.random);
+      const shopInventories = existingInventories[shopKey]
+        ? existingInventories
+        : { ...existingInventories, [shopKey]: shopInventory };
       return {
         ...state,
         phase: 'shop',
         exploration: {
           ...state.exploration!,
           shopInventory,
+          shopInventories,
         },
         player: playerAfterAction,
       };
