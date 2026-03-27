@@ -351,6 +351,30 @@ export interface Trap {
 }
 
 // ---------------------------------------------------------------------------
+// 設置済み爆弾エンティティ
+// ---------------------------------------------------------------------------
+
+/**
+ * プレイヤーが設置した時限爆弾。
+ * 毎ターン turnsLeft を減らし、0 になったら爆発する。
+ */
+export interface PlacedBomb {
+  /** ユニークID */
+  id: number;
+  /** 設置位置 */
+  pos: Position;
+  /** 残りターン数（0になった時に爆発） */
+  turnsLeft: number;
+  /**
+   * 爆発半径:
+   * 0=設置マスのみ, 1=設置マス+直交4マス(計5), 2=3×3範囲(計9), 3=5×5範囲(計25)
+   */
+  radius: number;
+  /** 爆発ダメージ */
+  damage: number;
+}
+
+// ---------------------------------------------------------------------------
 // ヒントメッセージエンティティ
 // ---------------------------------------------------------------------------
 
@@ -389,6 +413,10 @@ export interface Player {
   animState?: 'idle' | 'move' | 'attack' | 'hit' | 'item_use' | 'near_death';
   /** 現在付与されている状態異常リスト（省略時は空配列扱い） */
   statusEffects?: StatusEffect[];
+  /** 修理ナノボットによる毎ターン回復量（0の場合は効果なし） */
+  healPerTurn?: number;
+  /** 修理ナノボットの残りターン数 */
+  healTurnsLeft?: number;
   /** 現在装備中の武器（null は素手） */
   equippedWeapon?: WeaponInstance | null;
   /** 所持武器一覧（最大 MachineStats.weaponSlots 本） */
@@ -703,6 +731,11 @@ export interface GameState {
    */
   traps: Trap[];
   /**
+   * プレイヤーが設置した時限爆弾のリスト。
+   * 毎ターン処理されカウントダウンする。
+   */
+  placedBombs: PlacedBomb[];
+  /**
    * 現在フロアに存在するヒントのリスト。
    */
   hints: Hint[];
@@ -867,6 +900,7 @@ export function createInitialGameState(): GameState {
     player: null,
     enemies: [],
     traps: [],
+    placedBombs: [],
     hints: [],
     triggeredMonsterHouses: [],
     isBlackMarket: false,

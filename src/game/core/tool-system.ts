@@ -415,6 +415,82 @@ export function useInventoryItem(
     case 'boss_damage_up':
       return { nextState, log: `${itemName} を使用した（ボス対策強化）` };
 
+    // ── 時限爆弾設置 ──
+    case 'place_bomb': {
+      if (!state.player) break;
+      const bombDelay = (def as ItemDef & { bombDelay?: number }).bombDelay ?? 2;
+      const bombRadius = (def as ItemDef & { bombRadius?: number }).bombRadius ?? 0;
+      const newBombId = Date.now() + Math.floor(Math.random() * 1000);
+      const newBomb: import('./game-state').PlacedBomb = {
+        id: newBombId,
+        pos: { ...state.player.pos },
+        turnsLeft: bombDelay,
+        radius: bombRadius,
+        damage: def.value,
+      };
+      const currentBombs = (nextState.placedBombs ?? []);
+      nextState = { ...nextState, placedBombs: [...currentBombs, newBomb] };
+      return { nextState, log: `${itemName} を設置した（${bombDelay}ターン後に爆発）` };
+    }
+
+    // ── フラッシュグレネード ──
+    case 'flash_grenade': {
+      if (!state.player) break;
+      const flashRadius = (def as ItemDef & { flashRadius?: number }).flashRadius ?? 2;
+      const stunTurnsCount = (def as ItemDef & { stunTurns?: number }).stunTurns ?? 2;
+      const playerPos = state.player.pos;
+      const stunEffect: import('./game-state').StatusEffect = {
+        type: 'stunned',
+        remainingTurns: stunTurnsCount,
+        sourceId: def.id,
+      };
+      let stunCount = 0;
+      const newEnemies = nextState.enemies.map((e) => {
+        const dx = Math.abs(e.pos.x - playerPos.x);
+        const dy = Math.abs(e.pos.y - playerPos.y);
+        const dist = Math.max(dx, dy); // Chebyshev distance
+        if (dist <= flashRadius) {
+          stunCount++;
+          const existing = e.statusEffects ?? [];
+          const withoutStun = existing.filter((s) => s.type !== 'stunned');
+          return { ...e, statusEffects: [...withoutStun, stunEffect] };
+        }
+        return e;
+      });
+      nextState = { ...nextState, enemies: newEnemies };
+      const logMsg = stunCount > 0
+        ? `${itemName} を使用した（${stunCount}体をスタン）`
+        : `${itemName} を使用した（周囲に敵なし）`;
+      return { nextState, log: logMsg };
+    }
+
+    // ── 修理ナノボット（HoT） ──
+    case 'heal_over_time': {
+      if (!state.player) break;
+      const healDuration = (def as ItemDef & { healDuration?: number }).healDuration ?? 5;
+      const healAmt = def.value;
+      // 既存のHoTより強ければ上書き、弱ければ現状維持
+      const currentTurnsLeft = nextState.player?.healTurnsLeft ?? 0;
+      const currentHealAmt = nextState.player?.healPerTurn ?? 0;
+      if (healAmt > currentHealAmt || healDuration > currentTurnsLeft) {
+        nextState = {
+          ...nextState,
+          player: nextState.player
+            ? { ...nextState.player, healPerTurn: healAmt, healTurnsLeft: healDuration }
+            : nextState.player,
+        };
+      }
+      return { nextState, log: `${itemName} を投入した（${healDuration}ターン間 +${healAmt}HP/ターン）` };
+    }
+
+    // ── ワープ系（GameCanvas.tsx で専用処理） ──
+    case 'warp_down':
+      return { nextState, log: `${itemName} を起動した（下階転送）` };
+    case 'warp_up':
+      return { nextState, log: `${itemName} を起動した（上階転送）` };
+    case 'warp_random':
+      return { nextState, log: `${itemName} を起動した（ランダムワープ）` };
+
     // ── 特殊 ──
     case 'identify_item': {
       const target = identifyTargetIndex !== undefined

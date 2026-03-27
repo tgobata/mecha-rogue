@@ -34,7 +34,9 @@ import {
   INITIAL_PLAYER_ATK,
   INITIAL_PLAYER_DEF,
   VIEW_RADIUS,
+  TILE_FLOOR,
 } from "../core/constants";
+import itemsRaw from "../assets/data/items.json";
 import { generateFloor } from "../core/maze-generator";
 import {
   processTurn,
@@ -42,6 +44,8 @@ import {
   spawnEnemiesFromMap,
   getInventoryCapacity,
   getEnemyName,
+  transitionToNextFloor,
+  transitionToPrevFloor,
 } from "../core/turn-system";
 import { getSortedItems } from "../core/inventory-utils";
 import { applyStartReturn } from "../core/start-return";
@@ -1189,6 +1193,27 @@ export default function GameCanvas() {
           addFlash(nextEnemy.pos.x, nextEnemy.pos.y, 'rgba(255,0,0,0.7)');
         }
       }
+
+      // 設置済み爆弾が爆発した → 爆発タイルをオレンジフラッシュ
+      const prevBombs = prev.placedBombs ?? [];
+      const nextBombs = next.placedBombs ?? [];
+      const explodedBombs = prevBombs.filter(
+        (pb) => !nextBombs.some((nb) => nb.id === pb.id)
+      );
+      for (const bomb of explodedBombs) {
+        if (bomb.radius === 0) {
+          addFlash(bomb.pos.x, bomb.pos.y, 'rgba(255,120,0,0.9)');
+        } else {
+          const range = bomb.radius <= 2 ? 1 : 2;
+          const orthOnly = bomb.radius === 1;
+          for (let dy = -range; dy <= range; dy++) {
+            for (let dx = -range; dx <= range; dx++) {
+              if (orthOnly && dx !== 0 && dy !== 0) continue;
+              addFlash(bomb.pos.x + dx, bomb.pos.y + dy, 'rgba(255,120,0,0.9)');
+            }
+          }
+        }
+      }
     },
     [gameState.phase, activeSaveSlot, handleEnterDungeon],
   );
@@ -1299,6 +1324,71 @@ export default function GameCanvas() {
       return;
     }
 
+    // warp_down: 下階転送
+    if (item.itemId === "warp_chip_down") {
+      const isBossFloor = state.floor > 0 && (bossesRaw as {floor: number}[]).some((def) => def.floor === state.floor);
+      const bossAlive = isBossFloor && state.enemies.some((e) => e.isBoss && e.hp > 0);
+      if (bossAlive) {
+        playSE('ui_cancel');
+        setBattleLog((prev) => [...prev, 'ボスを倒さなければ転送できない！'].slice(-BATTLE_LOG_MAX));
+        return;
+      }
+      if (!state.player) return;
+      const { nextState: consumed } = useInventoryItem(state, index);
+      playSE('floor_descend');
+      const transitionFields = transitionToNextFloor({ ...consumed, player: consumed.player! });
+      const warpedState = { ...consumed, ...transitionFields, placedBombs: [] as import('../core/game-state').PlacedBomb[], phase: 'exploring' as const };
+      setGameState(warpedState);
+      stateRef.current = warpedState;
+      setBattleLog((prev) => [...prev, `下階転送チップを使用した（B${warpedState.floor}Fへ転送）`].slice(-BATTLE_LOG_MAX));
+      return;
+    }
+
+    // warp_up: 上階転送
+    if (item.itemId === "warp_chip_up") {
+      if (state.floor <= 1) {
+        playSE('ui_cancel');
+        setBattleLog((prev) => [...prev, 'これ以上上の階はない！'].slice(-BATTLE_LOG_MAX));
+        return;
+      }
+      if (!state.player) return;
+      const { nextState: consumed } = useInventoryItem(state, index);
+      playSE('floor_descend');
+      const transitionFields = transitionToPrevFloor({ ...consumed, player: consumed.player! });
+      const warpedState = { ...consumed, ...transitionFields, placedBombs: [] as import('../core/game-state').PlacedBomb[], phase: 'exploring' as const };
+      setGameState(warpedState);
+      stateRef.current = warpedState;
+      setBattleLog((prev) => [...prev, `上階転送チップを使用した（B${warpedState.floor}Fへ転送）`].slice(-BATTLE_LOG_MAX));
+      return;
+    }
+
+    // warp_random: フロア内ランダムワープ
+    if (item.itemId === "warp_chip_random") {
+      if (!state.player || !state.map) return;
+      const walkableTiles: {x: number; y: number}[] = [];
+      for (let y = 0; y < state.map.cells.length; y++) {
+        for (let x = 0; x < state.map.cells[y].length; x++) {
+          const tile = state.map.cells[y][x].tile;
+          if (tile === TILE_FLOOR) {
+            walkableTiles.push({ x, y });
+          }
+        }
+      }
+      if (walkableTiles.length === 0) return;
+      const dest = walkableTiles[Math.floor(Math.random() * walkableTiles.length)];
+      const { nextState: consumed } = useInventoryItem(state, index);
+      playSE('item_pickup');
+      const warpedState = {
+        ...consumed,
+        player: consumed.player ? { ...consumed.player, pos: dest } : consumed.player,
+      };
+      setGameState(warpedState);
+      stateRef.current = warpedState;
+      addFlash(dest.x, dest.y, 'rgba(0,150,255,0.8)');
+      setBattleLog((prev) => [...prev, `フロアワープチップを使用した（${dest.x},${dest.y}へ転送）`].slice(-BATTLE_LOG_MAX));
+      return;
+    }
+
     // inventory.items（items.json 系）の使用処理
     const { nextState, log } = useInventoryItem(state, index);
     // アイテム使用アニメーション（使用できた場合のみ）
@@ -1317,6 +1407,21 @@ export default function GameCanvas() {
     // アイテム使用フラッシュ → プレイヤータイルを緑フラッシュ
     if (withAnim.player) {
       addFlash(withAnim.player.pos.x, withAnim.player.pos.y, 'rgba(0,255,136,0.6)');
+    }
+    // フラッシュグレネード使用時: 影響範囲を白フラッシュ
+    const usedItemDef = (itemsRaw as unknown as Array<{id: string; effect?: string; flashRadius?: number}>)
+      .find((d) => d.id === item.itemId);
+    if (usedItemDef?.effect === 'flash_grenade' && state.player) {
+      const fr = usedItemDef.flashRadius ?? 2;
+      for (let dy = -fr; dy <= fr; dy++) {
+        for (let dx = -fr; dx <= fr; dx++) {
+          addFlash(state.player.pos.x + dx, state.player.pos.y + dy, 'rgba(255,255,200,0.85)');
+        }
+      }
+    }
+    // 爆弾設置時: 設置マスを赤フラッシュ
+    if (usedItemDef?.effect === 'place_bomb' && state.player) {
+      addFlash(state.player.pos.x, state.player.pos.y, 'rgba(255,50,0,0.7)');
     }
     setBattleLog((prevLogs) => {
       const merged = [...prevLogs, log];

@@ -289,7 +289,7 @@ function effectiveAtk(player: Player): number {
  * @param state - 現在の GameState（フロア遷移前）
  * @returns フロア遷移後の部分的な GameState フィールド
  */
-function transitionToNextFloor(
+export function transitionToNextFloor(
   state: GameState,
 ): Pick<GameState, 'exploration' | 'player' | 'enemies' | 'map' | 'floor' | 'traps' | 'hints' | 'triggeredMonsterHouses' | 'isBlackMarket'> {
   const nextFloorNumber = state.floor + 1;
@@ -339,6 +339,52 @@ function transitionToNextFloor(
     isBlackMarket,
     map: visibleMap,
     floor: nextFloorNumber,
+  };
+}
+
+/**
+ * 1階層上のフロアへ遷移する。
+ * B1F からは遷移できない（呼び出し元で確認すること）。
+ */
+export function transitionToPrevFloor(
+  state: GameState,
+): Pick<GameState, 'exploration' | 'player' | 'enemies' | 'map' | 'floor' | 'traps' | 'hints' | 'triggeredMonsterHouses' | 'isBlackMarket'> {
+  const prevFloorNumber = Math.max(1, state.floor - 1);
+  const newMap = generateFloor(prevFloorNumber);
+  const currentPlayer = state.player;
+  const newPlayer: Player = {
+    ...(currentPlayer ?? {}),
+    pos: newMap.startPos,
+    hp: currentPlayer?.hp ?? state.machine.hp,
+    maxHp: currentPlayer?.maxHp ?? state.machine.maxHp,
+    atk: currentPlayer?.atk ?? INITIAL_PLAYER_ATK,
+    def: currentPlayer?.def ?? INITIAL_PLAYER_DEF,
+    facing: INITIAL_FACING,
+    animState: 'idle' as const,
+  };
+  const newEnemies = spawnEnemiesFromMap(newMap, prevFloorNumber);
+  const newTraps = spawnTrapsFromMap(newMap);
+  const newHints = spawnHintsFromMap(newMap, prevFloorNumber);
+  let isBlackMarket = false;
+  if (prevFloorNumber % 10 === 0) {
+    isBlackMarket = newMap.cells.some(row => row.some(c => c.tile === TILE_SHOP));
+  }
+  const visibleMap = updateVisibility(newMap, newMap.startPos, VIEW_RADIUS);
+  return {
+    exploration: {
+      currentFloor: visibleMap,
+      playerPos: newMap.startPos,
+      floorNumber: prevFloorNumber,
+      turn: state.exploration?.turn ?? 0,
+    },
+    player: newPlayer,
+    enemies: newEnemies,
+    traps: newTraps,
+    hints: newHints,
+    triggeredMonsterHouses: [],
+    isBlackMarket,
+    map: visibleMap,
+    floor: prevFloorNumber,
   };
 }
 
@@ -1692,6 +1738,85 @@ export function processTurn(state: GameState, action: PlayerAction): GameState {
     }
   }
 
+  // ─── 設置済み爆弾カウントダウン & 爆発処理 ────────────────────────────
+  let bombsState = stateWithPickup;
+  let currentBombs = bombsState.placedBombs ?? [];
+  if (currentBombs.length > 0) {
+    const explosions: import('./game-state').PlacedBomb[] = [];
+    const remainingBombs: import('./game-state').PlacedBomb[] = [];
+    for (const bomb of currentBombs) {
+      const updated = { ...bomb, turnsLeft: bomb.turnsLeft - 1 };
+      if (updated.turnsLeft <= 0) {
+        explosions.push(bomb);
+      } else {
+        remainingBombs.push(updated);
+      }
+    }
+    // 爆発処理
+    let bombPlayer = playerAfterTrap;
+    let bombEnemies = enemiesAfterTrap;
+    for (const bomb of explosions) {
+      // 爆発範囲のタイル計算
+      const blastTiles: Position[] = [];
+      if (bomb.radius === 0) {
+        blastTiles.push(bomb.pos);
+      } else {
+        const range = bomb.radius === 1 ? 1 : bomb.radius === 2 ? 1 : 2;
+        const useOrthOnly = bomb.radius === 1;
+        for (let dy = -range; dy <= range; dy++) {
+          for (let dx = -range; dx <= range; dx++) {
+            if (useOrthOnly && dx !== 0 && dy !== 0) continue;
+            blastTiles.push({ x: bomb.pos.x + dx, y: bomb.pos.y + dy });
+          }
+        }
+      }
+      // 敵にダメージ
+      bombEnemies = bombEnemies.map((e) => {
+        if (blastTiles.some((t) => t.x === e.pos.x && t.y === e.pos.y)) {
+          const dmg = Math.max(1, bomb.damage - (e.def ?? 0));
+          return { ...e, hp: e.hp - dmg };
+        }
+        return e;
+      });
+      // プレイヤーにダメージ
+      if (blastTiles.some((t) => t.x === bombPlayer.pos.x && t.y === bombPlayer.pos.y)) {
+        const playerDmg = Math.max(1, Math.floor(bomb.damage * 0.5) - (bombPlayer.def ?? 0));
+        bombPlayer = { ...bombPlayer, hp: bombPlayer.hp - playerDmg };
+        newBattleLog.push(`爆弾が爆発！ プレイヤーに${playerDmg}ダメージ！`);
+      }
+      newBattleLog.push(`爆弾が爆発した！（ダメージ${bomb.damage}）`);
+    }
+    // 爆弾で倒した敵を除去
+    const bombDeadEnemies = bombEnemies.filter((e) => e.hp <= 0);
+    bombEnemies = bombEnemies.filter((e) => e.hp > 0);
+    for (const dead of bombDeadEnemies) {
+      newBattleLog.push(`${dead.name ?? dead.enemyType}を爆弾で倒した！`);
+    }
+    playerAfterTrap = bombPlayer;
+    enemiesAfterTrap = bombEnemies;
+    bombsState = { ...bombsState, placedBombs: remainingBombs };
+  } else {
+    bombsState = { ...bombsState, placedBombs: [] };
+  }
+  stateWithPickup = bombsState;
+
+  // ─── 修理ナノボット HoT 処理 ──────────────────────────────────────────
+  if (playerAfterTrap.healTurnsLeft && playerAfterTrap.healTurnsLeft > 0) {
+    const healAmt = playerAfterTrap.healPerTurn ?? 0;
+    const newHp = Math.min(playerAfterTrap.maxHp, playerAfterTrap.hp + healAmt);
+    const actualHeal = newHp - playerAfterTrap.hp;
+    const newTurnsLeft = playerAfterTrap.healTurnsLeft - 1;
+    playerAfterTrap = {
+      ...playerAfterTrap,
+      hp: newHp,
+      healTurnsLeft: newTurnsLeft,
+      healPerTurn: newTurnsLeft > 0 ? playerAfterTrap.healPerTurn : 0,
+    };
+    if (actualHeal > 0) {
+      newBattleLog.push(`ナノボット修復: +${actualHeal}HP（残${newTurnsLeft}ターン）`);
+    }
+  }
+
   // ─── フロア遷移 ────────────────────────────────────────────────────────
   if (finalShouldTransitionFloor) {
     const transitionFields = transitionToNextFloor({
@@ -1702,6 +1827,7 @@ export function processTurn(state: GameState, action: PlayerAction): GameState {
     return {
       ...stateWithPickup,
       ...transitionFields,
+      placedBombs: [],
       phase: 'exploring',
     };
   }
