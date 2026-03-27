@@ -19,9 +19,17 @@
  * - onPointerDown でアクション発火
  */
 
-import { useState } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import type { PlayerAction } from "../core/turn-system";
 import type { UIAction } from "../systems/input";
+
+// ---------------------------------------------------------------------------
+// 長押しリピート設定
+// ---------------------------------------------------------------------------
+/** 長押しリピート開始までの遅延（ms） */
+const LONG_PRESS_DELAY_MS = 350;
+/** リピート間隔（ms） */
+const REPEAT_INTERVAL_MS = 130;
 
 // ---------------------------------------------------------------------------
 // 定数
@@ -138,37 +146,83 @@ export default function VirtualController({
 }: VirtualControllerProps) {
   /** 向きモード: true のとき方向ボタンが move_* の代わりに turn_* を emit する */
   const [turnMode, setTurnMode] = useState(false);
+  /** turnMode の ref（リピートコールバック内でステールにならないよう） */
+  const turnModeRef = useRef(false);
+  /** 長押しリピート: 初期遅延タイマー */
+  const repeatTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  /** 長押しリピート: インターバルタイマー */
+  const repeatIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  // turnModeRef を turnMode state と同期する
+  useEffect(() => { turnModeRef.current = turnMode; }, [turnMode]);
+
+  // アンマウント時にタイマーをクリア
+  useEffect(() => () => clearRepeat(), []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  /** リピートタイマーを全てクリアする */
+  const clearRepeat = useCallback(() => {
+    if (repeatTimerRef.current !== null) {
+      clearTimeout(repeatTimerRef.current);
+      repeatTimerRef.current = null;
+    }
+    if (repeatIntervalRef.current !== null) {
+      clearInterval(repeatIntervalRef.current);
+      repeatIntervalRef.current = null;
+    }
+  }, []);
+
+  /** 長押しリピートを開始する（即時発火後に呼ぶ） */
+  const startRepeat = useCallback((getAction: () => PlayerAction) => {
+    clearRepeat();
+    repeatTimerRef.current = setTimeout(() => {
+      repeatIntervalRef.current = setInterval(() => {
+        if (!disabled) onAction(getAction());
+      }, REPEAT_INTERVAL_MS);
+    }, LONG_PRESS_DELAY_MS);
+  }, [clearRepeat, disabled, onAction]);
+
+  /** ポインタリリース系イベントハンドラ（リピート停止） */
+  const handlePointerUp = useCallback((e: React.PointerEvent) => {
+    e.preventDefault();
+    clearRepeat();
+  }, [clearRepeat]);
 
   /**
-   * onPointerDown ハンドラを生成する（PlayerAction 用）。
+   * 方向ボタン用ハンドラを生成する（長押しリピート対応）。
    * turnMode が true のとき moveAction の代わりに turnAction を使う。
-   * onPointerDown を使うことでモバイルでも遅延なく即時発火する。
    */
-  const makeDirHandler =
-    (
-      moveAction: PlayerAction,
-      turnAction: PlayerAction,
-    ) =>
-    (e: React.PointerEvent) => {
+  const makeDirHandler = (moveAction: PlayerAction, turnAction: PlayerAction) => ({
+    onPointerDown: (e: React.PointerEvent) => {
       e.preventDefault();
       if (!disabled) {
-        onAction(turnMode ? turnAction : moveAction);
+        const action = turnModeRef.current ? turnAction : moveAction;
+        onAction(action);
+        startRepeat(() => turnModeRef.current ? turnAction : moveAction);
       }
-    };
+    },
+    onPointerUp: handlePointerUp,
+    onPointerCancel: handlePointerUp,
+    onPointerLeave: handlePointerUp,
+  });
 
   /**
-   * onPointerDown ハンドラを生成する（PlayerAction 用、向き無関係）。
+   * アクションボタン用ハンドラを生成する（長押しリピート対応）。
    */
-  const makeHandler =
-    (action: PlayerAction) => (e: React.PointerEvent) => {
+  const makeHandler = (action: PlayerAction) => ({
+    onPointerDown: (e: React.PointerEvent) => {
       e.preventDefault();
       if (!disabled) {
         onAction(action);
+        startRepeat(() => action);
       }
-    };
+    },
+    onPointerUp: handlePointerUp,
+    onPointerCancel: handlePointerUp,
+    onPointerLeave: handlePointerUp,
+  });
 
   /**
-   * onPointerDown ハンドラを生成する（UIAction 用）。
+   * UIAction ハンドラを生成する（リピートなし）。
    */
   const makeUIHandler =
     (action: UIAction) => (e: React.PointerEvent) => {
@@ -207,7 +261,7 @@ export default function VirtualController({
         {/* 上ボタン: 1行2列 */}
         <div style={{ gridColumn: 2, gridRow: 1 }}>
           <button
-            onPointerDown={makeDirHandler("move_up", "turn_up")}
+            {...makeDirHandler("move_up", "turn_up")}
             style={DPAD_BUTTON_STYLE}
             aria-label={turnMode ? "上を向く" : "上移動"}
           >
@@ -218,7 +272,7 @@ export default function VirtualController({
         {/* 左ボタン: 2行1列 */}
         <div style={{ gridColumn: 1, gridRow: 2 }}>
           <button
-            onPointerDown={makeDirHandler("move_left", "turn_left")}
+            {...makeDirHandler("move_left", "turn_left")}
             style={DPAD_BUTTON_STYLE}
             aria-label={turnMode ? "左を向く" : "左移動"}
           >
@@ -264,7 +318,7 @@ export default function VirtualController({
         {/* 右ボタン: 2行3列 */}
         <div style={{ gridColumn: 3, gridRow: 2 }}>
           <button
-            onPointerDown={makeDirHandler("move_right", "turn_right")}
+            {...makeDirHandler("move_right", "turn_right")}
             style={DPAD_BUTTON_STYLE}
             aria-label={turnMode ? "右を向く" : "右移動"}
           >
@@ -275,7 +329,7 @@ export default function VirtualController({
         {/* 下ボタン: 3行2列 */}
         <div style={{ gridColumn: 2, gridRow: 3 }}>
           <button
-            onPointerDown={makeDirHandler("move_down", "turn_down")}
+            {...makeDirHandler("move_down", "turn_down")}
             style={DPAD_BUTTON_STYLE}
             aria-label={turnMode ? "下を向く" : "下移動"}
           >
@@ -295,7 +349,7 @@ export default function VirtualController({
       >
         {/* 攻撃ボタン */}
         <button
-          onPointerDown={makeHandler("attack")}
+          {...makeHandler("attack")}
           style={{ ...ACTION_BUTTON_BASE, backgroundColor: "#cc2222" }}
           aria-label="攻撃"
         >
@@ -304,7 +358,7 @@ export default function VirtualController({
 
         {/* 待機ボタン */}
         <button
-          onPointerDown={makeHandler("wait")}
+          {...makeHandler("wait")}
           style={{ ...ACTION_BUTTON_BASE, backgroundColor: "#224488" }}
           aria-label="待機"
         >

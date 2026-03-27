@@ -514,9 +514,30 @@
   <div class="content" id="tab-sprites">
     <h2>主人公ドット絵一覧</h2>
     <div class="note">
-      主人公（プレイヤー機体）の全スプライト。ファイルパス: <code>public/sprites/player/</code><br>
-      方向なしのファイル（例: <code>idle_0.png</code>）は下向きと同じ画像。各アニメは2〜3フレーム。
+      主人公スプライトはアルファベット文字をモチーフにしたデザイン。ステータスに応じて表示文字が変わる。<br>
+      ファイルパス: <code>public/sprites/player/</code><br>
+      優先順: <strong>瀕死(D)</strong> &gt; <strong>攻撃バフ(A)</strong> &gt; <strong>防御バフ(B)</strong> &gt; <strong>スピードバフ(S)</strong> &gt; <strong>HP満タン(F)</strong> &gt; <strong>通常(H)</strong><br>
+      ※ F = HP 100%時に表示。ゴールドカラーのフルパワー状態。
     </div>
+
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px;">
+      <button class="letter-tab active" data-letter="">H — 通常</button>
+      <button class="letter-tab" data-letter="d_">D — 瀕死</button>
+      <button class="letter-tab" data-letter="a_">A — 攻撃バフ</button>
+      <button class="letter-tab" data-letter="b_">B — 防御バフ</button>
+      <button class="letter-tab" data-letter="s_">S — スピードバフ</button>
+      <button class="letter-tab" data-letter="f_">F — HP満タン</button>
+    </div>
+    <style>
+      .letter-tab {
+        padding: 6px 14px; border-radius: 6px; border: 1px solid #2a2a5e;
+        background: #16213e; color: #888; cursor: pointer; font-size: 0.82rem;
+        transition: background 0.15s, color 0.15s;
+      }
+      .letter-tab.active { background: #0f3460; color: #ffcc88; border-color: #ffcc88; }
+      .letter-tab:hover:not(.active) { color: #ccc; }
+    </style>
+
     <div class="sprite-gallery" id="sprite-gallery"></div>
   </div>
 
@@ -528,18 +549,29 @@
 
       const BASE = '../public/sprites/player/';
       const DIRS = ['down', 'up', 'left', 'right'];
-      const DIR_LABELS = { down: '下', up: '上', left: '左', right: '右' };
+      const DIR_LABELS = { down: '下↓', up: '上↑', left: '左←', right: '右→' };
 
       const STATES = [
-        { key: 'idle',     label: '待機 (idle)',     frames: [0, 1] },
-        { key: 'move',     label: '移動 (move)',     frames: [0, 1] },
-        { key: 'attack',   label: '攻撃 (attack)',   frames: [0, 1, 2] },
-        { key: 'hit',      label: '被弾 (hit)',      frames: [0, 1] },
+        { key: 'idle',   label: '待機 (idle)',   frames: [0, 1] },
+        { key: 'move',   label: '移動 (move)',   frames: [0, 1] },
+        { key: 'attack', label: '攻撃 (attack)', frames: [0, 1, 2] },
+        { key: 'hit',    label: '被弾 (hit)',    frames: [0, 1] },
       ];
-      const SPECIAL_STATES = [
-        { key: 'item_use', label: 'アイテム使用 (item_use)', frames: [0, 1], noDir: true },
-        { key: 'near_death', label: '瀕死 (near_death)',     frames: [0, 1], noDir: true },
-      ];
+
+      // 文字別の特殊ステート定義
+      const SPECIAL_BY_LETTER = {
+        '':   [
+          { key: 'item_use',   label: 'アイテム使用 (item_use)',  frames: [0, 1] },
+          { key: 'near_death', label: '瀕死 (near_death) ※Dデザイン', frames: [0, 1] },
+        ],
+        'd_': [],  // D瀕死: near_death_0/1.pngで代用
+        'a_': [{ key: 'a_item_use', label: 'アイテム使用 (a_item_use)', frames: [0, 1] }],
+        'b_': [{ key: 'b_item_use', label: 'アイテム使用 (b_item_use)', frames: [0, 1] }],
+        's_': [{ key: 's_item_use', label: 'アイテム使用 (s_item_use)', frames: [0, 1] }],
+        'f_': [{ key: 'f_item_use', label: 'アイテム使用 (f_item_use)', frames: [0, 1] }],
+      };
+      // D文字の特殊ステートは near_death スプライトを参照
+      const D_SPECIAL = [{ key: 'near_death', label: '瀕死アニメ (near_death)', frames: [0, 1] }];
 
       function mkImg(src, label) {
         const img = document.createElement('img');
@@ -560,66 +592,84 @@
         return div;
       }
 
-      // 方向付きステート
-      STATES.forEach(state => {
-        const group = document.createElement('div');
-        group.className = 'sprite-group';
-        const title = document.createElement('div');
-        title.className = 'sprite-group-title';
-        title.textContent = state.label;
-        group.appendChild(title);
+      function buildGallery(letterPrefix) {
+        gallery.innerHTML = '';
 
-        const dirRow = document.createElement('div');
-        dirRow.className = 'sprite-dir-row';
+        STATES.forEach(state => {
+          const group = document.createElement('div');
+          group.className = 'sprite-group';
+          const title = document.createElement('div');
+          title.className = 'sprite-group-title';
+          title.textContent = state.label;
+          group.appendChild(title);
 
-        DIRS.forEach(dir => {
-          const block = document.createElement('div');
-          block.className = 'sprite-dir-block';
-          const dirLbl = document.createElement('div');
-          dirLbl.className = 'dir-label';
-          dirLbl.textContent = DIR_LABELS[dir];
-          block.appendChild(dirLbl);
-          const frRow = document.createElement('div');
-          frRow.className = 'frames-row';
-          state.frames.forEach(f => {
-            const src = `${BASE}${state.key}_${dir}_${f}.png`;
-            frRow.appendChild(mkEntry(src, `${state.key}_${dir}_${f}`));
+          const dirRow = document.createElement('div');
+          dirRow.className = 'sprite-dir-row';
+
+          DIRS.forEach(dir => {
+            const block = document.createElement('div');
+            block.className = 'sprite-dir-block';
+            const dirLbl = document.createElement('div');
+            dirLbl.className = 'dir-label';
+            dirLbl.textContent = DIR_LABELS[dir];
+            block.appendChild(dirLbl);
+            const frRow = document.createElement('div');
+            frRow.className = 'frames-row';
+            state.frames.forEach(f => {
+              const key = `${letterPrefix}${state.key}_${dir}_${f}`;
+              const src = `${BASE}${key}.png`;
+              frRow.appendChild(mkEntry(src, key));
+            });
+            block.appendChild(frRow);
+            dirRow.appendChild(block);
           });
-          block.appendChild(frRow);
-          dirRow.appendChild(block);
+
+          group.appendChild(dirRow);
+          gallery.appendChild(group);
         });
 
-        group.appendChild(dirRow);
-        gallery.appendChild(group);
+        // 特殊ステート（方向なし）
+        const specials = SPECIAL_BY_LETTER[letterPrefix] || [];
+        if (specials.length > 0) {
+          const specialGroup = document.createElement('div');
+          specialGroup.className = 'sprite-group';
+          const specialTitle = document.createElement('div');
+          specialTitle.className = 'sprite-group-title';
+          specialTitle.textContent = '特殊状態';
+          specialGroup.appendChild(specialTitle);
+          const specialRow = document.createElement('div');
+          specialRow.className = 'sprite-dir-row';
+          specials.forEach(state => {
+            const block = document.createElement('div');
+            block.className = 'sprite-dir-block';
+            const lbl = document.createElement('div');
+            lbl.className = 'dir-label';
+            lbl.textContent = state.label;
+            block.appendChild(lbl);
+            const frRow = document.createElement('div');
+            frRow.className = 'frames-row';
+            state.frames.forEach(f => {
+              const src = `${BASE}${state.key}_${f}.png`;
+              frRow.appendChild(mkEntry(src, `${state.key}_${f}`));
+            });
+            block.appendChild(frRow);
+            specialRow.appendChild(block);
+          });
+          specialGroup.appendChild(specialRow);
+          gallery.appendChild(specialGroup);
+        }
+      }
+
+      // タブ切り替え
+      document.querySelectorAll('.letter-tab').forEach(btn => {
+        btn.addEventListener('click', () => {
+          document.querySelectorAll('.letter-tab').forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
+          buildGallery(btn.dataset.letter);
+        });
       });
 
-      // 特殊ステート（方向なし）
-      const specialGroup = document.createElement('div');
-      specialGroup.className = 'sprite-group';
-      const specialTitle = document.createElement('div');
-      specialTitle.className = 'sprite-group-title';
-      specialTitle.textContent = '特殊状態';
-      specialGroup.appendChild(specialTitle);
-      const specialRow = document.createElement('div');
-      specialRow.className = 'sprite-dir-row';
-      SPECIAL_STATES.forEach(state => {
-        const block = document.createElement('div');
-        block.className = 'sprite-dir-block';
-        const lbl = document.createElement('div');
-        lbl.className = 'dir-label';
-        lbl.textContent = state.label;
-        block.appendChild(lbl);
-        const frRow = document.createElement('div');
-        frRow.className = 'frames-row';
-        state.frames.forEach(f => {
-          const src = `${BASE}${state.key}_${f}.png`;
-          frRow.appendChild(mkEntry(src, `${state.key}_${f}`));
-        });
-        block.appendChild(frRow);
-        specialRow.appendChild(block);
-      });
-      specialGroup.appendChild(specialRow);
-      gallery.appendChild(specialGroup);
+      buildGallery(''); // 初期表示: H (通常)
     })();
 
     const EXP_TABLE = {

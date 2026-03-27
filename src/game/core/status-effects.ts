@@ -118,6 +118,8 @@ export function applyStatusEffects<T extends EntityWithStatus>(
             burning: '炎上',
             shocked: '感電',
             regen: '修復',
+            attack_up: '攻撃力強化',
+            speed_up: '速度強化',
           };
           logs.push(`[${label[effect.type]}] 解除`);
         }

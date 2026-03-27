@@ -246,7 +246,7 @@
     "value": 1,
     "appearsFrom": 1,
     "shopPrice": 60,
-    "dropWeight": 10,
+    "dropWeight": 3,
     "description": "未鑑定アイテムを鑑定して正体を明らかにする。ハズレアイテムを掴まされるリスクを回避できる。"
   },
   {
@@ -425,7 +425,7 @@
     "appearsFrom": 1,
     "shopPrice": 0,
     "sellPrice": 20,
-    "dropWeight": 10,
+    "dropWeight": 4,
     "description": "初期階層で入手できる廃材。ショップで売ってゴールドにする。"
   },
   {
@@ -437,7 +437,7 @@
     "appearsFrom": 8,
     "shopPrice": 0,
     "sellPrice": 50,
-    "dropWeight": 8,
+    "dropWeight": 3,
     "description": "中層階の廃材。より高品質で高く売れる。"
   },
   {
@@ -449,7 +449,7 @@
     "appearsFrom": 16,
     "shopPrice": 0,
     "sellPrice": 100,
-    "dropWeight": 6,
+    "dropWeight": 2,
     "description": "深層の廃材。希少で高価値。"
   },
   {

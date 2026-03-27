@@ -143,6 +143,7 @@ export default function WeaponPanel({
 }: WeaponPanelProps) {
   return (
     <div
+      onPointerDown={(e) => { if (e.target === e.currentTarget) onClose(); }}
       style={{
         position: 'absolute',
         inset: 0,
@@ -154,6 +155,7 @@ export default function WeaponPanel({
       }}
     >
       <div
+        onPointerDown={(e) => e.stopPropagation()}
         style={{
           width: PANEL_WIDTH,
           maxHeight: PANEL_MAX_HEIGHT,

@@ -301,6 +301,1114 @@
         "width": 32,
         "height": 32
       }
+    ],
+    "d_idle_down": [
+      {
+        "file": "public/sprites/player/d_idle_down_0.png",
+        "width": 32,
+        "height": 32
+      },
+      {
+        "file": "public/sprites/player/d_idle_down_1.png",
+        "width": 32,
+        "height": 32
+      }
+    ],
+    "d_move_down": [
+      {
+        "file": "public/sprites/player/d_move_down_0.png",
+        "width": 32,
+        "height": 32
+      },
+      {
+        "file": "public/sprites/player/d_move_down_1.png",
+        "width": 32,
+        "height": 32
+      }
+    ],
+    "d_attack_down": [
+      {
+        "file": "public/sprites/player/d_attack_down_0.png",
+        "width": 32,
+        "height": 32
+      },
+      {
+        "file": "public/sprites/player/d_attack_down_1.png",
+        "width": 32,
+        "height": 32
+      },
+      {
+        "file": "public/sprites/player/d_attack_down_2.png",
+        "width": 32,
+        "height": 32
+      }
+    ],
+    "d_hit_down": [
+      {
+        "file": "public/sprites/player/d_hit_down_0.png",
+        "width": 32,
+        "height": 32
+      },
+      {
+        "file": "public/sprites/player/d_hit_down_1.png",
+        "width": 32,
+        "height": 32
+      }
+    ],
+    "d_idle_up": [
+      {
+        "file": "public/sprites/player/d_idle_up_0.png",
+        "width": 32,
+        "height": 32
+      },
+      {
+        "file": "public/sprites/player/d_idle_up_1.png",
+        "width": 32,
+        "height": 32
+      }
+    ],
+    "d_move_up": [
+      {
+        "file": "public/sprites/player/d_move_up_0.png",
+        "width": 32,
+        "height": 32
+      },
+      {
+        "file": "public/sprites/player/d_move_up_1.png",
+        "width": 32,
+        "height": 32
+      }
+    ],
+    "d_attack_up": [
+      {
+        "file": "public/sprites/player/d_attack_up_0.png",
+        "width": 32,
+        "height": 32
+      },
+      {
+        "file": "public/sprites/player/d_attack_up_1.png",
+        "width": 32,
+        "height": 32
+      },
+      {
+        "file": "public/sprites/player/d_attack_up_2.png",
+        "width": 32,
+        "height": 32
+      }
+    ],
+    "d_hit_up": [
+      {
+        "file": "public/sprites/player/d_hit_up_0.png",
+        "width": 32,
+        "height": 32
+      },
+      {
+        "file": "public/sprites/player/d_hit_up_1.png",
+        "width": 32,
+        "height": 32
+      }
+    ],
+    "d_idle_left": [
+      {
+        "file": "public/sprites/player/d_idle_left_0.png",
+        "width": 32,
+        "height": 32
+      },
+      {
+        "file": "public/sprites/player/d_idle_left_1.png",
+        "width": 32,
+        "height": 32
+      }
+    ],
+    "d_move_left": [
+      {
+        "file": "public/sprites/player/d_move_left_0.png",
+        "width": 32,
+        "height": 32
+      },
+      {
+        "file": "public/sprites/player/d_move_left_1.png",
+        "width": 32,
+        "height": 32
+      }
+    ],
+    "d_attack_left": [
+      {
+        "file": "public/sprites/player/d_attack_left_0.png",
+        "width": 32,
+        "height": 32
+      },
+      {
+        "file": "public/sprites/player/d_attack_left_1.png",
+        "width": 32,
+        "height": 32
+      },
+      {
+        "file": "public/sprites/player/d_attack_left_2.png",
+        "width": 32,
+        "height": 32
+      }
+    ],
+    "d_hit_left": [
+      {
+        "file": "public/sprites/player/d_hit_left_0.png",
+        "width": 32,
+        "height": 32
+      },
+      {
+        "file": "public/sprites/player/d_hit_left_1.png",
+        "width": 32,
+        "height": 32
+      }
+    ],
+    "d_idle_right": [
+      {
+        "file": "public/sprites/player/d_idle_right_0.png",
+        "width": 32,
+        "height": 32
+      },
+      {
+        "file": "public/sprites/player/d_idle_right_1.png",
+        "width": 32,
+        "height": 32
+      }
+    ],
+    "d_move_right": [
+      {
+        "file": "public/sprites/player/d_move_right_0.png",
+        "width": 32,
+        "height": 32
+      },
+      {
+        "file": "public/sprites/player/d_move_right_1.png",
+        "width": 32,
+        "height": 32
+      }
+    ],
+    "d_attack_right": [
+      {
+        "file": "public/sprites/player/d_attack_right_0.png",
+        "width": 32,
+        "height": 32
+      },
+      {
+        "file": "public/sprites/player/d_attack_right_1.png",
+        "width": 32,
+        "height": 32
+      },
+      {
+        "file": "public/sprites/player/d_attack_right_2.png",
+        "width": 32,
+        "height": 32
+      }
+    ],
+    "d_hit_right": [
+      {
+        "file": "public/sprites/player/d_hit_right_0.png",
+        "width": 32,
+        "height": 32
+      },
+      {
+        "file": "public/sprites/player/d_hit_right_1.png",
+        "width": 32,
+        "height": 32
+      }
+    ],
+    "a_idle_down": [
+      {
+        "file": "public/sprites/player/a_idle_down_0.png",
+        "width": 32,
+        "height": 32
+      },
+      {
+        "file": "public/sprites/player/a_idle_down_1.png",
+        "width": 32,
+        "height": 32
+      }
+    ],
+    "a_move_down": [
+      {
+        "file": "public/sprites/player/a_move_down_0.png",
+        "width": 32,
+        "height": 32
+      },
+      {
+        "file": "public/sprites/player/a_move_down_1.png",
+        "width": 32,
+        "height": 32
+      }
+    ],
+    "a_attack_down": [
+      {
+        "file": "public/sprites/player/a_attack_down_0.png",
+        "width": 32,
+        "height": 32
+      },
+      {
+        "file": "public/sprites/player/a_attack_down_1.png",
+        "width": 32,
+        "height": 32
+      },
+      {
+        "file": "public/sprites/player/a_attack_down_2.png",
+        "width": 32,
+        "height": 32
+      }
+    ],
+    "a_hit_down": [
+      {
+        "file": "public/sprites/player/a_hit_down_0.png",
+        "width": 32,
+        "height": 32
+      },
+      {
+        "file": "public/sprites/player/a_hit_down_1.png",
+        "width": 32,
+        "height": 32
+      }
+    ],
+    "a_idle_up": [
+      {
+        "file": "public/sprites/player/a_idle_up_0.png",
+        "width": 32,
+        "height": 32
+      },
+      {
+        "file": "public/sprites/player/a_idle_up_1.png",
+        "width": 32,
+        "height": 32
+      }
+    ],
+    "a_move_up": [
+      {
+        "file": "public/sprites/player/a_move_up_0.png",
+        "width": 32,
+        "height": 32
+      },
+      {
+        "file": "public/sprites/player/a_move_up_1.png",
+        "width": 32,
+        "height": 32
+      }
+    ],
+    "a_attack_up": [
+      {
+        "file": "public/sprites/player/a_attack_up_0.png",
+        "width": 32,
+        "height": 32
+      },
+      {
+        "file": "public/sprites/player/a_attack_up_1.png",
+        "width": 32,
+        "height": 32
+      },
+      {
+        "file": "public/sprites/player/a_attack_up_2.png",
+        "width": 32,
+        "height": 32
+      }
+    ],
+    "a_hit_up": [
+      {
+        "file": "public/sprites/player/a_hit_up_0.png",
+        "width": 32,
+        "height": 32
+      },
+      {
+        "file": "public/sprites/player/a_hit_up_1.png",
+        "width": 32,
+        "height": 32
+      }
+    ],
+    "a_idle_left": [
+      {
+        "file": "public/sprites/player/a_idle_left_0.png",
+        "width": 32,
+        "height": 32
+      },
+      {
+        "file": "public/sprites/player/a_idle_left_1.png",
+        "width": 32,
+        "height": 32
+      }
+    ],
+    "a_move_left": [
+      {
+        "file": "public/sprites/player/a_move_left_0.png",
+        "width": 32,
+        "height": 32
+      },
+      {
+        "file": "public/sprites/player/a_move_left_1.png",
+        "width": 32,
+        "height": 32
+      }
+    ],
+    "a_attack_left": [
+      {
+        "file": "public/sprites/player/a_attack_left_0.png",
+        "width": 32,
+        "height": 32
+      },
+      {
+        "file": "public/sprites/player/a_attack_left_1.png",
+        "width": 32,
+        "height": 32
+      },
+      {
+        "file": "public/sprites/player/a_attack_left_2.png",
+        "width": 32,
+        "height": 32
+      }
+    ],
+    "a_hit_left": [
+      {
+        "file": "public/sprites/player/a_hit_left_0.png",
+        "width": 32,
+        "height": 32
+      },
+      {
+        "file": "public/sprites/player/a_hit_left_1.png",
+        "width": 32,
+        "height": 32
+      }
+    ],
+    "a_idle_right": [
+      {
+        "file": "public/sprites/player/a_idle_right_0.png",
+        "width": 32,
+        "height": 32
+      },
+      {
+        "file": "public/sprites/player/a_idle_right_1.png",
+        "width": 32,
+        "height": 32
+      }
+    ],
+    "a_move_right": [
+      {
+        "file": "public/sprites/player/a_move_right_0.png",
+        "width": 32,
+        "height": 32
+      },
+      {
+        "file": "public/sprites/player/a_move_right_1.png",
+        "width": 32,
+        "height": 32
+      }
+    ],
+    "a_attack_right": [
+      {
+        "file": "public/sprites/player/a_attack_right_0.png",
+        "width": 32,
+        "height": 32
+      },
+      {
+        "file": "public/sprites/player/a_attack_right_1.png",
+        "width": 32,
+        "height": 32
+      },
+      {
+        "file": "public/sprites/player/a_attack_right_2.png",
+        "width": 32,
+        "height": 32
+      }
+    ],
+    "a_hit_right": [
+      {
+        "file": "public/sprites/player/a_hit_right_0.png",
+        "width": 32,
+        "height": 32
+      },
+      {
+        "file": "public/sprites/player/a_hit_right_1.png",
+        "width": 32,
+        "height": 32
+      }
+    ],
+    "a_item_use": [
+      {
+        "file": "public/sprites/player/a_item_use_0.png",
+        "width": 32,
+        "height": 32
+      },
+      {
+        "file": "public/sprites/player/a_item_use_1.png",
+        "width": 32,
+        "height": 32
+      }
+    ],
+    "b_idle_down": [
+      {
+        "file": "public/sprites/player/b_idle_down_0.png",
+        "width": 32,
+        "height": 32
+      },
+      {
+        "file": "public/sprites/player/b_idle_down_1.png",
+        "width": 32,
+        "height": 32
+      }
+    ],
+    "b_move_down": [
+      {
+        "file": "public/sprites/player/b_move_down_0.png",
+        "width": 32,
+        "height": 32
+      },
+      {
+        "file": "public/sprites/player/b_move_down_1.png",
+        "width": 32,
+        "height": 32
+      }
+    ],
+    "b_attack_down": [
+      {
+        "file": "public/sprites/player/b_attack_down_0.png",
+        "width": 32,
+        "height": 32
+      },
+      {
+        "file": "public/sprites/player/b_attack_down_1.png",
+        "width": 32,
+        "height": 32
+      },
+      {
+        "file": "public/sprites/player/b_attack_down_2.png",
+        "width": 32,
+        "height": 32
+      }
+    ],
+    "b_hit_down": [
+      {
+        "file": "public/sprites/player/b_hit_down_0.png",
+        "width": 32,
+        "height": 32
+      },
+      {
+        "file": "public/sprites/player/b_hit_down_1.png",
+        "width": 32,
+        "height": 32
+      }
+    ],
+    "b_idle_up": [
+      {
+        "file": "public/sprites/player/b_idle_up_0.png",
+        "width": 32,
+        "height": 32
+      },
+      {
+        "file": "public/sprites/player/b_idle_up_1.png",
+        "width": 32,
+        "height": 32
+      }
+    ],
+    "b_move_up": [
+      {
+        "file": "public/sprites/player/b_move_up_0.png",
+        "width": 32,
+        "height": 32
+      },
+      {
+        "file": "public/sprites/player/b_move_up_1.png",
+        "width": 32,
+        "height": 32
+      }
+    ],
+    "b_attack_up": [
+      {
+        "file": "public/sprites/player/b_attack_up_0.png",
+        "width": 32,
+        "height": 32
+      },
+      {
+        "file": "public/sprites/player/b_attack_up_1.png",
+        "width": 32,
+        "height": 32
+      },
+      {
+        "file": "public/sprites/player/b_attack_up_2.png",
+        "width": 32,
+        "height": 32
+      }
+    ],
+    "b_hit_up": [
+      {
+        "file": "public/sprites/player/b_hit_up_0.png",
+        "width": 32,
+        "height": 32
+      },
+      {
+        "file": "public/sprites/player/b_hit_up_1.png",
+        "width": 32,
+        "height": 32
+      }
+    ],
+    "b_idle_left": [
+      {
+        "file": "public/sprites/player/b_idle_left_0.png",
+        "width": 32,
+        "height": 32
+      },
+      {
+        "file": "public/sprites/player/b_idle_left_1.png",
+        "width": 32,
+        "height": 32
+      }
+    ],
+    "b_move_left": [
+      {
+        "file": "public/sprites/player/b_move_left_0.png",
+        "width": 32,
+        "height": 32
+      },
+      {
+        "file": "public/sprites/player/b_move_left_1.png",
+        "width": 32,
+        "height": 32
+      }
+    ],
+    "b_attack_left": [
+      {
+        "file": "public/sprites/player/b_attack_left_0.png",
+        "width": 32,
+        "height": 32
+      },
+      {
+        "file": "public/sprites/player/b_attack_left_1.png",
+        "width": 32,
+        "height": 32
+      },
+      {
+        "file": "public/sprites/player/b_attack_left_2.png",
+        "width": 32,
+        "height": 32
+      }
+    ],
+    "b_hit_left": [
+      {
+        "file": "public/sprites/player/b_hit_left_0.png",
+        "width": 32,
+        "height": 32
+      },
+      {
+        "file": "public/sprites/player/b_hit_left_1.png",
+        "width": 32,
+        "height": 32
+      }
+    ],
+    "b_idle_right": [
+      {
+        "file": "public/sprites/player/b_idle_right_0.png",
+        "width": 32,
+        "height": 32
+      },
+      {
+        "file": "public/sprites/player/b_idle_right_1.png",
+        "width": 32,
+        "height": 32
+      }
+    ],
+    "b_move_right": [
+      {
+        "file": "public/sprites/player/b_move_right_0.png",
+        "width": 32,
+        "height": 32
+      },
+      {
+        "file": "public/sprites/player/b_move_right_1.png",
+        "width": 32,
+        "height": 32
+      }
+    ],
+    "b_attack_right": [
+      {
+        "file": "public/sprites/player/b_attack_right_0.png",
+        "width": 32,
+        "height": 32
+      },
+      {
+        "file": "public/sprites/player/b_attack_right_1.png",
+        "width": 32,
+        "height": 32
+      },
+      {
+        "file": "public/sprites/player/b_attack_right_2.png",
+        "width": 32,
+        "height": 32
+      }
+    ],
+    "b_hit_right": [
+      {
+        "file": "public/sprites/player/b_hit_right_0.png",
+        "width": 32,
+        "height": 32
+      },
+      {
+        "file": "public/sprites/player/b_hit_right_1.png",
+        "width": 32,
+        "height": 32
+      }
+    ],
+    "b_item_use": [
+      {
+        "file": "public/sprites/player/b_item_use_0.png",
+        "width": 32,
+        "height": 32
+      },
+      {
+        "file": "public/sprites/player/b_item_use_1.png",
+        "width": 32,
+        "height": 32
+      }
+    ],
+    "s_idle_down": [
+      {
+        "file": "public/sprites/player/s_idle_down_0.png",
+        "width": 32,
+        "height": 32
+      },
+      {
+        "file": "public/sprites/player/s_idle_down_1.png",
+        "width": 32,
+        "height": 32
+      }
+    ],
+    "s_move_down": [
+      {
+        "file": "public/sprites/player/s_move_down_0.png",
+        "width": 32,
+        "height": 32
+      },
+      {
+        "file": "public/sprites/player/s_move_down_1.png",
+        "width": 32,
+        "height": 32
+      }
+    ],
+    "s_attack_down": [
+      {
+        "file": "public/sprites/player/s_attack_down_0.png",
+        "width": 32,
+        "height": 32
+      },
+      {
+        "file": "public/sprites/player/s_attack_down_1.png",
+        "width": 32,
+        "height": 32
+      },
+      {
+        "file": "public/sprites/player/s_attack_down_2.png",
+        "width": 32,
+        "height": 32
+      }
+    ],
+    "s_hit_down": [
+      {
+        "file": "public/sprites/player/s_hit_down_0.png",
+        "width": 32,
+        "height": 32
+      },
+      {
+        "file": "public/sprites/player/s_hit_down_1.png",
+        "width": 32,
+        "height": 32
+      }
+    ],
+    "s_idle_up": [
+      {
+        "file": "public/sprites/player/s_idle_up_0.png",
+        "width": 32,
+        "height": 32
+      },
+      {
+        "file": "public/sprites/player/s_idle_up_1.png",
+        "width": 32,
+        "height": 32
+      }
+    ],
+    "s_move_up": [
+      {
+        "file": "public/sprites/player/s_move_up_0.png",
+        "width": 32,
+        "height": 32
+      },
+      {
+        "file": "public/sprites/player/s_move_up_1.png",
+        "width": 32,
+        "height": 32
+      }
+    ],
+    "s_attack_up": [
+      {
+        "file": "public/sprites/player/s_attack_up_0.png",
+        "width": 32,
+        "height": 32
+      },
+      {
+        "file": "public/sprites/player/s_attack_up_1.png",
+        "width": 32,
+        "height": 32
+      },
+      {
+        "file": "public/sprites/player/s_attack_up_2.png",
+        "width": 32,
+        "height": 32
+      }
+    ],
+    "s_hit_up": [
+      {
+        "file": "public/sprites/player/s_hit_up_0.png",
+        "width": 32,
+        "height": 32
+      },
+      {
+        "file": "public/sprites/player/s_hit_up_1.png",
+        "width": 32,
+        "height": 32
+      }
+    ],
+    "s_idle_left": [
+      {
+        "file": "public/sprites/player/s_idle_left_0.png",
+        "width": 32,
+        "height": 32
+      },
+      {
+        "file": "public/sprites/player/s_idle_left_1.png",
+        "width": 32,
+        "height": 32
+      }
+    ],
+    "s_move_left": [
+      {
+        "file": "public/sprites/player/s_move_left_0.png",
+        "width": 32,
+        "height": 32
+      },
+      {
+        "file": "public/sprites/player/s_move_left_1.png",
+        "width": 32,
+        "height": 32
+      }
+    ],
+    "s_attack_left": [
+      {
+        "file": "public/sprites/player/s_attack_left_0.png",
+        "width": 32,
+        "height": 32
+      },
+      {
+        "file": "public/sprites/player/s_attack_left_1.png",
+        "width": 32,
+        "height": 32
+      },
+      {
+        "file": "public/sprites/player/s_attack_left_2.png",
+        "width": 32,
+        "height": 32
+      }
+    ],
+    "s_hit_left": [
+      {
+        "file": "public/sprites/player/s_hit_left_0.png",
+        "width": 32,
+        "height": 32
+      },
+      {
+        "file": "public/sprites/player/s_hit_left_1.png",
+        "width": 32,
+        "height": 32
+      }
+    ],
+    "s_idle_right": [
+      {
+        "file": "public/sprites/player/s_idle_right_0.png",
+        "width": 32,
+        "height": 32
+      },
+      {
+        "file": "public/sprites/player/s_idle_right_1.png",
+        "width": 32,
+        "height": 32
+      }
+    ],
+    "s_move_right": [
+      {
+        "file": "public/sprites/player/s_move_right_0.png",
+        "width": 32,
+        "height": 32
+      },
+      {
+        "file": "public/sprites/player/s_move_right_1.png",
+        "width": 32,
+        "height": 32
+      }
+    ],
+    "s_attack_right": [
+      {
+        "file": "public/sprites/player/s_attack_right_0.png",
+        "width": 32,
+        "height": 32
+      },
+      {
+        "file": "public/sprites/player/s_attack_right_1.png",
+        "width": 32,
+        "height": 32
+      },
+      {
+        "file": "public/sprites/player/s_attack_right_2.png",
+        "width": 32,
+        "height": 32
+      }
+    ],
+    "s_hit_right": [
+      {
+        "file": "public/sprites/player/s_hit_right_0.png",
+        "width": 32,
+        "height": 32
+      },
+      {
+        "file": "public/sprites/player/s_hit_right_1.png",
+        "width": 32,
+        "height": 32
+      }
+    ],
+    "s_item_use": [
+      {
+        "file": "public/sprites/player/s_item_use_0.png",
+        "width": 32,
+        "height": 32
+      },
+      {
+        "file": "public/sprites/player/s_item_use_1.png",
+        "width": 32,
+        "height": 32
+      }
+    ],
+    "f_idle_down": [
+      {
+        "file": "public/sprites/player/f_idle_down_0.png",
+        "width": 32,
+        "height": 32
+      },
+      {
+        "file": "public/sprites/player/f_idle_down_1.png",
+        "width": 32,
+        "height": 32
+      }
+    ],
+    "f_move_down": [
+      {
+        "file": "public/sprites/player/f_move_down_0.png",
+        "width": 32,
+        "height": 32
+      },
+      {
+        "file": "public/sprites/player/f_move_down_1.png",
+        "width": 32,
+        "height": 32
+      }
+    ],
+    "f_attack_down": [
+      {
+        "file": "public/sprites/player/f_attack_down_0.png",
+        "width": 32,
+        "height": 32
+      },
+      {
+        "file": "public/sprites/player/f_attack_down_1.png",
+        "width": 32,
+        "height": 32
+      },
+      {
+        "file": "public/sprites/player/f_attack_down_2.png",
+        "width": 32,
+        "height": 32
+      }
+    ],
+    "f_hit_down": [
+      {
+        "file": "public/sprites/player/f_hit_down_0.png",
+        "width": 32,
+        "height": 32
+      },
+      {
+        "file": "public/sprites/player/f_hit_down_1.png",
+        "width": 32,
+        "height": 32
+      }
+    ],
+    "f_idle_up": [
+      {
+        "file": "public/sprites/player/f_idle_up_0.png",
+        "width": 32,
+        "height": 32
+      },
+      {
+        "file": "public/sprites/player/f_idle_up_1.png",
+        "width": 32,
+        "height": 32
+      }
+    ],
+    "f_move_up": [
+      {
+        "file": "public/sprites/player/f_move_up_0.png",
+        "width": 32,
+        "height": 32
+      },
+      {
+        "file": "public/sprites/player/f_move_up_1.png",
+        "width": 32,
+        "height": 32
+      }
+    ],
+    "f_attack_up": [
+      {
+        "file": "public/sprites/player/f_attack_up_0.png",
+        "width": 32,
+        "height": 32
+      },
+      {
+        "file": "public/sprites/player/f_attack_up_1.png",
+        "width": 32,
+        "height": 32
+      },
+      {
+        "file": "public/sprites/player/f_attack_up_2.png",
+        "width": 32,
+        "height": 32
+      }
+    ],
+    "f_hit_up": [
+      {
+        "file": "public/sprites/player/f_hit_up_0.png",
+        "width": 32,
+        "height": 32
+      },
+      {
+        "file": "public/sprites/player/f_hit_up_1.png",
+        "width": 32,
+        "height": 32
+      }
+    ],
+    "f_idle_left": [
+      {
+        "file": "public/sprites/player/f_idle_left_0.png",
+        "width": 32,
+        "height": 32
+      },
+      {
+        "file": "public/sprites/player/f_idle_left_1.png",
+        "width": 32,
+        "height": 32
+      }
+    ],
+    "f_move_left": [
+      {
+        "file": "public/sprites/player/f_move_left_0.png",
+        "width": 32,
+        "height": 32
+      },
+      {
+        "file": "public/sprites/player/f_move_left_1.png",
+        "width": 32,
+        "height": 32
+      }
+    ],
+    "f_attack_left": [
+      {
+        "file": "public/sprites/player/f_attack_left_0.png",
+        "width": 32,
+        "height": 32
+      },
+      {
+        "file": "public/sprites/player/f_attack_left_1.png",
+        "width": 32,
+        "height": 32
+      },
+      {
+        "file": "public/sprites/player/f_attack_left_2.png",
+        "width": 32,
+        "height": 32
+      }
+    ],
+    "f_hit_left": [
+      {
+        "file": "public/sprites/player/f_hit_left_0.png",
+        "width": 32,
+        "height": 32
+      },
+      {
+        "file": "public/sprites/player/f_hit_left_1.png",
+        "width": 32,
+        "height": 32
+      }
+    ],
+    "f_idle_right": [
+      {
+        "file": "public/sprites/player/f_idle_right_0.png",
+        "width": 32,
+        "height": 32
+      },
+      {
+        "file": "public/sprites/player/f_idle_right_1.png",
+        "width": 32,
+        "height": 32
+      }
+    ],
+    "f_move_right": [
+      {
+        "file": "public/sprites/player/f_move_right_0.png",
+        "width": 32,
+        "height": 32
+      },
+      {
+        "file": "public/sprites/player/f_move_right_1.png",
+        "width": 32,
+        "height": 32
+      }
+    ],
+    "f_attack_right": [
+      {
+        "file": "public/sprites/player/f_attack_right_0.png",
+        "width": 32,
+        "height": 32
+      },
+      {
+        "file": "public/sprites/player/f_attack_right_1.png",
+        "width": 32,
+        "height": 32
+      },
+      {
+        "file": "public/sprites/player/f_attack_right_2.png",
+        "width": 32,
+        "height": 32
+      }
+    ],
+    "f_hit_right": [
+      {
+        "file": "public/sprites/player/f_hit_right_0.png",
+        "width": 32,
+        "height": 32
+      },
+      {
+        "file": "public/sprites/player/f_hit_right_1.png",
+        "width": 32,
+        "height": 32
+      }
+    ],
+    "f_item_use": [
+      {
+        "file": "public/sprites/player/f_item_use_0.png",
+        "width": 32,
+        "height": 32
+      },
+      {
+        "file": "public/sprites/player/f_item_use_1.png",
+        "width": 32,
+        "height": 32
+      }
     ]
   },
   "enemies": {

@@ -42,6 +42,8 @@ interface HUDProps {
   level: number;
   /** 所持金 */
   gold: number;
+  /** ボスを視界内で確認済みかどうか（true になったら HP バーを表示し続ける） */
+  bossHPVisible?: boolean;
 }
 
 function getHpBarColor(hp: number, maxHp: number): string {
@@ -52,13 +54,13 @@ function getHpBarColor(hp: number, maxHp: number): string {
 }
 
 
-export default function HUD({ player, floorNumber, floor, enemies, inventory, level, gold }: HUDProps) {
+export default function HUD({ player, floorNumber, floor, enemies, inventory, level, gold, bossHPVisible }: HUDProps) {
   const hpBarColor = getHpBarColor(player.hp, player.maxHp);
   const hpPercent  = `${Math.max(0, Math.floor((player.hp / player.maxHp) * 100))}%`;
-  const boss = enemies.find(
+  const boss = bossHPVisible ? enemies.find(
     (e) => e.aiType === 'boss' || e.enemyType === 'last_boss_shadow' ||
            e.enemyType === 'death_machine' || bosses.some(b => b.id === e.enemyType)
-  );
+  ) : undefined;
 
   // スマホ用装備表示
   const equippedWeapon = player.equippedWeapon;

@@ -474,6 +474,8 @@ export default function GameCanvas() {
   const bossWarningTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   /** ボス演出を表示済みのフロア番号セット（同フロアで重複表示しない） */
   const bossIntroShownRef = useRef<Set<number>>(new Set());
+  /** ボスを視界内で確認済みのフロア番号セット（HP バー表示制御用） */
+  const [bossSeenFloors, setBossSeenFloors] = useState<Set<number>>(new Set());
   /** ボス撃破演出: 撃破したボスの enemyType。null = 非表示 */
   const [bossDefeatEffect, setBossDefeatEffect] = useState<string | null>(null);
   /** スキル選択ダイアログの状態。null = 非表示 */
@@ -934,6 +936,7 @@ export default function GameCanvas() {
     setEnemiesDefeated(0);
     setGoldEarned(0);
     bossIntroShownRef.current.clear();
+    setBossSeenFloors(new Set());
     setGameState(newState);
     setMenuPanel(null);
     setBattleLog([`B${floorNumber}F へ潜入した`]);
@@ -1134,6 +1137,14 @@ export default function GameCanvas() {
         const bossFirstSeen = next.enemies.some(
           (e) => e.isBoss === true && next.map!.cells[e.pos.y]?.[e.pos.x]?.isVisible === true,
         );
+        if (bossFirstSeen) {
+          setBossSeenFloors((prev) => {
+            if (prev.has(next.floor)) return prev;
+            const next2 = new Set(prev);
+            next2.add(next.floor);
+            return next2;
+          });
+        }
         if (bossFirstSeen && !bossIntroShownRef.current.has(next.floor)) {
           bossIntroShownRef.current.add(next.floor);
           playBGM(getBossBGMName(next.floor));
@@ -1880,6 +1891,7 @@ export default function GameCanvas() {
                 inventory={gameState.inventory}
                 level={gameState.pilot.level}
                 gold={gameState.inventory.gold}
+                bossHPVisible={bossSeenFloors.has(gameState.floor)}
               />
             )}
 

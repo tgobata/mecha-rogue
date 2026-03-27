@@ -125,7 +125,7 @@ export const REST_SPAWN_RATE = 0.08;
 /** 武器修理ポイントの配置確率（部屋1つあたり） */
 export const REPAIR_SPAWN_RATE = 0.06;
 /** ショップの配置確率（部屋1つあたり） */
-export const SHOP_SPAWN_RATE = 0.05;
+export const SHOP_SPAWN_RATE = 0.12;
 /** ヒント石碑の配置確率（部屋1つあたり） */
 export const HINT_SPAWN_RATE = 0.05;
 /** 宝物部屋の配置確率（全部屋中） */

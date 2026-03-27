@@ -769,6 +769,20 @@ export function renderGame(
     const drawY = playerScreenY * tileSize;
 
     // animState と向きに対応したスプライトキーを選択
+    // 文字プレフィックスをステータス効果・HP割合で決定
+    // 優先順: 瀕死(D) > 攻撃バフ(A) > 防御バフ(B) > スピードバフ(S) > 通常(H/空)
+    const maxHp = player.maxHp ?? 50;
+    const effects = player.statusEffects ?? [];
+    const hasEffect = (t: string) => effects.some(e => e.type === t);
+    const isNearDeath = (player.hp / maxHp) <= 0.25 || player.animState === 'near_death';
+    const isFullHp = player.hp >= maxHp;
+    const letterPrefix: string =
+      isNearDeath              ? 'd_' :
+      hasEffect('attack_up')   ? 'a_' :
+      hasEffect('shielded')    ? 'b_' :
+      hasEffect('speed_up')    ? 's_' :
+      isFullHp                 ? 'f_' : '';
+
     const stateKey  = (player.animState === 'attack')     ? 'attack'    :
                       (player.animState === 'hit')        ? 'hit'       :
                       (player.animState === 'move')       ? 'move'      :
@@ -776,6 +790,8 @@ export function renderGame(
                       (player.animState === 'near_death') ? 'near_death' : 'idle';
     const facingKey = player.facing ?? 'down';
     const playerSprite =
+      sprites.get(`player_${letterPrefix}${stateKey}_${facingKey}_${animFrame}`) ??
+      sprites.get(`player_${letterPrefix}${stateKey}_${animFrame}`) ??
       sprites.get(`player_${stateKey}_${facingKey}_${animFrame}`) ??
       sprites.get(`player_${stateKey}_${animFrame}`) ??
       sprites.get(`player_idle_${facingKey}_${animFrame}`) ??

@@ -5,9 +5,9 @@
       "exp": 10,
       "gold": { "min": 3, "max": 8 },
       "drops": [
-        { "item_id": "scrap_metal_i",      "type": "item",   "weight": 55, "floor_min": 1 },
+        { "item_id": "scrap_metal_i",      "type": "item",   "weight": 18, "floor_min": 1 },
         { "item_id": "repair_kit_small",   "type": "item",   "weight": 30, "floor_min": 1 },
-        { "item_id": "id_scope",           "type": "item",   "weight": 15, "floor_min": 1 },
+        { "item_id": "id_scope",           "type": "item",   "weight": 5,  "floor_min": 1 },
         { "item_id": "bomb_1_s",           "type": "item",   "weight": 8,  "floor_min": 1 },
         { "item_id": "flash_grenade_weak", "type": "item",   "weight": 8,  "floor_min": 1 }
       ]
@@ -16,9 +16,9 @@
       "exp": 15,
       "gold": { "min": 5, "max": 12 },
       "drops": [
-        { "item_id": "scrap_metal_i",      "type": "item",   "weight": 45, "floor_min": 1 },
+        { "item_id": "scrap_metal_i",      "type": "item",   "weight": 15, "floor_min": 1 },
         { "item_id": "repair_kit_small",   "type": "item",   "weight": 25, "floor_min": 1 },
-        { "item_id": "id_scope",           "type": "item",   "weight": 15, "floor_min": 1 },
+        { "item_id": "id_scope",           "type": "item",   "weight": 5,  "floor_min": 1 },
         { "item_id": "smoke_bomb",         "type": "item",   "weight": 15, "floor_min": 1 },
         { "item_id": "bomb_1_s",           "type": "item",   "weight": 7,  "floor_min": 1 },
         { "item_id": "flash_grenade_weak", "type": "item",   "weight": 7,  "floor_min": 1 }
@@ -28,10 +28,10 @@
       "exp": 23,
       "gold": { "min": 8, "max": 18 },
       "drops": [
-        { "item_id": "scrap_metal_i",      "type": "item",   "weight": 35, "floor_min": 1 },
+        { "item_id": "scrap_metal_i",      "type": "item",   "weight": 10, "floor_min": 1 },
         { "item_id": "repair_kit_small",   "type": "item",   "weight": 20, "floor_min": 1 },
         { "item_id": "smoke_bomb",         "type": "item",   "weight": 18, "floor_min": 1 },
-        { "item_id": "id_scope",           "type": "item",   "weight": 15, "floor_min": 1 },
+        { "item_id": "id_scope",           "type": "item",   "weight": 5,  "floor_min": 1 },
         { "item_id": "blade_arm",          "type": "weapon", "weight": 12, "floor_min": 1 },
         { "item_id": "bomb_1_s",           "type": "item",   "weight": 6,  "floor_min": 1 },
         { "item_id": "flash_grenade_weak", "type": "item",   "weight": 6,  "floor_min": 1 }
@@ -41,7 +41,7 @@
       "exp": 18,
       "gold": { "min": 5, "max": 12 },
       "drops": [
-        { "item_id": "scrap_metal_i",      "type": "item",   "weight": 47, "floor_min": 1 },
+        { "item_id": "scrap_metal_i",      "type": "item",   "weight": 16, "floor_min": 1 },
         { "item_id": "repair_kit_small",   "type": "item",   "weight": 28, "floor_min": 1 },
         { "item_id": "smoke_bomb",         "type": "item",   "weight": 18, "floor_min": 1 },
         { "item_id": "armor_plate_i",      "type": "item",   "weight": 7,  "floor_min": 2 },
@@ -53,7 +53,7 @@
       "exp": 27,
       "gold": { "min": 8, "max": 18 },
       "drops": [
-        { "item_id": "scrap_metal_i",       "type": "item",   "weight": 40, "floor_min": 1 },
+        { "item_id": "scrap_metal_i",       "type": "item",   "weight": 13, "floor_min": 1 },
         { "item_id": "repair_kit_small",    "type": "item",   "weight": 30, "floor_min": 1 },
         { "item_id": "smoke_bomb",          "type": "item",   "weight": 20, "floor_min": 1 },
         { "item_id": "upgrade_core_i",      "type": "item",   "weight": 10, "floor_min": 1 },
@@ -78,9 +78,9 @@
       "exp": 22,
       "gold": { "min": 8, "max": 15 },
       "drops": [
-        { "item_id": "scrap_metal_i",      "type": "item",   "weight": 42, "floor_min": 2 },
+        { "item_id": "scrap_metal_i",      "type": "item",   "weight": 14, "floor_min": 2 },
         { "item_id": "repair_kit_small",   "type": "item",   "weight": 28, "floor_min": 2 },
-        { "item_id": "id_scope",           "type": "item",   "weight": 22, "floor_min": 2 },
+        { "item_id": "id_scope",           "type": "item",   "weight": 7,  "floor_min": 2 },
         { "item_id": "armor_plate_i",      "type": "item",   "weight": 5,  "floor_min": 2 },
         { "item_id": "light_shield",       "type": "weapon", "weight": 3,  "floor_min": 2 },
         { "item_id": "bomb_1_s",           "type": "item",   "weight": 8,  "floor_min": 2 },
@@ -91,9 +91,9 @@
       "exp": 33,
       "gold": { "min": 12, "max": 22 },
       "drops": [
-        { "item_id": "scrap_metal_i",      "type": "item",   "weight": 32, "floor_min": 2 },
+        { "item_id": "scrap_metal_i",      "type": "item",   "weight": 10, "floor_min": 2 },
         { "item_id": "repair_kit_small",   "type": "item",   "weight": 25, "floor_min": 2 },
-        { "item_id": "id_scope",           "type": "item",   "weight": 18, "floor_min": 2 },
+        { "item_id": "id_scope",           "type": "item",   "weight": 6,  "floor_min": 2 },
         { "item_id": "upgrade_core_i",     "type": "item",   "weight": 15, "floor_min": 2 },
         { "item_id": "armor_plate_i",      "type": "item",   "weight": 8,  "floor_min": 3 },
         { "item_id": "light_shield",       "type": "weapon", "weight": 5,  "floor_min": 3 },
@@ -130,7 +130,7 @@
       "exp": 20,
       "gold": { "min": 5, "max": 12 },
       "drops": [
-        { "item_id": "scrap_metal_i",      "type": "item",   "weight": 55, "floor_min": 2 },
+        { "item_id": "scrap_metal_i",      "type": "item",   "weight": 18, "floor_min": 2 },
         { "item_id": "repair_kit_small",   "type": "item",   "weight": 30, "floor_min": 2 },
         { "item_id": "energy_pack",        "type": "item",   "weight": 15, "floor_min": 3 },
         { "item_id": "bomb_1_s",           "type": "item",   "weight": 8,  "floor_min": 1 },
@@ -141,7 +141,7 @@
       "exp": 30,
       "gold": { "min": 8, "max": 18 },
       "drops": [
-        { "item_id": "scrap_metal_i",       "type": "item",   "weight": 45, "floor_min": 2 },
+        { "item_id": "scrap_metal_i",       "type": "item",   "weight": 15, "floor_min": 2 },
         { "item_id": "repair_kit_small",    "type": "item",   "weight": 30, "floor_min": 2 },
         { "item_id": "energy_pack",         "type": "item",   "weight": 25, "floor_min": 3 },
         { "item_id": "flash_grenade_normal","type": "item",   "weight": 6,  "floor_min": 5 },
@@ -152,7 +152,7 @@
       "exp": 46,
       "gold": { "min": 12, "max": 26 },
       "drops": [
-        { "item_id": "scrap_metal_i",      "type": "item",   "weight": 35, "floor_min": 2 },
+        { "item_id": "scrap_metal_i",      "type": "item",   "weight": 12, "floor_min": 2 },
         { "item_id": "repair_kit_small",   "type": "item",   "weight": 28, "floor_min": 2 },
         { "item_id": "energy_pack",        "type": "item",   "weight": 22, "floor_min": 3 },
         { "item_id": "smoke_bomb",         "type": "item",   "weight": 15, "floor_min": 2 },
@@ -164,7 +164,7 @@
       "exp": 5,
       "gold": { "min": 1, "max": 3 },
       "drops": [
-        { "item_id": "scrap_metal_i",      "type": "item",   "weight": 65, "floor_min": 2 },
+        { "item_id": "scrap_metal_i",      "type": "item",   "weight": 22, "floor_min": 2 },
         { "item_id": "repair_kit_small", "type": "item",   "weight": 35, "floor_min": 2 }
       ]
     },
@@ -172,16 +172,16 @@
       "exp": 8,
       "gold": { "min": 2, "max": 5 },
       "drops": [
-        { "item_id": "scrap_metal_i",      "type": "item",   "weight": 55, "floor_min": 2 },
+        { "item_id": "scrap_metal_i",      "type": "item",   "weight": 18, "floor_min": 2 },
         { "item_id": "repair_kit_small", "type": "item",   "weight": 30, "floor_min": 2 },
-        { "item_id": "id_scope",         "type": "item",   "weight": 15, "floor_min": 2 }
+        { "item_id": "id_scope",         "type": "item",   "weight": 5,  "floor_min": 2 }
       ]
     },
     "rust_hound_lv1": {
       "exp": 15,
       "gold": { "min": 4, "max": 10 },
       "drops": [
-        { "item_id": "scrap_metal_i",      "type": "item",   "weight": 50, "floor_min": 3 },
+        { "item_id": "scrap_metal_i",      "type": "item",   "weight": 17, "floor_min": 3 },
         { "item_id": "repair_kit_small",   "type": "item",   "weight": 28, "floor_min": 3 },
         { "item_id": "smoke_bomb",         "type": "item",   "weight": 14, "floor_min": 3 },
         { "item_id": "armor_plate_i",      "type": "item",   "weight": 6,  "floor_min": 3 },
@@ -194,7 +194,7 @@
       "exp": 23,
       "gold": { "min": 6, "max": 15 },
       "drops": [
-        { "item_id": "scrap_metal_i",       "type": "item",   "weight": 40, "floor_min": 3 },
+        { "item_id": "scrap_metal_i",       "type": "item",   "weight": 13, "floor_min": 3 },
         { "item_id": "repair_kit_small",    "type": "item",   "weight": 25, "floor_min": 3 },
         { "item_id": "smoke_bomb",          "type": "item",   "weight": 15, "floor_min": 3 },
         { "item_id": "speed_boost",         "type": "item",   "weight": 9,  "floor_min": 3 },
@@ -208,7 +208,7 @@
       "exp": 35,
       "gold": { "min": 10, "max": 22 },
       "drops": [
-        { "item_id": "scrap_metal_i",      "type": "item",   "weight": 35, "floor_min": 3 },
+        { "item_id": "scrap_metal_i",      "type": "item",   "weight": 11, "floor_min": 3 },
         { "item_id": "repair_kit_small",   "type": "item",   "weight": 25, "floor_min": 3 },
         { "item_id": "smoke_bomb",         "type": "item",   "weight": 18, "floor_min": 3 },
         { "item_id": "speed_boost",        "type": "item",   "weight": 12, "floor_min": 3 },
@@ -221,7 +221,7 @@
       "exp": 53,
       "gold": { "min": 16, "max": 32 },
       "drops": [
-        { "item_id": "scrap_metal_i",      "type": "item",   "weight": 28, "floor_min": 3 },
+        { "item_id": "scrap_metal_i",      "type": "item",   "weight": 9,  "floor_min": 3 },
         { "item_id": "repair_kit_small",   "type": "item",   "weight": 22, "floor_min": 3 },
         { "item_id": "speed_boost",        "type": "item",   "weight": 18, "floor_min": 3 },
         { "item_id": "upgrade_core_i",     "type": "item",   "weight": 15, "floor_min": 3 },
@@ -235,7 +235,7 @@
       "exp": 25,
       "gold": { "min": 7, "max": 15 },
       "drops": [
-        { "item_id": "scrap_metal_i",      "type": "item",   "weight": 45, "floor_min": 3 },
+        { "item_id": "scrap_metal_i",      "type": "item",   "weight": 15, "floor_min": 3 },
         { "item_id": "energy_pack",        "type": "item",   "weight": 30, "floor_min": 3 },
         { "item_id": "repair_kit_small",   "type": "item",   "weight": 25, "floor_min": 3 },
         { "item_id": "bomb_2_s",           "type": "item",   "weight": 7,  "floor_min": 3 },
@@ -246,7 +246,7 @@
       "exp": 38,
       "gold": { "min": 10, "max": 22 },
       "drops": [
-        { "item_id": "scrap_metal_i",       "type": "item",   "weight": 35, "floor_min": 3 },
+        { "item_id": "scrap_metal_i",       "type": "item",   "weight": 12, "floor_min": 3 },
         { "item_id": "energy_pack",         "type": "item",   "weight": 30, "floor_min": 3 },
         { "item_id": "repair_kit_small",    "type": "item",   "weight": 20, "floor_min": 3 },
         { "item_id": "upgrade_core_i",      "type": "item",   "weight": 15, "floor_min": 3 },
