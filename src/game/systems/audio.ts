@@ -78,6 +78,31 @@ let currentBGM: BGMName | null = null;
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 let activeBGMParts: any[] = [];
 
+/** 事前レンダリング済みBGMバッファのキャッシュ */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const bgmBufferCache: Map<BGMName, any> = new Map();
+
+/**
+ * BGMのメタ情報（Tone.Offline の duration 計算用）。
+ * loopBars: ループ単位の小節数。0 = ループなし（ジングル）。
+ */
+const BGM_META: Partial<Record<BGMName, { bpm: number; loopBars: number }>> = {
+  title:             { bpm: 135, loopBars: 4 },
+  explore:           { bpm: 80,  loopBars: 8 },
+  explore_light:     { bpm: 130, loopBars: 8 },
+  battle:            { bpm: 140, loopBars: 8 },
+  boss:              { bpm: 140, loopBars: 4 },
+  boss_bug_swarm:    { bpm: 120, loopBars: 4 },
+  boss_mach_runner:  { bpm: 175, loopBars: 4 },
+  boss_junk_king:    { bpm: 60,  loopBars: 8 },
+  boss_phantom:      { bpm: 90,  loopBars: 8 },
+  boss_iron_fortress:{ bpm: 100, loopBars: 8 },
+  shop:              { bpm: 100, loopBars: 4 },
+  base:              { bpm: 90,  loopBars: 4 },
+  deep:              { bpm: 110, loopBars: 8 },
+  // gameOver, bossDefeat はループなしのジングルなのでキャッシュしない
+};
+
 /** BGM用音量ノード */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 let bgmVol: any = null;
@@ -145,7 +170,8 @@ export async function initAudio(): Promise<void> {
   await Tone.start();
 
   // スケジューラの先読み時間を延ばしてメインスレッド負荷によるドロップを防ぐ
-  Tone.getContext().lookAhead = 0.3;
+  // 0.5 秒に引き上げ（事前レンダリングが完成するまでの保険）
+  Tone.getContext().lookAhead = 0.5;
 
   // マスターボリューム設定
   Tone.getDestination().volume.value = volumeToDb(masterVolume) - 6;
@@ -155,6 +181,20 @@ export async function initAudio(): Promise<void> {
   seVol  = new Tone.Volume(-6).toDestination();
 
   audioReady = true;
+
+  // BGM をバックグラウンドで事前レンダリング（await しない）
+  // 完了したものから順次 bgmBufferCache に格納される
+  const BGM_PRERENDER_ORDER: BGMName[] = [
+    'explore', 'explore_light', 'battle',
+    'title', 'shop', 'base', 'deep',
+    'boss', 'boss_bug_swarm', 'boss_mach_runner',
+    'boss_junk_king', 'boss_phantom', 'boss_iron_fortress',
+  ];
+  (async () => {
+    for (const name of BGM_PRERENDER_ORDER) {
+      await preRenderBGM(name);
+    }
+  })();
 }
 
 /**
@@ -210,13 +250,62 @@ export function playBGM(name: BGMName, fadeOutSec = 0.8, fadeInSec = 0.6): void 
 }
 
 /**
+ * BGMをオフラインで事前レンダリングしてバッファキャッシュに格納する。
+ * Tone.Offline で生成した AudioBuffer を Tone.Player で再生することで
+ * メインスレッドのジャンクに完全に依存しない再生を実現する。
+ */
+async function preRenderBGM(name: BGMName): Promise<void> {
+  if (!Tone || bgmBufferCache.has(name)) return;
+  const meta = BGM_META[name];
+  if (!meta || meta.loopBars === 0) return;
+
+  const secPerBar = (60 / meta.bpm) * 4; // 1小節の秒数（4/4拍子）
+  const loopDuration = secPerBar * meta.loopBars;
+  const renderDuration = loopDuration + 1.0; // リリーステール用に +1 秒
+
+  // activeBGMParts を保護（オフラインレンダリングがモジュール変数を上書きしないよう）
+  const savedParts = activeBGMParts;
+  activeBGMParts = [];
+
+  try {
+    const buffer = await Tone.Offline(() => {
+      Tone.getTransport().bpm.value = meta.bpm;
+      BGM_PLAYERS[name](Tone.getDestination());
+      // BGM ファクトリー内で transport.start() が呼ばれる
+    }, renderDuration);
+
+    bgmBufferCache.set(name, buffer);
+  } catch {
+    // 事前レンダリング失敗時はライブレンダリングにフォールバックするため無視
+  } finally {
+    // オフライン Parts を破棄
+    for (const p of activeBGMParts) {
+      try { p.stop?.(); p.dispose?.(); } catch { /* ignore */ }
+    }
+    activeBGMParts = savedParts;
+  }
+}
+
+/**
  * BGMをフェードインで開始する内部ヘルパー。
  */
 function _startBGMWithFadeIn(name: BGMName, fadeInSec: number): void {
   if (!Tone || !bgmVol) return;
   try {
     bgmVol.volume.value = -60;
-    BGM_PLAYERS[name]?.();
+
+    const cached = bgmBufferCache.get(name);
+    if (cached) {
+      // ── 事前レンダリング済み: AudioBufferSourceNode で再生（オーディオスレッド完全独立）
+      const player = new Tone.Player(cached).connect(bgmVol);
+      player.loop = true;
+      player.start();
+      activeBGMParts = [player];
+    } else {
+      // ── フォールバック: ライブレンダリング（バッファ未完成時）
+      BGM_PLAYERS[name]?.(bgmVol);
+    }
+
     currentBGM = name;
     bgmVol.volume.rampTo(BGM_NORMAL_DB, fadeInSec);
   } catch {
@@ -565,14 +654,15 @@ const SE_PLAYERS: Record<SoundEffectName, () => void> = {
 // ---------------------------------------------------------------------------
 
 /** BGM 再生関数マップ */
-const BGM_PLAYERS: Record<BGMName, () => void> = {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const BGM_PLAYERS: Record<BGMName, (dest: any) => void> = {
 
   /**
    * タイトル BGM
    * C major, 100 BPM, 明るい冒険感
    * コード進行: C - Am - F - G (8小節ループ)
    */
-  title: () => {
+  title: (dest: any) => {
     const transport = Tone.getTransport();
     transport.bpm.value = 135; // 楽しそうで軽快なテンポ
 
@@ -580,19 +670,19 @@ const BGM_PLAYERS: Record<BGMName, () => void> = {
     const melSynth = new Tone.Synth({
       oscillator: { type: 'square' },
       envelope: { attack: 0.005, decay: 0.1, sustain: 0.2, release: 0.1 },
-    }).connect(bgmVol);
+    }).connect(dest);
 
     // はねるベース
     const bassSynth = new Tone.Synth({
       oscillator: { type: 'triangle' },
       envelope: { attack: 0.01, decay: 0.2, sustain: 0.1, release: 0.1 },
-    }).connect(bgmVol);
+    }).connect(dest);
 
-    const kick = new Tone.MembraneSynth().connect(bgmVol);
+    const kick = new Tone.MembraneSynth().connect(dest);
     const snare = new Tone.NoiseSynth({
       noise: { type: 'white' },
       envelope: { attack: 0.001, decay: 0.1, sustain: 0, release: 0.01 },
-    }).connect(bgmVol);
+    }).connect(dest);
 
     // 軽快なメロディ (C - F - G - C) 4小節ループ
     const melNotes: [string, string][] = [
@@ -654,7 +744,7 @@ const BGM_PLAYERS: Record<BGMName, () => void> = {
    * Am ペンタトニック, 80 BPM, 緊張感のある探索音楽
    * コード進行: Am - G - F - Em (8小節ループ)
    */
-  explore: () => {
+  explore: (dest: any) => {
     const transport = Tone.getTransport();
     transport.bpm.value = 80;
 
@@ -662,19 +752,19 @@ const BGM_PLAYERS: Record<BGMName, () => void> = {
     const melSynth = new Tone.Synth({
       oscillator: { type: 'square' },
       envelope: { attack: 0.02, decay: 0.15, sustain: 0.5, release: 0.2 },
-    }).connect(bgmVol);
+    }).connect(dest);
 
     // パッドシンセ（サイン波、長めアタック）
     const padSynth = new Tone.PolySynth(Tone.Synth, {
       oscillator: { type: 'sine' },
       envelope: { attack: 0.3, decay: 0.2, sustain: 0.8, release: 0.5 },
-    }).connect(bgmVol);
+    }).connect(dest);
 
     // ベースシンセ
     const bassSynth = new Tone.Synth({
       oscillator: { type: 'triangle' },
       envelope: { attack: 0.02, decay: 0.2, sustain: 0.6, release: 0.2 },
-    }).connect(bgmVol);
+    }).connect(dest);
 
     // メロディ: Am ペンタトニック風フレーズ
     const melNotes: [string, string][] = [
@@ -754,7 +844,7 @@ const BGM_PLAYERS: Record<BGMName, () => void> = {
    * 用途: フロア10以下の奇数階（1F, 3F, 7F, 9F）
    * コード進行: C - G - Am - F (8小節ループ)
    */
-  explore_light: () => {
+  explore_light: (dest: any) => {
     const transport = Tone.getTransport();
     transport.bpm.value = 130;
 
@@ -762,26 +852,26 @@ const BGM_PLAYERS: Record<BGMName, () => void> = {
     const melSynth = new Tone.Synth({
       oscillator: { type: 'square' },
       envelope: { attack: 0.005, decay: 0.08, sustain: 0.3, release: 0.08 },
-    }).connect(bgmVol);
+    }).connect(dest);
 
     // ベースシンセ（三角波 ― 軽め）
     const bassSynth = new Tone.Synth({
       oscillator: { type: 'triangle' },
       envelope: { attack: 0.01, decay: 0.15, sustain: 0.4, release: 0.1 },
-    }).connect(bgmVol);
+    }).connect(dest);
 
     // キック
     const kick = new Tone.MembraneSynth({
       pitchDecay: 0.04,
       octaves: 4,
       envelope: { attack: 0.001, decay: 0.12, sustain: 0, release: 0.03 },
-    }).connect(bgmVol);
+    }).connect(dest);
 
     // スネア
     const snare = new Tone.NoiseSynth({
       noise: { type: 'white' },
       envelope: { attack: 0.001, decay: 0.06, sustain: 0, release: 0.01 },
-    }).connect(bgmVol);
+    }).connect(dest);
 
     // ハイハット（MetalSynth）
     const hihat = new Tone.MetalSynth({
@@ -791,7 +881,7 @@ const BGM_PLAYERS: Record<BGMName, () => void> = {
       modulationIndex: 32,
       resonance: 5000,
       octaves: 1.5,
-    }).connect(bgmVol);
+    }).connect(dest);
     hihat.volume.value = -8;
 
     // メロディ: Cメジャーペンタトニック（C D E G A）8小節ループ
@@ -899,7 +989,7 @@ const BGM_PLAYERS: Record<BGMName, () => void> = {
    * コード進行: Am - F - C - G (4小節ループ)
    * 16分音符ドラムパターン
    */
-  battle: () => {
+  battle: (dest: any) => {
     const transport = Tone.getTransport();
     transport.bpm.value = 140;
 
@@ -908,26 +998,26 @@ const BGM_PLAYERS: Record<BGMName, () => void> = {
       oscillator: { type: 'square' },
       envelope: { attack: 0.005, decay: 0.08, sustain: 0.7, release: 0.05 },
       detune: 5,
-    }).connect(bgmVol);
+    }).connect(dest);
 
     // ベースシンセ（矩形波）
     const bassSynth = new Tone.Synth({
       oscillator: { type: 'square' },
       envelope: { attack: 0.005, decay: 0.1, sustain: 0.8, release: 0.05 },
-    }).connect(bgmVol);
+    }).connect(dest);
 
     // キック
     const kick = new Tone.MembraneSynth({
       pitchDecay: 0.05,
       octaves: 4,
       envelope: { attack: 0.001, decay: 0.15, sustain: 0, release: 0.04 },
-    }).connect(bgmVol);
+    }).connect(dest);
 
     // スネア
     const snare = new Tone.NoiseSynth({
       noise: { type: 'white' },
       envelope: { attack: 0.001, decay: 0.06, sustain: 0, release: 0.01 },
-    }).connect(bgmVol);
+    }).connect(dest);
 
     // ハイハット
     const hihat = new Tone.MetalSynth({
@@ -937,7 +1027,7 @@ const BGM_PLAYERS: Record<BGMName, () => void> = {
       modulationIndex: 32,
       resonance: 4000,
       octaves: 1.5,
-    }).connect(bgmVol);
+    }).connect(dest);
 
     // メロディ: Am ペンタトニック + 激しいリズム
     const melNotes: [string, string][] = [
@@ -1042,14 +1132,14 @@ const BGM_PLAYERS: Record<BGMName, () => void> = {
    * D minor, 140 BPM, 重厚で威圧的
    * コード進行: Dm - Bb - Gm - A (4小節ループ)
    */
-  boss: () => {
+  boss: (dest: any) => {
     const transport = Tone.getTransport();
     transport.bpm.value = 140;
 
-    const melSynth = new Tone.Synth({ oscillator: { type: 'sawtooth' }, envelope: { attack: 0.01, decay: 0.1, sustain: 0.6, release: 0.2 } }).connect(bgmVol);
-    const bassSynth = new Tone.Synth({ oscillator: { type: 'fmsquare' }, envelope: { attack: 0.01, decay: 0.2, sustain: 0.7, release: 0.1 } }).connect(bgmVol);
-    const kick = new Tone.MembraneSynth({ pitchDecay: 0.08, octaves: 6, envelope: { attack: 0.001, decay: 0.3, sustain: 0, release: 0.01 } }).connect(bgmVol);
-    const snare = new Tone.NoiseSynth({ noise: { type: 'pink' }, envelope: { attack: 0.001, decay: 0.1, sustain: 0, release: 0.02 } }).connect(bgmVol);
+    const melSynth = new Tone.Synth({ oscillator: { type: 'sawtooth' }, envelope: { attack: 0.01, decay: 0.1, sustain: 0.6, release: 0.2 } }).connect(dest);
+    const bassSynth = new Tone.Synth({ oscillator: { type: 'fmsquare' }, envelope: { attack: 0.01, decay: 0.2, sustain: 0.7, release: 0.1 } }).connect(dest);
+    const kick = new Tone.MembraneSynth({ pitchDecay: 0.08, octaves: 6, envelope: { attack: 0.001, decay: 0.3, sustain: 0, release: 0.01 } }).connect(dest);
+    const snare = new Tone.NoiseSynth({ noise: { type: 'pink' }, envelope: { attack: 0.001, decay: 0.1, sustain: 0, release: 0.02 } }).connect(dest);
 
     const melNotes: [string, string][] = [
       ['0:0:0', 'D5'], ['0:1:0', 'F5'], ['0:1:2', 'A5'], ['0:2:0', 'G5'], ['0:3:0', 'F5'], ['0:3:2', 'E5'],
@@ -1096,7 +1186,7 @@ const BGM_PLAYERS: Record<BGMName, () => void> = {
    * C minor, 120 BPM, 不規則・不気味・虫の羽音イメージ
    * AMシンセによるトレモロ変調 + 不規則なアルペジオ + 低音ドローン
    */
-  boss_bug_swarm: () => {
+  boss_bug_swarm: (dest: any) => {
     const transport = Tone.getTransport();
     transport.bpm.value = 120;
 
@@ -1107,28 +1197,28 @@ const BGM_PLAYERS: Record<BGMName, () => void> = {
       modulation: { type: 'sawtooth' },
       modulationEnvelope: { attack: 0.01, decay: 0.1, sustain: 0.8, release: 0.1 },
       harmonicity: 8,
-    }).connect(bgmVol);
+    }).connect(dest);
     arpSynth.volume.value = -4;
 
     // 低音ドローン（不気味な持続音）
     const droneSynth = new Tone.Synth({
       oscillator: { type: 'fmsine', modulationType: 'triangle' },
       envelope: { attack: 0.5, decay: 0.3, sustain: 0.9, release: 0.8 },
-    }).connect(bgmVol);
+    }).connect(dest);
     droneSynth.volume.value = -10;
 
     // 打撃音（羽音のような細かいパルス）
     const blipSynth = new Tone.Synth({
       oscillator: { type: 'pulse', width: 0.1 },
       envelope: { attack: 0.001, decay: 0.03, sustain: 0, release: 0.01 },
-    }).connect(bgmVol);
+    }).connect(dest);
     blipSynth.volume.value = -8;
 
     // キック（重め）
     const kick = new Tone.MembraneSynth({
       pitchDecay: 0.05, octaves: 4,
       envelope: { attack: 0.001, decay: 0.25, sustain: 0, release: 0.01 },
-    }).connect(bgmVol);
+    }).connect(dest);
 
     // 不規則アルペジオ: Cm スケール (C Eb G Bb Ab) を不規則に
     const arpNotes: [string, string][] = [
@@ -1191,7 +1281,7 @@ const BGM_PLAYERS: Record<BGMName, () => void> = {
    * E minor, 175 BPM, 超高速・機械的・スピード感
    * Square波主体の高速8分ループ + 金属的打撃ドラム
    */
-  boss_mach_runner: () => {
+  boss_mach_runner: (dest: any) => {
     const transport = Tone.getTransport();
     transport.bpm.value = 175;
 
@@ -1199,35 +1289,35 @@ const BGM_PLAYERS: Record<BGMName, () => void> = {
     const leadSynth = new Tone.Synth({
       oscillator: { type: 'square' },
       envelope: { attack: 0.002, decay: 0.05, sustain: 0.4, release: 0.04 },
-    }).connect(bgmVol);
+    }).connect(dest);
     leadSynth.volume.value = -4;
 
     // ハーモニーライン（1オクターブ下の矩形波）
     const harmSynth = new Tone.Synth({
       oscillator: { type: 'square' },
       envelope: { attack: 0.002, decay: 0.05, sustain: 0.3, release: 0.04 },
-    }).connect(bgmVol);
+    }).connect(dest);
     harmSynth.volume.value = -9;
 
     // ベース（重め）
     const bassSynth = new Tone.Synth({
       oscillator: { type: 'fmsquare', modulationType: 'square' },
       envelope: { attack: 0.005, decay: 0.1, sustain: 0.6, release: 0.05 },
-    }).connect(bgmVol);
+    }).connect(dest);
     bassSynth.volume.value = -6;
 
     // キック（鋭く早い）
     const kick = new Tone.MembraneSynth({
       pitchDecay: 0.04, octaves: 8,
       envelope: { attack: 0.001, decay: 0.12, sustain: 0, release: 0.01 },
-    }).connect(bgmVol);
+    }).connect(dest);
 
     // メタル系スネア
     const metal = new Tone.MetalSynth({
       frequency: 400, harmonicity: 5.1,
       modulationIndex: 32, resonance: 4000, octaves: 1.5,
       envelope: { attack: 0.001, decay: 0.06, release: 0.01 },
-    }).connect(bgmVol);
+    }).connect(dest);
     metal.volume.value = -8;
 
     // 超高速メロディ: Em スケール (E G A B D)
@@ -1317,7 +1407,7 @@ const BGM_PLAYERS: Record<BGMName, () => void> = {
    * G minor, 60 BPM, 重厚・工業的・ガチャガチャした金属音
    * 重低音MembraneSynth + ゆっくりとした不気味なメロディ + 金属打撃SE風ドラム
    */
-  boss_junk_king: () => {
+  boss_junk_king: (dest: any) => {
     const transport = Tone.getTransport();
     transport.bpm.value = 60;
 
@@ -1325,21 +1415,21 @@ const BGM_PLAYERS: Record<BGMName, () => void> = {
     const melSynth = new Tone.Synth({
       oscillator: { type: 'sawtooth' },
       envelope: { attack: 0.05, decay: 0.3, sustain: 0.7, release: 0.4 },
-    }).connect(bgmVol);
+    }).connect(dest);
     melSynth.volume.value = -4;
 
     // 重厚なベース（FMシンセ）
     const bassSynth = new Tone.Synth({
       oscillator: { type: 'fmsquare', modulationType: 'square' },
       envelope: { attack: 0.02, decay: 0.4, sustain: 0.8, release: 0.3 },
-    }).connect(bgmVol);
+    }).connect(dest);
     bassSynth.volume.value = -2;
 
     // 強力なキック
     const kick = new Tone.MembraneSynth({
       pitchDecay: 0.15, octaves: 10,
       envelope: { attack: 0.001, decay: 0.6, sustain: 0, release: 0.05 },
-    }).connect(bgmVol);
+    }).connect(dest);
     kick.volume.value = 4;
 
     // 金属的クラッシュ（ジャンク感）
@@ -1347,14 +1437,14 @@ const BGM_PLAYERS: Record<BGMName, () => void> = {
       frequency: 120, harmonicity: 2.1,
       modulationIndex: 8, resonance: 800, octaves: 1.2,
       envelope: { attack: 0.001, decay: 0.5, release: 0.2 },
-    }).connect(bgmVol);
+    }).connect(dest);
     metalCrash.volume.value = -6;
 
     // ノイズスネア（重め）
     const snare = new Tone.NoiseSynth({
       noise: { type: 'pink' },
       envelope: { attack: 0.005, decay: 0.25, sustain: 0, release: 0.05 },
-    }).connect(bgmVol);
+    }).connect(dest);
     snare.volume.value = -4;
 
     // ゆっくりとした不気味なメロディ: Gm (G Bb D F Eb)
@@ -1423,12 +1513,12 @@ const BGM_PLAYERS: Record<BGMName, () => void> = {
    * B diminished, 90 BPM, 幻想的・不気味・ディミニッシュスケール
    * Sine波中心 + フランジャー効果 + コーラス重ねがけ
    */
-  boss_phantom: () => {
+  boss_phantom: (dest: any) => {
     const transport = Tone.getTransport();
     transport.bpm.value = 90;
 
     // コーラス（幻想的な揺れ）
-    const chorus = new Tone.Chorus(4, 2.5, 0.7).connect(bgmVol).start();
+    const chorus = new Tone.Chorus(4, 2.5, 0.7).connect(dest).start();
     // フランジャー代わりにディレイ+フィードバックで揺らぎを作る
     const flanger = new Tone.FeedbackDelay('32n', 0.3).connect(chorus);
 
@@ -1450,14 +1540,14 @@ const BGM_PLAYERS: Record<BGMName, () => void> = {
     const bassSynth = new Tone.Synth({
       oscillator: { type: 'sine' },
       envelope: { attack: 0.05, decay: 0.3, sustain: 0.8, release: 0.5 },
-    }).connect(bgmVol);
+    }).connect(dest);
     bassSynth.volume.value = -6;
 
     // ソフトパーカッション（幽霊的）
     const softDrum = new Tone.NoiseSynth({
       noise: { type: 'pink' },
       envelope: { attack: 0.02, decay: 0.15, sustain: 0, release: 0.1 },
-    }).connect(bgmVol);
+    }).connect(dest);
     softDrum.volume.value = -14;
 
     // ディミニッシュスケール: B D F Ab (Bdim7)
@@ -1521,7 +1611,7 @@ const BGM_PLAYERS: Record<BGMName, () => void> = {
    * D minor (軍隊的), 100 BPM, 壮大・マーチ風・要塞の重さ
    * 強いスネアドラム（マーチリズム）+ 重厚な低音 + 堂々としたメロディ
    */
-  boss_iron_fortress: () => {
+  boss_iron_fortress: (dest: any) => {
     const transport = Tone.getTransport();
     transport.bpm.value = 100;
 
@@ -1529,35 +1619,35 @@ const BGM_PLAYERS: Record<BGMName, () => void> = {
     const melSynth = new Tone.Synth({
       oscillator: { type: 'sawtooth' },
       envelope: { attack: 0.02, decay: 0.2, sustain: 0.7, release: 0.2 },
-    }).connect(bgmVol);
+    }).connect(dest);
     melSynth.volume.value = -3;
 
     // 副旋律（矩形波、重ねてチップチューン感）
     const harmSynth = new Tone.Synth({
       oscillator: { type: 'square' },
       envelope: { attack: 0.01, decay: 0.15, sustain: 0.5, release: 0.15 },
-    }).connect(bgmVol);
+    }).connect(dest);
     harmSynth.volume.value = -9;
 
     // 重厚なベース
     const bassSynth = new Tone.Synth({
       oscillator: { type: 'fmsquare', modulationType: 'square' },
       envelope: { attack: 0.01, decay: 0.3, sustain: 0.8, release: 0.2 },
-    }).connect(bgmVol);
+    }).connect(dest);
     bassSynth.volume.value = -2;
 
     // マーチキック（強め）
     const kick = new Tone.MembraneSynth({
       pitchDecay: 0.1, octaves: 8,
       envelope: { attack: 0.001, decay: 0.4, sustain: 0, release: 0.02 },
-    }).connect(bgmVol);
+    }).connect(dest);
     kick.volume.value = 2;
 
     // 軍隊的スネア（強くシャープ）
     const snare = new Tone.NoiseSynth({
       noise: { type: 'white' },
       envelope: { attack: 0.001, decay: 0.15, sustain: 0, release: 0.03 },
-    }).connect(bgmVol);
+    }).connect(dest);
     snare.volume.value = 0;
 
     // 金属的ハイハット（行進感）
@@ -1565,7 +1655,7 @@ const BGM_PLAYERS: Record<BGMName, () => void> = {
       frequency: 600, harmonicity: 5.1,
       modulationIndex: 32, resonance: 6000, octaves: 1.0,
       envelope: { attack: 0.001, decay: 0.04, release: 0.01 },
-    }).connect(bgmVol);
+    }).connect(dest);
     hihat.volume.value = -14;
 
     // 堂々としたメロディ: Dm (D F A C Bb)
@@ -1658,12 +1748,12 @@ const BGM_PLAYERS: Record<BGMName, () => void> = {
    * ショップ BGM
    * F major, 100BPM, のんびり
    */
-  shop: () => {
+  shop: (dest: any) => {
     const transport = Tone.getTransport();
     transport.bpm.value = 100;
 
-    const melSynth = new Tone.Synth({ oscillator: { type: 'sine' }, envelope: { attack: 0.02, decay: 0.2, sustain: 0.5, release: 0.3 } }).connect(bgmVol);
-    const padSynth = new Tone.PolySynth(Tone.Synth, { oscillator: { type: 'triangle' }, envelope: { attack: 0.2, decay: 0.5, sustain: 0.5, release: 0.5 } }).connect(bgmVol);
+    const melSynth = new Tone.Synth({ oscillator: { type: 'sine' }, envelope: { attack: 0.02, decay: 0.2, sustain: 0.5, release: 0.3 } }).connect(dest);
+    const padSynth = new Tone.PolySynth(Tone.Synth, { oscillator: { type: 'triangle' }, envelope: { attack: 0.2, decay: 0.5, sustain: 0.5, release: 0.5 } }).connect(dest);
 
     const melNotes: [string, string][] = [
         ['0:0:0', 'F4'], ['0:2:0', 'A4'], ['0:3:0', 'C5'],
@@ -1693,12 +1783,12 @@ const BGM_PLAYERS: Record<BGMName, () => void> = {
    * 拠点 BGM
    * C major, 90BPM, 穏やか
    */
-  base: () => {
+  base: (dest: any) => {
     const transport = Tone.getTransport();
     transport.bpm.value = 90;
 
-    const melSynth = new Tone.Synth({ oscillator: { type: 'sine' }, envelope: { attack: 0.1, decay: 0.3, sustain: 0.4, release: 0.5 } }).connect(bgmVol);
-    const bassSynth = new Tone.Synth({ oscillator: { type: 'sine' }, envelope: { attack: 0.01, decay: 0.3, sustain: 0.8, release: 0.2 } }).connect(bgmVol);
+    const melSynth = new Tone.Synth({ oscillator: { type: 'sine' }, envelope: { attack: 0.1, decay: 0.3, sustain: 0.4, release: 0.5 } }).connect(dest);
+    const bassSynth = new Tone.Synth({ oscillator: { type: 'sine' }, envelope: { attack: 0.01, decay: 0.3, sustain: 0.8, release: 0.2 } }).connect(dest);
 
     const melNotes: [string, string][] = [
         ['0:0:0', 'C4'], ['0:2:0', 'E4'], ['1:0:0', 'G4'], ['1:2:0', 'E4'],
@@ -1726,10 +1816,10 @@ const BGM_PLAYERS: Record<BGMName, () => void> = {
    * ゲームオーバー
    * A minor, 80BPM, 4小節ジングル
    */
-  gameOver: () => {
+  gameOver: (dest: any) => {
     const transport = Tone.getTransport();
     transport.bpm.value = 80;
-    const synth = new Tone.Synth({ oscillator: { type: 'sawtooth' }, envelope: { attack: 0.05, decay: 0.5, sustain: 0, release: 0.1 } }).connect(bgmVol);
+    const synth = new Tone.Synth({ oscillator: { type: 'sawtooth' }, envelope: { attack: 0.05, decay: 0.5, sustain: 0, release: 0.1 } }).connect(dest);
     const notes: [string, string][] = [
         ['0:0:0', 'A3'], ['0:2:0', 'G3'],
         ['1:0:0', 'F3'], ['1:2:0', 'E3'],
@@ -1747,10 +1837,10 @@ const BGM_PLAYERS: Record<BGMName, () => void> = {
    * ボス撃破
    * C major, 160BPM, ファンファーレ
    */
-  bossDefeat: () => {
+  bossDefeat: (dest: any) => {
     const transport = Tone.getTransport();
     transport.bpm.value = 160;
-    const synth = new Tone.Synth({ oscillator: { type: 'square' }, envelope: { attack: 0.01, decay: 0.2, sustain: 0.3, release: 0.1 } }).connect(bgmVol);
+    const synth = new Tone.Synth({ oscillator: { type: 'square' }, envelope: { attack: 0.01, decay: 0.2, sustain: 0.3, release: 0.1 } }).connect(dest);
     const notes: [string, string][] = [
         ['0:0:0', 'C4'], ['0:0:2', 'E4'], ['0:1:0', 'G4'],
         ['0:2:0', 'C5'], ['0:2:2', 'G4'], ['0:3:0', 'C5'],
@@ -1769,11 +1859,11 @@ const BGM_PLAYERS: Record<BGMName, () => void> = {
    * 深層
    * B minor, 110BPM, ダーク
    */
-  deep: () => {
+  deep: (dest: any) => {
     const transport = Tone.getTransport();
     transport.bpm.value = 110;
-    const pad = new Tone.PolySynth(Tone.Synth, { oscillator: { type: 'fmsine', modulationType: 'triangle' }, envelope: { attack: 1.5, decay: 1.0, sustain: 0.8, release: 1.5 } }).connect(bgmVol);
-    const bell = new Tone.MetalSynth({ frequency: 300, harmonicity: 12, resonance: 800, octaves: 2 }).connect(bgmVol);
+    const pad = new Tone.PolySynth(Tone.Synth, { oscillator: { type: 'fmsine', modulationType: 'triangle' }, envelope: { attack: 1.5, decay: 1.0, sustain: 0.8, release: 1.5 } }).connect(dest);
+    const bell = new Tone.MetalSynth({ frequency: 300, harmonicity: 12, resonance: 800, octaves: 2 }).connect(dest);
     bell.volume.value = -15;
     
     const padNotes: [string, string[]][] = [
