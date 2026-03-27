@@ -144,6 +144,9 @@ export async function initAudio(): Promise<void> {
   // AudioContext を起動（ブラウザのオートプレイポリシー対応）
   await Tone.start();
 
+  // スケジューラの先読み時間を延ばしてメインスレッド負荷によるドロップを防ぐ
+  Tone.getContext().lookAhead = 0.3;
+
   // マスターボリューム設定
   Tone.getDestination().volume.value = volumeToDb(masterVolume) - 6;
 
@@ -624,12 +627,16 @@ const BGM_PLAYERS: Record<BGMName, () => void> = {
     bassPart.loopEnd = '4m';
 
     const kickPattern = ['0:0:0','0:1:0','0:2:0','0:3:0', '1:0:0','1:1:0','1:2:0','1:3:0', '2:0:0','2:1:0','2:2:0','2:3:0', '3:0:0','3:1:0','3:2:0','3:3:0'];
-    const kickPart = new Tone.Part((time: number) => kick.triggerAttackRelease('C2', '16n', time), kickPattern.map(t => [t, null]));
+    const kickPart = new Tone.Part((time: number) => {
+      try { kick.triggerAttackRelease('C2', '16n', time); } catch { /* ループ境界での時刻衝突を無視 */ }
+    }, kickPattern.map(t => [t, null]));
     kickPart.loop = true;
     kickPart.loopEnd = '4m';
 
     const snarePattern = ['0:1:0','0:3:0', '1:1:0','1:3:0', '2:1:0','2:3:0', '3:1:0','3:3:0'];
-    const snarePart = new Tone.Part((time: number) => snare.triggerAttackRelease('16n', time), snarePattern.map(t => [t, null]));
+    const snarePart = new Tone.Part((time: number) => {
+      try { snare.triggerAttackRelease('16n', time); } catch { /* ループ境界での時刻衝突を無視 */ }
+    }, snarePattern.map(t => [t, null]));
     snarePart.loop = true;
     snarePart.loopEnd = '4m';
 
@@ -847,7 +854,7 @@ const BGM_PLAYERS: Record<BGMName, () => void> = {
       kickTimes.push(`${bar}:0:0`, `${bar}:2:0`);
     }
     const kickPart = new Tone.Part((time: number) => {
-      kick.triggerAttackRelease('C2', '16n', time);
+      try { kick.triggerAttackRelease('C2', '16n', time); } catch { /* ループ境界での時刻衝突を無視 */ }
     }, kickTimes.map(t => [t, null]));
     kickPart.loop = true;
     kickPart.loopEnd = '8m';
@@ -858,7 +865,7 @@ const BGM_PLAYERS: Record<BGMName, () => void> = {
       snareTimes.push(`${bar}:1:0`, `${bar}:3:0`);
     }
     const snarePart = new Tone.Part((time: number) => {
-      snare.triggerAttackRelease('16n', time);
+      try { snare.triggerAttackRelease('16n', time); } catch { /* ループ境界での時刻衝突を無視 */ }
     }, snareTimes.map(t => [t, null]));
     snarePart.loop = true;
     snarePart.loopEnd = '8m';
@@ -984,7 +991,7 @@ const BGM_PLAYERS: Record<BGMName, () => void> = {
     ];
 
     const kickPart = new Tone.Part((time: number) => {
-      kick.triggerAttackRelease('C2', '16n', time);
+      try { kick.triggerAttackRelease('C2', '16n', time); } catch { /* ループ境界での時刻衝突を無視 */ }
     }, kickTimes.map((t) => [t, null]));
     kickPart.loop = true;
     kickPart.loopEnd = '4m';
@@ -998,7 +1005,7 @@ const BGM_PLAYERS: Record<BGMName, () => void> = {
     ];
 
     const snarePart = new Tone.Part((time: number) => {
-      snare.triggerAttackRelease('16n', time);
+      try { snare.triggerAttackRelease('16n', time); } catch { /* ループ境界での時刻衝突を無視 */ }
     }, snareTimes.map((t) => [t, null]));
     snarePart.loop = true;
     snarePart.loopEnd = '4m';
@@ -1064,11 +1071,15 @@ const BGM_PLAYERS: Record<BGMName, () => void> = {
     bassPart.loop = true;
     bassPart.loopEnd = '4m';
 
-    const kickPart = new Tone.Part((time: number) => { kick.triggerAttackRelease('C1', '8n', time); }, [['0:0:0'], ['0:1:2'], ['0:2:0'], ['0:3:2'], ['1:0:0'], ['1:1:2'], ['1:2:0'], ['1:3:2'], ['2:0:0'], ['2:1:2'], ['2:2:0'], ['2:3:2'], ['3:0:0'], ['3:1:0'], ['3:2:0'], ['3:3:0']]);
+    const kickPart = new Tone.Part((time: number) => {
+      try { kick.triggerAttackRelease('C1', '8n', time); } catch { /* ループ境界での時刻衝突を無視 */ }
+    }, [['0:0:0'], ['0:1:2'], ['0:2:0'], ['0:3:2'], ['1:0:0'], ['1:1:2'], ['1:2:0'], ['1:3:2'], ['2:0:0'], ['2:1:2'], ['2:2:0'], ['2:3:2'], ['3:0:0'], ['3:1:0'], ['3:2:0'], ['3:3:0']]);
     kickPart.loop = true;
     kickPart.loopEnd = '4m';
 
-    const snarePart = new Tone.Part((time: number) => { snare.triggerAttackRelease('8n', time); }, [['0:1:0'], ['0:3:0'], ['1:1:0'], ['1:3:0'], ['2:1:0'], ['2:3:0'], ['3:1:0'], ['3:3:0']]);
+    const snarePart = new Tone.Part((time: number) => {
+      try { snare.triggerAttackRelease('8n', time); } catch { /* ループ境界での時刻衝突を無視 */ }
+    }, [['0:1:0'], ['0:3:0'], ['1:1:0'], ['1:3:0'], ['2:1:0'], ['2:3:0'], ['3:1:0'], ['3:3:0']]);
     snarePart.loop = true;
     snarePart.loopEnd = '4m';
 
@@ -1161,7 +1172,9 @@ const BGM_PLAYERS: Record<BGMName, () => void> = {
 
     // キックパターン（不規則）
     const kickTimes = ['0:0:0','0:2:0','1:0:0','1:1:2','1:3:0','2:0:0','2:2:2','3:0:0','3:2:0','3:3:2'];
-    const kickPart = new Tone.Part((time: number) => { kick.triggerAttackRelease('C1', '16n', time); }, kickTimes.map(t => [t, null]));
+    const kickPart = new Tone.Part((time: number) => {
+      try { kick.triggerAttackRelease('C1', '16n', time); } catch { /* ループ境界での時刻衝突を無視 */ }
+    }, kickTimes.map(t => [t, null]));
     kickPart.loop = true;
     kickPart.loopEnd = '4m';
 
@@ -1276,13 +1289,17 @@ const BGM_PLAYERS: Record<BGMName, () => void> = {
 
     // 超高速キックパターン（4つ打ち）
     const kickTimes = Array.from({ length: 16 }, (_, i) => `${Math.floor(i / 4)}:${i % 4}:0`);
-    const kickPart = new Tone.Part((time: number) => { kick.triggerAttackRelease('C1', '16n', time); }, kickTimes.map(t => [t, null]));
+    const kickPart = new Tone.Part((time: number) => {
+      try { kick.triggerAttackRelease('C1', '16n', time); } catch { /* ループ境界での時刻衝突を無視 */ }
+    }, kickTimes.map(t => [t, null]));
     kickPart.loop = true;
     kickPart.loopEnd = '4m';
 
     // メタルスネア（拍2・4）
     const metalTimes = ['0:1:0','0:3:0','1:1:0','1:3:0','2:1:0','2:3:0','3:1:0','3:3:0'];
-    const metalPart = new Tone.Part((time: number) => { metal.triggerAttack('16n', time); }, metalTimes.map(t => [t, null]));
+    const metalPart = new Tone.Part((time: number) => {
+      try { metal.triggerAttack('16n', time); } catch { /* ループ境界での時刻衝突を無視 */ }
+    }, metalTimes.map(t => [t, null]));
     metalPart.loop = true;
     metalPart.loopEnd = '4m';
 
@@ -1370,19 +1387,25 @@ const BGM_PLAYERS: Record<BGMName, () => void> = {
 
     // 重いキックパターン（強調）
     const kickTimes = ['0:0:0','0:2:2','1:2:0','2:0:0','2:2:2','3:2:0','4:0:0','4:2:2','5:2:0','6:0:0','6:2:2','7:2:0'];
-    const kickPart = new Tone.Part((time: number) => { kick.triggerAttackRelease('C1', '8n', time); }, kickTimes.map(t => [t, null]));
+    const kickPart = new Tone.Part((time: number) => {
+      try { kick.triggerAttackRelease('C1', '8n', time); } catch { /* ループ境界での時刻衝突を無視 */ }
+    }, kickTimes.map(t => [t, null]));
     kickPart.loop = true;
     kickPart.loopEnd = '8m';
 
     // 金属クラッシュ（拍3）
     const crashTimes = ['0:2:0','1:0:0','2:2:0','3:0:0','4:2:0','5:0:0','6:2:0','7:0:0'];
-    const crashPart = new Tone.Part((time: number) => { metalCrash.triggerAttack('8n', time); }, crashTimes.map(t => [t, null]));
+    const crashPart = new Tone.Part((time: number) => {
+      try { metalCrash.triggerAttack('8n', time); } catch { /* ループ境界での時刻衝突を無視 */ }
+    }, crashTimes.map(t => [t, null]));
     crashPart.loop = true;
     crashPart.loopEnd = '8m';
 
     // スネア
     const snareTimes = ['0:2:0','1:2:0','2:2:0','3:2:0','4:2:0','5:2:0','6:2:0','7:2:0'];
-    const snarePart = new Tone.Part((time: number) => { snare.triggerAttackRelease('4n', time); }, snareTimes.map(t => [t, null]));
+    const snarePart = new Tone.Part((time: number) => {
+      try { snare.triggerAttackRelease('4n', time); } catch { /* ループ境界での時刻衝突を無視 */ }
+    }, snareTimes.map(t => [t, null]));
     snarePart.loop = true;
     snarePart.loopEnd = '8m';
 
@@ -1479,7 +1502,9 @@ const BGM_PLAYERS: Record<BGMName, () => void> = {
 
     // ソフトパーカッション（控えめなリズム）
     const drumTimes = ['0:1:0','0:3:0','1:1:0','1:3:0','2:0:2','2:2:2','3:1:0','3:3:0','4:1:0','4:3:0','5:1:2','5:3:2','6:1:0','6:3:0','7:1:0','7:3:0'];
-    const drumPart = new Tone.Part((time: number) => { softDrum.triggerAttackRelease('8n', time); }, drumTimes.map(t => [t, null]));
+    const drumPart = new Tone.Part((time: number) => {
+      try { softDrum.triggerAttackRelease('8n', time); } catch { /* ループ境界での時刻衝突を無視 */ }
+    }, drumTimes.map(t => [t, null]));
     drumPart.loop = true;
     drumPart.loopEnd = '8m';
 
@@ -1596,20 +1621,26 @@ const BGM_PLAYERS: Record<BGMName, () => void> = {
 
     // マーチキック（1拍目 + 3拍目強調）
     const kickTimes = ['0:0:0','0:2:0','1:0:0','1:2:0','2:0:0','2:2:0','3:0:0','3:2:0','4:0:0','4:2:0','5:0:0','5:2:0','6:0:0','6:2:0','7:0:0','7:2:0'];
-    const kickPart = new Tone.Part((time: number) => { kick.triggerAttackRelease('C1', '8n', time); }, kickTimes.map(t => [t, null]));
+    const kickPart = new Tone.Part((time: number) => {
+      try { kick.triggerAttackRelease('C1', '8n', time); } catch { /* ループ境界での時刻衝突を無視 */ }
+    }, kickTimes.map(t => [t, null]));
     kickPart.loop = true;
     kickPart.loopEnd = '8m';
 
     // 軍隊的スネア（マーチリズム: 2・4拍目 + 裏拍）
     const snareTimes = ['0:1:0','0:3:0','0:3:2','1:1:0','1:3:0','1:3:2','2:1:0','2:3:0','2:3:2','3:1:0','3:3:0','3:3:2','4:1:0','4:3:0','4:3:2','5:1:0','5:3:0','5:3:2','6:1:0','6:3:0','6:3:2','7:1:0','7:3:0'];
-    const snarePart = new Tone.Part((time: number) => { snare.triggerAttackRelease('16n', time); }, snareTimes.map(t => [t, null]));
+    const snarePart = new Tone.Part((time: number) => {
+      try { snare.triggerAttackRelease('16n', time); } catch { /* ループ境界での時刻衝突を無視 */ }
+    }, snareTimes.map(t => [t, null]));
     snarePart.loop = true;
     snarePart.loopEnd = '8m';
 
     // ハイハット（8分刻み）
     const hihatTimes: string[] = [];
     for (let m = 0; m < 8; m++) { for (let b = 0; b < 4; b++) { hihatTimes.push(`${m}:${b}:0`); hihatTimes.push(`${m}:${b}:2`); } }
-    const hihatPart = new Tone.Part((time: number) => { hihat.triggerAttack('16n', time); }, hihatTimes.map(t => [t, null]));
+    const hihatPart = new Tone.Part((time: number) => {
+      try { hihat.triggerAttack('16n', time); } catch { /* ループ境界での時刻衝突を無視 */ }
+    }, hihatTimes.map(t => [t, null]));
     hihatPart.loop = true;
     hihatPart.loopEnd = '8m';
 

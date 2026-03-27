@@ -401,6 +401,7 @@
     "appearsFrom": 5,
     "shopPrice": 0,
     "dropWeight": 6,
+    "revealItems": ["repair_kit_medium", "energy_pack", "upgrade_core_i", "armor_plate_i", "smoke_bomb", "weapon_repair_kit"],
     "description": "未鑑定の不明パーツ。識別スコープで正体を明かせる。良いものもハズレもある。"
   },
   {
@@ -412,19 +413,44 @@
     "appearsFrom": 10,
     "shopPrice": 0,
     "dropWeight": 4,
+    "revealItems": ["repair_kit_large", "energy_pack_large", "upgrade_core_ii", "repair_kit_medium", "barrier_capsule", "armor_plate_ii"],
     "description": "未鑑定の上位不明パーツ。識別スコープで正体を明かせる。深層ほど高価値な可能性がある。"
   },
   {
-    "id": "scrap_metal",
-    "name": "廃金属",
+    "id": "scrap_metal_i",
+    "name": "廃金属I",
     "category": "material",
     "effect": "sell_only",
-    "value": 30,
+    "value": 20,
     "appearsFrom": 1,
     "shopPrice": 0,
-    "sellPrice": 30,
+    "sellPrice": 20,
     "dropWeight": 10,
-    "description": "売却専用の素材アイテム。ショップで売ってゴールドにする。"
+    "description": "初期階層で入手できる廃材。ショップで売ってゴールドにする。"
+  },
+  {
+    "id": "scrap_metal_ii",
+    "name": "廃金属II",
+    "category": "material",
+    "effect": "sell_only",
+    "value": 50,
+    "appearsFrom": 8,
+    "shopPrice": 0,
+    "sellPrice": 50,
+    "dropWeight": 8,
+    "description": "中層階の廃材。より高品質で高く売れる。"
+  },
+  {
+    "id": "scrap_metal_iii",
+    "name": "廃金属III",
+    "category": "material",
+    "effect": "sell_only",
+    "value": 100,
+    "appearsFrom": 16,
+    "shopPrice": 0,
+    "sellPrice": 100,
+    "dropWeight": 6,
+    "description": "深層の廃材。希少で高価値。"
   },
   {
     "id": "rare_circuit",

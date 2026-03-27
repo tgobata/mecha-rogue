@@ -465,7 +465,9 @@ export default function GameCanvas() {
   const [activeSaveSlot, setActiveSaveSlot] = useState<number | null>(null);
   const [confirmDialog, setConfirmDialog] = useState<ConfirmDialog>(null);
   const [breakNotif, setBreakNotif] = useState<string | null>(null);
+  const [bossWarning, setBossWarning] = useState(false);
   const breakNotifTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const bossWarningTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   /** ボス演出を表示済みのフロア番号セット（同フロアで重複表示しない） */
   const bossIntroShownRef = useRef<Set<number>>(new Set());
   /** ボス撃破演出: 撃破したボスの enemyType。null = 非表示 */
@@ -1059,6 +1061,14 @@ export default function GameCanvas() {
 
         if (breakNotifTimerRef.current) clearTimeout(breakNotifTimerRef.current);
         breakNotifTimerRef.current = setTimeout(() => setBreakNotif(null), 3500);
+      }
+
+      // ボスブロック通知（目立つ赤ポップアップ）
+      const hasBossBlock = syncedLogs.some((l) => l.includes('ボスを倒さなければ先へは進めない'));
+      if (hasBossBlock) {
+        setBossWarning(true);
+        if (bossWarningTimerRef.current) clearTimeout(bossWarningTimerRef.current);
+        bossWarningTimerRef.current = setTimeout(() => setBossWarning(false), 3000);
       }
 
       // 敵VS敵撃破通知
@@ -2027,6 +2037,32 @@ export default function GameCanvas() {
               >
                 <div style={{ fontSize: 11, color: '#ff8888', marginBottom: 2 }}>⚠ 装備破損</div>
                 <div style={{ fontSize: 13, color: '#ffcccc', fontWeight: 'bold' }}>{breakNotif}</div>
+              </div>
+            )}
+
+            {/* ── ボスブロック警告 ── */}
+            {bossWarning && (
+              <div
+                style={{
+                  position: 'absolute',
+                  top: '50%',
+                  left: '50%',
+                  transform: 'translate(-50%, -50%)',
+                  backgroundColor: 'rgba(200, 0, 0, 0.85)',
+                  color: '#fff',
+                  padding: '12px 24px',
+                  borderRadius: '8px',
+                  border: '2px solid #ff4444',
+                  fontSize: '14px',
+                  fontWeight: 'bold',
+                  textAlign: 'center',
+                  zIndex: 100,
+                  pointerEvents: 'none',
+                  letterSpacing: '0.05em',
+                  textShadow: '0 1px 2px rgba(0,0,0,0.8)',
+                }}
+              >
+                ボスを倒さなければ先へは進めない！
               </div>
             )}
 

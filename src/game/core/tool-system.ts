@@ -422,12 +422,26 @@ export function useInventoryItem(
         : nextState.inventory.items.findIndex((it) => it.unidentified);
       if (target >= 0 && nextState.inventory.items[target]?.unidentified) {
         const identified = nextState.inventory.items[target];
-        const newItemsWithId = nextState.inventory.items.map((it, i) =>
-          i === target ? { ...it, unidentified: false } : it,
-        );
-        const realName = getItemName(identified.itemId);
-        nextState = { ...nextState, inventory: { ...nextState.inventory, items: newItemsWithId } };
-        return { nextState, log: `${itemName} を使用した（${realName} を鑑定）` };
+        const targetDef = ITEM_DEFS.find((d) => d.id === identified.itemId);
+        const revealItems = (targetDef as {revealItems?: string[]})?.revealItems;
+        if (revealItems && revealItems.length > 0) {
+          // Randomly pick a revealed item
+          const revealedId = revealItems[Math.floor(Math.random() * revealItems.length)];
+          const realName = getItemName(revealedId);
+          const newItemsWithId = nextState.inventory.items.map((it, i) =>
+            i === target ? { ...it, itemId: revealedId, unidentified: false } : it,
+          );
+          nextState = { ...nextState, inventory: { ...nextState.inventory, items: newItemsWithId } };
+          return { nextState, log: `${itemName} を使用した（正体は ${realName} だった！）` };
+        } else {
+          // fallback: just mark as identified
+          const realName = getItemName(identified.itemId);
+          const newItemsWithId = nextState.inventory.items.map((it, i) =>
+            i === target ? { ...it, unidentified: false } : it,
+          );
+          nextState = { ...nextState, inventory: { ...nextState.inventory, items: newItemsWithId } };
+          return { nextState, log: `${itemName} を使用した（${realName} を鑑定）` };
+        }
       }
       return { nextState, log: `${itemName} を使用したが、鑑定できるアイテムがない` };
     }

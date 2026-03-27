@@ -73,7 +73,9 @@
     "warehouse_ticket":       { "buy": 1000, "sell": 450 },
     "unknown_part_a":         { "buy": 0,    "sell": 50  },
     "unknown_part_b":         { "buy": 0,    "sell": 130 },
-    "scrap_metal":            { "buy": 0,    "sell": 30  },
+    "scrap_metal_i":          { "buy": 0,    "sell": 20  },
+    "scrap_metal_ii":         { "buy": 0,    "sell": 50  },
+    "scrap_metal_iii":        { "buy": 0,    "sell": 100 },
     "rare_circuit":           { "buy": 0,    "sell": 150 }
   },
   "repair": {
