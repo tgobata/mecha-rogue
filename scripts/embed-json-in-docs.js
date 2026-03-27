@@ -25,6 +25,28 @@ function embedScript(varName, jsonStr) {
   return `<script>\nconst ${varName} = ${jsonStr};\n</script>`;
 }
 
+/**
+ * HTML内の既存 <script>const VAR = ...;</script> ブロックを置換する。
+ * 見つからない場合は </head> 直前に挿入する。
+ */
+function replaceOrInsertScript(html, varName, jsonStr) {
+  const block = `<script>\nconst ${varName} = ${jsonStr};\n</script>`;
+  // 既存ブロックを正規表現で検索して置換（複数あれば最初の1つだけ残す）
+  const re = new RegExp(`<script>\\s*const ${varName}\\s*=[\\s\\S]*?;\\s*</script>`, 'g');
+  const matches = html.match(re);
+  if (matches && matches.length > 0) {
+    // 最初のマッチを新しいブロックで置換し、残りは除去
+    let replaced = false;
+    html = html.replace(re, () => {
+      if (!replaced) { replaced = true; return block; }
+      return '';  // 2個目以降は削除
+    });
+    return html;
+  }
+  // 見つからない場合は </head> 直前に挿入
+  return html.replace('</head>', block + '\n</head>');
+}
+
 // ---------------------------------------------------------------------------
 // 全敵.html
 // ---------------------------------------------------------------------------
@@ -33,10 +55,7 @@ function fixZenteki() {
   let html = fs.readFileSync(filePath, 'utf8');
 
   const enemiesJson = readJson('enemies.json');
-  const embedBlock = embedScript('ENEMIES_DATA', enemiesJson);
-
-  // <head>の閉じタグ直前にデータを埋め込む
-  html = html.replace('</head>', embedBlock + '\n</head>');
+  html = replaceOrInsertScript(html, 'ENEMIES_DATA', enemiesJson);
 
   // async function init() { ... fetch部分 ... } を同期版に置き換え
   html = html.replace(
@@ -57,9 +76,8 @@ function fixZenboss() {
   let html = fs.readFileSync(filePath, 'utf8');
 
   const bossesJson = readJson('bosses.json');
-  const embedBlock = embedScript('BOSSES_DATA', bossesJson);
 
-  html = html.replace('</head>', embedBlock + '\n</head>');
+  html = replaceOrInsertScript(html, 'BOSSES_DATA', bossesJson);
 
   html = html.replace(
     /    async function init\(\) \{\n      try \{\n        const res = await fetch\('\.\.\/src\/game\/assets\/data\/bosses\.json'\);\n        if \(!res\.ok\) throw new Error\('fetch failed: ' \+ res\.status\);\n        allBosses = await res\.json\(\);\n      \} catch \(e\) \{\n        document\.getElementById\('loading'\)\.style\.display = 'none';\n        document\.getElementById\('error'\)\.style\.display = 'block';\n        document\.getElementById\('error'\)\.textContent = 'bosses\.json の読み込みに失敗しました: ' \+ e\.message;\n        return;\n      \}/,
@@ -81,13 +99,9 @@ function fixZenitem() {
   const weaponsJson = readJson('weapons.json');
   const toolsJson   = readJson('tools-equipment.json');
 
-  const embedBlock = [
-    embedScript('ITEMS_DATA',   itemsJson),
-    embedScript('WEAPONS_DATA', weaponsJson),
-    embedScript('TOOLS_DATA',   toolsJson),
-  ].join('\n');
-
-  html = html.replace('</head>', embedBlock + '\n</head>');
+  html = replaceOrInsertScript(html, 'ITEMS_DATA',   itemsJson);
+  html = replaceOrInsertScript(html, 'WEAPONS_DATA', weaponsJson);
+  html = replaceOrInsertScript(html, 'TOOLS_DATA',   toolsJson);
 
   html = html.replace(
     /    async function init\(\) \{\n      try \{\n        const \[rItems, rWeapons, rTools\] = await Promise\.all\(\[\n          fetch\('\.\.\/src\/game\/assets\/data\/items\.json'\),\n          fetch\('\.\.\/src\/game\/assets\/data\/weapons\.json'\),\n          fetch\('\.\.\/src\/game\/assets\/data\/tools-equipment\.json'\)\n        \]\);\n        if \(!rItems\.ok \|\| !rWeapons\.ok \|\| !rTools\.ok\) throw new Error\('fetch failed'\);\n        allItems = await rItems\.json\(\);\n        allWeapons = await rWeapons\.json\(\);\n        allTools = await rTools\.json\(\);\n      \} catch \(e\) \{\n        document\.getElementById\('loading'\)\.style\.display = 'none';\n        document\.getElementById\('error'\)\.style\.display = 'block';\n        document\.getElementById\('error'\)\.textContent = 'JSONの読み込みに失敗しました: ' \+ e\.message;\n        return;\n      \}/,

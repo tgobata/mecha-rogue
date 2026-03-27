@@ -574,7 +574,34 @@ export function renderGame(
     }
   }
 
-  // ─── 2.6. ショップNPC描画（TILE_SHOP の可視タイルにスプライトを重ねる） ─
+  // ─── 2.6. 爆弾カウントダウン表示 ────────────────────────────────────────
+  if (state.placedBombs && state.placedBombs.length > 0) {
+    for (const bomb of state.placedBombs) {
+      const bScreenX = bomb.pos.x - startTileX;
+      const bScreenY = bomb.pos.y - startTileY;
+      if (bScreenX < 0 || bScreenX >= tilesX || bScreenY < 0 || bScreenY >= tilesY) continue;
+      const bCell = map.cells[bomb.pos.y]?.[bomb.pos.x];
+      if (!bCell?.isVisible) continue;
+      const bDrawX = bScreenX * tileSize;
+      const bDrawY = bScreenY * tileSize;
+      // 背景: 半透明の赤/オレンジ円
+      const radius = tileSize * 0.38;
+      const cx = bDrawX + tileSize / 2;
+      const cy = bDrawY + tileSize / 2;
+      ctx.beginPath();
+      ctx.arc(cx, cy, radius, 0, Math.PI * 2);
+      ctx.fillStyle = bomb.turnsLeft <= 1 ? 'rgba(255,40,0,0.85)' : 'rgba(220,120,0,0.80)';
+      ctx.fill();
+      // カウントダウン数字
+      ctx.fillStyle = '#ffffff';
+      ctx.font = `bold ${Math.max(8, tileSize * 0.55)}px monospace`;
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(String(bomb.turnsLeft), cx, cy);
+    }
+  }
+
+  // ─── 2.7. ショップNPC描画（TILE_SHOP の可視タイルにスプライトを重ねる） ─
   const shopNpcSprite = sprites.get('npc_shop_npc');
   if (shopNpcSprite) {
     for (let screenY = 0; screenY < tilesY; screenY++) {
