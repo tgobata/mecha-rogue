@@ -584,6 +584,38 @@ export function spawnEnemiesFromMap(
             });
             if (unitIndex >= 8) break;
           }
+        } else if (bossDef.id === 'shadow_twin') {
+          // シャドウツイン: 2体同時スポーン
+          const spawnPositions: Position[] = [];
+          const offsets = [{ dx: 0, dy: 0 }, { dx: 3, dy: 0 }, { dx: 0, dy: 3 }, { dx: -3, dy: 0 }, { dx: 0, dy: -3 }];
+          for (const off of offsets) {
+            const ux = x + off.dx;
+            const uy = y + off.dy;
+            if (ux < 0 || uy < 0 || uy >= floor.height || ux >= floor.width) continue;
+            if (!isWalkable(floor.cells[uy][ux].tile)) continue;
+            if (spawnPositions.some(p => p.x === ux && p.y === uy)) continue;
+            spawnPositions.push({ x: ux, y: uy });
+            if (spawnPositions.length >= 2) break;
+          }
+          // 位置が足りない場合は (x,y) を重複使用
+          while (spawnPositions.length < 2) spawnPositions.push({ x, y });
+          for (let i = 0; i < 2; i++) {
+            enemies.push({
+              id: idCounter++,
+              enemyType: bossDef.id,
+              pos: spawnPositions[i],
+              hp: bossDef.hp,
+              maxHp: bossDef.hp,
+              atk: bossDef.atk,
+              def: bossDef.def,
+              expReward: Math.floor(bossDef.expReward / 2),
+              aiType: 'boss',
+              facing: 'down',
+              isBoss: true,
+              bossSize: (bossDef as any).size ?? 2,
+              bossState: { ...bossDef, twinIndex: i },
+            });
+          }
         } else {
           // 通常ボスの生成（ボスはスケール適用せずそのままのステータスを使用）
           enemies.push({
@@ -621,6 +653,30 @@ export function spawnEnemiesFromMap(
  * @param action - プレイヤーのアクション
  * @returns プレイヤー行動後の部分的な状態（player・enemies・それ以外の変化）
  */
+/**
+ * iron_fortress の方向装甲DEFを計算する。
+ * プレイヤーがボスの背後にいる場合は rearArmor(0)、それ以外は frontArmor(50)。
+ */
+function getIronFortressDef(boss: Enemy, playerPos: Position): number {
+  if (!boss.bossState) return boss.def;
+  const frontArmor = boss.bossState.frontArmor ?? 50;
+  const rearArmor = boss.bossState.rearArmor ?? 0;
+  // ボスの facing 方向の「逆方向」にプレイヤーがいれば背後攻撃
+  const bossSize = boss.bossSize ?? 4;
+  const bossCenterX = boss.pos.x + Math.floor(bossSize / 2);
+  const bossCenterY = boss.pos.y + Math.floor(bossSize / 2);
+  const dx = playerPos.x - bossCenterX;
+  const dy = playerPos.y - bossCenterY;
+  // ボスの facing と比較
+  const facing = boss.facing ?? 'down';
+  let isRear = false;
+  if (facing === 'right' && dx < 0) isRear = true;
+  if (facing === 'left'  && dx > 0) isRear = true;
+  if (facing === 'down'  && dy < 0) isRear = true;
+  if (facing === 'up'    && dy > 0) isRear = true;
+  return isRear ? rearArmor : frontArmor;
+}
+
 /** アイテム/武器/ゴールドピックアップ情報 */
 type PickupInfo =
   | { type: 'item'; pos: Position; itemId: string }
@@ -667,7 +723,11 @@ function processPlayerAction(
       } else {
         // バンプ攻撃: 装備武器の atk を加算した実効攻撃力でダメージ計算
         const weapon = newPlayer.equippedWeapon ?? null;
-        const dmg = calcDamage(effectiveAtk(newPlayer), targetEnemy.def);
+        // iron_fortress の方向装甲チェック
+        const effectiveDef = targetEnemy.enemyType === 'iron_fortress'
+          ? getIronFortressDef(targetEnemy, newPlayer.pos)
+          : targetEnemy.def;
+        const dmg = calcDamage(effectiveAtk(newPlayer), effectiveDef);
 
         // シールド吸収
         const { finalDamage, updatedEntity: shieldedEnemy } = absorbWithShield(targetEnemy, dmg);
@@ -832,7 +892,11 @@ function processPlayerAction(
         }
 
         // attack アクション: 装備武器の atk を加算した実効攻撃力でダメージ計算
-        const dmg = calcDamage(effectiveAtk(newPlayer), targetEnemy.def);
+        // iron_fortress の方向装甲チェック
+        const effectiveDefA = targetEnemy.enemyType === 'iron_fortress'
+          ? getIronFortressDef(targetEnemy, newPlayer.pos)
+          : targetEnemy.def;
+        const dmg = calcDamage(effectiveAtk(newPlayer), effectiveDefA);
 
         // シールド吸収
         const { finalDamage, updatedEntity: shieldedEnemy } = absorbWithShield(targetEnemy, dmg);
@@ -1175,6 +1239,122 @@ function processEnemyActions(
           break;
         }
 
+        case 'cannon_aoe': {
+          // アイアンフォートレスの3×3範囲砲撃
+          const cannonAction = action as { type: 'cannon_aoe'; centerPos: Position; radius: number; damage: number };
+          // プレイヤーが砲撃範囲内か（チェビシェフ距離 = 正方形エリア）
+          const cdx = Math.abs(newPlayer.pos.x - cannonAction.centerPos.x);
+          const cdy = Math.abs(newPlayer.pos.y - cannonAction.centerPos.y);
+          if (Math.max(cdx, cdy) <= cannonAction.radius) {
+            const shieldDefC = newPlayer.equippedShield?.def ?? 0;
+            const armorDefC = newPlayer.equippedArmor?.def ?? 0;
+            const effectiveDefC = newPlayer.def + shieldDefC + armorDefC;
+            const cannonDmg = Math.max(1, cannonAction.damage - effectiveDefC);
+            const { finalDamage: cannonFinal, updatedEntity: cannonPlayer } = absorbWithShield(newPlayer, cannonDmg);
+            newPlayer = {
+              ...cannonPlayer,
+              hp: cannonPlayer.hp - cannonFinal,
+              animState: 'hit' as const,
+              facing: newPlayer.facing,
+              ...(cannonFinal > 0 && { hpEverDroppedBelowMax: true }),
+            };
+            enemyEventMessages.push(`アイアンフォートレスの砲撃！ ${cannonFinal}ダメージ！`);
+          } else {
+            enemyEventMessages.push('アイアンフォートレスが砲撃したが外れた！');
+          }
+          currentEnemyState = { ...currentEnemyState, animState: 'attack' as const };
+          break;
+        }
+
+        case 'slash_attack': {
+          // サムライマスターの斬撃：ボスの向きの前方3方向×2タイルにプレイヤーがいればダメージ
+          const slashFacing = currentEnemyState.facing ?? 'down';
+          const bossSlashSize = currentEnemyState.bossSize ?? 2;
+          let slashHits = false;
+          const playerX = newPlayer.pos.x;
+          const playerY = newPlayer.pos.y;
+          const bx = currentEnemyState.pos.x;
+          const by = currentEnemyState.pos.y;
+          if (slashFacing === 'right') {
+            // 前方2列：x = bx+bossSlashSize, bx+bossSlashSize+1
+            // y範囲：by-1 〜 by+bossSlashSize
+            slashHits = playerX >= bx + bossSlashSize && playerX <= bx + bossSlashSize + 1
+              && playerY >= by - 1 && playerY <= by + bossSlashSize;
+          } else if (slashFacing === 'left') {
+            slashHits = playerX >= bx - 2 && playerX <= bx - 1
+              && playerY >= by - 1 && playerY <= by + bossSlashSize;
+          } else if (slashFacing === 'down') {
+            slashHits = playerY >= by + bossSlashSize && playerY <= by + bossSlashSize + 1
+              && playerX >= bx - 1 && playerX <= bx + bossSlashSize;
+          } else { // up
+            slashHits = playerY >= by - 2 && playerY <= by - 1
+              && playerX >= bx - 1 && playerX <= bx + bossSlashSize;
+          }
+          if (slashHits) {
+            const shieldDefS = newPlayer.equippedShield?.def ?? 0;
+            const armorDefS = newPlayer.equippedArmor?.def ?? 0;
+            const effectiveDefS = newPlayer.def + shieldDefS + armorDefS;
+            const slashDmg = Math.max(1, currentEnemyState.atk - effectiveDefS);
+            const { finalDamage: slashFinal, updatedEntity: slashPlayer } = absorbWithShield(newPlayer, slashDmg);
+            newPlayer = {
+              ...slashPlayer,
+              hp: slashPlayer.hp - slashFinal,
+              animState: 'hit' as const,
+              facing: newPlayer.facing,
+              ...(slashFinal > 0 && { hpEverDroppedBelowMax: true }),
+            };
+            enemyEventMessages.push(`サムライマスターの斬撃！ ${slashFinal}ダメージ！`);
+          }
+          currentEnemyState = {
+            ...currentEnemyState,
+            animState: 'attack' as const,
+            facing: getDirection(currentEnemyState.pos, newPlayer.pos),
+          };
+          break;
+        }
+
+        case 'iaido': {
+          // サムライマスターの居合い：直線5タイル貫通・防御無視
+          const iaidoAction = action as { type: 'iaido'; range: number; damage: number };
+          const iaidoFacing = currentEnemyState.facing ?? 'down';
+          const bossIaidoSize = currentEnemyState.bossSize ?? 2;
+          let inIaidoRange = false;
+          const iaidoPlayerX = newPlayer.pos.x;
+          const iaidoPlayerY = newPlayer.pos.y;
+          const ibx = currentEnemyState.pos.x;
+          const iby = currentEnemyState.pos.y;
+          if (iaidoFacing === 'right') {
+            const frontEdge = ibx + bossIaidoSize;
+            inIaidoRange = iaidoPlayerX >= frontEdge && iaidoPlayerX < frontEdge + iaidoAction.range
+              && iaidoPlayerY >= iby && iaidoPlayerY < iby + bossIaidoSize;
+          } else if (iaidoFacing === 'left') {
+            inIaidoRange = iaidoPlayerX > ibx - iaidoAction.range - 1 && iaidoPlayerX < ibx
+              && iaidoPlayerY >= iby && iaidoPlayerY < iby + bossIaidoSize;
+          } else if (iaidoFacing === 'down') {
+            const frontEdge = iby + bossIaidoSize;
+            inIaidoRange = iaidoPlayerY >= frontEdge && iaidoPlayerY < frontEdge + iaidoAction.range
+              && iaidoPlayerX >= ibx && iaidoPlayerX < ibx + bossIaidoSize;
+          } else { // up
+            inIaidoRange = iaidoPlayerY > iby - iaidoAction.range - 1 && iaidoPlayerY < iby
+              && iaidoPlayerX >= ibx && iaidoPlayerX < ibx + bossIaidoSize;
+          }
+          if (inIaidoRange) {
+            // 居合いは防御を無視する
+            const iaidoFinalDmg = Math.max(1, iaidoAction.damage);
+            const { finalDamage: iaidoFinal, updatedEntity: iaidoPlayer } = absorbWithShield(newPlayer, iaidoFinalDmg);
+            newPlayer = {
+              ...iaidoPlayer,
+              hp: iaidoPlayer.hp - iaidoFinal,
+              animState: 'hit' as const,
+              facing: newPlayer.facing,
+              ...(iaidoFinal > 0 && { hpEverDroppedBelowMax: true }),
+            };
+            enemyEventMessages.push(`サムライマスターの居合い！ 貫通${iaidoFinal}ダメージ！`);
+          }
+          currentEnemyState = { ...currentEnemyState, animState: 'attack' as const };
+          break;
+        }
+
         case 'skip':
         default:
           break;
@@ -1371,9 +1551,12 @@ function processDefeatedEnemies(
   const alive = enemies.filter((e) => e.hp > 0);
 
   // 今回倒したボスのID（isBoss フラグが立っている敵の enemyType）
+  // 複数体構成ボス（bug_swarm, shadow_twin 等）は同種が全滅した時だけ記録する
   const bossDefeatedIds = dead
     .filter((e) => e.isBoss === true)
-    .map((e) => e.enemyType);
+    .filter((e) => !alive.some((a) => a.enemyType === e.enemyType && a.isBoss))
+    .map((e) => e.enemyType)
+    .filter((id, idx, arr) => arr.indexOf(id) === idx); // 重複除去（8体一気に倒した場合）
 
   const totalExp = dead.reduce((acc, e) => acc + e.expReward, 0);
 

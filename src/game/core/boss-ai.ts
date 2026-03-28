@@ -7,7 +7,7 @@
 
 import type { GameState, Enemy } from './game-state';
 import type { Position } from './types';
-import { manhattanDistance, getTileAt, isWalkable, getNeighbors4 } from './floorUtils';
+import { manhattanDistance, getTileAt, isWalkable, getNeighbors4, getDirection } from './floorUtils';
 import { nextStep } from './pathfinding';
 import type { EnemyAction } from './enemy-ai';
 import { decideEnemyAction } from './enemy-ai';
@@ -126,34 +126,109 @@ export function decideBossAction(
       break;
     }
       
-    case 'iron_fortress':
-      // アイアンフォートレス (9F): 3ターンに1回範囲砲撃、正面装甲50
-      // 砲撃のクールダウン管理は bossState 内で行う。
-      if (!boss.bossState.currentCooldown) boss.bossState.currentCooldown = 0;
-      if (boss.bossState.currentCooldown <= 0) {
-        // 砲撃アクション（※turn-system が特殊攻撃を解釈できるかどうかに依存。ここではskipして自爆同等の広範囲ダメージ処理等が必要か）
-        // とりあえず今回は cooldown をリセットしつつ通常攻撃を返す
-        boss.bossState.currentCooldown = boss.bossState.cannonCooldown || 3;
-      } else {
-        boss.bossState.currentCooldown--;
+    case 'iron_fortress': {
+      // アイアンフォートレス (9F): 3ターンに1回3×3範囲砲撃、正面装甲50/背面装甲0
+      // 初期化（初回ターンはクールダウンを設定するのみ、砲撃・デクリメントは次ターンから）
+      if (boss.bossState.currentCooldown === undefined) {
+        boss.bossState.currentCooldown = boss.bossState.cannonCooldown ?? 3;
+        actions.push(decideChaseWithAttack(boss, player.pos, state));
+        break;
       }
-      actions.push(decideChaseWithAttack(boss, player.pos, state));
-      break;
 
-    case 'samurai_master':
-      // サムライマスター (10F): 1ターン2回行動、HP50%以下で居合い
-      // 便宜上2回ChaseAttackを積む。本来なら特定HP以下で特殊射程攻撃を行う。
-      for (let i = 0; i < (boss.bossState.attacksPerTurn || 2); i++) {
+      // ボスは常にプレイヤーの方向を向く（装甲方向管理のため）
+      const size = boss.bossSize ?? 4;
+      const bossCenterX = boss.pos.x + Math.floor(size / 2);
+      const bossCenterY = boss.pos.y + Math.floor(size / 2);
+      boss.facing = getDirection(
+        { x: bossCenterX, y: bossCenterY },
+        { x: player.pos.x, y: player.pos.y }
+      );
+
+      // クールダウン更新
+      boss.bossState.currentCooldown--;
+      if (boss.bossState.currentCooldown <= 0) {
+        boss.bossState.currentCooldown = boss.bossState.cannonCooldown ?? 3;
+        // 3×3 範囲砲撃
+        actions.push({
+          type: 'cannon_aoe',
+          centerPos: { x: player.pos.x, y: player.pos.y },
+          radius: boss.bossState.cannonRadius ?? 1,
+          damage: boss.bossState.cannonDamage ?? 25,
+        });
+      } else {
         actions.push(decideChaseWithAttack(boss, player.pos, state));
       }
       break;
+    }
 
-    case 'shadow_twin':
-      // シャドウツイン (15F): 片方が死ぬと暴走
-      // 毎ターン他の shadow_twin の生存を確認。死んでいたら enraged フラグを立てる等の処理。
-      // enraged時は speed と atk が上がる。ここは基本的なChaseとする。
-      actions.push(decideChaseWithAttack(boss, player.pos, state));
+    case 'samurai_master': {
+      // サムライマスター (10F): 1ターン2回の斬撃、HP50%以下で居合い
+      const hpRatio = boss.hp / boss.maxHp;
+      const iaidoThreshold = boss.bossState.iaidoHpThreshold ?? 0.5;
+
+      if (hpRatio <= iaidoThreshold) {
+        // 居合い：直線5タイル貫通攻撃
+        // まずプレイヤーの方向に向く
+        boss.facing = getDirection(boss.pos, player.pos);
+        actions.push({
+          type: 'iaido',
+          range: boss.bossState.iaidoRange ?? 5,
+          damage: boss.bossState.iaidoAtk ?? 80,
+        });
+      } else {
+        // 通常: 1ターン2回の斬撃（前方3方向）
+        let tempBoss = boss;
+        for (let i = 0; i < (boss.bossState.attacksPerTurn ?? 2); i++) {
+          const distToPlayer = bossEdgeDist(tempBoss, player.pos);
+          if (distToPlayer <= 2) {
+            // 斬撃範囲内（2タイル以内）
+            boss.facing = getDirection(tempBoss.pos, player.pos);
+            actions.push({ type: 'slash_attack' });
+          } else {
+            const action = decideChaseWithAttack(tempBoss, player.pos, state);
+            actions.push(action);
+            if (action.type === 'move') {
+              tempBoss = { ...tempBoss, pos: action.to };
+            } else if (action.type === 'attack') {
+              break;
+            }
+          }
+        }
+      }
       break;
+    }
+
+    case 'shadow_twin': {
+      // シャドウツイン (15F): 2体同時出現、片方が死ぬと暴走（ATK×2・2回行動）
+      // パートナー（同じenemyType）の存在・生存確認
+      const partnerExists = state.enemies.some(
+        (e) => e.enemyType === 'shadow_twin' && e.id !== boss.id
+      );
+      const partnerAlive = state.enemies.some(
+        (e) => e.enemyType === 'shadow_twin' && e.id !== boss.id && e.hp > 0
+      );
+
+      // 暴走処理（パートナーが存在して死んだ場合のみ、一度だけ発動）
+      if (partnerExists && !partnerAlive && !boss.bossState.isEnraged) {
+        boss.bossState.isEnraged = true;
+        // ATK を2倍にする
+        boss.atk = Math.round(boss.atk * (boss.bossState.enragedAtkMult ?? 2));
+      }
+
+      // 暴走時は2回行動
+      const actionsPerTurn = boss.bossState.isEnraged ? 2 : 1;
+      let tempBoss = boss;
+      for (let i = 0; i < actionsPerTurn; i++) {
+        const action = decideChaseWithAttack(tempBoss, player.pos, state);
+        actions.push(action);
+        if (action.type === 'move') {
+          tempBoss = { ...tempBoss, pos: action.to };
+        } else if (action.type === 'attack') {
+          break;
+        }
+      }
+      break;
+    }
 
     case 'queen_of_shadow':
       // クイーン・オブ・シャドウ (20F): 3フェーズ変化

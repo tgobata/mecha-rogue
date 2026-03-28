@@ -1087,13 +1087,19 @@ export default function GameCanvas() {
         playSE("enemy_death");
         const defeatedBoss = defeatedEnemies.find((e) => e.isBoss === true);
         if (defeatedBoss) {
-          // ボス撃破演出を表示
-          setBossDefeatEffect(defeatedBoss.enemyType);
-          // ラスボスは専用 BGM、それ以外は通常探索 BGM に戻す
-          if (defeatedBoss.enemyType === "last_boss_shadow") {
-            playBGM("bossDefeat");
-          } else {
-            playBGM(getExploreBGM(next.floor));
+          // 複数体構成ボス（bug_swarm, shadow_twin 等）は同種が全滅した時だけ撃破扱い
+          const allUnitsDefeated = !next.enemies.some(
+            (ne) => ne.enemyType === defeatedBoss.enemyType && ne.isBoss && ne.hp > 0,
+          );
+          if (allUnitsDefeated) {
+            // ボス撃破演出を表示
+            setBossDefeatEffect(defeatedBoss.enemyType);
+            // ラスボスは専用 BGM、それ以外は通常探索 BGM に戻す
+            if (defeatedBoss.enemyType === "last_boss_shadow") {
+              playBGM("bossDefeat");
+            } else {
+              playBGM(getExploreBGM(next.floor));
+            }
           }
         }
       }

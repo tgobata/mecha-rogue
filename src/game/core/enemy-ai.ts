@@ -33,7 +33,10 @@ export type EnemyAction =
   | { type: 'heal'; targetId: string; amount: number }
   | { type: 'skip' }
   | { type: 'explode' }
-  | { type: 'absorb_wall'; wallPos: Position };
+  | { type: 'absorb_wall'; wallPos: Position }
+  | { type: 'cannon_aoe'; centerPos: Position; radius: number; damage: number }
+  | { type: 'slash_attack' }
+  | { type: 'iaido'; range: number; damage: number };
 
 // ---------------------------------------------------------------------------
 // 定数
