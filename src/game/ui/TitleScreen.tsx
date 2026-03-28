@@ -28,6 +28,7 @@ const TitleScreen: React.FC<TitleScreenProps> = ({
   const [isMounted, setIsMounted] = useState(false);
   const [showManual, setShowManual] = useState(false);
   const [deleteConfirmSlot, setDeleteConfirmSlot] = useState<number | null>(null);
+  const [showFullSavesNotice, setShowFullSavesNotice] = useState(false);
 
   // メニューモードが切り替わるか、コンポーネントがマウントされた時にセーブデータを取得する
   useEffect(() => {
@@ -59,6 +60,11 @@ const TitleScreen: React.FC<TitleScreenProps> = ({
 
     if (menuMode === "main") {
       if (selectedIndex === 0) {
+        const activeSavesCount = saves.filter((s) => s !== null).length;
+        if (isMounted && activeSavesCount >= 5) {
+          setShowFullSavesNotice(true);
+          return;
+        }
         onNewGame();
       } else if (selectedIndex === 1) {
         setMenuMode("load");
@@ -163,7 +169,7 @@ const TitleScreen: React.FC<TitleScreenProps> = ({
       <button
         key={`main-${idx}`}
         style={{ touchAction: "manipulation" }}
-        className={`py-3 px-4 border-2 font-bold transition-all ${
+        className={`py-2 px-4 border-2 font-bold transition-all ${
           selectedIndex === idx && item.enabled
             ? "bg-blue-600 border-blue-300 text-white scale-110 shadow-[0_0_20px_rgba(59,130,246,0.5)] z-20 relative"
             : "bg-gray-900 border-gray-700 text-gray-500 opacity-60 z-10"
@@ -177,7 +183,14 @@ const TitleScreen: React.FC<TitleScreenProps> = ({
           }
           setSelectedIndex(idx);
           playSE("ui_select");
-          if (idx === 0) onNewGame();
+          if (idx === 0) {
+            const activeSavesCount = saves.filter((s) => s !== null).length;
+            if (isMounted && activeSavesCount >= 5) {
+              setShowFullSavesNotice(true);
+              return;
+            }
+            onNewGame();
+          }
           else if (idx === 1 && item.enabled) setMenuMode("load");
           else if (idx === 2 && item.enabled) setMenuMode("delete");
           else if (idx === 3) setShowManual(true);
@@ -198,8 +211,8 @@ const TitleScreen: React.FC<TitleScreenProps> = ({
 
   const renderSlotMenu = () => {
     return (
-      <div className="flex flex-col gap-2 w-72">
-        <h2 className="text-xl font-bold text-center text-blue-300 mb-2 font-mono drop-shadow-md">
+      <div className="flex flex-col gap-1 w-72">
+        <h2 className="text-base font-bold text-center text-blue-300 mb-1 font-mono drop-shadow-md">
           {menuMode === "load"
             ? "--- セーブデータ選択 ---"
             : "--- セーブデータ削除 ---"}
@@ -214,7 +227,7 @@ const TitleScreen: React.FC<TitleScreenProps> = ({
             <button
               key={`slot-${idx}`}
               style={{ touchAction: "manipulation" }}
-              className={`flex flex-col py-3 px-4 border-2 font-bold transition-all relative overflow-hidden ${
+              className={`flex flex-col py-2 px-4 border-2 font-bold transition-all relative overflow-hidden ${
                 isSelected
                   ? menuMode === "delete"
                     ? "bg-red-900 border-red-400 text-white scale-105 shadow-[0_0_15px_rgba(220,38,38,0.7)] z-20"
@@ -286,7 +299,7 @@ const TitleScreen: React.FC<TitleScreenProps> = ({
         <button
           key="back"
           style={{ touchAction: "manipulation" }}
-          className={`mt-4 py-2 border-2 font-bold transition-all ${
+          className={`mt-2 py-2 border-2 font-bold transition-all ${
             selectedIndex === 5
               ? "bg-gray-600 border-gray-300 text-white shadow-[0_0_10px_rgba(156,163,175,0.5)] z-20 relative"
               : "bg-gray-900 border-gray-700 text-gray-500 opacity-60 z-10"
@@ -332,7 +345,7 @@ const TitleScreen: React.FC<TitleScreenProps> = ({
       </div>
 
       {/* 🤖 タイトルロゴ (生成したスプライト) */}
-      <div className="relative mb-12 transform scale-125 z-10">
+      <div className="relative mb-4 z-10">
         <img
           src="/sprites/ui/title_logo.png"
           alt="MECHA ROGUE"
@@ -347,9 +360,9 @@ const TitleScreen: React.FC<TitleScreenProps> = ({
       </div>
 
       {/* 🔘 メニュー */}
-      <div className="flex flex-col gap-4 z-10">
+      <div className="flex flex-col gap-2 z-10">
         {menuMode === "main" ? (
-          <div className="flex flex-col gap-4 w-56">{renderMainMenu()}</div>
+          <div className="flex flex-col gap-2 w-56">{renderMainMenu()}</div>
         ) : (
           renderSlotMenu()
         )}
@@ -362,6 +375,52 @@ const TitleScreen: React.FC<TitleScreenProps> = ({
       {/* マニュアルオーバーレイ */}
       {showManual && (
         <HelpManualOverlay onClose={() => setShowManual(false)} />
+      )}
+
+      {/* セーブデータ満杯通知ダイアログ */}
+      {showFullSavesNotice && (
+        <div
+          className="absolute inset-0 flex items-center justify-center z-50"
+          style={{ backgroundColor: 'rgba(0,0,0,0.75)' }}
+        >
+          <div
+            className="flex flex-col items-center gap-5 p-7 rounded-lg border-2 border-yellow-500 font-mono"
+            style={{ backgroundColor: 'rgba(20, 15, 5, 0.98)', maxWidth: 320 }}
+          >
+            <div className="text-yellow-400 text-base font-bold tracking-wide">⚠ セーブデータが満杯です</div>
+            <div className="text-gray-200 text-sm text-center leading-relaxed">
+              セーブスロットが5つすべて<br />埋まっています。<br /><br />
+              <span className="text-yellow-300 font-bold">「データ削除」</span>で1つ以上の<br />
+              セーブデータを削除してから、<br />
+              <span className="text-blue-300 font-bold">「はじめから」</span>をお試しください。
+            </div>
+            <div className="flex gap-4">
+              <button
+                className="px-4 py-2 bg-yellow-800 border border-yellow-500 text-white rounded font-bold hover:bg-yellow-600 transition-colors"
+                style={{ touchAction: 'manipulation' }}
+                onClick={() => {
+                  playSE("ui_select");
+                  setShowFullSavesNotice(false);
+                  setMenuMode("delete");
+                }}
+                onTouchStart={unlockAudioContext}
+              >
+                データ削除へ
+              </button>
+              <button
+                className="px-4 py-2 bg-gray-700 border border-gray-500 text-gray-200 rounded font-bold hover:bg-gray-500 transition-colors"
+                style={{ touchAction: 'manipulation' }}
+                onClick={() => {
+                  playSE("ui_cancel");
+                  setShowFullSavesNotice(false);
+                }}
+                onTouchStart={unlockAudioContext}
+              >
+                もどる
+              </button>
+            </div>
+          </div>
+        </div>
       )}
 
       {/* セーブデータ削除確認ダイアログ */}
