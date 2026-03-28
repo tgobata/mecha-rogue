@@ -103,6 +103,18 @@ const BGM_META: Partial<Record<BGMName, { bpm: number; loopBars: number }>> = {
   // gameOver, bossDefeat はループなしのジングルなのでキャッシュしない
 };
 
+/**
+ * モバイル端末かどうかを判定する。
+ * iOS/Android では OfflineAudioContext がメインコンテキストを suspend させる場合があるため、
+ * 事前レンダリングをスキップしてライブレンダリングのみ使用する。
+ */
+function isMobileDevice(): boolean {
+  if (typeof navigator === 'undefined') return false;
+  // maxTouchPoints > 1 で iPad（デスクトップモード含む）も検出
+  return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)
+    || (typeof navigator.maxTouchPoints === 'number' && navigator.maxTouchPoints > 1);
+}
+
 /** BGM用音量ノード */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 let bgmVol: any = null;
@@ -182,19 +194,38 @@ export async function initAudio(): Promise<void> {
 
   audioReady = true;
 
-  // BGM をバックグラウンドで事前レンダリング（await しない）
-  // 完了したものから順次 bgmBufferCache に格納される
-  const BGM_PRERENDER_ORDER: BGMName[] = [
-    'explore', 'explore_light', 'battle',
-    'title', 'shop', 'base', 'deep',
-    'boss', 'boss_bug_swarm', 'boss_mach_runner',
-    'boss_junk_king', 'boss_phantom', 'boss_iron_fortress',
-  ];
-  (async () => {
-    for (const name of BGM_PRERENDER_ORDER) {
-      await preRenderBGM(name);
-    }
-  })();
+  // iOS/Android では OfflineAudioContext 生成がメインコンテキストを suspend させる
+  // 恐れがあるため事前レンダリングはスキップし、ライブレンダリングのみ使用する。
+  // デスクトップではバックグラウンドで事前レンダリングしてメインスレッドのジャンクを回避する。
+  if (!isMobileDevice()) {
+    const BGM_PRERENDER_ORDER: BGMName[] = [
+      'explore', 'explore_light', 'battle',
+      'title', 'shop', 'base', 'deep',
+      'boss', 'boss_bug_swarm', 'boss_mach_runner',
+      'boss_junk_king', 'boss_phantom', 'boss_iron_fortress',
+    ];
+    (async () => {
+      for (const name of BGM_PRERENDER_ORDER) {
+        await preRenderBGM(name);
+        // OfflineAudioContext 作成後にメインコンテキストが suspend されていれば再開する
+        try {
+          if (Tone.getContext().state === 'suspended') {
+            await Tone.start();
+          }
+        } catch { /* ignore */ }
+      }
+    })();
+  }
+
+  // iOS Safari はタブのバックグラウンド移行時に AudioContext を自動 suspend する。
+  // 前面復帰時に自動再開する。
+  if (typeof document !== 'undefined') {
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'visible' && audioReady && Tone) {
+        Tone.start().catch(() => {});
+      }
+    });
+  }
 }
 
 /**
