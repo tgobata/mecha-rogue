@@ -40,12 +40,25 @@ function createMockState(playerPos = { x: 5, y: 5 }, enemyPos = { x: 5, y: 3 }):
 describe('Boss AI System', () => {
 
   it('Mach Runner (4F) takes multiple actions per turn', () => {
+    // 距離2: move→隣接→attack+break で2アクション
     const { state, boss } = createMockState();
     boss.bossState = { id: 'mach_runner', actionsPerTurn: 3 };
 
     const actions = decideBossAction(boss, state, Math.random);
+    // 1回目 move（距離2→1）、2回目 attack+break → 2アクション
+    expect(actions.length).toBe(2);
+    expect(actions[0].type).toBe('move');
+    expect(actions[1].type).toBe('attack');
+  });
+
+  it('Mach Runner (4F) uses all 3 actions when target is far', () => {
+    // 距離5: 3回すべて move
+    const { state, boss } = createMockState({ x: 5, y: 5 }, { x: 5, y: 0 });
+    boss.bossState = { id: 'mach_runner', actionsPerTurn: 3 };
+
+    const actions = decideBossAction(boss, state, Math.random);
     expect(actions.length).toBe(3);
-    // 距離が2なので、すべて move か最初の move 後 attack になる可能性があるが、ここでは配列長を確認
+    expect(actions.every(a => a.type === 'move')).toBe(true);
   });
 
   it('Eternal Core (40F) attacks without moving', () => {

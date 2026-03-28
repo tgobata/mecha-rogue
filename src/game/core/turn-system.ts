@@ -550,22 +550,58 @@ export function spawnEnemiesFromMap(
           lastAttackedEnemyId: null,
         });
       } else if (floor.cells[y][x].tile === 'B' && bossDef) {
-        // ボスの生成（ボスはスケール適用せずそのままのステータスを使用）
-        enemies.push({
-          id: idCounter++,
-          enemyType: bossDef.id,
-          pos: { x, y },
-          hp: bossDef.hp,
-          maxHp: bossDef.hp,
-          atk: bossDef.atk,
-          def: bossDef.def,
-          expReward: bossDef.expReward,
-          aiType: 'boss', // boss-ai に処理を委譲
-          facing: 'down',
-          isBoss: true,
-          bossSize: (bossDef as any).size ?? 2,
-          bossState: { ...bossDef }, // ボス専用パラメータを保持
-        });
+        if (bossDef.id === 'bug_swarm') {
+          // バグスウォーム: 8体の小虫として分散して出現
+          const unitHp = (bossDef as any).unitHp ?? 10;
+          const unitAtk = (bossDef as any).unitAtk ?? 1;
+          const unitExp = Math.floor(bossDef.expReward / 8);
+          const spawnOffsets = [
+            { dx: 0, dy: 0 }, { dx: 1, dy: 0 }, { dx: -1, dy: 0 },
+            { dx: 0, dy: 1 }, { dx: 0, dy: -1 },
+            { dx: 1, dy: 1 }, { dx: -1, dy: 1 }, { dx: 1, dy: -1 },
+          ];
+          let unitIndex = 0;
+          for (const off of spawnOffsets) {
+            const ux = x + off.dx;
+            const uy = y + off.dy;
+            if (ux < 0 || uy < 0 || uy >= floor.height || ux >= floor.width) continue;
+            const t = floor.cells[uy][ux].tile;
+            if (!isWalkable(t)) continue;
+            enemies.push({
+              id: idCounter++,
+              enemyType: bossDef.id,
+              pos: { x: ux, y: uy },
+              hp: unitHp,
+              maxHp: unitHp,
+              atk: unitAtk,
+              def: bossDef.def,
+              expReward: unitExp,
+              aiType: 'boss',
+              facing: 'down',
+              isBoss: true,
+              bossSize: 1,
+              bossState: { ...bossDef, swarmUnitIndex: unitIndex++ },
+            });
+            if (unitIndex >= 8) break;
+          }
+        } else {
+          // 通常ボスの生成（ボスはスケール適用せずそのままのステータスを使用）
+          enemies.push({
+            id: idCounter++,
+            enemyType: bossDef.id,
+            pos: { x, y },
+            hp: bossDef.hp,
+            maxHp: bossDef.hp,
+            atk: bossDef.atk,
+            def: bossDef.def,
+            expReward: bossDef.expReward,
+            aiType: 'boss', // boss-ai に処理を委譲
+            facing: 'down',
+            isBoss: true,
+            bossSize: (bossDef as any).size ?? 2,
+            bossState: { ...bossDef }, // ボス専用パラメータを保持
+          });
+        }
       }
     }
   }
@@ -621,38 +657,47 @@ function processPlayerAction(
     // 移動先に敵がいるか確認（バンプ攻撃）
     const targetEnemy = _stairsCheck === TILE_STAIRS_DOWN ? undefined : enemyAt(newEnemies, targetPos);
     if (targetEnemy !== undefined) {
-      // バンプ攻撃: 装備武器の atk を加算した実効攻撃力でダメージ計算
-      const weapon = newPlayer.equippedWeapon ?? null;
-      const dmg = calcDamage(effectiveAtk(newPlayer), targetEnemy.def);
-
-      // シールド吸収
-      const { finalDamage, updatedEntity: shieldedEnemy } = absorbWithShield(targetEnemy, dmg);
-
-      // 状態異常付与
-      let hitEnemy = { ...shieldedEnemy, hp: shieldedEnemy.hp - finalDamage, animState: 'hit' as const };
-      if (weapon) {
-        const statusEffect = applyWeaponSpecial(weapon);
-        if (statusEffect) {
-          hitEnemy = addStatusEffect(hitEnemy, statusEffect) as typeof hitEnemy;
-        }
-        // バンプ攻撃でも耐久消費
-        const updatedWeapon = consumeDurability(weapon);
-        if (isBroken(updatedWeapon)) {
-          logMessages.push(`武器「${weapon.name}」が壊れた！`);
-        }
-        newPlayer = {
-          ...newPlayer,
-          equippedWeapon: isBroken(updatedWeapon) ? null : updatedWeapon,
-          animState: 'attack' as const,
-        };
+      // 透明ボス（phantom）への攻撃をブロック
+      const isTargetInvisible = targetEnemy.bossState?.isInvisible === true;
+      const hasTrapSensor = newPlayer.equippedTools?.some((t: any) => t.id === 'trap_sensor' && t.isEquipped);
+      const isRevealedBySmoke = (targetEnemy.bossState?.revealedTurns ?? 0) > 0;
+      if (isTargetInvisible && !hasTrapSensor && !isRevealedBySmoke) {
+        logMessages.push('透明な敵には攻撃が当たらない！（煙幕弾かトラップセンサーが必要）');
+        // ダメージ処理をスキップ（移動もキャンセル）
       } else {
-        // 素手攻撃でもアニメーション
-        newPlayer = { ...newPlayer, animState: 'attack' as const };
-      }
+        // バンプ攻撃: 装備武器の atk を加算した実効攻撃力でダメージ計算
+        const weapon = newPlayer.equippedWeapon ?? null;
+        const dmg = calcDamage(effectiveAtk(newPlayer), targetEnemy.def);
 
-      newEnemies = newEnemies.map((e) =>
-        e.id === targetEnemy.id ? hitEnemy : e,
-      );
+        // シールド吸収
+        const { finalDamage, updatedEntity: shieldedEnemy } = absorbWithShield(targetEnemy, dmg);
+
+        // 状態異常付与
+        let hitEnemy = { ...shieldedEnemy, hp: shieldedEnemy.hp - finalDamage, animState: 'hit' as const };
+        if (weapon) {
+          const statusEffect = applyWeaponSpecial(weapon);
+          if (statusEffect) {
+            hitEnemy = addStatusEffect(hitEnemy, statusEffect) as typeof hitEnemy;
+          }
+          // バンプ攻撃でも耐久消費
+          const updatedWeapon = consumeDurability(weapon);
+          if (isBroken(updatedWeapon)) {
+            logMessages.push(`武器「${weapon.name}」が壊れた！`);
+          }
+          newPlayer = {
+            ...newPlayer,
+            equippedWeapon: isBroken(updatedWeapon) ? null : updatedWeapon,
+            animState: 'attack' as const,
+          };
+        } else {
+          // 素手攻撃でもアニメーション
+          newPlayer = { ...newPlayer, animState: 'attack' as const };
+        }
+
+        newEnemies = newEnemies.map((e) =>
+          e.id === targetEnemy.id ? hitEnemy : e,
+        );
+      }
     } else {
       // 移動先のタイルを確認
       const mapData = state.map!;
@@ -777,6 +822,15 @@ function processPlayerAction(
     for (const targetPos of targetPositions) {
       const targetEnemy = enemyAt(newEnemies, targetPos);
       if (targetEnemy !== undefined) {
+        // 透明ボス（phantom）への攻撃をブロック
+        const isTargetInvisibleA = targetEnemy.bossState?.isInvisible === true;
+        const hasTrapSensorA = newPlayer.equippedTools?.some((t: any) => t.id === 'trap_sensor' && t.isEquipped);
+        const isRevealedBySmokeA = (targetEnemy.bossState?.revealedTurns ?? 0) > 0;
+        if (isTargetInvisibleA && !hasTrapSensorA && !isRevealedBySmokeA) {
+          logMessages.push('透明な敵には攻撃が当たらない！（煙幕弾かトラップセンサーが必要）');
+          continue; // このターゲットをスキップ
+        }
+
         // attack アクション: 装備武器の atk を加算した実効攻撃力でダメージ計算
         const dmg = calcDamage(effectiveAtk(newPlayer), targetEnemy.def);
 
@@ -1096,6 +1150,28 @@ function processEnemyActions(
             }
           }
           currentEnemyState = { ...currentEnemyState, hp: 0, animState: 'attack' as const };
+          break;
+        }
+
+        case 'absorb_wall': {
+          // ジャンクキングがひび割れ壁を吸収してHP+/ATK+
+          const wallPos = (action as { type: 'absorb_wall'; wallPos: Position }).wallPos;
+          if (state.map && wallPos.y >= 0 && wallPos.y < state.map.height && wallPos.x >= 0 && wallPos.x < state.map.width) {
+            state.map.cells[wallPos.y][wallPos.x].tile = TILE_FLOOR;
+          }
+          const absorbHp = currentEnemyState.bossState?.absorbHpPerWall ?? 10;
+          const absorbAtk = currentEnemyState.bossState?.absorbAtkBonus ?? 3;
+          const newAbsorbCount = (currentEnemyState.bossState?.absorbCount ?? 0) + 1;
+          currentEnemyState = {
+            ...currentEnemyState,
+            hp: Math.min(currentEnemyState.maxHp + 50, currentEnemyState.hp + absorbHp),
+            atk: currentEnemyState.atk + absorbAtk,
+            bossState: {
+              ...currentEnemyState.bossState,
+              absorbCount: newAbsorbCount,
+            },
+          };
+          enemyEventMessages.push(`ジャンクキングが廃材を吸収！ HP+${absorbHp}、ATK+${absorbAtk}（計${newAbsorbCount}個吸収）`);
           break;
         }
 

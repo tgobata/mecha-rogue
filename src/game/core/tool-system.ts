@@ -402,8 +402,22 @@ export function useInventoryItem(
       return { nextState, log: `${itemName} を使用した（フロアマップを解析）` };
 
     // ── 戦闘系（効果は簡易実装：消費して使用ログのみ） ──
-    case 'enemy_lose_tracking':
-      return { nextState, log: `${itemName} を使用した（煙幕展開）` };
+    case 'enemy_lose_tracking': {
+      // 透明ボス（phantom）を5ターン可視化
+      const revealTurns = 5;
+      const newEnemies = nextState.enemies.map(e => {
+        if (e.bossState?.isInvisible !== undefined) {
+          return { ...e, bossState: { ...e.bossState, revealedTurns: revealTurns } };
+        }
+        return e;
+      });
+      nextState = { ...nextState, enemies: newEnemies };
+      const phantomExists = newEnemies.some(e => e.enemyType === 'phantom');
+      const logMsg = phantomExists
+        ? `${itemName} を使用した（透明なボスを${revealTurns}ターン可視化！）`
+        : `${itemName} を使用した（煙幕展開、敵の追跡を妨害）`;
+      return { nextState, log: logMsg };
+    }
     case 'stun_area':
       return { nextState, log: `${itemName} を使用した（EMP爆発）` };
     case 'stun_radius_2':

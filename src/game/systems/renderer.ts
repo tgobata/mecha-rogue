@@ -639,6 +639,18 @@ export function renderGame(
       continue;
     }
 
+    // ─── ファントム（透明ボス）の不可視チェック ───
+    const isPhantomInvisible = enemy.bossState?.isInvisible === true;
+    if (isPhantomInvisible) {
+      const hasTrapSensor = state.player?.equippedTools?.some((t: any) => t.id === 'trap_sensor' && t.isEquipped);
+      const isRevealedBySmoke = (enemy.bossState?.revealedTurns ?? 0) > 0;
+      if (!hasTrapSensor && !isRevealedBySmoke) {
+        continue; // 完全に非表示
+      }
+      // センサーや煙幕で可視化されている場合は半透明描画
+      ctx.globalAlpha = 0.35;
+    }
+
     const drawX = screenX * tileSize;
     const drawY = screenY * tileSize;
 
@@ -754,6 +766,11 @@ export function renderGame(
     ctx.fillRect(barX, barY, barW, barH);
     ctx.fillStyle = hpRatio > 0.5 ? '#44ff44' : hpRatio > 0.25 ? '#ffcc00' : '#ff4444';
     ctx.fillRect(barX, barY, Math.floor(barW * hpRatio), barH);
+
+    // ファントム半透明描画後に透明度をリセット
+    if (isPhantomInvisible) {
+      ctx.globalAlpha = 1.0;
+    }
   }
 
   // ─── 4. プレイヤー描画 ───────────────────────────────────────────────

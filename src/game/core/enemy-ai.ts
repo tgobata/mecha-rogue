@@ -32,7 +32,8 @@ export type EnemyAction =
   | { type: 'attack'; targetId: 'player' | string }
   | { type: 'heal'; targetId: string; amount: number }
   | { type: 'skip' }
-  | { type: 'explode' };
+  | { type: 'explode' }
+  | { type: 'absorb_wall'; wallPos: Position };
 
 // ---------------------------------------------------------------------------
 // 定数

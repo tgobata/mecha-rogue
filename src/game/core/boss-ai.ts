@@ -11,6 +11,7 @@ import { manhattanDistance, getTileAt, isWalkable, getNeighbors4 } from './floor
 import { nextStep } from './pathfinding';
 import type { EnemyAction } from './enemy-ai';
 import { decideEnemyAction } from './enemy-ai';
+import { TILE_CRACKED_WALL, TILE_FLOOR } from './constants';
 
 // ---------------------------------------------------------------------------
 // ボスの固有行動処理（id / special ベース）
@@ -36,33 +37,94 @@ export function decideBossAction(
 
   switch (boss.bossState?.id) {
     case 'bug_swarm':
-      // バグスウォーム (2F): maze-generator 側で1体しか出していないため、とりあえず直進。
-      // 個体ATK (unitAtk) は攻撃時に計算される想定だが、ここでは通常の attack として扱う。
+      // バグスウォーム (2F): 8体の小虫として生成済み（swarmUnitIndex を持つ）。通常の追跡。
       actions.push(decideChaseWithAttack(boss, player.pos, state));
       break;
 
-    case 'mach_runner':
-      // スピード狂 (4F): 1ターンにつき3回行動
-      // 氷結・EMPによる完全停止（状態異常）は processEnemyActions 前に canAct 等で弾かれる想定
+    case 'mach_runner': {
+      // スピード狂 (4F): 1ターンにつき3回行動。前回の移動位置を次の計算に使う。
+      // フリーズ状態による完全停止は canAct() で処理される想定。
+      let tempBoss = boss;
       for (let i = 0; i < (boss.bossState.actionsPerTurn || 3); i++) {
-        // ※実際には各行動の合間に状態が変化するが、ここでは擬似的に現在の距離ベースで複数アクションを生成
-        actions.push(decideChaseWithAttack(boss, player.pos, state));
+        const action = decideChaseWithAttack(tempBoss, player.pos, state);
+        actions.push(action);
+        if (action.type === 'move') {
+          tempBoss = { ...tempBoss, pos: action.to };
+        } else if (action.type === 'attack') {
+          break; // 攻撃したら以降の行動はキャンセル
+        }
       }
       break;
+    }
 
-    case 'junk_king':
-      // ジャンクキング (5F): 壁破壊吸収 & 破片弾丸
-      // 便宜上、隣接していれば優先攻撃、近接に壁(WALL, CRACKED_WALL)があれば吸収回復、
-      // クールダウンがゼロの時は遠隔攻撃(projectile)を放つなどのロジックが考えられる。
-      // 実装の複雑化を避けるため、今回は基本的な近接追跡 AI とする。
+    case 'junk_king': {
+      // ジャンクキング (5F): 周囲のひび割れ壁を吸収→HP+10/ATK+3。3ターンごとに弾丸発射。
+      // 初期化
+      if (boss.bossState.currentCooldown === undefined) {
+        boss.bossState.currentCooldown = boss.bossState.projectileCooldown ?? 3;
+        boss.bossState.absorbCount = 0;
+      }
+
+      // 周囲のひび割れ壁を探す（ボスサイズ+2タイル以内）
+      const checkRange = (boss.bossSize ?? 2) + 2;
+      let foundWall: Position | null = null;
+      if (state.map) {
+        outer: for (let dx = -checkRange; dx <= checkRange; dx++) {
+          for (let dy = -checkRange; dy <= checkRange; dy++) {
+            const wp = { x: boss.pos.x + dx, y: boss.pos.y + dy };
+            if (wp.x >= 0 && wp.y >= 0 && wp.y < state.map.height && wp.x < state.map.width) {
+              if (getTileAt(state.map, wp) === TILE_CRACKED_WALL) {
+                foundWall = wp;
+                break outer;
+              }
+            }
+          }
+        }
+      }
+
+      if (foundWall) {
+        // 壁を吸収（このターンは吸収のみ）
+        actions.push({ type: 'absorb_wall', wallPos: foundWall });
+      } else {
+        // クールダウン更新
+        boss.bossState.currentCooldown--;
+        if (boss.bossState.currentCooldown <= 0) {
+          boss.bossState.currentCooldown = boss.bossState.projectileCooldown ?? 3;
+          if ((boss.bossState.absorbCount ?? 0) > 0) {
+            // 吸収した破片を弾丸として発射
+            boss.bossState.absorbCount = 0;
+            actions.push({ type: 'attack', targetId: 'player' });
+          } else {
+            actions.push(decideChaseWithAttack(boss, player.pos, state));
+          }
+        } else {
+          actions.push(decideChaseWithAttack(boss, player.pos, state));
+        }
+      }
+      break;
+    }
+
+    case 'phantom': {
+      // 透明マン (7F): 4ターン中3ターンは透明（isInvisible フラグ管理）
+      // 透明時も攻撃してくる。姿が見える1ターンのみ攻撃可能。
+      // 初期化
+      if (boss.bossState.visibilityTimer === undefined) {
+        boss.bossState.visibilityTimer = 0;
+        boss.bossState.isInvisible = false;
+      }
+
+      // smoke_bomb 等による強制可視化のカウントダウン
+      if ((boss.bossState.revealedTurns ?? 0) > 0) {
+        boss.bossState.revealedTurns--;
+      }
+
+      // 透明サイクル更新: 0=可視, 1〜3=不可視
+      boss.bossState.visibilityTimer = ((boss.bossState.visibilityTimer ?? 0) + 1) % 4;
+      boss.bossState.isInvisible = boss.bossState.visibilityTimer !== 0;
+
       actions.push(decideChaseWithAttack(boss, player.pos, state));
       break;
-
-    case 'phantom':
-      // 透明マン (7F): 4ターン中3ターン透明
-      // ※描画側や攻撃対象判定側で transparent=true を処理する。AI自身は普通に追いかける。
-      actions.push(decideChaseWithAttack(boss, player.pos, state));
-      break;
+    }
       
     case 'iron_fortress':
       // アイアンフォートレス (9F): 3ターンに1回範囲砲撃、正面装甲50

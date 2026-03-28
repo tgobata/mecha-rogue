@@ -64,10 +64,13 @@ describe('Full Boss AI & Trap Suite', () => {
     });
 
     it('Mach Runner (4F) - Triple Action', () => {
+      // 距離2: 1回目move→隣接→2回目attack+break = 2アクション（位置更新が正しく機能している）
       const { state, boss } = createTestState();
       boss.bossState = { id: 'mach_runner', actionsPerTurn: 3 };
       const actions = decideBossAction(boss, state, Math.random);
-      expect(actions.length).toBe(3);
+      expect(actions.length).toBe(2);
+      expect(actions[0].type).toBe('move');
+      expect(actions[1].type).toBe('attack');
     });
 
     it('Junk King (5F) - Basic Chase', () => {
