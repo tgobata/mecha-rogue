@@ -5972,11 +5972,148 @@ const bossDrawers: Record<string, BossDrawFn> = {
     }
   },
   samurai_master: (buf, S, c1, c2) => {
-    // 剣豪
-    fillRect(buf, S, 24, 16, 16, 24, c1); 
-    fillRect(buf, S, 26, 8, 12, 8, c1); 
-    setPixel(buf, S, 28, 12, c2); setPixel(buf, S, 34, 12, c2); 
-    fillRect(buf, S, 16, 20, 32, 2, hexToRGBA('#ffffff'));
+    // サムライマスター - 侍ロボット (64x64)
+    const BLACK  = { r: 0, g: 0, b: 0, a: 255 };
+    const EYE    = hexToRGBA('#ff2255');
+    const EYE_HL = hexToRGBA('#ffaacc', 200);
+    const BLADE  = hexToRGBA('#aaddff');
+    const TSUBA  = hexToRGBA('#ff6600');
+
+    // === 背中の刀 ×2（X型に交差）===
+    // 刀1: 左上→右下
+    for (let i = 0; i < 20; i++) {
+      setPixel(buf, S, 18 + i, 4 + i, BLADE);
+    }
+    setPixel(buf, S, 22, 8, TSUBA); setPixel(buf, S, 23, 8, TSUBA);
+    setPixel(buf, S, 22, 9, TSUBA); setPixel(buf, S, 23, 9, TSUBA);
+    // 刀2: 右上→左下
+    for (let i = 0; i < 20; i++) {
+      setPixel(buf, S, 45 - i, 4 + i, BLADE);
+    }
+    setPixel(buf, S, 40, 8, TSUBA); setPixel(buf, S, 41, 8, TSUBA);
+    setPixel(buf, S, 40, 9, TSUBA); setPixel(buf, S, 41, 9, TSUBA);
+
+    // === 兜 kuwagata (y:2-8) ===
+    // 左角
+    setPixel(buf, S, 24, 2, c1); setPixel(buf, S, 23, 3, c1);
+    setPixel(buf, S, 22, 4, c1); setPixel(buf, S, 22, 5, c1);
+    setPixel(buf, S, 23, 6, c1);
+    // 右角
+    setPixel(buf, S, 39, 2, c1); setPixel(buf, S, 40, 3, c1);
+    setPixel(buf, S, 41, 4, c1); setPixel(buf, S, 41, 5, c1);
+    setPixel(buf, S, 40, 6, c1);
+
+    // === 兜本体 (y:6-18) ===
+    fillRect(buf, S, 22, 7, 20, 12, BLACK);
+    hLine(buf, S, 24, 6,  16, c1);   // top dome
+    hLine(buf, S, 22, 18, 20, c1);   // bottom
+    vLine(buf, S, 22, 7,  12, c1);   // left
+    vLine(buf, S, 41, 7,  12, c1);   // right
+    setPixel(buf, S, 23, 7,  c1); setPixel(buf, S, 40, 7,  c1);
+    // 吹返し (faceplate wings)
+    hLine(buf, S, 18, 12, 6, c1); hLine(buf, S, 18, 15, 6, c1);
+    vLine(buf, S, 18, 13, 3, c1); vLine(buf, S, 23, 13, 3, c1);
+    hLine(buf, S, 40, 12, 6, c1); hLine(buf, S, 40, 15, 6, c1);
+    vLine(buf, S, 45, 13, 3, c1); vLine(buf, S, 40, 13, 3, c1);
+    // 前立て（兜飾り）
+    setPixel(buf, S, 32, 6, c1); setPixel(buf, S, 32, 5, c1); setPixel(buf, S, 32, 4, c1);
+    // バイザー
+    fillRect(buf, S, 25, 9, 14, 8, BLACK);
+    hLine(buf, S, 25,  9, 14, c1);
+    hLine(buf, S, 25, 16, 14, c1);
+    vLine(buf, S, 25, 10,  7, c1);
+    vLine(buf, S, 38, 10,  7, c1);
+    // 赤い目 ×2
+    fillRect(buf, S, 26, 11, 5, 4, EYE);
+    fillRect(buf, S, 33, 11, 5, 4, EYE);
+    setPixel(buf, S, 27, 12, EYE_HL); setPixel(buf, S, 34, 12, EYE_HL);
+
+    // === 首 (y:18-22) ===
+    fillRect(buf, S, 29, 18,  6, 4, BLACK);
+    vLine(buf, S, 29, 18, 4, c1); vLine(buf, S, 34, 18, 4, c1);
+
+    // === 肩鎧 sode (y:20-30) ===
+    // 左肩
+    fillRect(buf, S, 8, 20, 16, 12, BLACK);
+    hLine(buf, S, 8, 20, 16, c1); hLine(buf, S, 8, 31, 16, c1);
+    vLine(buf, S, 8, 21, 11, c1); vLine(buf, S, 23, 21, 11, c1);
+    hLine(buf, S, 10, 24, 12, c2); hLine(buf, S, 10, 27, 12, c2);
+    // 右肩
+    fillRect(buf, S, 40, 20, 16, 12, BLACK);
+    hLine(buf, S, 40, 20, 16, c1); hLine(buf, S, 40, 31, 16, c1);
+    vLine(buf, S, 40, 21, 11, c1); vLine(buf, S, 55, 21, 11, c1);
+    hLine(buf, S, 42, 24, 12, c2); hLine(buf, S, 42, 27, 12, c2);
+
+    // === 胸鎧 do (y:20-40, 横縞) ===
+    fillRect(buf, S, 22, 20, 20, 20, BLACK);
+    hLine(buf, S, 22, 20, 20, c1); hLine(buf, S, 22, 39, 20, c1);
+    vLine(buf, S, 22, 21, 19, c1); vLine(buf, S, 41, 21, 19, c1);
+    // 横縞 (lamellar plates)
+    for (let y = 24; y < 40; y += 4) hLine(buf, S, 23, y, 18, c2);
+    // 胸のコア
+    setPixel(buf, S, 31, 30, c1); setPixel(buf, S, 32, 30, c1);
+    setPixel(buf, S, 31, 31, c1); setPixel(buf, S, 32, 31, c1);
+
+    // === 腰帯 obi (y:40-44) ===
+    fillRect(buf, S, 20, 40, 24,  4, BLACK);
+    hLine(buf, S, 20, 40, 24, c1); hLine(buf, S, 20, 43, 24, c1);
+    vLine(buf, S, 20, 41,  3, c1); vLine(buf, S, 43, 41,  3, c1);
+
+    // === 草摺 kusazuri (y:44-52, 垂れ板) ===
+    for (let x = 21; x < 43; x += 5) {
+      fillRect(buf, S, x, 44, 4, 8, BLACK);
+      hLine(buf, S, x, 44, 4, c1); hLine(buf, S, x, 51, 4, c1);
+      vLine(buf, S, x, 45, 6, c1); vLine(buf, S, x+3, 45, 6, c1);
+    }
+
+    // === 左腕 + 大刀（構え）===
+    // 上腕
+    fillRect(buf, S, 12, 22, 10, 8, BLACK);
+    hLine(buf, S, 12, 22, 10, c1); hLine(buf, S, 12, 29, 10, c1);
+    vLine(buf, S, 12, 23,  7, c1);
+    // 前腕
+    fillRect(buf, S, 6, 28, 8, 8, BLACK);
+    hLine(buf, S,  6, 28,  8, c1); hLine(buf, S,  6, 35,  8, c1);
+    vLine(buf, S,  6, 29,  7, c1); vLine(buf, S, 13, 29,  7, c1);
+    // 手（グリップ）
+    fillRect(buf, S, 4, 34, 6, 6, BLACK);
+    hLine(buf, S, 4, 34, 6, c1); hLine(buf, S, 4, 39, 6, c1);
+    vLine(buf, S, 4, 35, 5, c1); vLine(buf, S, 9, 35, 5, c1);
+    // 鍔（tsuba）- オレンジ円
+    fillRect(buf, S, 3, 38, 8, 4, TSUBA);
+    hLine(buf, S, 3, 38, 8, c1); hLine(buf, S, 3, 41, 8, c1);
+    // 刀の刃（斜め上左方向）
+    for (let i = 0; i < 22; i++) {
+      setPixel(buf, S, 3 - (i > 10 ? i - 10 : 0), 37 - i, BLADE);
+    }
+
+    // === 右腕 + 脇差 ===
+    // 上腕
+    fillRect(buf, S, 42, 22, 10, 8, BLACK);
+    hLine(buf, S, 42, 22, 10, c1); hLine(buf, S, 42, 29, 10, c1);
+    vLine(buf, S, 51, 23,  7, c1);
+    // 前腕
+    fillRect(buf, S, 48, 30, 8, 7, BLACK);
+    hLine(buf, S, 48, 30,  8, c1); hLine(buf, S, 48, 36,  8, c1);
+    vLine(buf, S, 48, 31,  6, c1); vLine(buf, S, 55, 31,  6, c1);
+    // 脇差
+    hLine(buf, S, 50, 37, 12, BLADE);
+    hLine(buf, S, 50, 38, 12, BLADE);
+    fillRect(buf, S, 48, 36, 4, 4, TSUBA);
+
+    // === 左脚 (y:52-62) ===
+    fillRect(buf, S, 20, 52, 10, 10, BLACK);
+    hLine(buf, S, 20, 52, 10, c1); vLine(buf, S, 20, 53, 9, c1); vLine(buf, S, 29, 53, 9, c1);
+    hLine(buf, S, 20, 56, 10, c2);  // 膝
+    hLine(buf, S, 18, 61, 14, c1);  // 草鞋
+    setPixel(buf, S, 18, 60, c1); setPixel(buf, S, 31, 60, c1);
+
+    // === 右脚 (y:52-62) ===
+    fillRect(buf, S, 34, 52, 10, 10, BLACK);
+    hLine(buf, S, 34, 52, 10, c1); vLine(buf, S, 34, 53, 9, c1); vLine(buf, S, 43, 53, 9, c1);
+    hLine(buf, S, 34, 56, 10, c2);  // 膝
+    hLine(buf, S, 32, 61, 14, c1);  // 草鞋
+    setPixel(buf, S, 32, 60, c1); setPixel(buf, S, 45, 60, c1);
   },
   shadow_twin: (buf, S, c1, c2) => {
     // 双子
@@ -6057,7 +6194,7 @@ const bossColors: Record<string, [RGBA, RGBA]> = {
   junk_king: [hexToRGBA('#ff6600'), hexToRGBA('#00ccaa')],
   phantom: [hexToRGBA('#bb44ff'), hexToRGBA('#440088')],
   iron_fortress: [hexToRGBA('#00ff88'), hexToRGBA('#004422')],
-  samurai_master: [hexToRGBA('#4444ff'), hexToRGBA('#ffff00')],
+  samurai_master: [hexToRGBA('#ffdd00'), hexToRGBA('#885500')],
   shadow_twin: [hexToRGBA('#8800ff'), hexToRGBA('#ff0088')],
   queen_of_shadow: [hexToRGBA('#110022'), hexToRGBA('#ff0000')],
   mind_controller: [hexToRGBA('#440088'), hexToRGBA('#00ffff')],
@@ -6210,7 +6347,7 @@ async function generateEnemy4DirFull(
 async function generateBoss4DirSprites(outDir: string): Promise<void> {
   console.log('\n[Boss 4-Dir Sprites]');
   const S = BOSS_SIZE;
-  const B10F_BOSSES = ['bug_swarm', 'mach_runner', 'junk_king', 'phantom', 'iron_fortress'] as const;
+  const B10F_BOSSES = ['bug_swarm', 'mach_runner', 'junk_king', 'phantom', 'iron_fortress', 'samurai_master'] as const;
   const DIRS = ['down', 'up', 'left', 'right'] as const;
   const STATES = ['move', 'atk', 'dmg', 'dead'] as const;
 
@@ -6256,7 +6393,7 @@ async function generateBoss4DirSprites(outDir: string): Promise<void> {
           const p = params[frame];
           const fileName = `${id}_dir_${dir}_${state}_${frame}.png`;
           const file = path.join(outDir, fileName);
-          const forceRegen = (id === 'bug_swarm' || id === 'mach_runner' || id === 'junk_king' || id === 'phantom' || id === 'iron_fortress');
+          const forceRegen = (id === 'bug_swarm' || id === 'mach_runner' || id === 'junk_king' || id === 'phantom' || id === 'iron_fortress' || id === 'samurai_master');
           if (!forceRegen && fs.existsSync(file)) continue;
 
           let buf = createBuffer(S, S);
@@ -6294,7 +6431,7 @@ async function generateBoss4DirSprites(outDir: string): Promise<void> {
           }
 
           // bug_swarm / mach_runner / junk_king: 方向インジケーター（小矢印）を上乗せ
-          if (id === 'bug_swarm' || id === 'mach_runner' || id === 'junk_king' || id === 'phantom' || id === 'iron_fortress') {
+          if (id === 'bug_swarm' || id === 'mach_runner' || id === 'junk_king' || id === 'phantom' || id === 'iron_fortress' || id === 'samurai_master') {
             const arr = hexToRGBA('#ffffff', 210);
             if (dir === 'down') {
               hLine(buf, S, 28, 56, 8, arr);
