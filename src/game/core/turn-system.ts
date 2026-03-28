@@ -765,7 +765,7 @@ function processPlayerAction(
       const targetTile = getTileAt(mapData, targetPos);
 
       // ─── 罠バンプ処理 ───────────────────────────────────────────────────
-      // TILE_TRAP マスへのバンプ: 可視罠は攻撃(60%破壊), 不可視罠は発見
+      // TILE_TRAP マスへのバンプ: 可視罠は攻撃(75%破壊), 不可視罠は発見
       if (targetTile === TILE_TRAP) {
         const trapAtTarget = state.traps.find(
           t => t.pos.x === targetPos.x && t.pos.y === targetPos.y && !t.isTriggered
@@ -1884,11 +1884,11 @@ export function processTurn(state: GameState, action: PlayerAction): GameState {
     }
   }
 
-  // ─── 罠攻撃処理（可視罠を攻撃: 60%破壊） ──────────────────────────────
+  // ─── 罠攻撃処理（可視罠を攻撃: 75%破壊） ──────────────────────────────
   if (attackedTrapId !== undefined) {
     const idx = trapsAfterAction.findIndex(t => t.id === attackedTrapId);
     if (idx >= 0) {
-      if (Math.random() < 0.6) {
+      if (Math.random() < 0.75) {
         const updated = [...trapsAfterAction];
         updated[idx] = { ...updated[idx], isTriggered: true };
         trapsAfterAction = updated;

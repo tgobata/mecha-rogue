@@ -503,11 +503,11 @@ export function renderGame(
             // 不可視罠 or 発動済み罠: 床として描画
             drawSFFloor(ctx, drawX, drawY, tileSize, floorPalette);
           } else {
-            // 可視罠: 150% サイズではみ出し表示
+            // 可視罠: 95% サイズで中央揃え表示
             const trapSprite = sprites.get('tile_trap');
             if (trapSprite) {
               drawSFFloor(ctx, drawX, drawY, tileSize, floorPalette);
-              const drawSize = tileSize * 1.5;
+              const drawSize = tileSize * 0.95;
               const ofs = (tileSize - drawSize) / 2;
               ctx.drawImage(trapSprite, drawX + ofs, drawY + ofs, drawSize, drawSize);
             } else {

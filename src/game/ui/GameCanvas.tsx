@@ -845,6 +845,15 @@ export default function GameCanvas() {
         exploration: null,
         // machine.hp を maxHp に確実にリセットする
         machine: { ...penalizedState.machine, hp: penalizedState.machine.maxHp },
+        // ゲームオーバー: 所持アイテム・装備を全て失う
+        inventory: {
+          ...penalizedState.inventory,
+          items: [],
+          equippedWeapons: [],
+          equippedShields: [],
+          equippedArmors: [],
+          equippedTools: [],
+        },
       };
 
       setGameState(finalState);
