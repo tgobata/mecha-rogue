@@ -774,7 +774,9 @@ export function renderGame(
     const effects = player.statusEffects ?? [];
     const hasEffect = (t: string) => effects.some(e => e.type === t);
     const isNearDeath = (player.hp / maxHp) <= 0.25 || player.animState === 'near_death';
-    const isFullHp = player.hp >= maxHp;
+    // ゲームスタート時（hpEverDroppedBelowMax が未設定/false）は H スプライトを表示。
+    // ゲーム中に HP が最大値未満になった後で最大値まで回復した場合のみ F スプライトを表示。
+    const isFullHp = player.hp >= maxHp && (player.hpEverDroppedBelowMax ?? false);
     const letterPrefix: string =
       isNearDeath              ? 'd_' :
       hasEffect('attack_up')   ? 'a_' :

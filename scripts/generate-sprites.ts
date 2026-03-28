@@ -515,13 +515,13 @@ function getLetterPalette(letter: PlayerLetter): LetterPalette {
   switch (letter) {
     case 'H':
       return {
-        main:   hexToRGBA('#00c8ff'),
-        mid:    hexToRGBA('#0080ff'),
-        dark:   hexToRGBA('#0044aa'),
-        edge:   hexToRGBA('#ffffff'),
-        accent: hexToRGBA('#ffdd00'),
-        sensor: hexToRGBA('#ff00ff'),
-        core:   hexToRGBA('#00ff88'),
+        main:   hexToRGBA('#0a1e2e'),  // ダークネイビー（カバー#0d2a3aに近い）
+        mid:    hexToRGBA('#0f2d42'),  // 少し明るいダーク
+        dark:   hexToRGBA('#061218'),  // 影色
+        edge:   hexToRGBA('#00e5ff'),  // シアンアウトライン（カバー完全一致）
+        accent: hexToRGBA('#00b4cc'),  // 薄めシアン（背中パネル等）
+        sensor: hexToRGBA('#ff3333'),  // 赤い目（カバー完全一致）
+        core:   hexToRGBA('#00e5ff'),  // シアンコア
       };
     case 'D':
       return {
@@ -847,7 +847,16 @@ function drawHitEffect(buf: Uint8Array, S: number, frame: number, palette: Lette
 // ---------------------------------------------------------------------------
 
 /**
- * 文字 H キャラクターを描画する（通常状態・シアン系）。
+ * 文字 H キャラクターを描画する（ロボット型・カバー画像と同デザイン）。
+ *
+ * 特徴:
+ * - ダークネイビー胴体＋シアンアウトライン（cover.png と同じ #00e5ff）
+ * - 赤い目 2 つ（cover.png と同じ #ff3333）
+ * - アンテナ・コアリアクター・肩アーマー・腕・ブレード・ブーツを持つ
+ * - UP方向: 背中パネル（ベントライン）を表示、顔は非表示
+ * - LEFT/RIGHT方向: シアー変形＋顔を横にずらし＋背中ベントライン
+ * - ATTACK: 腕/ブレードを攻撃方向へ派手に突き出す
+ * - HIT: 目が飛び出る（白い強膜＋大きな赤目）
  */
 function drawLetterH(
   buf: Uint8Array,
@@ -857,57 +866,209 @@ function drawLetterH(
   frame: number,
 ): void {
   const pal = getLetterPalette('H');
-  const W = pal.edge; const G = pal.accent; const M = pal.sensor;
+  const W = pal.edge;    // #00e5ff シアン（アウトライン）
+  const A = pal.accent;  // #00b4cc 薄めシアン（背中パネル）
+  const R = pal.sensor;  // #ff3333 赤（目）
   const dir = direction;
+
+  // ─── アニメーションオフセット ─────────────────────────────────────
   const bY = (state === 'idle' && frame === 1) ? 1 : 0;
   const leftFootY  = (state === 'move' && frame === 0) ? 1 : 0;
   const rightFootY = (state === 'move' && frame === 1) ? 1 : 0;
-
   const aX = state === 'attack' && frame >= 1
     ? (dir === 'right' ? 5 : dir === 'left' ? -5 : 0) : 0;
   const aY = state === 'attack' && frame >= 1
     ? (dir === 'down' ? 4 : dir === 'up' ? -4 : 0) : 0;
   const hX = state === 'hit' && frame === 0 ? -4 : 0;
   const hY = state === 'hit' && frame === 0 ? -2 : 0;
-  const ox = aX + hX; const oy = aY + hY + bY;
+  const ox = aX + hX;
+  const oy = aY + hY + bY;
 
-  // 左柱
-  fillRectS(buf, S, 8+ox, 10+oy, 4, 17, pal.main, dir);
-  // 右柱
-  fillRectS(buf, S, 20+ox, 10+oy, 4, 17, pal.main, dir);
-  // 横棒
-  fillRectS(buf, S, 12+ox, 15+oy, 8, 3, pal.mid, dir);
-  // エッジ
-  hLineS(buf, S, 8+ox, 11+oy, 4, G, dir);
-  hLineS(buf, S, 20+ox, 11+oy, 4, G, dir);
-  hLineS(buf, S, 12+ox, 15+oy, 8, W, dir);
-  hLineS(buf, S, 12+ox, 17+oy, 8, W, dir);
-  vLineS(buf, S, 8+ox, 10+oy, 17, W, dir);
-  vLineS(buf, S, 23+ox, 10+oy, 17, W, dir);
-  // コア
-  setPixelS(buf, S, 15+ox, 16+oy, pal.core, dir);
-  setPixelS(buf, S, 16+ox, 16+oy, pal.core, dir);
-  // 左足
-  fillRectS(buf, S, 6+ox, 26+oy+leftFootY, 6, 4, pal.mid, dir);
-  hLineS(buf, S, 6+ox, 26+oy+leftFootY, 6, W, dir);
-  // 右足
-  fillRectS(buf, S, 20+ox, 26+oy+rightFootY, 6, 4, pal.mid, dir);
-  hLineS(buf, S, 20+ox, 26+oy+rightFootY, 6, W, dir);
-  // 頭部
-  fillRectS(buf, S, 12+ox, 2+oy, 8, 7, pal.main, dir);
-  hLineS(buf, S, 12+ox, 2+oy, 8, W, dir);
-  vLineS(buf, S, 12+ox, 2+oy, 7, W, dir);
-  vLineS(buf, S, 19+ox, 2+oy, 7, W, dir);
-  // センサーバイザー
-  hLineS(buf, S, 13+ox, 6+oy, 6, M, dir);
-  // アンテナ
-  setPixelS(buf, S, 16+ox, 1+oy, G, dir);
+  // ─── アンテナ ───────────────────────────────────────────────────
+  // UP方向は薄めシアン、それ以外はシアン
+  if (dir === 'up') {
+    setPixelS(buf, S, 15+ox, 0+oy, A, dir);
+    setPixelS(buf, S, 15+ox, 1+oy, A, dir);
+  } else {
+    setPixelS(buf, S, 15+ox, 0+oy, W, dir);
+    setPixelS(buf, S, 15+ox, 1+oy, W, dir);
+    setPixelS(buf, S, 16+ox, 0+oy, W, dir);
+  }
 
-  // 顔（down/left/right のみ）
-  if (direction !== 'up') {
-    const faceCX = direction === 'right' ? 22+ox : direction === 'left' ? 10+ox : 16+ox;
-    const faceCY = 5+oy;
-    drawFace(buf, S, faceCX, faceCY, W, M, pal.sensor, dir);
+  // ─── 頭部（10×7 px、x=11-20, y=2-8）────────────────────────────
+  // ダークネイビー塗り
+  fillRectS(buf, S, 11+ox, 2+oy, 10, 7, pal.main, dir);
+  // シアン外枠
+  hLineS(buf, S, 11+ox, 2+oy, 10, W, dir);   // 上辺
+  hLineS(buf, S, 11+ox, 8+oy,  10, W, dir);   // 下辺
+  vLineS(buf, S, 11+ox, 2+oy,  7,  W, dir);   // 左辺
+  vLineS(buf, S, 20+ox, 2+oy,  7,  W, dir);   // 右辺
+
+  // ─── ネック（x=14-17, y=9-10）───────────────────────────────────
+  fillRectS(buf, S, 14+ox, 9+oy, 4, 2, pal.mid, dir);
+
+  // ─── 方向別: UP=背面・それ以外=顔 ───────────────────────────────
+  if (dir === 'up') {
+    // 背面頭部: ベントライン3本（薄めシアン）
+    hLineS(buf, S, 13+ox, 3+oy, 6, A, dir);
+    hLineS(buf, S, 13+ox, 5+oy, 6, A, dir);
+    hLineS(buf, S, 13+ox, 7+oy, 6, A, dir);
+  } else {
+    // 目の座標: DOWN=正面中央, RIGHT/LEFT=横に寄せる
+    const faceCX = dir === 'right' ? 19+ox : dir === 'left' ? 13+ox : 16+ox;
+    const eyeBaseY = 4+oy;
+
+    if (state === 'hit') {
+      // HIT: 目が飛び出る（白い強膜 6×4 ＋ 大きな赤目 4×2）
+      const eyeW = hexToRGBA('#ffffff');
+      // 左目（白い強膜）
+      fillRectS(buf, S, faceCX-7, eyeBaseY-1, 6, 4, eyeW, dir);
+      fillRectS(buf, S, faceCX-6, eyeBaseY,   4, 2, R,    dir);
+      // 右目（白い強膜）
+      fillRectS(buf, S, faceCX+1, eyeBaseY-1, 6, 4, eyeW, dir);
+      fillRectS(buf, S, faceCX+2, eyeBaseY,   4, 2, R,    dir);
+    } else {
+      // 通常: 左目 3×2（x=faceCX-6〜-4）、右目 3×2（x=faceCX+1〜+3）
+      fillRectS(buf, S, faceCX-6, eyeBaseY,   3, 2, R, dir);  // 左目
+      fillRectS(buf, S, faceCX+1, eyeBaseY,   3, 2, R, dir);  // 右目
+      // 目のハイライト（各目の左上1px）
+      setPixelS(buf, S, faceCX-6, eyeBaseY, hexToRGBA('#ff6666'), dir);
+      setPixelS(buf, S, faceCX+1, eyeBaseY, hexToRGBA('#ff6666'), dir);
+    }
+
+    // バイザーライン（y=7、薄めシアン横線）
+    hLineS(buf, S, 12+ox, 7+oy, 8, A, dir);
+  }
+
+  // ─── 肩アーマー ─────────────────────────────────────────────────
+  // 左肩（x=7-9, y=9-11）
+  fillRectS(buf, S, 7+ox,  9+oy, 3, 3, pal.mid, dir);
+  hLineS(buf, S,   7+ox,  9+oy, 3, W, dir);   // 上辺シアンエッジ
+  vLineS(buf, S,   7+ox,  9+oy, 3, W, dir);   // 左辺シアンエッジ
+  // 右肩（x=22-24, y=9-11）
+  fillRectS(buf, S, 22+ox, 9+oy, 3, 3, pal.mid, dir);
+  hLineS(buf, S,   22+ox, 9+oy, 3, W, dir);   // 上辺シアンエッジ
+  vLineS(buf, S,   24+ox, 9+oy, 3, W, dir);   // 右辺シアンエッジ
+
+  // ─── ボディ（14×10 px、x=9-22, y=11-20）────────────────────────
+  fillRectS(buf, S, 9+ox, 11+oy, 14, 10, pal.main, dir);
+  // シアン外枠
+  hLineS(buf, S, 9+ox,  11+oy, 14, W, dir);  // 上辺
+  hLineS(buf, S, 9+ox,  20+oy, 14, W, dir);  // 下辺
+  vLineS(buf, S, 9+ox,  11+oy, 10, W, dir);  // 左辺
+  vLineS(buf, S, 22+ox, 11+oy, 10, W, dir);  // 右辺
+
+  // ボディ内装飾ライン（4隅にシアンショートライン）
+  hLineS(buf, S, 10+ox, 13+oy, 3, A, dir);   // 左上
+  hLineS(buf, S, 19+ox, 13+oy, 3, A, dir);   // 右上
+  hLineS(buf, S, 10+ox, 18+oy, 3, A, dir);   // 左下
+  hLineS(buf, S, 19+ox, 18+oy, 3, A, dir);   // 右下
+
+  // コアリアクター（中央 x=14-17, y=14-16）
+  // 外周シアン
+  hLineS(buf, S, 14+ox, 14+oy, 4, W, dir);   // 上辺
+  hLineS(buf, S, 14+ox, 16+oy, 4, W, dir);   // 下辺
+  setPixelS(buf, S, 14+ox, 15+oy, W, dir);   // 左辺
+  setPixelS(buf, S, 17+ox, 15+oy, W, dir);   // 右辺
+  // 中心白
+  setPixelS(buf, S, 15+ox, 15+oy, hexToRGBA('#ffffff'), dir);
+  setPixelS(buf, S, 16+ox, 15+oy, hexToRGBA('#ffffff'), dir);
+
+  // ─── 腕 ─────────────────────────────────────────────────────────
+  // 左腕（x=6-8, y=12-18）
+  fillRectS(buf, S, 6+ox, 12+oy, 3, 7, pal.main, dir);
+  vLineS(buf, S,   6+ox, 12+oy, 7, W, dir);  // 左縁シアン
+  // 右腕（x=23-25, y=12-18）
+  fillRectS(buf, S, 23+ox, 12+oy, 3, 7, pal.main, dir);
+  vLineS(buf, S,   25+ox, 12+oy, 7, W, dir); // 右縁シアン
+
+  // ─── 左腕ブレード（x=5-6, y=18-23）─────────────────────────────
+  if (dir !== 'up') {
+    fillRectS(buf, S, 5+ox, 18+oy, 2, 6, pal.mid, dir);
+    vLineS(buf, S,   5+ox, 18+oy, 6, W, dir);  // 左縁シアン
+    setPixelS(buf, S, 5+ox, 23+oy, W, dir);    // 先端
+    setPixelS(buf, S, 6+ox, 24+oy, W, dir);    // 先端
+  }
+
+  // ─── 背中ベントライン（LEFT/RIGHT方向のみ）──────────────────────
+  if (dir === 'right') {
+    // 背中側（左柱）にベントライン
+    hLineS(buf, S, 10+ox, 13+oy, 2, A, dir);
+    hLineS(buf, S, 10+ox, 16+oy, 2, A, dir);
+    hLineS(buf, S, 10+ox, 19+oy, 2, A, dir);
+  } else if (dir === 'left') {
+    // 背中側（右柱）にベントライン
+    hLineS(buf, S, 20+ox, 13+oy, 2, A, dir);
+    hLineS(buf, S, 20+ox, 16+oy, 2, A, dir);
+    hLineS(buf, S, 20+ox, 19+oy, 2, A, dir);
+  } else if (dir === 'up') {
+    // UP方向: 両腕にベントライン
+    hLineS(buf, S, 9+ox,  13+oy, 2, A, dir);
+    hLineS(buf, S, 9+ox,  16+oy, 2, A, dir);
+    hLineS(buf, S, 9+ox,  19+oy, 2, A, dir);
+    hLineS(buf, S, 21+ox, 13+oy, 2, A, dir);
+    hLineS(buf, S, 21+ox, 16+oy, 2, A, dir);
+    hLineS(buf, S, 21+ox, 19+oy, 2, A, dir);
+  }
+
+  // ─── 脚（x=11-13 左、x=18-20 右、y=21-25）───────────────────────
+  fillRectS(buf, S, 11+ox, 21+oy, 3, 5, pal.main, dir);
+  fillRectS(buf, S, 18+ox, 21+oy, 3, 5, pal.main, dir);
+
+  // ─── ブーツ（左 x=9-13, 右 x=18-22, y=26-28）────────────────────
+  const lfy = leftFootY;
+  const rfy = rightFootY;
+  // 左ブーツ
+  fillRectS(buf, S, 9+ox,  26+oy+lfy, 5, 3, pal.mid, dir);
+  hLineS(buf, S,   9+ox,  26+oy+lfy, 5, W, dir);  // 上辺
+  hLineS(buf, S,   9+ox,  28+oy+lfy, 5, W, dir);  // 下辺
+  vLineS(buf, S,   9+ox,  26+oy+lfy, 3, W, dir);  // 左辺
+  vLineS(buf, S,   13+ox, 26+oy+lfy, 3, W, dir);  // 右辺
+  // 右ブーツ
+  fillRectS(buf, S, 18+ox, 26+oy+rfy, 5, 3, pal.mid, dir);
+  hLineS(buf, S,   18+ox, 26+oy+rfy, 5, W, dir);
+  hLineS(buf, S,   18+ox, 28+oy+rfy, 5, W, dir);
+  vLineS(buf, S,   18+ox, 26+oy+rfy, 3, W, dir);
+  vLineS(buf, S,   22+ox, 26+oy+rfy, 3, W, dir);
+
+  // ─── ATTACK: 腕/ブレードを攻撃方向へ派手に突き出す ───────────────
+  if (state === 'attack' && frame >= 1) {
+    if (dir === 'down') {
+      // 右腕を下に +4px 伸ばして拳追加
+      fillRectS(buf, S, 23+ox, 19+oy, 3, 5, pal.mid, dir);
+      fillRectS(buf, S, 22+ox, 23+oy, 5, 3, pal.mid, dir);  // 拳（幅広）
+      hLineS(buf, S,   22+ox, 23+oy, 5, W, dir);
+      hLineS(buf, S,   22+ox, 25+oy, 5, W, dir);
+      vLineS(buf, S,   26+ox, 23+oy, 3, W, dir);
+      // 左腕ブレードを前方へ（下に伸ばす）
+      fillRectS(buf, S, 5+ox, 24+oy, 2, 4, pal.mid, dir);
+      vLineS(buf, S,   5+ox, 24+oy, 4, W, dir);
+      setPixelS(buf, S, 5+ox, 27+oy, W, dir);
+    } else if (dir === 'up') {
+      // 左腕を上に伸ばす
+      fillRectS(buf, S, 6+ox, 5+oy,  3, 7, pal.mid, dir);
+      fillRectS(buf, S, 5+ox, 3+oy,  4, 3, pal.mid, dir);  // 拳
+      hLineS(buf, S,   5+ox, 3+oy,  4, W, dir);
+      hLineS(buf, S,   5+ox, 5+oy,  4, W, dir);
+      vLineS(buf, S,   5+ox, 3+oy,  3, W, dir);
+    } else if (dir === 'right') {
+      // 右腕を右へ水平に +5px 伸ばす
+      fillRectS(buf, S, 25+ox, 13+oy, 6, 3, pal.mid, dir);
+      fillRectS(buf, S, 29+ox, 11+oy, 3, 6, pal.mid, dir);  // 拳
+      vLineS(buf, S,   31+ox, 11+oy, 6, W, dir);
+      hLineS(buf, S,   29+ox, 11+oy, 3, W, dir);
+      hLineS(buf, S,   29+ox, 16+oy, 3, W, dir);
+    } else {
+      // 左腕を左へ水平に +5px 伸ばす
+      fillRectS(buf, S, 2+ox, 13+oy, 6, 3, pal.mid, dir);
+      fillRectS(buf, S, 0+ox, 11+oy, 3, 6, pal.mid, dir);  // 拳
+      vLineS(buf, S,   0+ox, 11+oy, 6, W, dir);
+      hLineS(buf, S,   0+ox, 11+oy, 3, W, dir);
+      hLineS(buf, S,   0+ox, 16+oy, 3, W, dir);
+      // ブレードも前方（左）へ
+      fillRectS(buf, S, 3+ox, 18+oy, 3, 6, pal.mid, dir);
+      vLineS(buf, S,   3+ox, 18+oy, 6, W, dir);
+    }
   }
 
   if (state === 'attack') drawAttackEffect(buf, S, direction, frame, pal);

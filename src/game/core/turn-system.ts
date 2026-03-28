@@ -700,7 +700,7 @@ function processPlayerAction(
         // 溶岩ダメージ
         const hasHeatResist = false; // TODO: アップグレード判定
         if (slideTile === TILE_LAVA && !hasHeatResist) {
-           newPlayer = { ...newPlayer, hp: newPlayer.hp - 5 };
+           newPlayer = { ...newPlayer, hp: newPlayer.hp - 5, hpEverDroppedBelowMax: true };
            logMessages.push('溶岩の熱で5ダメージを受けた！');
         }
 
@@ -902,7 +902,8 @@ function processEnemyActions(
               ...shieldedPlayer,
               hp: shieldedPlayer.hp - finalDamage,
               animState: 'hit' as const,
-              facing: newPlayer.facing // 明示的に維持
+              facing: newPlayer.facing, // 明示的に維持
+              ...(finalDamage > 0 && { hpEverDroppedBelowMax: true }),
             };
             // 盾・アーマー耐久度消費（武器の半分: 50%の確率で1減少）
             if (finalDamage > 0 || isBlocked) {
@@ -1054,7 +1055,7 @@ function processEnemyActions(
           const isBlockedEx = blockChanceEx > 0 && Math.random() < blockChanceEx;
           const dmg = isBlockedEx ? 0 : calcDamage(currentEnemyState.atk, effectiveDefEx);
           const { finalDamage, updatedEntity: shieldedPlayer } = absorbWithShield(newPlayer, dmg);
-          newPlayer = { ...shieldedPlayer, hp: shieldedPlayer.hp - finalDamage, animState: 'hit' as const };
+          newPlayer = { ...shieldedPlayer, hp: shieldedPlayer.hp - finalDamage, animState: 'hit' as const, ...(finalDamage > 0 && { hpEverDroppedBelowMax: true }) };
           // 盾・アーマー耐久度消費（武器の半分: 50%の確率で1減少）
           if (finalDamage > 0 || isBlockedEx) {
             if (newPlayer.equippedShield && newPlayer.equippedShield.durability > 0 && Math.random() < 0.5) {
@@ -1390,6 +1391,7 @@ function handleTrapTrigger(
     case 'visible_pitfall':
     case 'hidden_pitfall': {
       newPlayer.hp -= 20;
+      newPlayer.hpEverDroppedBelowMax = true;
       const isBossFloorPit = state.floor > 0 && BOSS_DEFS.some((def) => def.floor === state.floor);
       const bossAlivePit = isBossFloorPit && newEnemies.some((e) => e.isBoss && e.hp > 0);
       if (bossAlivePit) {
@@ -1403,6 +1405,7 @@ function handleTrapTrigger(
     }
     case 'large_pitfall': {
       newPlayer.hp -= 50;
+      newPlayer.hpEverDroppedBelowMax = true;
       const isBossFloorLarge = state.floor > 0 && BOSS_DEFS.some((def) => def.floor === state.floor);
       const bossAliveLarge = isBossFloorLarge && newEnemies.some((e) => e.isBoss && e.hp > 0);
       if (bossAliveLarge) {
@@ -1417,6 +1420,7 @@ function handleTrapTrigger(
     case 'landmine':
       logMessages.push('地雷が爆発した！ 25のダメージ！');
       newPlayer.hp -= 25;
+      newPlayer.hpEverDroppedBelowMax = true;
       newEnemies = newEnemies.map(e => {
         if (Math.abs(e.pos.x - trap.pos.x) <= 1 && Math.abs(e.pos.y - trap.pos.y) <= 1) {
           return { ...e, hp: e.hp - 25 };
@@ -1429,11 +1433,13 @@ function handleTrapTrigger(
     case 'poison_gas':
       logMessages.push('毒ガスを吸い込んだ！ 10のダメージ！');
       newPlayer.hp -= 10;
+      newPlayer.hpEverDroppedBelowMax = true;
       trap.isTriggered = true;
       break;
     case 'arrow_trap':
       logMessages.push('矢が飛んできた！ 15のダメージ！');
       newPlayer.hp -= 15;
+      newPlayer.hpEverDroppedBelowMax = true;
       trap.isTriggered = true;
       break;
     case 'teleport_trap':
@@ -1843,7 +1849,7 @@ export function processTurn(state: GameState, action: PlayerAction): GameState {
       // プレイヤーにダメージ
       if (blastTiles.some((t) => t.x === bombPlayer.pos.x && t.y === bombPlayer.pos.y)) {
         const playerDmg = Math.max(1, Math.floor(bomb.damage * 0.5) - (bombPlayer.def ?? 0));
-        bombPlayer = { ...bombPlayer, hp: bombPlayer.hp - playerDmg };
+        bombPlayer = { ...bombPlayer, hp: bombPlayer.hp - playerDmg, hpEverDroppedBelowMax: true };
         newBattleLog.push(`爆弾が爆発！ プレイヤーに${playerDmg}ダメージ！`);
       }
       newBattleLog.push(`爆弾が爆発した！（ダメージ${bomb.damage}）`);

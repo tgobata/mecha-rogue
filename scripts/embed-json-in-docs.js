@@ -113,9 +113,44 @@ function fixZenitem() {
 }
 
 // ---------------------------------------------------------------------------
+// 主人公.html
+// ---------------------------------------------------------------------------
+function fixShujinko() {
+  const filePath = path.join(DOCS, '主人公.html');
+  let html = fs.readFileSync(filePath, 'utf8');
+
+  // ドット絵タブの「note」ブロックを新しいデザイン仕様に差し替える
+  const noteBlock = `    <div class="note">
+      主人公スプライトはアルファベット文字をモチーフにしたデザイン。ステータスに応じて表示文字が変わる。<br>
+      ファイルパス: <code>public/sprites/player/</code><br>
+      優先順: <strong>瀕死(D)</strong> &gt; <strong>攻撃バフ(A)</strong> &gt; <strong>防御バフ(B)</strong> &gt; <strong>スピードバフ(S)</strong> &gt; <strong>HP満タン(F)</strong> &gt; <strong>通常(H)</strong><br>
+      ※ H = 通常状態。<strong>cover.png と同配色</strong>（ダークネイビー胴体 / シアン <code>#00e5ff</code> アウトライン / 赤 <code>#ff3333</code> 目）。<br>
+      ※ F = HP 100%時に表示。ただし<strong>ゲーム開始直後は H を表示</strong>し、一度でもダメージを受けて HP 回復後に F へ切り替わる。ゴールドカラーのフルパワー状態。<br>
+      ※ D = 瀕死。明るい青灰系カラー。<br>
+      <strong>方向表現:</strong><br>
+      &nbsp;&nbsp;下↓ = 正面（赤い大きな目/鼻/口 を大きく表示）<br>
+      &nbsp;&nbsp;上↑ = 背面（顔パーツ非表示・頭部ベントライン3本＋ボディベント表示）<br>
+      &nbsp;&nbsp;左右←→ = シアー変形（体全体45°傾き）＋顔を左右端に大きくずらし＋反対側ボディにベントライン（背中ハーフ表示）<br>
+      <strong>攻撃:</strong> frame1でキャラが攻撃方向にオフセット＋拳/腕を派手に突き出す＋衝撃波エフェクト<br>
+      <strong>被弾:</strong> frame0で白い強膜を持つ大きな目が飛び出る＋キャラが左上に吹き飛び＋フラッシュ＋亀裂
+    </div>`;
+
+  // 既存 note ブロック（正規表現で検索）を新しい内容で置換
+  const re = /<div class="note">[\s\S]*?<\/div>/;
+  if (re.test(html)) {
+    html = html.replace(re, noteBlock);
+    fs.writeFileSync(filePath, html, 'utf8');
+    console.log('主人公.html: 書き込み完了 (' + fs.statSync(filePath).size + ' bytes)');
+  } else {
+    console.log('主人公.html: note ブロックのパターンが見つかりません（スキップ）');
+  }
+}
+
+// ---------------------------------------------------------------------------
 // 実行
 // ---------------------------------------------------------------------------
 fixZenteki();
 fixZenboss();
 fixZenitem();
-console.log('\n既存3ファイルの修正完了。');
+fixShujinko();
+console.log('\n既存4ファイルの修正完了。');

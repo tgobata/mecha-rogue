@@ -419,6 +419,12 @@ export interface Player {
   animState?: 'idle' | 'move' | 'attack' | 'hit' | 'item_use' | 'near_death';
   /** 現在付与されている状態異常リスト（省略時は空配列扱い） */
   statusEffects?: StatusEffect[];
+  /**
+   * HP が一度でも最大値を下回ったかを示すフラグ。
+   * false/undefined = ゲーム開始直後（H スプライト表示）
+   * true            = ダメージを受けた後（HP回復時に F スプライト表示）
+   */
+  hpEverDroppedBelowMax?: boolean;
   /** 修理ナノボットによる毎ターン回復量（0の場合は効果なし） */
   healPerTurn?: number;
   /** 修理ナノボットの残りターン数 */
