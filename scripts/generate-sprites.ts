@@ -5317,40 +5317,659 @@ function transformBuffer(
 // 15体のボスの「基本描画」処理
 const bossDrawers: Record<string, BossDrawFn> = {
   bug_swarm: (buf, S, c1, c2) => {
-    // 8体の小虫を分散して描画
-    const positions = [[16,16],[24,24],[8,8],[40,40],[16,48],[48,16],[48,48],[32,32]];
-    positions.forEach(([cx, cy]) => {
-      fillRect(buf, S, cx-2, cy-2, 4, 4, c1);
-      setPixel(buf, S, cx-1, cy-1, c2);
-    });
+    // 大きな1体のハエ (64×64)
+    const BLACK = hexToRGBA('#000000');
+    const EYE   = hexToRGBA('#ff8800');
+    const WHITE = hexToRGBA('#ffffff');
+
+    // ---- 触角 ----
+    for (const [px, py] of [[29,8],[27,6],[25,5],[23,3],[21,2],[20,1]] as [number,number][]) {
+      setPixel(buf, S, px, py, c1);
+    }
+    for (const [px, py] of [[34,8],[36,6],[38,5],[40,3],[42,2],[43,1]] as [number,number][]) {
+      setPixel(buf, S, px, py, c1);
+    }
+
+    // ---- 頭部 ----
+    fillRect(buf, S, 23, 9, 18, 11, BLACK);
+    hLine(buf, S, 26, 8, 12, c1);
+    hLine(buf, S, 24, 18, 16, c1);
+    vLine(buf, S, 23, 9, 11, c1);
+    vLine(buf, S, 40, 9, 11, c1);
+    setPixel(buf, S, 24, 9, c1);
+    setPixel(buf, S, 39, 9, c1);
+    setPixel(buf, S, 24, 18, c1);
+    setPixel(buf, S, 39, 18, c1);
+    // 左複眼
+    fillRect(buf, S, 15, 10, 10, 9, EYE);
+    setPixel(buf, S, 16, 11, WHITE);
+    // 右複眼
+    fillRect(buf, S, 39, 10, 10, 9, EYE);
+    setPixel(buf, S, 40, 11, WHITE);
+    // 触肢（口）
+    for (const px of [30,31,32,33]) setPixel(buf, S, px, 19, c1);
+    setPixel(buf, S, 29, 20, c1);
+    setPixel(buf, S, 34, 20, c1);
+
+    // ---- 胸部 ----
+    fillRect(buf, S, 22, 19, 20, 15, BLACK);
+    hLine(buf, S, 23, 19, 18, c1);
+    hLine(buf, S, 22, 33, 20, c1);
+    vLine(buf, S, 22, 20, 14, c1);
+    vLine(buf, S, 41, 20, 14, c1);
+    // 十字マーク
+    hLine(buf, S, 24, 26, 16, c2);
+    vLine(buf, S, 32, 21, 12, c2);
+    // 中心輝点
+    fillRect(buf, S, 30, 25, 4, 4, BLACK);
+    setPixel(buf, S, 31, 25, c1);
+    setPixel(buf, S, 32, 25, c1);
+    setPixel(buf, S, 31, 26, c1);
+    setPixel(buf, S, 32, 26, c1);
+
+    // ---- 腹部 ----
+    fillRect(buf, S, 25, 33, 14, 20, BLACK);
+    fillRect(buf, S, 27, 53, 10, 3, BLACK);
+    hLine(buf, S, 26, 33, 12, c1);
+    vLine(buf, S, 24, 34, 20, c1);
+    vLine(buf, S, 39, 34, 20, c1);
+    setPixel(buf, S, 25, 34, c1);
+    setPixel(buf, S, 38, 34, c1);
+    hLine(buf, S, 27, 54, 10, c1);
+    setPixel(buf, S, 26, 53, c1);
+    setPixel(buf, S, 37, 53, c1);
+    // 縞
+    hLine(buf, S, 26, 39, 12, c2);
+    hLine(buf, S, 26, 44, 12, c2);
+    hLine(buf, S, 26, 49, 12, c2);
+
+    // ---- 左翅 ----
+    hLine(buf, S, 4, 16, 18, c1);
+    hLine(buf, S, 2, 17, 3, c1);
+    setPixel(buf, S, 2, 18, c1);
+    vLine(buf, S, 2, 16, 13, c1);
+    hLine(buf, S, 2, 29, 10, c1);
+    setPixel(buf, S, 12, 30, c1);
+    setPixel(buf, S, 15, 31, c1);
+    setPixel(buf, S, 18, 31, c1);
+    setPixel(buf, S, 21, 31, c1);
+    // 翅脈
+    hLine(buf, S, 4, 20, 16, { ...c1, a: 120 });
+    hLine(buf, S, 4, 24, 14, { ...c1, a: 80 });
+    vLine(buf, S, 8, 16, 13, { ...c1, a: 100 });
+    vLine(buf, S, 14, 16, 12, { ...c1, a: 70 });
+
+    // ---- 右翅 (左の鏡像) ----
+    hLine(buf, S, 42, 16, 18, c1);
+    hLine(buf, S, 59, 17, 3, c1);
+    setPixel(buf, S, 61, 18, c1);
+    vLine(buf, S, 61, 16, 13, c1);
+    hLine(buf, S, 52, 29, 10, c1);
+    setPixel(buf, S, 51, 30, c1);
+    setPixel(buf, S, 48, 31, c1);
+    setPixel(buf, S, 45, 31, c1);
+    setPixel(buf, S, 42, 31, c1);
+    // 翅脈
+    hLine(buf, S, 44, 20, 16, { ...c1, a: 120 });
+    hLine(buf, S, 46, 24, 14, { ...c1, a: 80 });
+    vLine(buf, S, 55, 16, 13, { ...c1, a: 100 });
+    vLine(buf, S, 49, 16, 12, { ...c1, a: 70 });
+
+    // ---- 脚6本 ----
+    // 左前脚
+    for (const [px, py] of [[21,22],[19,23],[17,25],[15,27]] as [number,number][]) setPixel(buf, S, px, py, c1);
+    // 左中脚
+    for (const [px, py] of [[21,27],[18,28],[15,30],[12,32]] as [number,number][]) setPixel(buf, S, px, py, c1);
+    // 左後脚
+    for (const [px, py] of [[21,31],[18,33],[15,35],[13,37]] as [number,number][]) setPixel(buf, S, px, py, c1);
+    // 右前脚
+    for (const [px, py] of [[42,22],[44,23],[46,25],[48,27]] as [number,number][]) setPixel(buf, S, px, py, c1);
+    // 右中脚
+    for (const [px, py] of [[42,27],[45,28],[48,30],[51,32]] as [number,number][]) setPixel(buf, S, px, py, c1);
+    // 右後脚
+    for (const [px, py] of [[42,31],[45,33],[48,35],[50,37]] as [number,number][]) setPixel(buf, S, px, py, c1);
   },
   mach_runner: (buf, S, c1, c2) => {
-    // スピード狂（流線型のメカ）
-    fillRect(buf, S, 20, 24, 24, 16, c1);
-    hLine(buf, S, 22, 28, 20, c2);
-    fillRect(buf, S, 12, 26, 8, 12, hexToRGBA('#ff8800'));
+    // 機械蜘蛛型ボス - オレンジネオン
+    const BLACK = { r: 0, g: 0, b: 0, a: 255 };
+    const RED_EYE = hexToRGBA('#cc0022');
+    const EYE_HL  = hexToRGBA('#ff88aa', 200);
+    const BLUE_GEM = hexToRGBA('#2255dd');
+    const FLAME   = hexToRGBA('#ff4400');
+    const FLAME2  = hexToRGBA('#ffaa00');
+    const WHITE_HL = hexToRGBA('#ffffff', 180);
+
+    // === 翼 (上部) ===
+    // 左翼 (後退翼、y:5-16)
+    fillRect(buf, S, 4, 8, 22, 7, BLACK);
+    hLine(buf, S, 4, 7, 22, c1);
+    hLine(buf, S, 6, 15, 18, c1);
+    vLine(buf, S, 4, 8, 8, c1);
+    setPixel(buf, S, 5, 15, c1);
+    // 翼の縞
+    for (let x = 7; x < 24; x += 4) {
+      vLine(buf, S, x, 8, 7, c2);
+    }
+    // スピード線
+    hLine(buf, S, 2, 10, 6, { ...c1, a: 140 });
+    hLine(buf, S, 2, 12, 4, { ...c1, a: 100 });
+    hLine(buf, S, 2, 14, 2, { ...c1, a: 70 });
+
+    // 右翼 (後退翼、y:5-16)
+    fillRect(buf, S, 38, 8, 22, 7, BLACK);
+    hLine(buf, S, 38, 7, 22, c1);
+    hLine(buf, S, 40, 15, 18, c1);
+    vLine(buf, S, 59, 8, 8, c1);
+    setPixel(buf, S, 58, 15, c1);
+    for (let x = 40; x < 58; x += 4) {
+      vLine(buf, S, x, 8, 7, c2);
+    }
+    hLine(buf, S, 56, 10, 6, { ...c1, a: 140 });
+    hLine(buf, S, 58, 12, 4, { ...c1, a: 100 });
+    hLine(buf, S, 60, 14, 2, { ...c1, a: 70 });
+
+    // === 赤い複眼 (右上) ===
+    fillRect(buf, S, 44, 18, 12, 12, BLACK);
+    hLine(buf, S, 45, 18, 10, c1);
+    hLine(buf, S, 45, 29, 10, c1);
+    vLine(buf, S, 44, 19, 11, c1);
+    vLine(buf, S, 55, 19, 11, c1);
+    fillRect(buf, S, 46, 20, 8, 8, RED_EYE);
+    setPixel(buf, S, 47, 21, EYE_HL);
+    setPixel(buf, S, 48, 21, EYE_HL);
+    setPixel(buf, S, 47, 22, EYE_HL);
+
+    // === 砲身 (右) ===
+    hLine(buf, S, 55, 27, 9, c1);
+    hLine(buf, S, 55, 29, 9, c1);
+    setPixel(buf, S, 63, 28, c1);
+
+    // === 胴体 (横長) y:24-38 ===
+    fillRect(buf, S, 12, 25, 42, 14, BLACK);
+    hLine(buf, S, 13, 25, 40, c1);
+    hLine(buf, S, 13, 38, 40, c1);
+    vLine(buf, S, 12, 26, 13, c1);
+    vLine(buf, S, 53, 26, 13, c1);
+    // セグメント (4つ)
+    for (let cx = 19; cx <= 47; cx += 9) {
+      fillRect(buf, S, cx - 3, 27, 6, 10, BLACK);
+      hLine(buf, S, cx - 2, 27, 4, c2);
+      hLine(buf, S, cx - 2, 36, 4, c2);
+      vLine(buf, S, cx - 3, 28, 8, c2);
+      vLine(buf, S, cx + 2, 28, 8, c2);
+    }
+    // 青い宝石
+    fillRect(buf, S, 33, 28, 6, 8, BLUE_GEM);
+    setPixel(buf, S, 34, 29, WHITE_HL);
+
+    // 目→胴体の接続
+    vLine(buf, S, 44, 29, 3, c1);
+    vLine(buf, S, 53, 29, 2, c1);
+
+    // === ロケット (左側, 2基) ===
+    // 上ロケット
+    fillRect(buf, S, 4, 22, 12, 5, BLACK);
+    hLine(buf, S, 5, 22, 11, c1);
+    hLine(buf, S, 5, 26, 11, c1);
+    vLine(buf, S, 4, 23, 4, c1);
+    vLine(buf, S, 15, 23, 4, c1);
+    setPixel(buf, S, 3, 23, FLAME);
+    setPixel(buf, S, 2, 24, FLAME);
+    setPixel(buf, S, 3, 24, FLAME2);
+    setPixel(buf, S, 3, 25, FLAME);
+    setPixel(buf, S, 2, 25, FLAME2);
+
+    // 下ロケット
+    fillRect(buf, S, 4, 29, 12, 5, BLACK);
+    hLine(buf, S, 5, 29, 11, c1);
+    hLine(buf, S, 5, 33, 11, c1);
+    vLine(buf, S, 4, 30, 4, c1);
+    vLine(buf, S, 15, 30, 4, c1);
+    setPixel(buf, S, 3, 30, FLAME);
+    setPixel(buf, S, 2, 31, FLAME);
+    setPixel(buf, S, 3, 31, FLAME2);
+    setPixel(buf, S, 3, 32, FLAME);
+    setPixel(buf, S, 2, 32, FLAME2);
+
+    // === 脚 6本 (関節付き) ===
+    // 関節を描くヘルパー
+    const joint = (x: number, y: number) => {
+      setPixel(buf, S, x,     y,     BLACK);
+      setPixel(buf, S, x - 1, y,     c1);
+      setPixel(buf, S, x + 1, y,     c1);
+      setPixel(buf, S, x,     y - 1, c1);
+      setPixel(buf, S, x,     y + 1, c1);
+    };
+
+    // 左前脚
+    vLine(buf, S, 20, 39, 5, c1); joint(20, 44);
+    setPixel(buf, S, 17, 45, c1); setPixel(buf, S, 15, 47, c1);
+    setPixel(buf, S, 13, 50, c1); setPixel(buf, S, 11, 53, c1);
+    // 左中脚
+    vLine(buf, S, 26, 39, 5, c1); joint(26, 44);
+    setPixel(buf, S, 23, 46, c1); setPixel(buf, S, 20, 49, c1);
+    setPixel(buf, S, 18, 52, c1); setPixel(buf, S, 16, 55, c1);
+    // 左後脚
+    vLine(buf, S, 32, 39, 5, c1); joint(32, 44);
+    setPixel(buf, S, 29, 46, c1); setPixel(buf, S, 26, 49, c1);
+    setPixel(buf, S, 24, 53, c1); setPixel(buf, S, 22, 57, c1);
+    // 右前脚
+    vLine(buf, S, 43, 39, 5, c1); joint(43, 44);
+    setPixel(buf, S, 46, 45, c1); setPixel(buf, S, 48, 47, c1);
+    setPixel(buf, S, 50, 50, c1); setPixel(buf, S, 52, 53, c1);
+    // 右中脚
+    vLine(buf, S, 37, 39, 5, c1); joint(37, 44);
+    setPixel(buf, S, 40, 46, c1); setPixel(buf, S, 43, 49, c1);
+    setPixel(buf, S, 45, 52, c1); setPixel(buf, S, 47, 55, c1);
+    // 右後脚  (後寄り)
+    hLine(buf, S, 50, 39, 3, c1); joint(53, 42);
+    setPixel(buf, S, 55, 44, c1); setPixel(buf, S, 57, 47, c1);
+    setPixel(buf, S, 58, 51, c1); setPixel(buf, S, 59, 55, c1);
   },
   junk_king: (buf, S, c1, c2) => {
-    // 巨大な廃材の塊
-    for(let y=10; y<54; y++) {
-      for(let x=10; x<54; x++) {
-        if(Math.random() > 0.3) setPixel(buf, S, x, y, Math.random()>0.5?c1:c2);
-      }
-    }
+    // ジャンクキング - 重装甲人型ロボット (64x64)
+    const BLACK = { r: 0, g: 0, b: 0, a: 255 };
+    const RED     = hexToRGBA('#ff2200');
+    const RED_HL  = hexToRGBA('#ff8888', 180);
+
+    // === 背中のジャンク (肩の上) ===
+    vLine(buf, S, 21, 4, 10, c1);
+    vLine(buf, S, 42, 4, 10, c1);
+    vLine(buf, S, 38, 6,  8, c1);
+    hLine(buf, S, 36, 6,  4, c1);
+    // 歯車
+    hLine(buf, S, 28, 2,  8, c1);
+    vLine(buf, S, 28, 2,  8, c1);
+    vLine(buf, S, 35, 2,  8, c1);
+    hLine(buf, S, 28, 9,  8, c1);
+    setPixel(buf, S, 30, 4, c2); setPixel(buf, S, 33, 4, c2);
+    setPixel(buf, S, 30, 7, c2); setPixel(buf, S, 33, 7, c2);
+
+    // === 頭部 (y:10-23) ===
+    fillRect(buf, S, 22, 11, 20, 13, BLACK);
+    hLine(buf, S, 24, 10, 16, c1);
+    hLine(buf, S, 22, 23, 20, c1);
+    vLine(buf, S, 22, 11, 13, c1);
+    vLine(buf, S, 41, 11, 13, c1);
+    setPixel(buf, S, 23, 11, c1); setPixel(buf, S, 40, 11, c1);
+    // バイザー枠
+    fillRect(buf, S, 24, 13, 16, 7, BLACK);
+    hLine(buf, S, 24, 13, 16, c1);
+    hLine(buf, S, 24, 19, 16, c1);
+    vLine(buf, S, 23, 14,  6, c1);
+    vLine(buf, S, 40, 14,  6, c1);
+    // 赤い目 x2
+    fillRect(buf, S, 25, 14, 5, 4, RED);
+    fillRect(buf, S, 34, 14, 5, 4, RED);
+    setPixel(buf, S, 26, 15, RED_HL);
+    setPixel(buf, S, 35, 15, RED_HL);
+    // 口グリル
+    hLine(buf, S, 27, 21, 10, c2);
+    setPixel(buf, S, 29, 22, c2); setPixel(buf, S, 32, 22, c2); setPixel(buf, S, 35, 22, c2);
+
+    // === 左肩パッド (y:22-31) ===
+    fillRect(buf, S, 10, 22, 14, 10, BLACK);
+    hLine(buf, S, 10, 22, 14, c1);
+    hLine(buf, S, 10, 31, 14, c1);
+    vLine(buf, S, 10, 23,  9, c1);
+    vLine(buf, S, 23, 23,  9, c1);
+    hLine(buf, S, 12, 26, 10, c2);
+
+    // === 右肩パッド (y:22-31) ===
+    fillRect(buf, S, 40, 22, 14, 10, BLACK);
+    hLine(buf, S, 40, 22, 14, c1);
+    hLine(buf, S, 40, 31, 14, c1);
+    vLine(buf, S, 40, 23,  9, c1);
+    vLine(buf, S, 53, 23,  9, c1);
+    hLine(buf, S, 42, 26, 10, c2);
+
+    // === 胸部 (y:22-41) ===
+    fillRect(buf, S, 22, 22, 20, 20, BLACK);
+    hLine(buf, S, 22, 22, 20, c1);
+    hLine(buf, S, 22, 41, 20, c1);
+    vLine(buf, S, 22, 23, 19, c1);
+    vLine(buf, S, 41, 23, 19, c1);
+    hLine(buf, S, 24, 28, 16, c2);
+    hLine(buf, S, 24, 36, 16, c1);
+    // 中央コア
+    fillRect(buf, S, 28, 30, 8, 6, BLACK);
+    hLine(buf, S, 28, 30,  8, c2);
+    hLine(buf, S, 28, 35,  8, c2);
+    vLine(buf, S, 28, 31,  4, c2);
+    vLine(buf, S, 35, 31,  4, c2);
+    setPixel(buf, S, 31, 32, c2); setPixel(buf, S, 32, 32, c2);
+    setPixel(buf, S, 31, 33, c2); setPixel(buf, S, 32, 33, c2);
+
+    // === ベルト (y:42-48) ===
+    fillRect(buf, S, 20, 42, 24,  6, BLACK);
+    hLine(buf, S, 20, 42, 24, c1);
+    hLine(buf, S, 20, 47, 24, c1);
+    vLine(buf, S, 20, 43,  5, c1);
+    vLine(buf, S, 43, 43,  5, c1);
+    fillRect(buf, S, 29, 43,  6, 4, BLACK);
+    hLine(buf, S, 29, 43,  6, c2);
+    hLine(buf, S, 29, 46,  6, c2);
+    vLine(buf, S, 29, 44,  2, c2);
+    vLine(buf, S, 34, 44,  2, c2);
+
+    // === 左腕 (シアン前腕・クロー付き) ===
+    // 上腕
+    vLine(buf, S, 20, 30, 6, c1);
+    vLine(buf, S, 22, 31, 5, c1);
+    fillRect(buf, S, 13, 32, 9, 6, BLACK);
+    hLine(buf, S, 13, 32, 9, c1);
+    hLine(buf, S, 13, 37, 9, c1);
+    vLine(buf, S, 13, 33, 5, c1);
+    // 前腕 (シアン発光)
+    fillRect(buf, S, 4, 34, 10, 6, BLACK);
+    hLine(buf, S, 4, 34, 10, c2);
+    hLine(buf, S, 4, 39, 10, c2);
+    vLine(buf, S,  4, 35,  5, c2);
+    vLine(buf, S, 13, 35,  5, c2);
+    // クロー指
+    setPixel(buf, S, 2, 33, c2);
+    setPixel(buf, S, 1, 32, c2); setPixel(buf, S, 1, 36, c2); setPixel(buf, S, 1, 39, c2);
+    setPixel(buf, S, 2, 31, c2); setPixel(buf, S, 2, 38, c2);
+    setPixel(buf, S, 3, 30, c2); setPixel(buf, S, 3, 39, c2);
+    setPixel(buf, S, 4, 29, c2); setPixel(buf, S, 5, 29, c2);
+
+    // === 右腕 + スタッフ ===
+    // 上腕
+    vLine(buf, S, 43, 30, 6, c1);
+    vLine(buf, S, 41, 31, 5, c1);
+    fillRect(buf, S, 42, 34,  8, 6, BLACK);
+    hLine(buf, S, 42, 34,  8, c1);
+    hLine(buf, S, 42, 39,  8, c1);
+    vLine(buf, S, 49, 33,  7, c1);
+    // 右手 (グリップ)
+    fillRect(buf, S, 50, 38,  6, 6, BLACK);
+    hLine(buf, S, 50, 38,  6, c1);
+    hLine(buf, S, 50, 43,  6, c1);
+    vLine(buf, S, 50, 39,  5, c1);
+    vLine(buf, S, 55, 39,  5, c1);
+    // スタッフ本体
+    vLine(buf, S, 57, 4, 56, c1);
+    vLine(buf, S, 58, 4, 56, c1);
+    // スタッフ頭部
+    fillRect(buf, S, 54, 4,  8, 8, BLACK);
+    hLine(buf, S, 55, 4,  6, c1);
+    hLine(buf, S, 55, 11,  6, c1);
+    vLine(buf, S, 54, 5,  7, c1);
+    vLine(buf, S, 61, 5,  7, c1);
+    fillRect(buf, S, 56, 6,  4, 4, c2);
+    // スタッフとグリップの接続
+    hLine(buf, S, 55, 40,  3, c1);
+
+    // === 左脚 (y:48-62) ===
+    fillRect(buf, S, 22, 48, 10, 14, BLACK);
+    hLine(buf, S, 22, 48, 10, c1);
+    vLine(buf, S, 22, 49, 13, c1);
+    vLine(buf, S, 31, 49, 13, c1);
+    hLine(buf, S, 22, 54, 10, c2);  // 膝
+    hLine(buf, S, 20, 61, 14, c1);  // ブーツ底
+    setPixel(buf, S, 20, 60, c1); setPixel(buf, S, 33, 60, c1);
+
+    // === 右脚 (y:48-62) ===
+    fillRect(buf, S, 32, 48, 10, 14, BLACK);
+    hLine(buf, S, 32, 48, 10, c1);
+    vLine(buf, S, 32, 49, 13, c1);
+    vLine(buf, S, 41, 49, 13, c1);
+    hLine(buf, S, 32, 54, 10, c2);  // 膝
+    hLine(buf, S, 30, 61, 14, c1);  // ブーツ底
+    setPixel(buf, S, 30, 60, c1); setPixel(buf, S, 43, 60, c1);
   },
   phantom: (buf, S, c1, c2) => {
-    // 半透明の幽霊型
-    const c1a = { ...c1, a: 150 };
-    const c2a = { ...c2, a: 150 };
-    fillRect(buf, S, 24, 16, 16, 32, c1a);
-    fillRect(buf, S, 26, 20, 4, 4, c2a);
-    fillRect(buf, S, 34, 20, 4, 4, c2a);
+    // ファントム - 人型幽霊戦士 (64x64)
+    const BLACK  = { r: 0, g: 0, b: 0, a: 255 };
+    const EYE    = hexToRGBA('#ff6600');
+    const EYE_HL = hexToRGBA('#ffcc88', 200);
+    const CORE   = hexToRGBA('#cc88ff', 220);
+
+    // === 頭部 (y:6-20) ===
+    fillRect(buf, S, 24, 7, 16, 14, BLACK);
+    // 頭の丸みのある輪郭
+    hLine(buf, S, 26, 6,  12, c1);   // top
+    hLine(buf, S, 24, 20, 16, c1);   // bottom
+    vLine(buf, S, 24,  7, 14, c1);   // left
+    vLine(buf, S, 39,  7, 14, c1);   // right
+    setPixel(buf, S, 25,  7, c1); setPixel(buf, S, 38,  7, c1);  // 角丸
+    setPixel(buf, S, 25, 20, c1); setPixel(buf, S, 38, 20, c1);
+    // 赤い目 (オレンジ)
+    fillRect(buf, S, 26, 11, 5, 4, EYE);
+    fillRect(buf, S, 33, 11, 5, 4, EYE);
+    setPixel(buf, S, 27, 12, EYE_HL);
+    setPixel(buf, S, 34, 12, EYE_HL);
+
+    // === 首 (y:20-24) ===
+    fillRect(buf, S, 29, 20, 6, 4, BLACK);
+    vLine(buf, S, 29, 20, 4, c1);
+    vLine(buf, S, 34, 20, 4, c1);
+
+    // === 胸部 (y:24-42) ===
+    fillRect(buf, S, 20, 24, 24, 18, BLACK);
+    hLine(buf, S, 20, 24, 24, c1);
+    hLine(buf, S, 20, 41, 24, c1);
+    vLine(buf, S, 20, 25, 17, c1);
+    vLine(buf, S, 43, 25, 17, c1);
+    // 鎖骨ライン
+    hLine(buf, S, 22, 27, 20, c2);
+    // 腹筋ライン
+    hLine(buf, S, 22, 33, 20, c2);
+    hLine(buf, S, 22, 38, 20, c2);
+    vLine(buf, S, 32, 28,  5, c2);
+    // 胸のコア
+    fillRect(buf, S, 30, 29,  4, 4, BLACK);
+    setPixel(buf, S, 31, 30, CORE);
+    setPixel(buf, S, 32, 30, CORE);
+    setPixel(buf, S, 31, 31, CORE);
+    setPixel(buf, S, 32, 31, CORE);
+
+    // === ベルト (y:42-47) ===
+    fillRect(buf, S, 21, 42, 22,  5, BLACK);
+    hLine(buf, S, 21, 42, 22, c1);
+    hLine(buf, S, 21, 46, 22, c1);
+    vLine(buf, S, 21, 43,  4, c1);
+    vLine(buf, S, 42, 43,  4, c1);
+    // バックル
+    hLine(buf, S, 29, 43,  6, c1);
+    hLine(buf, S, 29, 45,  6, c1);
+    vLine(buf, S, 29, 44,  1, c1);
+    vLine(buf, S, 34, 44,  1, c1);
+
+    // === 左腕 (爪付き・前方伸ばし) ===
+    // 肩
+    fillRect(buf, S, 12, 24, 10, 8, BLACK);
+    hLine(buf, S, 12, 24, 10, c1);
+    hLine(buf, S, 12, 31, 10, c1);
+    vLine(buf, S, 12, 25,  7, c1);
+    // 上腕
+    fillRect(buf, S, 6, 29, 8, 8, BLACK);
+    hLine(buf, S,  6, 29,  8, c1);
+    hLine(buf, S,  6, 36,  8, c1);
+    vLine(buf, S,  6, 30,  7, c1);
+    vLine(buf, S, 13, 30,  7, c1);
+    // 前腕
+    fillRect(buf, S, 2, 34, 6, 7, BLACK);
+    hLine(buf, S, 2, 34,  6, c1);
+    hLine(buf, S, 2, 40,  6, c1);
+    vLine(buf, S, 2, 35,  6, c1);
+    vLine(buf, S, 7, 35,  6, c1);
+    // 爪 (5本の細長い指)
+    setPixel(buf, S, 1, 34, c1); setPixel(buf, S, 0, 33, c1);  // 指1
+    setPixel(buf, S, 1, 36, c1); setPixel(buf, S, 0, 35, c1);  // 指2
+    setPixel(buf, S, 1, 38, c1); setPixel(buf, S, 0, 37, c1);  // 指3
+    setPixel(buf, S, 1, 40, c1); setPixel(buf, S, 0, 39, c1);  // 指4
+    setPixel(buf, S, 1, 42, c1); setPixel(buf, S, 0, 41, c1);  // 指5
+    // エネルギースラッシュ線
+    setPixel(buf, S, 3, 43, c1); setPixel(buf, S, 1, 45, c1);
+    setPixel(buf, S, 5, 44, c1); setPixel(buf, S, 3, 46, c1);
+
+    // === 右腕 (オーブ付き) ===
+    // 肩
+    fillRect(buf, S, 42, 24, 10, 8, BLACK);
+    hLine(buf, S, 42, 24, 10, c1);
+    hLine(buf, S, 42, 31, 10, c1);
+    vLine(buf, S, 51, 25,  7, c1);
+    // 上腕
+    fillRect(buf, S, 50, 29, 8, 8, BLACK);
+    hLine(buf, S, 50, 29,  8, c1);
+    hLine(buf, S, 50, 36,  8, c1);
+    vLine(buf, S, 50, 30,  7, c1);
+    vLine(buf, S, 57, 30,  7, c1);
+    // 前腕 (斜め下)
+    fillRect(buf, S, 54, 35, 6, 7, BLACK);
+    hLine(buf, S, 54, 35,  6, c1);
+    hLine(buf, S, 54, 41,  6, c1);
+    vLine(buf, S, 54, 36,  6, c1);
+    vLine(buf, S, 59, 36,  6, c1);
+    // 発光オーブ
+    setPixel(buf, S, 60, 42, CORE);
+    setPixel(buf, S, 61, 41, CORE);
+    setPixel(buf, S, 61, 43, CORE);
+    setPixel(buf, S, 62, 42, CORE);
+    setPixel(buf, S, 60, 43, CORE);
+
+    // === 左脚 (y:47-62) ===
+    fillRect(buf, S, 20, 47, 11, 15, BLACK);
+    hLine(buf, S, 20, 47, 11, c1);
+    vLine(buf, S, 20, 48, 14, c1);
+    vLine(buf, S, 30, 48, 14, c1);
+    hLine(buf, S, 20, 53,  11, c2);  // 膝
+    hLine(buf, S, 18, 61,  15, c1);  // ブーツ底
+    setPixel(buf, S, 18, 60, c1); setPixel(buf, S, 32, 60, c1);
+    // 地面ひび
+    setPixel(buf, S, 16, 62, c2); setPixel(buf, S, 14, 63, c2);
+    setPixel(buf, S, 18, 63, c2); setPixel(buf, S, 20, 63, c2);
+
+    // === 右脚 (y:47-62) ===
+    fillRect(buf, S, 33, 47, 11, 15, BLACK);
+    hLine(buf, S, 33, 47, 11, c1);
+    vLine(buf, S, 33, 48, 14, c1);
+    vLine(buf, S, 43, 48, 14, c1);
+    hLine(buf, S, 33, 53, 11, c2);  // 膝
+    hLine(buf, S, 31, 61, 15, c1);  // ブーツ底
+    setPixel(buf, S, 31, 60, c1); setPixel(buf, S, 45, 60, c1);
+    // 地面ひび
+    setPixel(buf, S, 44, 62, c2); setPixel(buf, S, 46, 63, c2);
+    setPixel(buf, S, 42, 63, c2); setPixel(buf, S, 40, 63, c2);
   },
   iron_fortress: (buf, S, c1, c2) => {
-    // 四角い要塞
-    fillRect(buf, S, 8, 16, 48, 40, c1);
-    fillRect(buf, S, 12, 20, 40, 32, hexToRGBA('#444444'));
-    fillRect(buf, S, 24, 4, 16, 12, c2);
+    // アイアンフォートレス - 要塞型ロボット (64x64)
+    const BLACK  = { r: 0, g: 0, b: 0, a: 255 };
+    const EYE    = hexToRGBA('#ff4400');
+    const EYE_HL = hexToRGBA('#ffaa88', 200);
+    const CORE   = hexToRGBA('#ffff00');
+
+    // === 城壁 胸壁（メルロン 3つ、y:2-12）===
+    // 左メルロン
+    fillRect(buf, S, 14, 2, 10, 10, BLACK);
+    hLine(buf, S, 14, 2, 10, c1);
+    vLine(buf, S, 14, 3, 9,  c1);
+    vLine(buf, S, 23, 3, 9,  c1);
+    // 中央メルロン
+    fillRect(buf, S, 27, 2, 10, 10, BLACK);
+    hLine(buf, S, 27, 2, 10, c1);
+    vLine(buf, S, 27, 3, 9,  c1);
+    vLine(buf, S, 36, 3, 9,  c1);
+    // 右メルロン
+    fillRect(buf, S, 40, 2, 10, 10, BLACK);
+    hLine(buf, S, 40, 2, 10, c1);
+    vLine(buf, S, 40, 3, 9,  c1);
+    vLine(buf, S, 49, 3, 9,  c1);
+    // 胸壁の台座（メルロンの下）
+    hLine(buf, S, 12, 11, 40, c1);
+
+    // === 城壁本体（y:12-28）===
+    fillRect(buf, S, 12, 12, 40, 18, BLACK);
+    hLine(buf, S, 12, 28, 40, c1);
+    vLine(buf, S, 12, 13, 16, c1);
+    vLine(buf, S, 51, 13, 16, c1);
+    // 目 (赤、y:14-22)
+    fillRect(buf, S, 18, 14, 10, 9, EYE);
+    fillRect(buf, S, 36, 14, 10, 9, EYE);
+    setPixel(buf, S, 19, 15, EYE_HL); setPixel(buf, S, 37, 15, EYE_HL);
+    setPixel(buf, S, 20, 15, EYE_HL); setPixel(buf, S, 38, 15, EYE_HL);
+    // 目の輪郭
+    hLine(buf, S, 18, 14, 10, c1); hLine(buf, S, 18, 22, 10, c1);
+    vLine(buf, S, 18, 15,  8, c1); vLine(buf, S, 27, 15,  8, c1);
+    hLine(buf, S, 36, 14, 10, c1); hLine(buf, S, 36, 22, 10, c1);
+    vLine(buf, S, 36, 15,  8, c1); vLine(buf, S, 45, 15,  8, c1);
+    // 鼻梁(目の間)
+    fillRect(buf, S, 28, 16, 8, 7, BLACK);
+    hLine(buf, S, 29, 16, 6, c2);
+    hLine(buf, S, 29, 22, 6, c2);
+
+    // === 大きな盾（y:16-56, 左寄り）===
+    // 盾の外形 (上が平たく下がV字)
+    fillRect(buf, S, 4, 17, 28, 34, BLACK);
+    hLine(buf, S, 4, 17, 28, c1);       // 盾上端
+    vLine(buf, S, 4, 18, 34, c1);       // 盾左辺
+    vLine(buf, S, 31, 18, 24, c1);      // 盾右辺
+    // V字下端
+    for (let i = 0; i <= 8; i++) {
+      setPixel(buf, S,  4 + i, 52 - i, c1);  // 左斜め
+      setPixel(buf, S, 31 - i, 52 - i, c1);  // 右斜め
+    }
+    setPixel(buf, S, 17, 56, c1);  // 先端
+    setPixel(buf, S, 18, 56, c1);
+    // 盾の中央ライン
+    vLine(buf, S, 17, 19, 36, c2);
+    vLine(buf, S, 18, 19, 36, c2);
+    // 盾のコアドット
+    fillRect(buf, S, 14, 34, 8, 8, BLACK);
+    setPixel(buf, S, 17, 37, CORE);
+    setPixel(buf, S, 18, 37, CORE);
+    setPixel(buf, S, 17, 38, CORE);
+    setPixel(buf, S, 18, 38, CORE);
+    // 盾の内枠
+    hLine(buf, S,  6, 20, 24, c2);
+    hLine(buf, S,  6, 48, 20, c2);
+    vLine(buf, S,  6, 21, 28, c2);
+    vLine(buf, S, 29, 21, 28, c2);
+
+    // === 右装甲ボディ (y:28-56)===
+    fillRect(buf, S, 34, 28, 26, 28, BLACK);
+    hLine(buf, S, 34, 28, 26, c1);
+    hLine(buf, S, 34, 55, 26, c1);
+    vLine(buf, S, 59, 29, 27, c1);
+    // 段差ライン
+    hLine(buf, S, 36, 35, 22, c2);
+    hLine(buf, S, 36, 44, 22, c2);
+    // パネル詳細
+    fillRect(buf, S, 37, 36, 10, 8, BLACK);
+    hLine(buf, S, 37, 36, 10, c2);
+    hLine(buf, S, 37, 43, 10, c2);
+    vLine(buf, S, 37, 37,  6, c2);
+    vLine(buf, S, 46, 37,  6, c2);
+    setPixel(buf, S, 41, 39, CORE);
+    setPixel(buf, S, 42, 40, CORE);
+
+    // === 左の砲身 (y:38-42, 3本)===
+    hLine(buf, S, 1, 36, 10, c1);
+    hLine(buf, S, 1, 38, 12, c1);
+    hLine(buf, S, 1, 40, 10, c1);
+    setPixel(buf, S,  1, 37, c1); setPixel(buf, S, 10, 37, c1);
+    setPixel(buf, S,  1, 39, c1); setPixel(buf, S, 12, 39, c1);
+    setPixel(buf, S,  1, 41, c1); setPixel(buf, S, 10, 41, c1);
+
+    // === 右の砲身 (y:46-50, 3本)===
+    hLine(buf, S, 52, 45, 12, c1);
+    hLine(buf, S, 52, 47, 12, c1);
+    hLine(buf, S, 52, 49, 12, c1);
+    setPixel(buf, S, 52, 46, c1); setPixel(buf, S, 63, 46, c1);
+    setPixel(buf, S, 52, 48, c1); setPixel(buf, S, 63, 48, c1);
+    setPixel(buf, S, 52, 50, c1); setPixel(buf, S, 63, 50, c1);
+
+    // === 台座/キャタピラ (y:56-62)===
+    fillRect(buf, S, 4, 56, 56, 7, BLACK);
+    hLine(buf, S, 4, 56, 56, c1);
+    hLine(buf, S, 4, 62, 56, c1);
+    vLine(buf, S,  4, 57, 6,  c1);
+    vLine(buf, S, 59, 57, 6,  c1);
+    // キャタピラのコマ
+    for (let x = 8; x < 56; x += 8) {
+      vLine(buf, S, x, 57, 6, c2);
+    }
   },
   samurai_master: (buf, S, c1, c2) => {
     // 剣豪
@@ -5433,11 +6052,11 @@ const bossDrawers: Record<string, BossDrawFn> = {
 };
 
 const bossColors: Record<string, [RGBA, RGBA]> = {
-  bug_swarm: [hexToRGBA('#88cc44'), hexToRGBA('#224400')],
-  mach_runner: [hexToRGBA('#ff2200'), hexToRGBA('#ffff00')],
-  junk_king: [hexToRGBA('#886644'), hexToRGBA('#443322')],
-  phantom: [hexToRGBA('#cccccc'), hexToRGBA('#ffffff')],
-  iron_fortress: [hexToRGBA('#aaaaaa'), hexToRGBA('#ff4400')],
+  bug_swarm: [hexToRGBA('#00ee66'), hexToRGBA('#003311')],
+  mach_runner: [hexToRGBA('#ffaa00'), hexToRGBA('#664400')],
+  junk_king: [hexToRGBA('#ff6600'), hexToRGBA('#00ccaa')],
+  phantom: [hexToRGBA('#bb44ff'), hexToRGBA('#440088')],
+  iron_fortress: [hexToRGBA('#00ff88'), hexToRGBA('#004422')],
   samurai_master: [hexToRGBA('#4444ff'), hexToRGBA('#ffff00')],
   shadow_twin: [hexToRGBA('#8800ff'), hexToRGBA('#ff0088')],
   queen_of_shadow: [hexToRGBA('#110022'), hexToRGBA('#ff0000')],
@@ -5637,7 +6256,8 @@ async function generateBoss4DirSprites(outDir: string): Promise<void> {
           const p = params[frame];
           const fileName = `${id}_dir_${dir}_${state}_${frame}.png`;
           const file = path.join(outDir, fileName);
-          if (fs.existsSync(file)) continue;
+          const forceRegen = (id === 'bug_swarm' || id === 'mach_runner' || id === 'junk_king' || id === 'phantom' || id === 'iron_fortress');
+          if (!forceRegen && fs.existsSync(file)) continue;
 
           let buf = createBuffer(S, S);
           if (dir === 'right') {
@@ -5670,6 +6290,32 @@ async function generateBoss4DirSprites(outDir: string): Promise<void> {
             const alpha = frame === 0 ? 180 : 80;
             for (let i = 0; i < buf.length; i += 4) {
               if (buf[i + 3] > 0) buf[i + 3] = Math.min(buf[i + 3], alpha);
+            }
+          }
+
+          // bug_swarm / mach_runner / junk_king: 方向インジケーター（小矢印）を上乗せ
+          if (id === 'bug_swarm' || id === 'mach_runner' || id === 'junk_king' || id === 'phantom' || id === 'iron_fortress') {
+            const arr = hexToRGBA('#ffffff', 210);
+            if (dir === 'down') {
+              hLine(buf, S, 28, 56, 8, arr);
+              hLine(buf, S, 29, 57, 6, arr);
+              hLine(buf, S, 30, 58, 4, arr);
+              hLine(buf, S, 31, 59, 2, arr);
+            } else if (dir === 'up') {
+              hLine(buf, S, 31, 4, 2, arr);
+              hLine(buf, S, 30, 5, 4, arr);
+              hLine(buf, S, 29, 6, 6, arr);
+              hLine(buf, S, 28, 7, 8, arr);
+            } else if (dir === 'left') {
+              vLine(buf, S, 4,  29, 2, arr);
+              vLine(buf, S, 5,  28, 4, arr);
+              vLine(buf, S, 6,  27, 6, arr);
+              vLine(buf, S, 7,  26, 8, arr);
+            } else if (dir === 'right') {
+              vLine(buf, S, 59, 29, 2, arr);
+              vLine(buf, S, 58, 28, 4, arr);
+              vLine(buf, S, 57, 27, 6, arr);
+              vLine(buf, S, 56, 26, 8, arr);
             }
           }
 
