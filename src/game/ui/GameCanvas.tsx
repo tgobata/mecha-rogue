@@ -529,6 +529,7 @@ export default function GameCanvas() {
   const [tileSize, setTileSize] = useState<number>(TILE_SIZE_MAX);
   const [spritesReady, setSpritesReady] = useState(false);
   const [menuPanel, setMenuPanel] = useState<MenuPanel>(null);
+  const menuPanelRef = useRef<MenuPanel>(null);
   const [hasSaveData, setHasSaveData] = useState(false);
   const [isLoadingSave, setIsLoadingSave] = useState(false);
   /** ロード失敗時のエラーメッセージ */
@@ -570,6 +571,11 @@ export default function GameCanvas() {
   useEffect(() => {
     stateRef.current = gameState;
   }, [gameState]);
+
+  // menuPanelRef は常に最新の menuPanel を反映する（クロージャ対策）
+  useEffect(() => {
+    menuPanelRef.current = menuPanel;
+  }, [menuPanel]);
 
   // ── スプライト読み込み ─────────────────────────────────────────────
   useEffect(() => {
@@ -1872,32 +1878,31 @@ export default function GameCanvas() {
       });
 
       if (action === "menu_select") {
-        setMenuPanel((prev) => {
-          if (!prev) return prev;
-          if (prev.type === "inventory") {
-            const sorted = getSortedItems(state.inventory.items, state.inventory.sortKey);
-            const originalIndex = sorted[prev.index]?.originalIndex;
-            if (originalIndex !== undefined) {
-              handleUseItem(originalIndex);
-            }
-          } else if (prev.type === "weapons") {
-            handleEquipWeapon(prev.index);
-          } else if (prev.type === "pause") {
-            if (prev.index === 0) return null; // 再開
-            if (prev.index === 1) {
-              handleSaveAndExit(); // セーブして終了
-              return null;
-            }
-            if (prev.index === 2) {
-              handleMoveToBase(); // 拠点へ帰還
-              return null;
-            }
+        // menuPanelRef で最新値を読む（state updater 内で side effect を起こすアンチパターンを回避）
+        const panel = menuPanelRef.current;
+        if (!panel) return;
+        if (panel.type === "inventory") {
+          const sorted = getSortedItems(state.inventory.items, state.inventory.sortKey);
+          const originalIndex = sorted[panel.index]?.originalIndex;
+          if (originalIndex !== undefined) {
+            handleUseItem(originalIndex);
           }
-          return prev;
-        });
+        } else if (panel.type === "weapons") {
+          handleEquipWeapon(panel.index);
+        } else if (panel.type === "pause") {
+          if (panel.index === 0) {
+            setMenuPanel(null); // 再開
+          } else if (panel.index === 1) {
+            setMenuPanel(null);
+            handleSaveAndExit(); // セーブして終了
+          } else if (panel.index === 2) {
+            setMenuPanel(null);
+            handleMoveToBase(); // 拠点へ帰還
+          }
+        }
       }
     },
-    [handleUseItem, handleEquipWeapon],
+    [handleUseItem, handleEquipWeapon, handleSaveAndExit, handleMoveToBase],
   );
 
   // ── キーボード入力フック ─────────────────────────────────────
