@@ -544,8 +544,10 @@ export default function GameCanvas() {
   const [confirmDialog, setConfirmDialog] = useState<ConfirmDialog>(null);
   const [breakNotif, setBreakNotif] = useState<string | null>(null);
   const [bossWarning, setBossWarning] = useState(false);
+  const [floorNotif, setFloorNotif] = useState<string | null>(null);
   const breakNotifTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const bossWarningTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const floorNotifTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   /** ボス演出を表示済みのフロア番号セット（同フロアで重複表示しない） */
   const bossIntroShownRef = useRef<Set<number>>(new Set());
   /** ボスを視界内で確認済みのフロア番号セット（HP バー表示制御用） */
@@ -1167,7 +1169,7 @@ export default function GameCanvas() {
       }
 
       // ボスブロック通知（目立つ赤ポップアップ）
-      const hasBossBlock = syncedLogs.some((l) => l.includes('ボスを倒さなければ先へは進めない'));
+      const hasBossBlock = syncedLogs.some((l) => l.includes('ボスを倒さなければ下階へは行けない'));
       if (hasBossBlock) {
         setBossWarning(true);
         if (bossWarningTimerRef.current) clearTimeout(bossWarningTimerRef.current);
@@ -1213,7 +1215,20 @@ export default function GameCanvas() {
         newLogs.push(`${name}を倒した！（+${e.expReward} EXP）`);
       }
 
-      if (next.floor > prevFloor) newLogs.push(`B${next.floor}F へ降りた`);
+      if (next.floor > prevFloor) {
+        newLogs.push(`B${next.floor}F へ降りた`);
+        const msg = `▼ B${next.floor}F へ降りた`;
+        setFloorNotif(msg);
+        if (floorNotifTimerRef.current) clearTimeout(floorNotifTimerRef.current);
+        floorNotifTimerRef.current = setTimeout(() => setFloorNotif(null), 3000);
+      }
+      if (next.floor < prevFloor) {
+        newLogs.push(`B${next.floor}F へ上がった`);
+        const msg = `▲ B${next.floor}F へ上がった`;
+        setFloorNotif(msg);
+        if (floorNotifTimerRef.current) clearTimeout(floorNotifTimerRef.current);
+        floorNotifTimerRef.current = setTimeout(() => setFloorNotif(null), 3000);
+      }
 
       if (newLogs.length > 0) {
         setBattleLog((prevLogs) => {
@@ -1448,6 +1463,9 @@ export default function GameCanvas() {
       setGameState(warpedState);
       stateRef.current = warpedState;
       setBattleLog((prev) => [...prev, `下階転送チップを使用した（B${warpedState.floor}Fへ転送）`].slice(-BATTLE_LOG_MAX));
+      setFloorNotif(`▼ B${warpedState.floor}F へ転送された`);
+      if (floorNotifTimerRef.current) clearTimeout(floorNotifTimerRef.current);
+      floorNotifTimerRef.current = setTimeout(() => setFloorNotif(null), 3000);
       return;
     }
 
@@ -1466,6 +1484,9 @@ export default function GameCanvas() {
       setGameState(warpedState);
       stateRef.current = warpedState;
       setBattleLog((prev) => [...prev, `上階転送チップを使用した（B${warpedState.floor}Fへ転送）`].slice(-BATTLE_LOG_MAX));
+      setFloorNotif(`▲ B${warpedState.floor}F へ転送された`);
+      if (floorNotifTimerRef.current) clearTimeout(floorNotifTimerRef.current);
+      floorNotifTimerRef.current = setTimeout(() => setFloorNotif(null), 3000);
       return;
     }
 
@@ -2288,7 +2309,35 @@ export default function GameCanvas() {
                   textShadow: '0 1px 2px rgba(0,0,0,0.8)',
                 }}
               >
-                ボスを倒さなければ先へは進めない！
+                ボスを倒さなければ下階へは行けない！
+              </div>
+            )}
+
+            {/* ── 階移動通知 ── */}
+            {floorNotif && !bossWarning && (
+              <div
+                style={{
+                  position: 'absolute',
+                  top: '18%',
+                  left: '50%',
+                  transform: 'translateX(-50%)',
+                  backgroundColor: 'rgba(10, 40, 80, 0.92)',
+                  color: '#88ddff',
+                  padding: '14px 32px',
+                  borderRadius: '10px',
+                  border: '2px solid #4499cc',
+                  fontSize: '16px',
+                  fontWeight: 'bold',
+                  textAlign: 'center',
+                  zIndex: 110,
+                  pointerEvents: 'none',
+                  letterSpacing: '0.08em',
+                  fontFamily: 'monospace',
+                  boxShadow: '0 0 24px rgba(68,153,204,0.6)',
+                  whiteSpace: 'nowrap',
+                }}
+              >
+                {floorNotif}
               </div>
             )}
 

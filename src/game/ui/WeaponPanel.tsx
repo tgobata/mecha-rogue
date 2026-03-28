@@ -243,9 +243,8 @@ export default function WeaponPanel({
                     gap: 4,
                     backgroundColor: isSelected ? SELECTED_ROW_BG : 'transparent',
                     borderBottom: '1px solid rgba(68, 85, 102, 0.3)',
-                    cursor: 'pointer',
+                    cursor: 'default',
                   }}
-                  onClick={() => onEquipWeapon(i)}
                 >
                   {/* 上行: 選択インジケーター + 武器ID + ★ + レアリティ + [装備/捨てる]ボタン */}
                   <div

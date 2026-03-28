@@ -201,11 +201,7 @@ export default function InventoryPanel({
                     gap: 8,
                     backgroundColor: isSelected ? SELECTED_ROW_BG : 'transparent',
                     borderBottom: '1px solid rgba(68, 85, 102, 0.3)',
-                    cursor: 'pointer',
-                  }}
-                  onPointerDown={() => {
-                    // 行クリックで選択 → 使用
-                    onUseItem(originalIndex);
+                    cursor: 'default',
                   }}
                 >
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8, width: '100%' }}>

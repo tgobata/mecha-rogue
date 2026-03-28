@@ -727,7 +727,7 @@ function processPlayerAction(
           const isBossFloor = state.floor > 0 && BOSS_DEFS.some((def) => def.floor === state.floor);
           const bossAlive = isBossFloor && newEnemies.some((e) => e.isBoss && e.hp > 0);
           if (bossAlive) {
-            logMessages.push('ボスを倒さなければ先へは進めない！');
+            logMessages.push('ボスを倒さなければ下階へは行けない！');
           } else {
             shouldTransitionFloor = true;
           }
@@ -1393,7 +1393,7 @@ function handleTrapTrigger(
       const isBossFloorPit = state.floor > 0 && BOSS_DEFS.some((def) => def.floor === state.floor);
       const bossAlivePit = isBossFloorPit && newEnemies.some((e) => e.isBoss && e.hp > 0);
       if (bossAlivePit) {
-        logMessages.push('落とし穴に落ちた！ 20のダメージ！ ボスを倒さなければ先へは進めない！');
+        logMessages.push('落とし穴に落ちた！ 20のダメージ！ ボスを倒さなければ下階へは行けない！');
       } else {
         logMessages.push('落とし穴に落ちた！ 20のダメージを受けて次階層へ！');
         shouldTransitionFloor = true;
@@ -1406,7 +1406,7 @@ function handleTrapTrigger(
       const isBossFloorLarge = state.floor > 0 && BOSS_DEFS.some((def) => def.floor === state.floor);
       const bossAliveLarge = isBossFloorLarge && newEnemies.some((e) => e.isBoss && e.hp > 0);
       if (bossAliveLarge) {
-        logMessages.push('巨大な落とし穴に落ちた！ 50のダメージ！ ボスを倒さなければ先へは進めない！');
+        logMessages.push('巨大な落とし穴に落ちた！ 50のダメージ！ ボスを倒さなければ下階へは行けない！');
       } else {
         logMessages.push('巨大な落とし穴に落ちた！ 50のダメージを受けて次階層へ！');
         shouldTransitionFloor = true;

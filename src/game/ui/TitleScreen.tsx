@@ -27,6 +27,7 @@ const TitleScreen: React.FC<TitleScreenProps> = ({
   const [saves, setSaves] = useState<(SaveSummary | null)[]>([]);
   const [isMounted, setIsMounted] = useState(false);
   const [showManual, setShowManual] = useState(false);
+  const [deleteConfirmSlot, setDeleteConfirmSlot] = useState<number | null>(null);
 
   // メニューモードが切り替わるか、コンポーネントがマウントされた時にセーブデータを取得する
   useEffect(() => {
@@ -86,9 +87,7 @@ const TitleScreen: React.FC<TitleScreenProps> = ({
       } else {
         const slot = selectedIndex + 1;
         if (saves[selectedIndex]) {
-          deleteSave(slot);
-          setSaves(getAllSaves());
-          playSE("enemy_death"); // カスタム削除音があればそれに変更
+          setDeleteConfirmSlot(slot);
         } else {
           playSE("ui_cancel");
         }
@@ -230,9 +229,7 @@ const TitleScreen: React.FC<TitleScreenProps> = ({
                   playSE("ui_select");
                   onLoadGame(idx + 1);
                 } else if (menuMode === "delete" && save) {
-                  deleteSave(idx + 1);
-                  setSaves(getAllSaves());
-                  playSE("enemy_death");
+                  setDeleteConfirmSlot(idx + 1);
                 } else {
                   playSE("ui_cancel");
                 }
@@ -365,6 +362,50 @@ const TitleScreen: React.FC<TitleScreenProps> = ({
       {/* マニュアルオーバーレイ */}
       {showManual && (
         <HelpManualOverlay onClose={() => setShowManual(false)} />
+      )}
+
+      {/* セーブデータ削除確認ダイアログ */}
+      {deleteConfirmSlot !== null && (
+        <div
+          className="absolute inset-0 flex items-center justify-center z-50"
+          style={{ backgroundColor: 'rgba(0,0,0,0.7)' }}
+        >
+          <div
+            className="flex flex-col items-center gap-6 p-8 rounded-lg border-2 border-red-500 font-mono"
+            style={{ backgroundColor: 'rgba(30, 10, 10, 0.98)', minWidth: 280 }}
+          >
+            <div className="text-red-400 text-base font-bold tracking-wide">⚠ セーブデータ削除</div>
+            <div className="text-gray-200 text-sm text-center">
+              スロット {deleteConfirmSlot} のデータを<br />本当に削除しますか？
+            </div>
+            <div className="flex gap-4">
+              <button
+                className="px-6 py-2 bg-red-800 border border-red-500 text-white rounded font-bold hover:bg-red-600 transition-colors"
+                style={{ touchAction: 'manipulation' }}
+                onClick={() => {
+                  deleteSave(deleteConfirmSlot);
+                  setSaves(getAllSaves());
+                  playSE("enemy_death");
+                  setDeleteConfirmSlot(null);
+                }}
+                onTouchStart={unlockAudioContext}
+              >
+                削除する
+              </button>
+              <button
+                className="px-6 py-2 bg-gray-700 border border-gray-500 text-gray-200 rounded font-bold hover:bg-gray-500 transition-colors"
+                style={{ touchAction: 'manipulation' }}
+                onClick={() => {
+                  playSE("ui_cancel");
+                  setDeleteConfirmSlot(null);
+                }}
+                onTouchStart={unlockAudioContext}
+              >
+                キャンセル
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

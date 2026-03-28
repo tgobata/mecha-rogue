@@ -200,13 +200,12 @@ export default function ShopPanel({
                 return (
                   <div
                     key={`buy-${idx}`}
-                    onClick={() => setSelectedIndex(idx)}
                     style={{
                       display: 'flex', alignItems: 'center', justifyContent: 'space-between',
                       padding: '8px 12px', marginBottom: 4, borderRadius: 4,
                       backgroundColor: isSelected ? 'rgba(100, 80, 50, 0.8)' : 'rgba(0, 0, 0, 0.3)',
                       border: isSelected ? '1px solid #dcb56e' : '1px solid transparent',
-                      cursor: 'pointer',
+                      cursor: 'default',
                     }}
                   >
                     <div style={{ display: 'flex', flexDirection: 'column' }}>
