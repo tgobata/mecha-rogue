@@ -266,6 +266,7 @@ export function buyItem(
     const newWeaponSlots = [...currentSlots, instance];
     // inventory.equippedWeapons（セーブ用）も同期して更新する
     const newEquippedWeapon: EquippedWeapon = {
+      instanceId: instance.instanceId,
       weaponId: instance.id,
       durability: instance.durability ?? 999,
       weaponLevel: 1,

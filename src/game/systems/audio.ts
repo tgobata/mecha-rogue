@@ -263,26 +263,33 @@ async function preRenderBGM(name: BGMName): Promise<void> {
   const loopDuration = secPerBar * meta.loopBars;
   const renderDuration = loopDuration + 1.0; // リリーステール用に +1 秒
 
-  // activeBGMParts を保護（オフラインレンダリングがモジュール変数を上書きしないよう）
-  const savedParts = activeBGMParts;
-  activeBGMParts = [];
+  // オフラインコンテキスト内で生成された Parts を追跡するローカル変数
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  let offlineParts: any[] = [];
 
   try {
     const buffer = await Tone.Offline(() => {
+      // BGM_PLAYERS は activeBGMParts（モジュールグローバル）に同期的に書き込む。
+      // Tone.Offline のコールバックは同期実行されるため、ここで確実に捕捉・復元できる。
+      const prevParts = activeBGMParts;
+      activeBGMParts = [];
       Tone.getTransport().bpm.value = meta.bpm;
       BGM_PLAYERS[name](Tone.getDestination());
-      // BGM ファクトリー内で transport.start() が呼ばれる
+      // BGM ファクトリーが書き込んだオフライン Parts を退避
+      offlineParts = activeBGMParts;
+      // 非同期レンダリング開始前にライブ Parts を即座に復元
+      // （レンダリング中に playBGM が呼ばれても activeBGMParts が上書きされない）
+      activeBGMParts = prevParts;
     }, renderDuration);
 
     bgmBufferCache.set(name, buffer);
   } catch {
     // 事前レンダリング失敗時はライブレンダリングにフォールバックするため無視
   } finally {
-    // オフライン Parts を破棄
-    for (const p of activeBGMParts) {
+    // オフライン Parts のみ破棄（ライブ Parts には一切触れない）
+    for (const p of offlineParts) {
       try { p.stop?.(); p.dispose?.(); } catch { /* ignore */ }
     }
-    activeBGMParts = savedParts;
   }
 }
 
@@ -299,6 +306,13 @@ function _startBGMWithFadeIn(name: BGMName, fadeInSec: number): void {
       // ── 事前レンダリング済み: AudioBufferSourceNode で再生（オーディオスレッド完全独立）
       const player = new Tone.Player(cached).connect(bgmVol);
       player.loop = true;
+      // ループ区間をテール (+1秒) を除いた音楽部分のみに限定
+      const meta = BGM_META[name];
+      if (meta) {
+        const loopDuration = (60 / meta.bpm) * 4 * meta.loopBars;
+        player.loopStart = 0;
+        player.loopEnd = loopDuration;
+      }
       player.start();
       activeBGMParts = [player];
     } else {

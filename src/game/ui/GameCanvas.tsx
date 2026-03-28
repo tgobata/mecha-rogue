@@ -251,19 +251,70 @@ function migrateGameState(saved: GameState): GameState {
   }
 
   // instanceId 補完: 旧セーブデータには instanceId がないため付与する
+  // 同種アイテムを複数所持した際の耐久度が混同しないよう、各スロット・装備中アイテムに
+  // 一意な instanceId を付与し、装備中アイテムはスロット内の対応するエントリと同じ ID を共有する。
   const _genId = () => Math.random().toString(36).slice(2, 10) + Date.now().toString(36);
+
+  // ── 武器 ──
   if (migrated.player?.weaponSlots) {
+    const newWeaponSlots = (migrated.player.weaponSlots as any[]).map((w: any) =>
+      w.instanceId ? w : { ...w, instanceId: _genId() }
+    );
+    // equippedWeapon: スロット内の対応エントリと instanceId を揃える
+    let newEquippedWeapon = migrated.player.equippedWeapon as any;
+    if (newEquippedWeapon && !newEquippedWeapon.instanceId) {
+      const match = newWeaponSlots.find((w: any) =>
+        w.id === newEquippedWeapon.id && w.durability === newEquippedWeapon.durability
+      );
+      newEquippedWeapon = { ...newEquippedWeapon, instanceId: match?.instanceId ?? _genId() };
+    }
     migrated.player = {
       ...migrated.player,
-      weaponSlots: (migrated.player.weaponSlots as any[]).map((w: any) =>
-        w.instanceId ? w : { ...w, instanceId: _genId() }
-      ) as any,
+      weaponSlots: newWeaponSlots as any,
+      equippedWeapon: newEquippedWeapon,
     };
-  }
-  if (migrated.player?.equippedWeapon && !(migrated.player.equippedWeapon as any).instanceId) {
+  } else if (migrated.player?.equippedWeapon && !(migrated.player.equippedWeapon as any).instanceId) {
     migrated.player = {
       ...migrated.player,
       equippedWeapon: { ...migrated.player.equippedWeapon, instanceId: _genId() } as any,
+    };
+  }
+
+  // ── 盾 ──
+  if (migrated.player?.shieldSlots) {
+    const newShieldSlots = (migrated.player.shieldSlots as any[]).map((s: any) =>
+      s.instanceId ? s : { ...s, instanceId: _genId() }
+    );
+    let newEquippedShield = migrated.player.equippedShield as any;
+    if (newEquippedShield && !newEquippedShield.instanceId) {
+      const match = newShieldSlots.find((s: any) =>
+        s.shieldId === newEquippedShield.shieldId && s.durability === newEquippedShield.durability
+      );
+      newEquippedShield = { ...newEquippedShield, instanceId: match?.instanceId ?? _genId() };
+    }
+    migrated.player = {
+      ...migrated.player,
+      shieldSlots: newShieldSlots as any,
+      equippedShield: newEquippedShield,
+    };
+  }
+
+  // ── 防具 ──
+  if (migrated.player?.armorSlots) {
+    const newArmorSlots = (migrated.player.armorSlots as any[]).map((a: any) =>
+      a.instanceId ? a : { ...a, instanceId: _genId() }
+    );
+    let newEquippedArmor = migrated.player.equippedArmor as any;
+    if (newEquippedArmor && !newEquippedArmor.instanceId) {
+      const match = newArmorSlots.find((a: any) =>
+        a.armorId === newEquippedArmor.armorId && a.durability === newEquippedArmor.durability
+      );
+      newEquippedArmor = { ...newEquippedArmor, instanceId: match?.instanceId ?? _genId() };
+    }
+    migrated.player = {
+      ...migrated.player,
+      armorSlots: newArmorSlots as any,
+      equippedArmor: newEquippedArmor,
     };
   }
 
@@ -1623,7 +1674,9 @@ export default function GameCanvas() {
     if (!shield) return;
 
     const newShieldSlots = state.player.shieldSlots.filter((_, i) => i !== index);
-    const isEquipped = state.player.equippedShield?.shieldId === shield.shieldId;
+    const isEquipped = (shield.instanceId && state.player.equippedShield?.instanceId)
+      ? state.player.equippedShield.instanceId === shield.instanceId
+      : state.player.equippedShield?.shieldId === shield.shieldId;
     const newEquippedShield = isEquipped ? null : state.player.equippedShield;
 
     const next: GameState = {
@@ -1708,7 +1761,9 @@ export default function GameCanvas() {
     if (!armor) return;
 
     const newArmorSlots = state.player.armorSlots.filter((_, i) => i !== index);
-    const isEquipped = state.player.equippedArmor?.armorId === armor.armorId;
+    const isEquipped = (armor.instanceId && state.player.equippedArmor?.instanceId)
+      ? state.player.equippedArmor.instanceId === armor.instanceId
+      : state.player.equippedArmor?.armorId === armor.armorId;
     const newEquippedArmor = isEquipped ? null : state.player.equippedArmor;
 
     // アーマー破棄時は maxHpBonus を差し引く
@@ -2262,7 +2317,7 @@ export default function GameCanvas() {
                 fontFamily: "monospace",
                 fontSize: 10,
                 color: "#aaaacc",
-                maxHeight: 160,
+                maxHeight: 220,
                 overflow: "hidden",
               }}
             >
