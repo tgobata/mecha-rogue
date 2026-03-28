@@ -232,23 +232,37 @@ export default function VirtualController({
       }
     };
 
+  const hasSkills = skillSlots && skillSlots.length > 0;
+
   return (
     <div
       style={{
         display: "flex",
-        flexDirection: "row",
+        flexDirection: "column",
         alignItems: "center",
-        justifyContent: "space-between",
-        gap: 24,
-        padding: "12px 20px",
+        gap: 6,
+        padding: "8px 12px",
         backgroundColor: "rgba(0,0,0,0.5)",
         borderRadius: 16,
         touchAction: "none",
         userSelect: "none",
         WebkitUserSelect: "none",
+        width: "100%",
+        boxSizing: "border-box",
       }}
       aria-label="仮想コントローラー"
     >
+      {/* ── 1段目: Dpad + アクション + メニュー ── */}
+      <div
+        style={{
+          display: "flex",
+          flexDirection: "row",
+          alignItems: "center",
+          justifyContent: "space-between",
+          gap: 16,
+          width: "100%",
+        }}
+      >
       {/* ── Dpad ── */}
       <div
         style={{
@@ -403,28 +417,33 @@ export default function VirtualController({
         </button>
       </div>
 
-      {/* ── スキルボタン（習得済みアクティブスキルのみ表示） ── */}
-      {skillSlots && skillSlots.length > 0 && (
+      </div>{/* ── 1段目ここまで ── */}
+
+      {/* ── 2段目: スキルボタン（習得済みアクティブスキルのみ） ── */}
+      {hasSkills && (
         <div
           style={{
             display: "flex",
-            flexDirection: "column",
-            gap: 4,
+            flexDirection: "row",
+            gap: 8,
             alignItems: "center",
+            justifyContent: "center",
+            width: "100%",
           }}
         >
           <div
             style={{
               fontSize: 9,
               color: "#aaaacc",
-              marginBottom: 2,
               fontWeight: "bold",
               letterSpacing: "0.05em",
+              whiteSpace: "nowrap",
+              marginRight: 2,
             }}
           >
             スキル
           </div>
-          {skillSlots.map((slot, idx) => {
+          {skillSlots!.map((slot, idx) => {
             const ready = slot.cooldown === 0;
             return (
               <button
@@ -436,7 +455,9 @@ export default function VirtualController({
                   }
                 }}
                 style={{
-                  width: MENU_BUTTON_W + 4,
+                  flex: 1,
+                  minWidth: 60,
+                  maxWidth: 100,
                   height: MENU_BUTTON_H,
                   display: "flex",
                   flexDirection: "column",
@@ -456,6 +477,7 @@ export default function VirtualController({
                   WebkitUserSelect: "none",
                   opacity: disabled ? 0.5 : 1,
                   gap: 1,
+                  boxSizing: "border-box",
                 }}
                 aria-label={`スキル${idx + 1}: ${slot.name}${ready ? " (使用可能)" : ` (CD:${slot.cooldown})`}`}
                 aria-disabled={!ready}

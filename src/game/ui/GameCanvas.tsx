@@ -2308,14 +2308,19 @@ export default function GameCanvas() {
           </div>
 
           {/* ── バトルログ: キャンバス直下 ── */}
+          {/* パネル開放中にタップ → パネルを閉じる */}
           {gameState.phase === "exploring" && battleLog.length > 0 && (
-            <BattleLogPanel battleLog={battleLog} />
+            <div onPointerDown={() => { if (menuPanel) setMenuPanel(null); }}>
+              <BattleLogPanel battleLog={battleLog} />
+            </div>
           )}
 
           {/* pc-info-bar: バトルログ直下に配置 */}
+          {/* パネル開放中にクリック → パネルを閉じる（pointer-events-none は削除済み） */}
           {gameState.phase === "exploring" && gameState.player && (
             <div
-              className="pc-info-bar kb-guide hidden flex-shrink-0 flex-row gap-3 items-start px-2 py-1 pointer-events-none select-none"
+              className="pc-info-bar kb-guide hidden flex-shrink-0 flex-row gap-3 items-start px-2 py-1 select-none"
+              onPointerDown={() => { if (menuPanel) setMenuPanel(null); }}
               style={{
                 backgroundColor: "rgba(0,0,0,0.85)",
                 borderTop: "1px solid rgba(80,80,120,0.5)",
@@ -2602,7 +2607,7 @@ export default function GameCanvas() {
       `}</style>
 
       {/* ── 仮想コントローラー（スマホ） ── */}
-      <div className="vc-wrapper hidden pointer-events-auto justify-center py-2">
+      <div className="vc-wrapper hidden pointer-events-auto justify-center py-2 w-full px-2">
         <VirtualController
           onAction={(action) => {
             if (gameState.phase === "exploring") {
