@@ -687,7 +687,7 @@ type PickupInfo =
 function processPlayerAction(
   state: GameState,
   action: PlayerAction,
-): { player: Player; enemies: Enemy[]; shouldTransitionFloor: boolean; pickup: PickupInfo | null; logMessages: string[]; triggeredTrapId?: number } {
+): { player: Player; enemies: Enemy[]; shouldTransitionFloor: boolean; pickup: PickupInfo | null; logMessages: string[]; triggeredTrapId?: number; revealedTrapId?: number; attackedTrapId?: number } {
   const player = state.player!;
   let newPlayer = { ...player };
   let newEnemies = [...state.enemies];
@@ -695,6 +695,7 @@ function processPlayerAction(
   let pickup: PickupInfo | null = null;
   const logMessages: string[] = [];
   let triggeredTrapId: number | undefined = undefined;
+  let revealedTrapId: number | undefined = undefined;
 
   const delta = actionToDelta(action);
 
@@ -763,6 +764,38 @@ function processPlayerAction(
       const mapData = state.map!;
       const targetTile = getTileAt(mapData, targetPos);
 
+      // ─── 罠バンプ処理 ───────────────────────────────────────────────────
+      // TILE_TRAP マスへのバンプ: 可視罠は攻撃(60%破壊), 不可視罠は発見
+      if (targetTile === TILE_TRAP) {
+        const trapAtTarget = state.traps.find(
+          t => t.pos.x === targetPos.x && t.pos.y === targetPos.y && !t.isTriggered
+        );
+        if (trapAtTarget) {
+          if (trapAtTarget.isVisible) {
+            // 可視罠への攻撃: attackedTrapId を返して processTurn で60%破壊処理
+            return {
+              player: newPlayer,
+              enemies: newEnemies,
+              shouldTransitionFloor,
+              pickup: null,
+              logMessages,
+              attackedTrapId: trapAtTarget.id,
+            };
+          } else {
+            // 不可視罠の発見（踏まずに発見）
+            return {
+              player: newPlayer,
+              enemies: newEnemies,
+              shouldTransitionFloor,
+              pickup: null,
+              logMessages,
+              revealedTrapId: trapAtTarget.id,
+            };
+          }
+        }
+      }
+      // ────────────────────────────────────────────────────────────────────
+
       if (isWalkable(targetTile)) {
         let slidePos = targetPos;
         let slideTile = targetTile;
@@ -813,9 +846,20 @@ function processPlayerAction(
         if (slideTile === TILE_TRAP) {
            const trap = state.traps.find(t => t.pos.x === slidePos.x && t.pos.y === slidePos.y);
            if (trap && !trap.isTriggered) {
-              triggeredTrapId = trap.id;
-              logMessages.push('罠を踏んだ！');
-              // 罠の具体的効果は processTurn で解決する
+              if (!trap.isVisible) {
+                // 隠し罠: 踏むと必ず発見。50%の確率で即時発動、50%で発見のみ
+                if (Math.random() < 0.5) {
+                  triggeredTrapId = trap.id;
+                  logMessages.push('罠を発見した！ そして発動した！');
+                } else {
+                  revealedTrapId = trap.id;
+                  logMessages.push('罠を発見した！ 慎重に引き返せ！');
+                }
+              } else {
+                // 可視罠: 踏んだら必ず発動
+                triggeredTrapId = trap.id;
+                logMessages.push('罠を踏んだ！');
+              }
            }
         }
 
@@ -934,7 +978,7 @@ function processPlayerAction(
   }
   // wait: 何もしない
 
-  return { player: newPlayer, enemies: newEnemies, shouldTransitionFloor, pickup, logMessages, triggeredTrapId };
+  return { player: newPlayer, enemies: newEnemies, shouldTransitionFloor, pickup, logMessages, triggeredTrapId, revealedTrapId };
 }
 
 // ---------------------------------------------------------------------------
@@ -1660,6 +1704,7 @@ function handleTrapTrigger(
         shouldTransitionFloor = true;
       }
       trap.isTriggered = true;
+      trap.isVisible = true;
       break;
     }
     case 'large_pitfall': {
@@ -1674,6 +1719,7 @@ function handleTrapTrigger(
         shouldTransitionFloor = true;
       }
       trap.isTriggered = true;
+      trap.isVisible = true;
       break;
     }
     case 'landmine':
@@ -1694,12 +1740,14 @@ function handleTrapTrigger(
       newPlayer.hp -= 10;
       newPlayer.hpEverDroppedBelowMax = true;
       trap.isTriggered = true;
+      trap.isVisible = true;
       break;
     case 'arrow_trap':
       logMessages.push('矢が飛んできた！ 15のダメージ！');
       newPlayer.hp -= 15;
       newPlayer.hpEverDroppedBelowMax = true;
       trap.isTriggered = true;
+      trap.isVisible = true;
       break;
     case 'teleport_trap':
       logMessages.push('ワープ罠だ！ どこかに飛ばされた！');
@@ -1713,18 +1761,22 @@ function handleTrapTrigger(
          newPlayer.pos = wpos;
       }
       trap.isTriggered = true;
+      trap.isVisible = true;
       break;
     case 'summon_trap':
       logMessages.push('モンスター召喚罠だ！');
       trap.isTriggered = true;
+      trap.isVisible = true;
       break;
     case 'rust_trap':
       logMessages.push('錆び罠だ！');
       trap.isTriggered = true;
+      trap.isVisible = true;
       break;
     case 'item_loss':
       logMessages.push('アイテム没収罠だ！');
       trap.isTriggered = true;
+      trap.isVisible = true;
       break;
   }
   
@@ -1784,6 +1836,8 @@ export function processTurn(state: GameState, action: PlayerAction): GameState {
     pickup,
     logMessages,
     triggeredTrapId,
+    revealedTrapId,
+    attackedTrapId,
   } = processPlayerAction(stateForAction, action);
 
   let stateWithPickup = stateForAction;
@@ -1817,6 +1871,32 @@ export function processTurn(state: GameState, action: PlayerAction): GameState {
     enemiesAfterTrap = trapResult.enemies;
     trapsAfterAction = trapResult.traps;
     if (trapResult.shouldTransitionFloor) finalShouldTransitionFloor = true;
+  }
+
+  // ─── 罠発見処理 ───────────────────────────────────────────────────────
+  if (revealedTrapId !== undefined) {
+    const idx = trapsAfterAction.findIndex(t => t.id === revealedTrapId);
+    if (idx >= 0) {
+      const updated = [...trapsAfterAction];
+      updated[idx] = { ...updated[idx], isVisible: true };
+      trapsAfterAction = updated;
+      newBattleLog.push('罠を発見した！');
+    }
+  }
+
+  // ─── 罠攻撃処理（可視罠を攻撃: 60%破壊） ──────────────────────────────
+  if (attackedTrapId !== undefined) {
+    const idx = trapsAfterAction.findIndex(t => t.id === attackedTrapId);
+    if (idx >= 0) {
+      if (Math.random() < 0.6) {
+        const updated = [...trapsAfterAction];
+        updated[idx] = { ...updated[idx], isTriggered: true };
+        trapsAfterAction = updated;
+        newBattleLog.push('罠を破壊した！');
+      } else {
+        newBattleLog.push('罠の解除に失敗した...');
+      }
+    }
   }
 
   stateWithPickup = {

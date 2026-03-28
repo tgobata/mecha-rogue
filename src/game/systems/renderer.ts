@@ -494,21 +494,48 @@ export function renderGame(
         drawSFFloor(ctx, drawX, drawY, tileSize, floorPalette);
       } else {
         // 特殊タイル（溶岩・氷・ワープ・罠・ヒント・階段等）はスプライト優先
-        const spriteKey = tileToSpriteKey(cell.tile);
-        const sprite    = spriteKey ? sprites.get(spriteKey) : undefined;
-        if (sprite) {
-          if (cell.tile === TILE_STAIRS_DOWN) {
-            // 階段は 150% サイズではみ出し表示（中央揃え）
-            const drawSize = tileSize * 1.5;
-            const ofs = (tileSize - drawSize) / 2;
-            ctx.drawImage(sprite, drawX + ofs, drawY + ofs, drawSize, drawSize);
+        // TILE_TRAP: 不可視罠は床として描画する
+        if (cell.tile === TILE_TRAP) {
+          const trapHere = state.traps.find(
+            t => t.pos.x === mapX && t.pos.y === mapY && !t.isTriggered
+          );
+          if (!trapHere || !trapHere.isVisible) {
+            // 不可視罠 or 発動済み罠: 床として描画
+            drawSFFloor(ctx, drawX, drawY, tileSize, floorPalette);
           } else {
-            ctx.drawImage(sprite, drawX, drawY, tileSize, tileSize);
+            // 可視罠: 150% サイズではみ出し表示
+            const trapSprite = sprites.get('tile_trap');
+            if (trapSprite) {
+              drawSFFloor(ctx, drawX, drawY, tileSize, floorPalette);
+              const drawSize = tileSize * 1.5;
+              const ofs = (tileSize - drawSize) / 2;
+              ctx.drawImage(trapSprite, drawX + ofs, drawY + ofs, drawSize, drawSize);
+            } else {
+              drawSFFloor(ctx, drawX, drawY, tileSize, floorPalette);
+              ctx.fillStyle = '#ff8800';
+              ctx.font = `bold ${Math.max(8, tileSize * 0.7)}px monospace`;
+              ctx.textAlign = 'center';
+              ctx.textBaseline = 'middle';
+              ctx.fillText('⚠', drawX + tileSize / 2, drawY + tileSize / 2);
+            }
           }
         } else {
-          const color = TILE_FALLBACK_COLORS[cell.tile] ?? '#0a0a0a';
-          ctx.fillStyle = color;
-          ctx.fillRect(drawX, drawY, tileSize, tileSize);
+          const spriteKey = tileToSpriteKey(cell.tile);
+          const sprite    = spriteKey ? sprites.get(spriteKey) : undefined;
+          if (sprite) {
+            if (cell.tile === TILE_STAIRS_DOWN) {
+              // 階段は 150% サイズではみ出し表示（中央揃え）
+              const drawSize = tileSize * 1.5;
+              const ofs = (tileSize - drawSize) / 2;
+              ctx.drawImage(sprite, drawX + ofs, drawY + ofs, drawSize, drawSize);
+            } else {
+              ctx.drawImage(sprite, drawX, drawY, tileSize, tileSize);
+            }
+          } else {
+            const color = TILE_FALLBACK_COLORS[cell.tile] ?? '#0a0a0a';
+            ctx.fillStyle = color;
+            ctx.fillRect(drawX, drawY, tileSize, tileSize);
+          }
         }
       }
 

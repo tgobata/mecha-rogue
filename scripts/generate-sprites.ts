@@ -436,15 +436,51 @@ async function generateWarpTile(outDir: string): Promise<SpriteFrame> {
 
 /**
  * 罠タイル（trap.png）を生成する。
+ * 黄色〜オレンジの警告ギア/スパイクデザイン。
  */
 async function generateTrapTile(outDir: string): Promise<SpriteFrame> {
   const S = TILE_SIZE;
   const buf = createBuffer(S, S);
-  const bg = hexToRGBA('#2d2d2d');
-  const dark = hexToRGBA('#111111');
-  clearBuffer(buf, S, S, bg);
-  fillRect(buf, S, 12, 12, 8, 8, dark);
-  setPixel(buf, S, 14, 14, hexToRGBA('#ff0000'));
+  const orange = hexToRGBA('#ff8800');
+  const yellow = hexToRGBA('#ffcc00');
+  const red    = hexToRGBA('#ff4400');
+  const inner  = hexToRGBA('#252525');
+
+  // 1. 背景: ダーク床
+  clearBuffer(buf, S, S, hexToRGBA('#1a1a1a'));
+
+  // 2. 外枠2ピクセル: オレンジ
+  hLine(buf, S, 0, 0, S, orange);
+  hLine(buf, S, 0, 1, S, orange);
+  hLine(buf, S, 0, 30, S, orange);
+  hLine(buf, S, 0, 31, S, orange);
+  vLine(buf, S, 0, 0, S, orange);
+  vLine(buf, S, 1, 0, S, orange);
+  vLine(buf, S, 30, 0, S, orange);
+  vLine(buf, S, 31, 0, S, orange);
+
+  // 3. 内側の暗いグリッド
+  fillRect(buf, S, 2, 2, 28, 28, inner);
+
+  // 4. 警告の斜め縞模様
+  for (let x = 2; x <= 29; x++) {
+    setPixel(buf, S, x, x, orange);
+    setPixel(buf, S, x, 31 - x, orange);
+  }
+
+  // 5. 中央の十字スパイク（縦4x20、横20x4）
+  fillRect(buf, S, 14, 6, 4, 20, yellow);
+  fillRect(buf, S, 6, 14, 20, 4, yellow);
+
+  // 6. 中心点
+  fillRect(buf, S, 13, 13, 6, 6, red);
+
+  // 7. 4隅の小さいスパイク(3x3)
+  fillRect(buf, S, 3, 3, 3, 3, orange);
+  fillRect(buf, S, 26, 3, 3, 3, orange);
+  fillRect(buf, S, 3, 26, 3, 3, orange);
+  fillRect(buf, S, 26, 26, 3, 3, orange);
+
   const file = path.join(outDir, 'trap.png');
   await savePNG(buf, S, S, file);
   return { file: 'public/sprites/tiles/trap.png', width: S, height: S };
