@@ -153,11 +153,11 @@ const TitleScreen: React.FC<TitleScreenProps> = ({
     const hasSaves = !isMounted || activeSavesCount > 0;
 
     const items = [
-      { label: "START NEW GAME", enabled: true },
-      { label: "LOAD GAME", enabled: hasSaves },
-      { label: "DELETE SAVE", enabled: hasSaves },
-      { label: "MANUAL", enabled: true },
-      { label: "ACHIEVEMENTS", enabled: false, comingSoon: true },
+      { label: "はじめから", enabled: true },
+      { label: "つづきから", enabled: hasSaves },
+      { label: "データ削除", enabled: hasSaves },
+      { label: "マニュアル確認", enabled: true },
+      { label: "実績", enabled: false, comingSoon: true },
     ];
 
     return items.map((item, idx) => (
@@ -202,14 +202,14 @@ const TitleScreen: React.FC<TitleScreenProps> = ({
       <div className="flex flex-col gap-2 w-72">
         <h2 className="text-xl font-bold text-center text-blue-300 mb-2 font-mono drop-shadow-md">
           {menuMode === "load"
-            ? "--- SELECT SAVE DATA ---"
-            : "--- DELETE SAVE DATA ---"}
+            ? "--- セーブデータ選択 ---"
+            : "--- セーブデータ削除 ---"}
         </h2>
 
         {Array.from({ length: 5 }).map((_, idx) => {
           const save = saves[idx];
           const isSelected = selectedIndex === idx;
-          const slotLabel = `SLOT ${idx + 1}`;
+          const slotLabel = `スロット ${idx + 1}`;
 
           return (
             <button
@@ -279,7 +279,7 @@ const TitleScreen: React.FC<TitleScreenProps> = ({
                 </div>
               ) : (
                 <div className="flex items-center justify-center h-12 w-full text-gray-700 italic text-sm tracking-widest bg-black/20 rounded">
-                  NO DATA
+                  データなし
                 </div>
               )}
             </button>
@@ -303,7 +303,7 @@ const TitleScreen: React.FC<TitleScreenProps> = ({
           onTouchStart={unlockAudioContext}
           onMouseEnter={() => setSelectedIndex(5)}
         >
-          {selectedIndex === 5 ? "▶ " : ""}BACK
+          {selectedIndex === 5 ? "▶ " : ""}もどる
         </button>
       </div>
     );
