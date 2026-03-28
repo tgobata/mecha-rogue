@@ -7,6 +7,7 @@ import {
   unlockAudioContext,
 } from "../systems/audio";
 import { getAllSaves, deleteSave, SaveSummary } from "../core/save-system";
+import HelpManualOverlay from "./HelpManualOverlay";
 
 interface TitleScreenProps {
   onNewGame: () => void;
@@ -25,6 +26,7 @@ const TitleScreen: React.FC<TitleScreenProps> = ({
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [saves, setSaves] = useState<(SaveSummary | null)[]>([]);
   const [isMounted, setIsMounted] = useState(false);
+  const [showManual, setShowManual] = useState(false);
 
   // メニューモードが切り替わるか、コンポーネントがマウントされた時にセーブデータを取得する
   useEffect(() => {
@@ -62,7 +64,10 @@ const TitleScreen: React.FC<TitleScreenProps> = ({
       } else if (selectedIndex === 2) {
         setMenuMode("delete");
       } else if (selectedIndex === 3) {
-        onAchievements();
+        setShowManual(true);
+      } else if (selectedIndex === 4) {
+        // ACHIEVEMENTS は未実装のため無効
+        playSE("ui_cancel");
       }
     } else if (menuMode === "load") {
       if (selectedIndex === 5) {
@@ -112,7 +117,15 @@ const TitleScreen: React.FC<TitleScreenProps> = ({
       // 最初のキー操作で audio を初期化して BGM を再生（autoplay policy 対応）
       ensureAudioAndBGM();
 
-      const maxIndex = menuMode === "main" ? 3 : 5; // load/delete = 5 (slots 1-5 + back)
+      // H キーでマニュアルを開閉
+      if (e.key === "h" || e.key === "H") {
+        setShowManual((prev) => !prev);
+        return;
+      }
+      // マニュアル表示中は他のキー操作を受け付けない
+      if (showManual) return;
+
+      const maxIndex = menuMode === "main" ? 4 : 5; // main = 0-4 (4 items + achievements disabled), load/delete = 5 (slots 1-5 + back)
 
       if (e.key === "ArrowUp" || e.key === "w") {
         setSelectedIndex((prev) => (prev > 0 ? prev - 1 : maxIndex));
@@ -132,7 +145,7 @@ const TitleScreen: React.FC<TitleScreenProps> = ({
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [menuMode, handleAction]);
+  }, [menuMode, handleAction, showManual]);
 
   // 描画ヘルパー
   const renderMainMenu = () => {
@@ -143,7 +156,8 @@ const TitleScreen: React.FC<TitleScreenProps> = ({
       { label: "START NEW GAME", enabled: true },
       { label: "LOAD GAME", enabled: hasSaves },
       { label: "DELETE SAVE", enabled: hasSaves },
-      { label: "ACHIEVEMENTS", enabled: true },
+      { label: "MANUAL", enabled: true },
+      { label: "ACHIEVEMENTS", enabled: false, comingSoon: true },
     ];
 
     return items.map((item, idx) => (
@@ -151,14 +165,14 @@ const TitleScreen: React.FC<TitleScreenProps> = ({
         key={`main-${idx}`}
         style={{ touchAction: "manipulation" }}
         className={`py-3 px-4 border-2 font-bold transition-all ${
-          selectedIndex === idx
+          selectedIndex === idx && item.enabled
             ? "bg-blue-600 border-blue-300 text-white scale-110 shadow-[0_0_20px_rgba(59,130,246,0.5)] z-20 relative"
             : "bg-gray-900 border-gray-700 text-gray-500 opacity-60 z-10"
-        } ${!item.enabled && selectedIndex !== idx ? "opacity-30" : ""}`}
+        } ${!item.enabled ? "opacity-30 cursor-not-allowed" : ""}`}
         onClick={(e) => {
           unlockAudioContext();
           ensureAudioAndBGM();
-          if (!item.enabled && idx !== 0 && idx !== 3) {
+          if (!item.enabled) {
             playSE("ui_cancel");
             return;
           }
@@ -167,13 +181,18 @@ const TitleScreen: React.FC<TitleScreenProps> = ({
           if (idx === 0) onNewGame();
           else if (idx === 1 && item.enabled) setMenuMode("load");
           else if (idx === 2 && item.enabled) setMenuMode("delete");
-          else if (idx === 3) onAchievements();
+          else if (idx === 3) setShowManual(true);
         }}
         onTouchStart={unlockAudioContext}
-        onMouseEnter={() => setSelectedIndex(idx)}
+        onMouseEnter={() => { if (item.enabled) setSelectedIndex(idx); }}
       >
-        {selectedIndex === idx ? "▶ " : ""}
+        {selectedIndex === idx && item.enabled ? "▶ " : ""}
         {item.label}
+        {"comingSoon" in item && item.comingSoon && (
+          <span style={{ fontSize: 9, color: "#666688", marginLeft: 6, fontWeight: "normal" }}>
+            (COMING SOON)
+          </span>
+        )}
       </button>
     ));
   };
@@ -342,6 +361,11 @@ const TitleScreen: React.FC<TitleScreenProps> = ({
       <div className="absolute bottom-4 text-[10px] text-gray-600 tracking-tighter">
         © 2026 o77bata / VER 0.1.{process.env.NEXT_PUBLIC_BUILD_VERSION ?? '0000.00.00.00.00.00'}
       </div>
+
+      {/* マニュアルオーバーレイ */}
+      {showManual && (
+        <HelpManualOverlay onClose={() => setShowManual(false)} />
+      )}
     </div>
   );
 };

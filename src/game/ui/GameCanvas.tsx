@@ -20,6 +20,7 @@ import { useRef, useState, useEffect, useCallback } from "react";
 import type { GameState, Player, WeaponRarity } from "../core/game-state";
 import BaseScreen from "./BaseScreen";
 import StatusPanel from "./StatusPanel";
+import HelpManualOverlay from "./HelpManualOverlay";
 import ShopPanel from "./ShopPanel";
 import {
   getShopInventory,
@@ -164,7 +165,8 @@ type MenuPanel =
   | { type: "inventory"; index: number }
   | { type: "status"; index: number }
   | { type: "weapons"; index: number }
-  | { type: "pause"; index: number };
+  | { type: "pause"; index: number }
+  | { type: "help" };
 
 // ---------------------------------------------------------------------------
 // BGM 選択ロジック
@@ -1824,6 +1826,11 @@ export default function GameCanvas() {
   const handleUIAction = useCallback(
     (action: UIAction) => {
       const state = stateRef.current;
+      // ヘルプはどのフェーズでも開ける
+      if (action === "open_help") {
+        setMenuPanel((prev) => (prev?.type === "help" ? null : { type: "help" }));
+        return;
+      }
       if (state.phase !== "exploring") return;
 
       setMenuPanel((prev) => {
@@ -1846,13 +1853,13 @@ export default function GameCanvas() {
             return null;
 
           case "menu_up": {
-            if (!prev) return prev;
+            if (!prev || prev.type === "help") return prev;
             const newIndex = Math.max(0, prev.index - 1);
             return { ...prev, index: newIndex };
           }
 
           case "menu_down": {
-            if (!prev) return prev;
+            if (!prev || prev.type === "help") return prev;
             let maxIndex = 0;
             if (prev.type === "inventory") {
               maxIndex =
@@ -2064,6 +2071,11 @@ export default function GameCanvas() {
                   onClose={() => setMenuPanel(null)}
                 />
               )}
+
+            {/* ヘルプマニュアルオーバーレイ（どのフェーズでも表示可能） */}
+            {menuPanel?.type === "help" && (
+              <HelpManualOverlay onClose={() => setMenuPanel(null)} />
+            )}
 
             {/* ショップパネルオーバーレイ */}
             {gameState.phase === "shop" && (
@@ -2380,6 +2392,7 @@ export default function GameCanvas() {
                         ["Space", "待機", "—"],
                         ["I", "アイテム", "閉じる"],
                         ["E", "装備", "閉じる"],
+                        ["H", "マニュアル確認", "閉じる"],
                         ["Esc", "メニュー", "閉じる"],
                       ] as [string, string, string][]
                     ).map(([key, normal, menu]) => (

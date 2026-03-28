@@ -28,6 +28,7 @@ export type UIAction =
   | 'open_inventory'
   | 'open_weapons'
   | 'open_status'
+  | 'open_help'
   | 'close_menu'
   | 'menu_up'
   | 'menu_down'
@@ -117,6 +118,10 @@ export function keyToUIAction(key: string): UIAction | null {
     case 'C':
       return 'open_status';
 
+    case 'h':
+    case 'H':
+      return 'open_help';
+
     case 'Escape':
       return 'close_menu';
 
@@ -182,6 +187,7 @@ export function useGameInput(
         event.key === 'i' || event.key === 'I' ||
         event.key === 'e' || event.key === 'E' ||
         event.key === 'c' || event.key === 'C' ||
+        event.key === 'h' || event.key === 'H' ||
         event.key === 'Escape' ||
         event.key === 'Enter';
 

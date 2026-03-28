@@ -415,6 +415,15 @@ export default function VirtualController({
         >
           装備
         </button>
+
+        {/* ヘルプボタン */}
+        <button
+          onPointerDown={makeUIHandler("open_help")}
+          style={{ ...MENU_BUTTON_BASE, backgroundColor: "#334455" }}
+          aria-label="ヘルプを開く"
+        >
+          ？
+        </button>
       </div>
 
       </div>{/* ── 1段目ここまで ── */}
