@@ -2118,6 +2118,7 @@ export default function GameCanvas() {
               <ShopPanel
                 shopInventory={gameState.exploration?.shopInventory ?? []}
                 gold={gameState.inventory.gold}
+                sortKey={gameState.inventory.sortKey}
                 playerItems={gameState.inventory.items}
                 playerWeapons={gameState.player?.weaponSlots ?? []}
                 onBuy={handleBuyItem}

@@ -644,6 +644,29 @@ export function renderGame(
         const drawSize = tileSize * 1.5;
         const offset   = (drawSize - tileSize) / 2;
         ctx.drawImage(shopNpcSprite, drawX - offset, drawY - offset, drawSize, drawSize);
+        // 「店」サイン描画
+        const signFontSize = Math.max(10, tileSize * 0.5);
+        const signText = '店';
+        ctx.save();
+        ctx.font = `bold ${signFontSize}px sans-serif`;
+        const textMetrics = ctx.measureText(signText);
+        const signW = textMetrics.width + 8;
+        const signH = signFontSize + 6;
+        const signX = drawX + tileSize / 2 - signW / 2;
+        const signY = drawY - offset - signH - 2;
+        // 背景
+        ctx.fillStyle = '#cc2222';
+        ctx.fillRect(signX, signY, signW, signH);
+        // 枠線
+        ctx.strokeStyle = '#ffdd44';
+        ctx.lineWidth = 1.5;
+        ctx.strokeRect(signX, signY, signW, signH);
+        // 文字
+        ctx.fillStyle = '#ffff88';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(signText, drawX + tileSize / 2, signY + signH / 2);
+        ctx.restore();
       }
     }
   }

@@ -9,7 +9,8 @@
 
 import { useState } from 'react';
 import type { ShopItem } from '../core/shop-system';
-import type { WeaponInstance } from '../core/game-state';
+import type { WeaponInstance, InventoryItem } from '../core/game-state';
+import { getSortedItems } from '../core/inventory-utils';
 import itemsRaw from '../assets/data/items.json';
 import toolsRaw from '../assets/data/tools-equipment.json';
 import weaponsRaw from '../assets/data/weapons.json';
@@ -40,8 +41,10 @@ interface ShopPanelProps {
   shopInventory: ShopItem[];
   /** プレイヤーの所持金 */
   gold: number;
+  /** ポーチのソート順（インベントリパネルと揃える） */
+  sortKey: 'default' | 'name' | 'category';
   /** プレイヤーの所持アイテム */
-  playerItems: { itemId: string; quantity: number; unidentified?: boolean }[];
+  playerItems: InventoryItem[];
   /** プレイヤーの所持武器 */
   playerWeapons: WeaponInstance[];
   /** 購入ボタン押下時のコールバック */
@@ -69,6 +72,7 @@ function getDisplayName(id: string): string {
 export default function ShopPanel({
   shopInventory,
   gold,
+  sortKey,
   playerItems,
   playerWeapons,
   onBuy,
@@ -251,15 +255,16 @@ export default function ShopPanel({
               {playerItems.length > 0 && (
                 <div>
                   <div style={{ fontSize: 11, color: '#44aa88', marginBottom: 4, fontWeight: 'bold' }}>アイテム</div>
-                  {playerItems.map((it, idx) => {
+                  {getSortedItems(playerItems, sortKey).map((entry) => {
+                    const { item: it, originalIndex } = entry;
                     const sellPrice = prices.items[it.itemId]?.sell ?? 0;
                     return (
-                      <div key={`sell-i-${idx}`} style={{ display: 'flex', justifyContent: 'space-between', padding: '4px 8px', backgroundColor: 'rgba(0,0,0,0.2)', marginBottom: 2, borderRadius: 4 }}>
+                      <div key={`sell-i-${originalIndex}`} style={{ display: 'flex', justifyContent: 'space-between', padding: '4px 8px', backgroundColor: 'rgba(0,0,0,0.2)', marginBottom: 2, borderRadius: 4 }}>
                         <span style={{ fontSize: 12 }}>{getDisplayName(it.itemId)}{it.quantity > 1 ? ` x${it.quantity}` : ''}</span>
                         <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
                           <span style={{ fontSize: 12, color: '#ffdd22' }}>{sellPrice} G</span>
                           <button
-                            onClick={() => onSell(it.itemId, 'item', idx)}
+                            onClick={() => onSell(it.itemId, 'item', originalIndex)}
                             style={{ padding: '2px 6px', backgroundColor: '#883333', borderRadius: 4, color: '#fff', fontSize: 10, cursor: 'pointer' }}
                           >売る</button>
                         </div>
