@@ -39,6 +39,11 @@
       "file": "public/sprites/tiles/hint.png",
       "width": 32,
       "height": 32
+    },
+    "shop": {
+      "file": "public/sprites/tiles/shop.png",
+      "width": 32,
+      "height": 32
     }
   },
   "player": {

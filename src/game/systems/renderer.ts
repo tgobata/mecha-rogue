@@ -669,7 +669,7 @@ export function renderGame(
         const drawSize = tileSize * 1.5;
         const offset   = (drawSize - tileSize) / 2;
         ctx.drawImage(shopNpcSprite, drawX - offset, drawY - offset, drawSize, drawSize);
-        // 「店」サイン描画
+        // 「店」サイン描画（ネオン線画スタイル）
         const signFontSize = Math.max(10, tileSize * 0.5);
         const signText = '店';
         ctx.save();
@@ -679,15 +679,19 @@ export function renderGame(
         const signH = signFontSize + 6;
         const signX = drawX + tileSize / 2 - signW / 2;
         const signY = drawY - offset - signH - 2;
-        // 背景
-        ctx.fillStyle = '#cc2222';
+        // 背景（暗いネイビー）
+        ctx.fillStyle = '#071428';
         ctx.fillRect(signX, signY, signW, signH);
-        // 枠線
-        ctx.strokeStyle = '#ffdd44';
+        // ネオン枠線（シアン）
+        ctx.strokeStyle = '#00f0ff';
         ctx.lineWidth = 1.5;
+        ctx.shadowColor = '#00f0ff';
+        ctx.shadowBlur = 4;
         ctx.strokeRect(signX, signY, signW, signH);
-        // 文字
-        ctx.fillStyle = '#ffff88';
+        // 文字（明るい赤）
+        ctx.shadowColor = '#ff4444';
+        ctx.shadowBlur = 6;
+        ctx.fillStyle = '#ff6666';
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
         ctx.fillText(signText, drawX + tileSize / 2, signY + signH / 2);

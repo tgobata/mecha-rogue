@@ -519,6 +519,28 @@ async function generateHintTile(outDir: string): Promise<SpriteFrame> {
 }
 
 /**
+ * ショップフロアタイル（shop.png）を生成する。
+ * ネオン線画スタイル: 暗いネイビー背景、シアン1px枠線、中央に「店」文字（赤）。
+ * SVGテキストレンダリングを使用して実際の「店」文字を描画する。
+ */
+async function generateShopTile(outDir: string): Promise<SpriteFrame> {
+  const S = TILE_SIZE;
+  const svg = `<svg width="${S}" height="${S}" xmlns="http://www.w3.org/2000/svg">
+    <rect width="${S}" height="${S}" fill="#071428"/>
+    <rect x="0" y="0" width="${S}" height="1" fill="#00f0ff"/>
+    <rect x="0" y="${S - 1}" width="${S}" height="1" fill="#00f0ff"/>
+    <rect x="0" y="0" width="1" height="${S}" fill="#00f0ff"/>
+    <rect x="${S - 1}" y="0" width="1" height="${S}" fill="#00f0ff"/>
+    <text x="${S / 2}" y="${S / 2 + 1}" font-family="serif" font-size="20" font-weight="bold"
+          fill="#ff4444" text-anchor="middle" dominant-baseline="middle">店</text>
+  </svg>`;
+  const file = path.join(outDir, 'shop.png');
+  await sharp(Buffer.from(svg)).png().toFile(file);
+  console.log('  Generated:', file);
+  return { file: 'public/sprites/tiles/shop.png', width: S, height: S };
+}
+
+/**
  * タイルスプライト群を生成する。
  */
 async function generateTileSprites(meta: SpriteMeta): Promise<void> {
@@ -534,6 +556,7 @@ async function generateTileSprites(meta: SpriteMeta): Promise<void> {
   meta.tiles['warp']   = await generateWarpTile(outDir);
   meta.tiles['trap']   = await generateTrapTile(outDir);
   meta.tiles['hint']   = await generateHintTile(outDir);
+  meta.tiles['shop']   = await generateShopTile(outDir);
 }
 
 // ---------------------------------------------------------------------------
@@ -4312,55 +4335,122 @@ async function generateEnemyDirectional(
 
 /**
  * ショップ NPC (shop_npc.png) を生成する。
- * 青系のロボット商人。
+ * ネオン線画スタイルのショップ陳列台。
+ * 背景透明、シアン／赤のアウトラインのみ。
  */
 async function generateShopNpc(outDir: string): Promise<SpriteFrame> {
-  const S = TILE_SIZE;
-  const buf = createBuffer(S, S);
-  const body    = hexToRGBA('#2244aa');
-  const shadow  = hexToRGBA('#112266');
-  const light   = hexToRGBA('#6688ff');
-  const dark    = hexToRGBA('#000000');
-  const visor   = hexToRGBA('#00ffcc');
-  const hat     = hexToRGBA('#ffcc00');
-  const hatDark = hexToRGBA('#aa8800');
+  const S    = TILE_SIZE;
+  const buf  = createBuffer(S, S);
+  const cyan = hexToRGBA('#00f0ff');
+  const red  = hexToRGBA('#ff4444');
+  const navy = hexToRGBA('#071428');
 
-  // 帽子（トッパー）
-  fillRect(buf, S, 10, 1, 12,  2, hatDark);
-  fillRect(buf, S, 12, 3,  8,  5, hat);
-  fillRect(buf, S, 12, 3,  1,  5, hatDark);
-  fillRect(buf, S, 19, 3,  1,  5, hatDark);
+  // ---- 巾着袋 (y=0..4, x=12..19, 中央配置) ----
+  // 巾着本体: fillRect(x=13, y=1, w=6, h=4, red)
+  fillRect(buf, S, 13, 1, 6, 4, red);
+  // 巾着紐: hLine(x=14, y=0, len=4, cyan)
+  hLine(buf, S, 14, 0, 4, cyan);
+  // 巾着底: 下弧をピクセルで表現（y=5 両端を除いた横線）
+  hLine(buf, S, 14, 5, 4, cyan);
+  setPixel(buf, S, 13, 4, cyan);
+  setPixel(buf, S, 19, 4, cyan);
 
-  // 頭部
-  fillRect(buf, S, 10, 8, 12, 9, body);
-  fillRect(buf, S, 10, 8,  1, 9, shadow);
-  fillRect(buf, S, 21, 8,  1, 9, dark);
-  hLine(buf, S, 11, 8, 10, light);
-  // バイザー（笑顔）
-  fillRect(buf, S, 12, 12, 8, 3, dark);
-  hLine(buf, S, 13, 14, 6, visor); // 笑顔ライン
-  setPixel(buf, S, 12, 13, visor);
-  setPixel(buf, S, 19, 13, visor);
+  // ---- 商品ボード (x=0..31, y=4..19) ----
+  // 枠線1px
+  hLine(buf, S, 0,  4, 32, cyan); // 上辺 y=4
+  hLine(buf, S, 0, 19, 32, cyan); // 下辺 y=19
+  vLine(buf, S, 0,  5, 14, cyan); // 左辺 x=0, y=5..18
+  vLine(buf, S, 31, 5, 14, cyan); // 右辺 x=31, y=5..18
+  // 内部塗りつぶし: fillRect(x=1, y=5, w=30, h=14, navy)
+  fillRect(buf, S, 1, 5, 30, 14, navy);
+  // 中央縦分割線: vLine(x=15, y=5, len=14) シアン
+  vLine(buf, S, 15, 5, 14, cyan);
 
-  // 胴体（ずんぐり）
-  fillRect(buf, S, 9, 17, 14, 9, body);
-  fillRect(buf, S, 9, 17,  1, 9, shadow);
-  fillRect(buf, S, 22, 17, 1, 9, dark);
-  // 胸に ¥ マーク
-  fillRect(buf, S, 14, 19, 2, 5, light);
-  hLine(buf, S, 13, 20, 6, light);
-  hLine(buf, S, 13, 22, 6, light);
+  // ---- 左ゾーン (x=1..14, y=5..18) ----
 
-  // 腕（持ち物）
-  fillRect(buf, S, 4,  18, 5, 4, shadow);
-  fillRect(buf, S, 2,  21, 6, 5, body); // 左手にコイン
-  setPixel(buf, S, 4, 22, hat); setPixel(buf, S, 5, 21, hat); setPixel(buf, S, 5, 23, hat);
-  fillRect(buf, S, 23, 18, 5, 4, body);
-  fillRect(buf, S, 24, 21, 5, 5, shadow);
+  // バッテリーアイコン (x=2..7, y=6..11): 枠シアン3x5, 内部赤2x3, 端子シアン1x1
+  // 枠（外形 w=6,h=6 → x=2..7, y=6..11）
+  hLine(buf, S, 2,  6, 6, cyan); // 上辺
+  hLine(buf, S, 2, 11, 6, cyan); // 下辺
+  vLine(buf, S, 2,  7, 4, cyan); // 左辺
+  vLine(buf, S, 7,  7, 4, cyan); // 右辺
+  // 内部充電量（赤 2x3 → x=3..4, y=7..9）
+  fillRect(buf, S, 3, 7, 3, 3, red);
+  // 端子（シアン 1x2 → x=8, y=8..9）
+  vLine(buf, S, 8, 8, 2, cyan);
 
-  // 脚
-  fillRect(buf, S, 11, 26, 4, 5, shadow);
-  fillRect(buf, S, 17, 26, 4, 5, body);
+  // ポーション瓶 (x=2..5, y=12..17): 枠赤2x4+頭1x2
+  // 瓶本体（x=2..5, y=14..17）
+  hLine(buf, S, 2, 14, 4, red); // 上辺
+  hLine(buf, S, 2, 17, 4, red); // 下辺
+  vLine(buf, S, 2, 14, 4, red); // 左辺
+  vLine(buf, S, 5, 14, 4, red); // 右辺
+  // 瓶頸（x=3..4, y=12..13）
+  vLine(buf, S, 3, 12, 2, red);
+  vLine(buf, S, 4, 12, 2, red);
+
+  // シールド (x=8..13, y=12..17): 枠シアン4x4+内部赤ハート2x2
+  // 盾外形
+  hLine(buf, S, 8,  12, 6, cyan); // 上辺
+  vLine(buf, S, 8,  12, 5, cyan); // 左辺
+  vLine(buf, S, 13, 12, 5, cyan); // 右辺
+  // 盾底を尖らせる（中央1px）
+  setPixel(buf, S, 10, 17, cyan);
+  setPixel(buf, S, 11, 17, cyan);
+  hLine(buf, S, 9, 16, 4, cyan);
+  // 内部ハート（赤 2x2 → x=10..11, y=13..14）
+  fillRect(buf, S, 10, 13, 2, 2, red);
+
+  // ---- 右ゾーン (x=16..30, y=5..18) ----
+
+  // 銃 (x=18..28, y=6..10): 銃身シアン8x2, 銃口先端シアン, グリップ赤2x3
+  // 銃身（x=18..25, y=7..8）
+  hLine(buf, S, 18, 7, 8, cyan);
+  hLine(buf, S, 18, 8, 8, cyan);
+  // 銃口先端（x=26..27, y=7）
+  hLine(buf, S, 26, 7, 2, cyan);
+  // グリップ（赤 x=19..20, y=9..11）
+  fillRect(buf, S, 19, 9, 2, 3, red);
+
+  // 剣 (対角線, x=17..27, y=11..17): シアン斜めライン7px, 柄赤2x2
+  // 斜め刀身（左上→右下）
+  for (let i = 0; i < 7; i++) {
+    setPixel(buf, S, 17 + i, 11 + i, cyan);
+  }
+  // 柄（赤 x=24..25, y=16..17）
+  fillRect(buf, S, 24, 16, 2, 2, red);
+  // ガード（横）
+  hLine(buf, S, 22, 15, 4, cyan);
+
+  // 小瓶 (x=20..24, y=13..17): 赤3x4+頸シアン2x2
+  // 瓶本体（x=20..23, y=14..17）
+  hLine(buf, S, 20, 14, 4, red);
+  hLine(buf, S, 20, 17, 4, red);
+  vLine(buf, S, 20, 14, 4, red);
+  vLine(buf, S, 23, 14, 4, red);
+  // 瓶頸（シアン x=21..22, y=13）
+  hLine(buf, S, 21, 13, 2, cyan);
+
+  // ---- カウンター (x=3..28, y=20..24) ----
+  // 天板: hLine(x=3, y=20, len=26) 赤
+  hLine(buf, S, 3, 20, 26, red);
+  // 枠線: vLine左, vLine右, hLine下
+  vLine(buf, S, 3,  20, 5, cyan); // 左辺
+  vLine(buf, S, 28, 20, 5, cyan); // 右辺
+  hLine(buf, S, 3,  24, 26, cyan); // 下辺
+  // 内部: fillRect(x=4, y=21, w=24, h=3, navy)
+  fillRect(buf, S, 4, 21, 24, 3, navy);
+
+  // ---- 脚 (y=25..29) ----
+  // 左脚: x=6,7
+  vLine(buf, S, 6, 25, 5, cyan);
+  vLine(buf, S, 7, 25, 5, cyan);
+  // 右脚: x=24,25
+  vLine(buf, S, 24, 25, 5, cyan);
+  vLine(buf, S, 25, 25, 5, cyan);
+  // 底面
+  hLine(buf, S, 5, 29, 4, cyan);  // 左底 x=5..8
+  hLine(buf, S, 23, 29, 4, cyan); // 右底 x=23..26
 
   const file = path.join(outDir, 'shop_npc.png');
   await savePNG(buf, S, S, file);
