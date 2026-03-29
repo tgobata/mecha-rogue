@@ -14,8 +14,8 @@ export default function BossDefeatOverlay({ bossType, onFinish }: Props) {
   const [visible, setVisible] = useState(true);
 
   useEffect(() => {
-    const t1 = setTimeout(() => setVisible(false), 1200);
-    const t2 = setTimeout(onFinish, 1700);
+    const t1 = setTimeout(() => setVisible(false), 2500);
+    const t2 = setTimeout(onFinish, 3000);
     return () => {
       clearTimeout(t1);
       clearTimeout(t2);
@@ -26,55 +26,27 @@ export default function BossDefeatOverlay({ bossType, onFinish }: Props) {
 
   return (
     <div
-      className="absolute inset-0 z-50 flex items-center justify-center pointer-events-none"
       style={{
+        position: 'absolute',
+        top: '18%',
+        left: '50%',
+        transform: 'translateX(-50%)',
+        zIndex: 50,
+        pointerEvents: 'none',
         opacity: visible ? 1 : 0,
         transition: 'opacity 0.5s ease',
+        backgroundColor: 'rgba(40, 28, 0, 0.93)',
+        border: '2px solid #ffaa00',
+        borderRadius: 8,
+        padding: '10px 24px',
+        fontFamily: 'monospace',
+        textAlign: 'center',
+        boxShadow: '0 0 20px rgba(255,170,0,0.5), 0 0 40px rgba(255,170,0,0.2)',
+        whiteSpace: 'nowrap',
       }}
     >
-      <div
-        className="text-center"
-        style={{
-          transform: visible ? 'scale(1)' : 'scale(0.85)',
-          transition: 'transform 0.5s ease',
-        }}
-      >
-        <div
-          style={{
-            fontSize: '1rem',
-            fontFamily: 'monospace',
-            fontWeight: 'bold',
-            letterSpacing: '0.3em',
-            color: '#44ff88',
-            textShadow: '0 0 10px #00ff44, 0 0 20px #00ff44',
-            marginBottom: '0.5rem',
-          }}
-        >
-          TARGET NEUTRALIZED
-        </div>
-        <div
-          style={{
-            fontSize: '2.2rem',
-            fontFamily: 'monospace',
-            fontWeight: 900,
-            color: '#ffdd44',
-            textShadow: '0 0 20px #ffaa00, 0 0 40px #ff8800',
-            marginBottom: '0.4rem',
-          }}
-        >
-          {bossName}
-        </div>
-        <div
-          style={{
-            fontSize: '0.85rem',
-            fontFamily: 'monospace',
-            color: '#88ccaa',
-            letterSpacing: '0.25em',
-          }}
-        >
-          ─── THREAT ELIMINATED ───
-        </div>
-      </div>
+      <div style={{ fontSize: 11, color: '#ffaa44', marginBottom: 3, letterSpacing: '0.1em' }}>⚡ ボス撃破</div>
+      <div style={{ fontSize: 15, color: '#ffdd44', fontWeight: 'bold', letterSpacing: '0.05em' }}>{bossName}</div>
     </div>
   );
 }

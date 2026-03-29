@@ -5035,35 +5035,54 @@ async function generateItemSprites(meta: SpriteMeta): Promise<void> {
     meta.items['special'] = { file: 'public/sprites/items/special.png', width: IS, height: IS };
   }
 
-  // machine_upgrade: 歯車
+  // machine_upgrade: チップ/IC（集積回路）
   {
     const buf = createBuffer(IS, IS);
-    const gear = hexToRGBA('#88aaff');
-    const gearDk = hexToRGBA('#445588');
-    const cx = 8, cy = 8;
-    // 歯車の歯（8本）
-    for (let angle = 0; angle < 360; angle += 45) {
-      const rad = angle * Math.PI / 180;
-      const tx = Math.round(cx + 6 * Math.cos(rad));
-      const ty = Math.round(cy + 6 * Math.sin(rad));
-      fillRect(buf, IS, tx - 1, ty - 1, 2, 2, gear);
-    }
-    // 歯車本体（円）
-    for (let y = 3; y < 13; y++) {
-      for (let x = 3; x < 13; x++) {
-        const dx = x - cx, dy = y - cy;
-        const dist = Math.sqrt(dx * dx + dy * dy);
-        if (dist <= 4) setPixel(buf, IS, x, y, gear);
-        else if (dist <= 5) setPixel(buf, IS, x, y, gearDk);
-      }
-    }
-    // 中央穴
-    for (let y = 6; y < 10; y++) {
-      for (let x = 6; x < 10; x++) {
-        const dx = x - cx, dy = y - cy;
-        if (dx * dx + dy * dy <= 3) setPixel(buf, IS, x, y, { r: 0, g: 0, b: 0, a: 0 });
-      }
-    }
+    const bg         = hexToRGBA('#0d1929');
+    const chipFill   = hexToRGBA('#005566');
+    const chipBorder = hexToRGBA('#00ccdd');
+    const red        = hexToRGBA('#cc2222');
+    const circleFill = hexToRGBA('#003344');
+    const circleEdge = hexToRGBA('#0088aa');
+
+    // 背景
+    fillRect(buf, IS, 0, 0, IS, IS, bg);
+
+    // チップ本体（12×12）
+    fillRect(buf, IS, 2, 2, 12, 12, chipFill);
+    // チップ枠線
+    hLine(buf, IS, 2, 2, 12, chipBorder);
+    hLine(buf, IS, 2, 13, 12, chipBorder);
+    vLine(buf, IS, 2, 2, 12, chipBorder);
+    vLine(buf, IS, 13, 2, 12, chipBorder);
+
+    // ピン（上下左右 各2本、2px長）
+    setPixel(buf, IS, 5, 0, chipBorder); setPixel(buf, IS, 5, 1, chipBorder);
+    setPixel(buf, IS, 9, 0, chipBorder); setPixel(buf, IS, 9, 1, chipBorder);
+    setPixel(buf, IS, 5, 14, chipBorder); setPixel(buf, IS, 5, 15, chipBorder);
+    setPixel(buf, IS, 9, 14, chipBorder); setPixel(buf, IS, 9, 15, chipBorder);
+    setPixel(buf, IS, 0, 5, chipBorder); setPixel(buf, IS, 1, 5, chipBorder);
+    setPixel(buf, IS, 0, 9, chipBorder); setPixel(buf, IS, 1, 9, chipBorder);
+    setPixel(buf, IS, 14, 5, chipBorder); setPixel(buf, IS, 15, 5, chipBorder);
+    setPixel(buf, IS, 14, 9, chipBorder); setPixel(buf, IS, 15, 9, chipBorder);
+
+    // 赤インジケータ（左上 2×2）
+    fillRect(buf, IS, 3, 3, 2, 2, red);
+
+    // 中央円（中心 8,9）
+    setPixel(buf, IS, 7, 7, circleEdge);
+    setPixel(buf, IS, 8, 7, circleEdge);
+    setPixel(buf, IS, 6, 8, circleEdge);
+    setPixel(buf, IS, 9, 8, circleEdge);
+    setPixel(buf, IS, 7, 8, circleFill);
+    setPixel(buf, IS, 8, 8, circleFill);
+    setPixel(buf, IS, 6, 9, circleEdge);
+    setPixel(buf, IS, 9, 9, circleEdge);
+    setPixel(buf, IS, 7, 9, circleFill);
+    setPixel(buf, IS, 8, 9, circleFill);
+    setPixel(buf, IS, 7, 10, circleEdge);
+    setPixel(buf, IS, 8, 10, circleEdge);
+
     const file = path.join(outDir, 'machine_upgrade.png');
     await savePNG(buf, IS, IS, file);
     console.log('  Generated:', file);
