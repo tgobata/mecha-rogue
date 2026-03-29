@@ -41,15 +41,10 @@ const TitleScreen: React.FC<TitleScreenProps> = ({
   useEffect(() => {
     const tryAutoplay = async () => {
       try {
-        if (!isAudioReady()) {
-          await initAudio();
-        }
+        if (!isAudioReady()) return; // ユーザー操作前は何もしない
         audioStartedRef.current = true;
         playBGM("title");
-      } catch {
-        // ブラウザの autoplay policy で再生が blocked された場合は
-        // ensureAudioAndBGM（最初のユーザー操作時）が再試行する
-      }
+      } catch { /* ignore */ }
     };
     tryAutoplay();
     // eslint-disable-next-line react-hooks/exhaustive-deps

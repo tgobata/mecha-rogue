@@ -87,7 +87,7 @@ const bgmBufferCache: Map<BGMName, any> = new Map();
  * loopBars: ループ単位の小節数。0 = ループなし（ジングル）。
  */
 const BGM_META: Partial<Record<BGMName, { bpm: number; loopBars: number }>> = {
-  title:             { bpm: 135, loopBars: 4 },
+  title:             { bpm: 138, loopBars: 8 },
   explore:           { bpm: 80,  loopBars: 8 },
   explore_light:     { bpm: 130, loopBars: 8 },
   battle:            { bpm: 140, loopBars: 8 },
@@ -98,7 +98,7 @@ const BGM_META: Partial<Record<BGMName, { bpm: number; loopBars: number }>> = {
   boss_phantom:      { bpm: 90,  loopBars: 8 },
   boss_iron_fortress:{ bpm: 100, loopBars: 8 },
   shop:              { bpm: 100, loopBars: 4 },
-  base:              { bpm: 90,  loopBars: 4 },
+  base:              { bpm: 118, loopBars: 8 },
   deep:              { bpm: 110, loopBars: 8 },
   // gameOver, bossDefeat はループなしのジングルなのでキャッシュしない
 };
@@ -704,84 +704,174 @@ const BGM_PLAYERS: Record<BGMName, (dest: any) => void> = {
 
   /**
    * タイトル BGM
-   * C major, 100 BPM, 明るい冒険感
-   * コード進行: C - Am - F - G (8小節ループ)
+   * D minor, 138 BPM, 重低音・冒険ワクワク感
+   * コード進行: Dm - Bb - Am - Gm (8小節ループ)
    */
   title: (dest: any) => {
     const transport = Tone.getTransport();
-    transport.bpm.value = 135; // 楽しそうで軽快なテンポ
+    transport.bpm.value = 138;
 
-    // リズミカルなピコピコメロディ
-    const melSynth = new Tone.Synth({
+    // 重厚なリード（鋸波）
+    const leadSynth = new Tone.Synth({
+      oscillator: { type: 'sawtooth' },
+      envelope: { attack: 0.005, decay: 0.08, sustain: 0.3, release: 0.1 },
+    }).connect(dest);
+    leadSynth.volume.value = -4;
+
+    // 重低音ベース（FMシンセ）
+    const bassSynth = new Tone.FMSynth({
+      harmonicity: 2,
+      modulationIndex: 3,
       oscillator: { type: 'square' },
-      envelope: { attack: 0.005, decay: 0.1, sustain: 0.2, release: 0.1 },
+      envelope: { attack: 0.01, decay: 0.15, sustain: 0.6, release: 0.1 },
+      modulation: { type: 'sine' },
+      modulationEnvelope: { attack: 0.01, decay: 0.1, sustain: 0.5, release: 0.1 },
     }).connect(dest);
+    bassSynth.volume.value = -2;
 
-    // はねるベース
-    const bassSynth = new Tone.Synth({
-      oscillator: { type: 'triangle' },
-      envelope: { attack: 0.01, decay: 0.2, sustain: 0.1, release: 0.1 },
+    // キック（重い）
+    const kick = new Tone.MembraneSynth({
+      pitchDecay: 0.08,
+      octaves: 8,
+      envelope: { attack: 0.001, decay: 0.3, sustain: 0, release: 0.1 },
     }).connect(dest);
+    kick.volume.value = 4;
 
-    const kick = new Tone.MembraneSynth().connect(dest);
+    // スネア
     const snare = new Tone.NoiseSynth({
       noise: { type: 'white' },
-      envelope: { attack: 0.001, decay: 0.1, sustain: 0, release: 0.01 },
+      envelope: { attack: 0.001, decay: 0.15, sustain: 0, release: 0.05 },
     }).connect(dest);
+    snare.volume.value = -3;
 
-    // 軽快なメロディ (C - F - G - C) 4小節ループ
-    const melNotes: [string, string][] = [
-      ['0:0:0', 'E5'], ['0:0:2', 'G5'], ['0:1:0', 'C6'], ['0:1:2', 'G5'],
-      ['0:2:0', 'E5'], ['0:2:2', 'C5'], ['0:3:0', 'D5'], ['0:3:2', 'E5'],
-      ['1:0:0', 'F5'], ['1:0:2', 'A5'], ['1:1:0', 'C6'], ['1:1:2', 'A5'],
-      ['1:2:0', 'F5'], ['1:2:2', 'C5'], ['1:3:0', 'D5'], ['1:3:2', 'E5'],
-      ['2:0:0', 'D5'], ['2:0:2', 'G5'], ['2:1:0', 'B5'], ['2:1:2', 'G5'],
-      ['2:2:0', 'D5'], ['2:2:2', 'B4'], ['2:3:0', 'C5'], ['2:3:2', 'D5'],
-      ['3:0:0', 'E5'], ['3:0:2', 'C5'], ['3:1:0', 'E5'], ['3:1:2', 'G5'],
-      ['3:2:0', 'C6'], ['3:2:2', 'C6'], ['3:3:0', 'C6'],
+    // ハイハット
+    const hihat = new Tone.MetalSynth({
+      frequency: 400,
+      envelope: { attack: 0.001, decay: 0.04, release: 0.01 },
+      harmonicity: 5.1,
+      resonance: 4000,
+      octaves: 1.5,
+    }).connect(dest);
+    hihat.volume.value = -12;
+
+    // ハーモニーパッド
+    const padSynth = new Tone.PolySynth(Tone.Synth, {
+      oscillator: { type: 'square' },
+      envelope: { attack: 0.1, decay: 0.2, sustain: 0.4, release: 0.3 },
+    }).connect(dest);
+    padSynth.volume.value = -12;
+
+    // リードメロディ: Dm スケール、ワクワク感 (8小節)
+    const leadNotes: [string, string][] = [
+      ['0:0:0', 'D5'], ['0:0:2', 'F5'], ['0:1:0', 'A5'], ['0:1:2', 'G5'],
+      ['0:2:0', 'F5'], ['0:2:2', 'D5'], ['0:3:0', 'E5'], ['0:3:2', 'C5'],
+      ['1:0:0', 'D5'], ['1:0:2', 'F5'], ['1:1:0', 'A5'], ['1:2:0', 'Bb5'],
+      ['1:2:2', 'A5'], ['1:3:0', 'G5'],
+      ['2:0:0', 'Bb4'], ['2:0:2', 'D5'], ['2:1:0', 'F5'], ['2:1:2', 'G5'],
+      ['2:2:0', 'A5'], ['2:2:2', 'Bb5'], ['2:3:0', 'A5'], ['2:3:2', 'G5'],
+      ['3:0:0', 'F5'], ['3:0:2', 'E5'], ['3:1:0', 'D5'], ['3:1:2', 'C5'],
+      ['3:2:0', 'D5'], ['3:3:0', 'A4'],
+      ['4:0:0', 'A4'], ['4:0:2', 'C5'], ['4:1:0', 'E5'], ['4:1:2', 'F5'],
+      ['4:2:0', 'G5'], ['4:2:2', 'A5'], ['4:3:0', 'C6'], ['4:3:2', 'A5'],
+      ['5:0:0', 'G5'], ['5:0:2', 'F5'], ['5:1:0', 'E5'], ['5:1:2', 'D5'],
+      ['5:2:0', 'E5'], ['5:2:2', 'F5'], ['5:3:0', 'G5'],
+      ['6:0:0', 'A5'], ['6:0:2', 'G5'], ['6:1:0', 'F5'], ['6:1:2', 'E5'],
+      ['6:2:0', 'D5'], ['6:2:2', 'C5'], ['6:3:0', 'D5'], ['6:3:2', 'E5'],
+      ['7:0:0', 'F5'], ['7:0:2', 'A5'], ['7:1:0', 'D6'], ['7:1:2', 'C6'],
+      ['7:2:0', 'Bb5'], ['7:2:2', 'A5'], ['7:3:0', 'G5'], ['7:3:2', 'F5'],
     ];
 
-    const melPart = new Tone.Part((time: number, note: string) => {
-      melSynth.triggerAttackRelease(note, '16n', time);
-    }, melNotes);
-    melPart.loop = true;
-    melPart.loopEnd = '4m';
-
-    // はねるベースライン
+    // 重低音ベースライン
     const bassNotes: [string, string][] = [
-      ['0:0:0', 'C3'], ['0:0:2', 'C3'], ['0:1:2', 'C3'], ['0:2:0', 'C3'], ['0:2:2', 'C3'],
-      ['1:0:0', 'F2'], ['1:0:2', 'F2'], ['1:1:2', 'F2'], ['1:2:0', 'F2'], ['1:2:2', 'F2'],
-      ['2:0:0', 'G2'], ['2:0:2', 'G2'], ['2:1:2', 'G2'], ['2:2:0', 'G2'], ['2:2:2', 'G2'],
-      ['3:0:0', 'C3'], ['3:0:2', 'C3'], ['3:1:2', 'C3'], ['3:2:0', 'C3'], ['3:2:2', 'C3'],
+      ['0:0:0', 'D2'], ['0:0:2', 'D2'], ['0:1:0', 'A2'], ['0:2:0', 'D2'], ['0:2:2', 'F2'], ['0:3:0', 'C2'],
+      ['1:0:0', 'D2'], ['1:0:2', 'D2'], ['1:1:0', 'A2'], ['1:2:0', 'D2'], ['1:2:2', 'F2'], ['1:3:0', 'G2'],
+      ['2:0:0', 'Bb1'], ['2:0:2', 'Bb1'], ['2:1:0', 'F2'], ['2:2:0', 'Bb1'], ['2:2:2', 'D2'], ['2:3:0', 'C2'],
+      ['3:0:0', 'A1'], ['3:0:2', 'A1'], ['3:1:0', 'E2'], ['3:2:0', 'A1'], ['3:2:2', 'C2'], ['3:3:0', 'G2'],
+      ['4:0:0', 'A1'], ['4:0:2', 'A1'], ['4:1:0', 'E2'], ['4:2:0', 'A1'], ['4:2:2', 'C2'], ['4:3:0', 'D2'],
+      ['5:0:0', 'G1'], ['5:0:2', 'G1'], ['5:1:0', 'D2'], ['5:2:0', 'G1'], ['5:2:2', 'B1'], ['5:3:0', 'A1'],
+      ['6:0:0', 'F1'], ['6:0:2', 'F1'], ['6:1:0', 'C2'], ['6:2:0', 'F1'], ['6:2:2', 'A1'], ['6:3:0', 'G1'],
+      ['7:0:0', 'D2'], ['7:0:2', 'F2'], ['7:1:0', 'A2'], ['7:2:0', 'D2'], ['7:2:2', 'C2'], ['7:3:0', 'Bb1'], ['7:3:2', 'A1'],
     ];
+
+    // キック: 4つ打ち (8小節)
+    const kickTimes = [
+      '0:0:0','0:1:0','0:2:0','0:3:0','1:0:0','1:1:0','1:2:0','1:3:0',
+      '2:0:0','2:1:0','2:2:0','2:3:0','3:0:0','3:1:0','3:2:0','3:3:0',
+      '4:0:0','4:1:0','4:2:0','4:3:0','5:0:0','5:1:0','5:2:0','5:3:0',
+      '6:0:0','6:1:0','6:2:0','6:3:0','7:0:0','7:1:0','7:2:0','7:3:0',
+    ];
+
+    // スネア: 2と4拍 (8小節)
+    const snareTimes = [
+      '0:1:0','0:3:0','1:1:0','1:3:0','2:1:0','2:3:0','3:1:0','3:3:0',
+      '4:1:0','4:3:0','5:1:0','5:3:0','6:1:0','6:3:0','7:1:0','7:3:0',
+    ];
+
+    // ハイハット: 8分音符 (8小節)
+    const hihatTimes = [
+      '0:0:0','0:0:2','0:1:0','0:1:2','0:2:0','0:2:2','0:3:0','0:3:2',
+      '1:0:0','1:0:2','1:1:0','1:1:2','1:2:0','1:2:2','1:3:0','1:3:2',
+      '2:0:0','2:0:2','2:1:0','2:1:2','2:2:0','2:2:2','2:3:0','2:3:2',
+      '3:0:0','3:0:2','3:1:0','3:1:2','3:2:0','3:2:2','3:3:0','3:3:2',
+      '4:0:0','4:0:2','4:1:0','4:1:2','4:2:0','4:2:2','4:3:0','4:3:2',
+      '5:0:0','5:0:2','5:1:0','5:1:2','5:2:0','5:2:2','5:3:0','5:3:2',
+      '6:0:0','6:0:2','6:1:0','6:1:2','6:2:0','6:2:2','6:3:0','6:3:2',
+      '7:0:0','7:0:2','7:1:0','7:1:2','7:2:0','7:2:2','7:3:0','7:3:2',
+    ];
+
+    // コード進行: Dm - Bb - Am - Gm (各2小節)
+    const padNotes: [string, string[]][] = [
+      ['0:0:0', ['D3', 'F3', 'A3']],
+      ['2:0:0', ['Bb2', 'D3', 'F3']],
+      ['4:0:0', ['A2', 'C3', 'E3']],
+      ['6:0:0', ['G2', 'Bb2', 'D3']],
+    ];
+
+    const leadPart = new Tone.Part((time: number, note: string) => {
+      leadSynth.triggerAttackRelease(note, '16n', time);
+    }, leadNotes);
+    leadPart.loop = true;
+    leadPart.loopEnd = '8m';
 
     const bassPart = new Tone.Part((time: number, note: string) => {
-      bassSynth.triggerAttackRelease(note, '16n', time);
+      bassSynth.triggerAttackRelease(note, '8n', time);
     }, bassNotes);
     bassPart.loop = true;
-    bassPart.loopEnd = '4m';
+    bassPart.loopEnd = '8m';
 
-    const kickPattern = ['0:0:0','0:1:0','0:2:0','0:3:0', '1:0:0','1:1:0','1:2:0','1:3:0', '2:0:0','2:1:0','2:2:0','2:3:0', '3:0:0','3:1:0','3:2:0','3:3:0'];
     const kickPart = new Tone.Part((time: number) => {
-      try { kick.triggerAttackRelease('C2', '16n', time); } catch { /* ループ境界での時刻衝突を無視 */ }
-    }, kickPattern.map(t => [t, null]));
+      try { kick.triggerAttackRelease('C1', '16n', time); } catch { /* ループ境界での時刻衝突を無視 */ }
+    }, kickTimes.map(t => [t, null]));
     kickPart.loop = true;
-    kickPart.loopEnd = '4m';
+    kickPart.loopEnd = '8m';
 
-    const snarePattern = ['0:1:0','0:3:0', '1:1:0','1:3:0', '2:1:0','2:3:0', '3:1:0','3:3:0'];
     const snarePart = new Tone.Part((time: number) => {
       try { snare.triggerAttackRelease('16n', time); } catch { /* ループ境界での時刻衝突を無視 */ }
-    }, snarePattern.map(t => [t, null]));
+    }, snareTimes.map(t => [t, null]));
     snarePart.loop = true;
-    snarePart.loopEnd = '4m';
+    snarePart.loopEnd = '8m';
 
-    melPart.start(0);
+    const hihatPart = new Tone.Part((time: number) => {
+      try { hihat.triggerAttack(time); } catch { /* ループ境界での時刻衝突を無視 */ }
+    }, hihatTimes.map(t => [t, null]));
+    hihatPart.loop = true;
+    hihatPart.loopEnd = '8m';
+
+    const padPart = new Tone.Part((time: number, chord: string[]) => {
+      padSynth.triggerAttackRelease(chord, '2m', time);
+    }, padNotes);
+    padPart.loop = true;
+    padPart.loopEnd = '8m';
+
+    leadPart.start(0);
     bassPart.start(0);
     kickPart.start(0);
     snarePart.start(0);
+    hihatPart.start(0);
+    padPart.start(0);
     transport.start();
 
-    activeBGMParts = [melPart, bassPart, kickPart, snarePart, melSynth, bassSynth, kick, snare];
+    activeBGMParts = [leadPart, bassPart, kickPart, snarePart, hihatPart, padPart, leadSynth, bassSynth, kick, snare, hihat, padSynth];
   },
 
   /**
@@ -1826,35 +1916,170 @@ const BGM_PLAYERS: Record<BGMName, (dest: any) => void> = {
 
   /**
    * 拠点 BGM
-   * C major, 90BPM, 穏やか
+   * C major, 118 BPM, グルーヴィー・冒険感
+   * コード進行: C - G - Am - F (8小節ループ)
    */
   base: (dest: any) => {
     const transport = Tone.getTransport();
-    transport.bpm.value = 90;
+    transport.bpm.value = 118;
 
-    const melSynth = new Tone.Synth({ oscillator: { type: 'sine' }, envelope: { attack: 0.1, decay: 0.3, sustain: 0.4, release: 0.5 } }).connect(dest);
-    const bassSynth = new Tone.Synth({ oscillator: { type: 'sine' }, envelope: { attack: 0.01, decay: 0.3, sustain: 0.8, release: 0.2 } }).connect(dest);
+    // ウォームリード（矩形波）
+    const leadSynth = new Tone.Synth({
+      oscillator: { type: 'square' },
+      envelope: { attack: 0.01, decay: 0.1, sustain: 0.4, release: 0.2 },
+    }).connect(dest);
+    leadSynth.volume.value = -6;
 
-    const melNotes: [string, string][] = [
-        ['0:0:0', 'C4'], ['0:2:0', 'E4'], ['1:0:0', 'G4'], ['1:2:0', 'E4'],
-        ['2:0:0', 'F4'], ['2:2:0', 'A4'], ['3:0:0', 'G4'], ['3:2:0', 'C4'],
+    // グルーヴィーベース（鋸波）
+    const bassSynth = new Tone.Synth({
+      oscillator: { type: 'sawtooth' },
+      envelope: { attack: 0.01, decay: 0.2, sustain: 0.5, release: 0.1 },
+    }).connect(dest);
+    bassSynth.volume.value = -3;
+
+    // キック
+    const kick = new Tone.MembraneSynth({
+      pitchDecay: 0.06,
+      octaves: 6,
+      envelope: { attack: 0.001, decay: 0.25, sustain: 0, release: 0.1 },
+    }).connect(dest);
+    kick.volume.value = 2;
+
+    // スネア
+    const snare = new Tone.NoiseSynth({
+      noise: { type: 'white' },
+      envelope: { attack: 0.001, decay: 0.12, sustain: 0, release: 0.05 },
+    }).connect(dest);
+    snare.volume.value = -5;
+
+    // ハイハット（柔らかめ）
+    const hihat = new Tone.MetalSynth({
+      frequency: 300,
+      envelope: { attack: 0.001, decay: 0.03, release: 0.01 },
+      harmonicity: 5.1,
+      resonance: 3000,
+      octaves: 1.0,
+    }).connect(dest);
+    hihat.volume.value = -14;
+
+    // コードパッド
+    const chordSynth = new Tone.PolySynth(Tone.Synth, {
+      oscillator: { type: 'triangle' },
+      envelope: { attack: 0.15, decay: 0.2, sustain: 0.5, release: 0.4 },
+    }).connect(dest);
+    chordSynth.volume.value = -14;
+
+    // メロディ: C major, 明るく冒険的 (8小節)
+    const leadNotes: [string, string][] = [
+      ['0:0:0', 'G4'], ['0:0:2', 'E4'], ['0:1:0', 'C5'], ['0:1:2', 'D5'],
+      ['0:2:0', 'E5'], ['0:2:2', 'C5'], ['0:3:0', 'D5'],
+      ['1:0:0', 'G4'], ['1:0:2', 'A4'], ['1:1:0', 'C5'], ['1:1:2', 'B4'],
+      ['1:2:0', 'A4'], ['1:3:0', 'G4'],
+      ['2:0:0', 'F4'], ['2:0:2', 'A4'], ['2:1:0', 'C5'], ['2:1:2', 'E5'],
+      ['2:2:0', 'D5'], ['2:2:2', 'C5'], ['2:3:0', 'B4'],
+      ['3:0:0', 'G4'], ['3:0:2', 'F4'], ['3:1:0', 'E4'], ['3:1:2', 'D4'],
+      ['3:2:0', 'E4'], ['3:3:0', 'G4'],
+      ['4:0:0', 'A4'], ['4:0:2', 'C5'], ['4:1:0', 'E5'], ['4:1:2', 'G5'],
+      ['4:2:0', 'F5'], ['4:2:2', 'E5'], ['4:3:0', 'D5'],
+      ['5:0:0', 'C5'], ['5:0:2', 'B4'], ['5:1:0', 'A4'], ['5:1:2', 'G4'],
+      ['5:2:0', 'A4'], ['5:2:2', 'B4'], ['5:3:0', 'C5'],
+      ['6:0:0', 'E5'], ['6:0:2', 'D5'], ['6:1:0', 'C5'], ['6:1:2', 'B4'],
+      ['6:2:0', 'G4'], ['6:2:2', 'A4'], ['6:3:0', 'B4'],
+      ['7:0:0', 'C5'], ['7:0:2', 'E5'], ['7:1:0', 'G5'], ['7:2:0', 'E5'],
+      ['7:2:2', 'D5'], ['7:3:0', 'C5'], ['7:3:2', 'B4'],
     ];
-    const melPart = new Tone.Part((time: number, note: string) => { melSynth.triggerAttackRelease(note, '2n', time); }, melNotes);
-    melPart.loop = true;
-    melPart.loopEnd = '4m';
 
+    // グルーヴィーベースライン
     const bassNotes: [string, string][] = [
-        ['0:0:0', 'C2'],
-        ['2:0:0', 'F2'],
+      ['0:0:0', 'C2'], ['0:0:2', 'C2'], ['0:1:2', 'G2'], ['0:2:0', 'C2'], ['0:3:0', 'E2'],
+      ['1:0:0', 'G1'], ['1:0:2', 'G1'], ['1:1:2', 'D2'], ['1:2:0', 'G1'], ['1:3:0', 'B1'],
+      ['2:0:0', 'A1'], ['2:0:2', 'A1'], ['2:1:2', 'E2'], ['2:2:0', 'A1'], ['2:3:0', 'C2'],
+      ['3:0:0', 'F1'], ['3:0:2', 'F1'], ['3:1:2', 'C2'], ['3:2:0', 'F1'], ['3:3:0', 'A1'],
+      ['4:0:0', 'A1'], ['4:0:2', 'A1'], ['4:1:2', 'E2'], ['4:2:0', 'A1'], ['4:3:0', 'C2'],
+      ['5:0:0', 'C2'], ['5:0:2', 'C2'], ['5:1:2', 'G2'], ['5:2:0', 'C2'], ['5:3:0', 'E2'],
+      ['6:0:0', 'F1'], ['6:0:2', 'F1'], ['6:1:2', 'C2'], ['6:2:0', 'F1'], ['6:3:0', 'G1'],
+      ['7:0:0', 'C2'], ['7:0:2', 'G1'], ['7:1:0', 'C2'], ['7:1:2', 'E2'], ['7:2:0', 'G2'], ['7:3:0', 'C2'],
     ];
-    const bassPart = new Tone.Part((time: number, note: string) => { bassSynth.triggerAttackRelease(note, '1m', time); }, bassNotes);
-    bassPart.loop = true;
-    bassPart.loopEnd = '4m';
 
-    melPart.start(0);
+    // キック: 4つ打ち (8小節)
+    const kickTimes = [
+      '0:0:0','0:1:0','0:2:0','0:3:0','1:0:0','1:1:0','1:2:0','1:3:0',
+      '2:0:0','2:1:0','2:2:0','2:3:0','3:0:0','3:1:0','3:2:0','3:3:0',
+      '4:0:0','4:1:0','4:2:0','4:3:0','5:0:0','5:1:0','5:2:0','5:3:0',
+      '6:0:0','6:1:0','6:2:0','6:3:0','7:0:0','7:1:0','7:2:0','7:3:0',
+    ];
+
+    // スネア: 2と4拍 (8小節)
+    const snareTimes = [
+      '0:1:0','0:3:0','1:1:0','1:3:0','2:1:0','2:3:0','3:1:0','3:3:0',
+      '4:1:0','4:3:0','5:1:0','5:3:0','6:1:0','6:3:0','7:1:0','7:3:0',
+    ];
+
+    // ハイハット: 8分音符 (8小節)
+    const hihatTimes = [
+      '0:0:0','0:0:2','0:1:0','0:1:2','0:2:0','0:2:2','0:3:0','0:3:2',
+      '1:0:0','1:0:2','1:1:0','1:1:2','1:2:0','1:2:2','1:3:0','1:3:2',
+      '2:0:0','2:0:2','2:1:0','2:1:2','2:2:0','2:2:2','2:3:0','2:3:2',
+      '3:0:0','3:0:2','3:1:0','3:1:2','3:2:0','3:2:2','3:3:0','3:3:2',
+      '4:0:0','4:0:2','4:1:0','4:1:2','4:2:0','4:2:2','4:3:0','4:3:2',
+      '5:0:0','5:0:2','5:1:0','5:1:2','5:2:0','5:2:2','5:3:0','5:3:2',
+      '6:0:0','6:0:2','6:1:0','6:1:2','6:2:0','6:2:2','6:3:0','6:3:2',
+      '7:0:0','7:0:2','7:1:0','7:1:2','7:2:0','7:2:2','7:3:0','7:3:2',
+    ];
+
+    // コード進行: C - G - Am - F (各2小節)
+    const chordNotes: [string, string[]][] = [
+      ['0:0:0', ['C3', 'E3', 'G3']],
+      ['2:0:0', ['G2', 'B2', 'D3']],
+      ['4:0:0', ['A2', 'C3', 'E3']],
+      ['6:0:0', ['F2', 'A2', 'C3']],
+    ];
+
+    const leadPart = new Tone.Part((time: number, note: string) => {
+      leadSynth.triggerAttackRelease(note, '16n', time);
+    }, leadNotes);
+    leadPart.loop = true;
+    leadPart.loopEnd = '8m';
+
+    const bassPart = new Tone.Part((time: number, note: string) => {
+      bassSynth.triggerAttackRelease(note, '8n', time);
+    }, bassNotes);
+    bassPart.loop = true;
+    bassPart.loopEnd = '8m';
+
+    const kickPart = new Tone.Part((time: number) => {
+      try { kick.triggerAttackRelease('C1', '16n', time); } catch { /* ループ境界での時刻衝突を無視 */ }
+    }, kickTimes.map(t => [t, null]));
+    kickPart.loop = true;
+    kickPart.loopEnd = '8m';
+
+    const snarePart = new Tone.Part((time: number) => {
+      try { snare.triggerAttackRelease('16n', time); } catch { /* ループ境界での時刻衝突を無視 */ }
+    }, snareTimes.map(t => [t, null]));
+    snarePart.loop = true;
+    snarePart.loopEnd = '8m';
+
+    const hihatPart = new Tone.Part((time: number) => {
+      try { hihat.triggerAttack(time); } catch { /* ループ境界での時刻衝突を無視 */ }
+    }, hihatTimes.map(t => [t, null]));
+    hihatPart.loop = true;
+    hihatPart.loopEnd = '8m';
+
+    const chordPart = new Tone.Part((time: number, chord: string[]) => {
+      chordSynth.triggerAttackRelease(chord, '2m', time);
+    }, chordNotes);
+    chordPart.loop = true;
+    chordPart.loopEnd = '8m';
+
+    leadPart.start(0);
     bassPart.start(0);
+    kickPart.start(0);
+    snarePart.start(0);
+    hihatPart.start(0);
+    chordPart.start(0);
     transport.start();
-    activeBGMParts = [melPart, bassPart, melSynth, bassSynth];
+
+    activeBGMParts = [leadPart, bassPart, kickPart, snarePart, hihatPart, chordPart, leadSynth, bassSynth, kick, snare, hihat, chordSynth];
   },
 
   /**
