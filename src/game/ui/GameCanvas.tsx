@@ -179,9 +179,10 @@ type MenuPanel =
  * @param floor - 現在のフロア番号
  * @returns 'explore' | 'explore_light' | 'deep'
  */
-function getExploreBGM(floor: number): 'explore' | 'explore_light' | 'deep' {
+function getExploreBGM(floor: number): 'explore' | 'explore_light' | 'deep' | 'base' {
+  if (floor % 3 === 0) return 'base'; // 3の倍数階（3,6,9,12,15）
   if (floor > 10) return 'deep';
-  if (floor % 2 === 1) return 'explore_light'; // 奇数階（1,3,5,7,9）
+  if (floor % 2 === 1) return 'explore_light'; // 奇数階（1,5,7）
   return 'explore';
 }
 
@@ -860,7 +861,7 @@ export default function GameCanvas() {
       stateRef.current = finalState;
       if (!toTitle) {
         setDeathFloor(currentState.floor);
-        playBGM("base");
+        playBGM("title");
       } else {
         setDeathFloor(null);
         playBGM("title");
@@ -879,7 +880,7 @@ export default function GameCanvas() {
   // ── タイトル → 拠点へ移動 ───────────────────────────────────
   const handleMoveToBase = useCallback(() => {
     // initAudio() の完了を待ってから BGM を再生（モバイルの autoplay policy 対応）
-    initAudio().then(() => playBGM("base")).catch(() => {});
+    initAudio().then(() => playBGM("title")).catch(() => {});
     setDeathFloor(null);
     setGameState((prev) => {
       const next: GameState = {
@@ -943,7 +944,7 @@ export default function GameCanvas() {
                 typeof state.floor === "number"
               )
                 ? (state.floor % 5 === 0 ? "boss" : getExploreBGM(state.floor))
-                : "base";
+                : "title";
               initAudio().then(() => playBGM(bgmName)).catch(() => {});
             }
             // 成功した場合はローディングを閉じる
@@ -1441,7 +1442,7 @@ export default function GameCanvas() {
     // escape_module は専用処理（帰還）
     if (item.itemId === "escape_module") {
       playSE("floor_descend");
-      playBGM("base");
+      playBGM("title");
       const escapeState: GameState = {
         ...state,
         phase: "base",

@@ -412,7 +412,7 @@ export default function BaseScreen({ gameState, deathFloor, onEnterDungeon, onUp
     } else {
       // It will replay 'base' BGM when closing the shop.
       // This is to ensure the music state is consistent.
-      playBGM('base');
+      playBGM('title');
     }
   }, [showStorage]);
 
