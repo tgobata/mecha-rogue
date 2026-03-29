@@ -1132,10 +1132,16 @@ export default function GameCanvas() {
             next.exploration.currentFloor,
             next.player.pos,
           );
+          const hasBossVisible = next.enemies.some(
+            (e) => e.isBoss === true && next.map?.cells[e.pos.y]?.[e.pos.x]?.isVisible === true,
+          );
           if (room?.type === RoomType.MONSTER_HOUSE) {
             playBGM("battle");
+          } else if (hasBossVisible) {
+            // ボスが視界内: ボス BGM を維持（または開始）
+            playBGM(getBossBGMName(next.floor));
           } else if (next.floor % 5 !== 0) {
-            // ボスフロア以外: 通常探索 BGM（ボスフロアは視認トリガーで制御）
+            // ボスフロア以外かつボス非視認: 通常探索 BGM
             playBGM(getExploreBGM(next.floor));
           }
         }
@@ -2751,14 +2757,6 @@ export default function GameCanvas() {
           onFinish={() =>
             setGameState((prev) => ({ ...prev, phase: "exploring" }))
           }
-        />
-      )}
-
-      {/* ── ボス撃破演出（全画面レイヤー外） ── */}
-      {bossDefeatEffect && (
-        <BossDefeatOverlay
-          bossType={bossDefeatEffect}
-          onFinish={() => setBossDefeatEffect(null)}
         />
       )}
 

@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import bossesRaw from '../assets/data/bosses.json';
 
 const bosses = bossesRaw as { id: string; name: string }[];
@@ -12,15 +12,18 @@ interface Props {
 
 export default function BossDefeatOverlay({ bossType, onFinish }: Props) {
   const [visible, setVisible] = useState(true);
+  const onFinishRef = useRef(onFinish);
+  onFinishRef.current = onFinish;
 
   useEffect(() => {
     const t1 = setTimeout(() => setVisible(false), 2500);
-    const t2 = setTimeout(onFinish, 3000);
+    const t2 = setTimeout(() => onFinishRef.current(), 3000);
     return () => {
       clearTimeout(t1);
       clearTimeout(t2);
     };
-  }, [onFinish]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const bossName = bosses.find((b) => b.id === bossType)?.name ?? bossType;
 
