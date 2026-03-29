@@ -665,10 +665,7 @@ export function renderGame(
         if (cell.tile !== TILE_SHOP) continue;
         const drawX = screenX * tileSize;
         const drawY = screenY * tileSize;
-        // タイルより 50% 大きく描画（タイル中央に合わせてオフセット）
-        const drawSize = tileSize * 1.5;
-        const offset   = (drawSize - tileSize) / 2;
-        ctx.drawImage(shopNpcSprite, drawX - offset, drawY - offset, drawSize, drawSize);
+        ctx.drawImage(shopNpcSprite, drawX, drawY, tileSize, tileSize);
         // 「店」サイン描画（ネオン線画スタイル）
         const signFontSize = Math.max(10, tileSize * 0.5);
         const signText = '店';
@@ -678,7 +675,7 @@ export function renderGame(
         const signW = textMetrics.width + 8;
         const signH = signFontSize + 6;
         const signX = drawX + tileSize / 2 - signW / 2;
-        const signY = drawY - offset - signH - 2;
+        const signY = drawY - signH - 2;
         // 背景（暗いネイビー）
         ctx.fillStyle = '#071428';
         ctx.fillRect(signX, signY, signW, signH);
