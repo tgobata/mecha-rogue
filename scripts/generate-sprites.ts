@@ -436,50 +436,62 @@ async function generateWarpTile(outDir: string): Promise<SpriteFrame> {
 
 /**
  * 罠タイル（trap.png）を生成する。
- * 黄色〜オレンジの警告ギア/スパイクデザイン。
+ * シグナル発信機デザイン（WiFiアンテナ型センサー罠）。
+ * 警告色（黄・オレンジ・赤）。
  */
 async function generateTrapTile(outDir: string): Promise<SpriteFrame> {
-  const S = TILE_SIZE;
-  const buf = createBuffer(S, S);
-  const orange = hexToRGBA('#ff8800');
+  const S      = TILE_SIZE; // 32
+  const buf    = createBuffer(S, S);
+  const bg     = hexToRGBA('#1a1a1a');
   const yellow = hexToRGBA('#ffcc00');
+  const orange = hexToRGBA('#ff8800');
   const red    = hexToRGBA('#ff4400');
-  const inner  = hexToRGBA('#252525');
+  const redDot = hexToRGBA('#ff0000');
+  const darkOg = hexToRGBA('#cc5500');
 
-  // 1. 背景: ダーク床
-  clearBuffer(buf, S, S, hexToRGBA('#1a1a1a'));
+  // 背景
+  clearBuffer(buf, S, S, bg);
 
-  // 2. 外枠2ピクセル: オレンジ
-  hLine(buf, S, 0, 0, S, orange);
-  hLine(buf, S, 0, 1, S, orange);
-  hLine(buf, S, 0, 30, S, orange);
-  hLine(buf, S, 0, 31, S, orange);
-  vLine(buf, S, 0, 0, S, orange);
-  vLine(buf, S, 1, 0, S, orange);
-  vLine(buf, S, 30, 0, S, orange);
-  vLine(buf, S, 31, 0, S, orange);
+  // デバイス本体: x=7..24 (18px幅), y=23..28 (6px高)
+  fillRect(buf, S, 7, 23, 18, 6, orange);
+  hLine(buf, S, 7, 23, 18, yellow);   // 上端ハイライト
+  hLine(buf, S, 7, 28, 18, darkOg);  // 下端影
+  vLine(buf, S, 7,  23, 6, yellow);   // 左端
+  vLine(buf, S, 24, 23, 6, yellow);   // 右端
 
-  // 3. 内側の暗いグリッド
-  fillRect(buf, S, 2, 2, 28, 28, inner);
+  // 信号発信点（デバイス上部中央、小突起）
+  fillRect(buf, S, 15, 21, 3, 2, yellow);
 
-  // 4. 警告の斜め縞模様
-  for (let x = 2; x <= 29; x++) {
-    setPixel(buf, S, x, x, orange);
-    setPixel(buf, S, x, 31 - x, orange);
+  // インジケータドット（赤 × 2）
+  fillRect(buf, S,  9, 25, 2, 2, redDot);
+  fillRect(buf, S, 13, 25, 2, 2, redDot);
+
+  // シグナルアーク（上半円）アーク中心 = デバイス上端中央
+  const cx = 16, cy = 23;
+
+  // 小アーク (r=4) 黄色
+  for (let deg = 30; deg <= 150; deg += 3) {
+    const rad = deg * Math.PI / 180;
+    const x = Math.round(cx + 4 * Math.cos(rad));
+    const y = Math.round(cy - 4 * Math.sin(rad));
+    setPixel(buf, S, x, y, yellow);
   }
 
-  // 5. 中央の十字スパイク（縦4x20、横20x4）
-  fillRect(buf, S, 14, 6, 4, 20, yellow);
-  fillRect(buf, S, 6, 14, 20, 4, yellow);
+  // 中アーク (r=8) オレンジ
+  for (let deg = 30; deg <= 150; deg += 2) {
+    const rad = deg * Math.PI / 180;
+    const x = Math.round(cx + 8 * Math.cos(rad));
+    const y = Math.round(cy - 8 * Math.sin(rad));
+    setPixel(buf, S, x, y, orange);
+  }
 
-  // 6. 中心点
-  fillRect(buf, S, 13, 13, 6, 6, red);
-
-  // 7. 4隅の小さいスパイク(3x3)
-  fillRect(buf, S, 3, 3, 3, 3, orange);
-  fillRect(buf, S, 26, 3, 3, 3, orange);
-  fillRect(buf, S, 3, 26, 3, 3, orange);
-  fillRect(buf, S, 26, 26, 3, 3, orange);
+  // 大アーク (r=13) 赤
+  for (let deg = 25; deg <= 155; deg += 2) {
+    const rad = deg * Math.PI / 180;
+    const x = Math.round(cx + 13 * Math.cos(rad));
+    const y = Math.round(cy - 13 * Math.sin(rad));
+    setPixel(buf, S, x, y, red);
+  }
 
   const file = path.join(outDir, 'trap.png');
   await savePNG(buf, S, S, file);
