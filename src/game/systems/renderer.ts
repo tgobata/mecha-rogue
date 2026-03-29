@@ -23,9 +23,17 @@ import {
   TILE_MAGNETIC,
 } from '../core/constants';
 import spriteMetaRaw from '../assets/data/sprites.json';
+import itemsRaw from '../assets/data/items.json';
+import toolsRaw from '../assets/data/tools-equipment.json';
 
 // Avoid ts strict checking issues
 const spriteMeta: any = spriteMetaRaw;
+
+/** アイテムID → カテゴリ のルックアップマップ */
+const itemCategoryMap = new Map<string, string>(
+  ([...(itemsRaw as any[]), ...(toolsRaw as any[])])
+    .map((d: { id: string; category?: string }) => [d.id, d.category ?? 'unidentified'])
+);
 
 // ---------------------------------------------------------------------------
 // 型定義
@@ -97,6 +105,14 @@ export async function loadSprites(
 export function getDefaultSpriteList(): Array<[name: string, url: string]> {
   const list: Array<[name: string, url: string]> = [];
   
+  // Items（カテゴリ別アイテムスプライト）
+  if (spriteMeta.items) {
+    for (const [key, sprite] of Object.entries(spriteMeta.items)) {
+      const spriteObj = sprite as any;
+      list.push([`item_${key}`, spriteObj.file.replace('public/', '/')]);
+    }
+  }
+
   // Tiles (除外設定: tile_wall と tile_floor は暗すぎるためフォールバックを使用)
   if (spriteMeta.tiles) {
     for (const [key, sprite] of Object.entries(spriteMeta.tiles)) {
@@ -538,13 +554,21 @@ export function renderGame(
       }
 
 
-      // アイテムタイル: 緑の★マーク
+      // アイテムタイル: カテゴリスプライト（未判明時は unidentified）
       if (cell.tile === TILE_ITEM) {
-        ctx.fillStyle = '#44ff44';
-        ctx.font = `bold ${Math.max(8, tileSize * 0.55)}px monospace`;
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'middle';
-        ctx.fillText('★', drawX + tileSize / 2, drawY + tileSize / 2);
+        const category = cell.itemId
+          ? (itemCategoryMap.get(cell.itemId) ?? 'unidentified')
+          : 'unidentified';
+        const itemSprite = sprites.get(`item_${category}`) ?? sprites.get('item_unidentified');
+        if (itemSprite) {
+          ctx.drawImage(itemSprite, drawX, drawY, tileSize, tileSize);
+        } else {
+          ctx.fillStyle = '#44ff44';
+          ctx.font = `bold ${Math.max(8, tileSize * 0.55)}px monospace`;
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'middle';
+          ctx.fillText('★', drawX + tileSize / 2, drawY + tileSize / 2);
+        }
       }
 
       // ゴールドタイル: 黄色の$マーク

@@ -160,14 +160,19 @@ const TitleScreen: React.FC<TitleScreenProps> = ({
       { label: "実績", enabled: false, comingSoon: true },
     ];
 
-    return items.map((item, idx) => (
+    return (
+      <>
+        <div className="text-center text-[10px] text-cyan-400 font-bold tracking-widest animate-bounce mb-1 pointer-events-none">
+          PRESS START
+        </div>
+        {items.map((item, idx) => (
       <button
         key={`main-${idx}`}
         style={{ touchAction: "manipulation" }}
         className={`py-2 px-4 border-2 font-bold transition-all ${
           selectedIndex === idx && item.enabled
-            ? "bg-blue-600 border-blue-300 text-white scale-110 shadow-[0_0_20px_rgba(59,130,246,0.5)] z-20 relative"
-            : "bg-gray-900 border-gray-700 text-gray-500 opacity-60 z-10"
+            ? "bg-cyan-900 border-cyan-400 text-cyan-100 scale-110 shadow-[0_0_20px_rgba(0,220,220,0.5)] z-20 relative"
+            : "bg-gray-950 border-gray-700 text-gray-400 opacity-60 z-10"
         } ${!item.enabled ? "opacity-30 cursor-not-allowed" : ""}`}
         onClick={(e) => {
           unlockAudioContext();
@@ -201,7 +206,9 @@ const TitleScreen: React.FC<TitleScreenProps> = ({
           </span>
         )}
       </button>
-    ));
+        ))}
+      </>
+    );
   };
 
   const renderSlotMenu = () => {
@@ -226,8 +233,8 @@ const TitleScreen: React.FC<TitleScreenProps> = ({
                 isSelected
                   ? menuMode === "delete"
                     ? "bg-red-900 border-red-400 text-white scale-105 shadow-[0_0_15px_rgba(220,38,38,0.7)] z-20"
-                    : "bg-blue-900 border-blue-400 text-white scale-105 shadow-[0_0_20px_rgba(59,130,246,0.6)] z-20"
-                  : "bg-gray-900 border-gray-700 text-gray-500 opacity-70 z-10"
+                    : "bg-cyan-900 border-cyan-400 text-white scale-105 shadow-[0_0_20px_rgba(0,220,220,0.6)] z-20"
+                  : "bg-gray-950 border-gray-700 text-gray-500 opacity-70 z-10"
               }`}
               onClick={(e) => {
                 unlockAudioContext();
@@ -296,8 +303,8 @@ const TitleScreen: React.FC<TitleScreenProps> = ({
           style={{ touchAction: "manipulation" }}
           className={`mt-2 py-2 border-2 font-bold transition-all ${
             selectedIndex === 5
-              ? "bg-gray-600 border-gray-300 text-white shadow-[0_0_10px_rgba(156,163,175,0.5)] z-20 relative"
-              : "bg-gray-900 border-gray-700 text-gray-500 opacity-60 z-10"
+              ? "bg-gray-700 border-gray-400 text-white shadow-[0_0_10px_rgba(156,163,175,0.4)] z-20 relative"
+              : "bg-gray-950 border-gray-700 text-gray-500 opacity-60 z-10"
           }`}
           onClick={(e) => {
             unlockAudioContext();
@@ -316,46 +323,24 @@ const TitleScreen: React.FC<TitleScreenProps> = ({
 
   return (
     <div
-      className="absolute inset-0 bg-gradient-to-br from-sky-300 via-blue-500 to-indigo-600 flex flex-col items-center justify-center overflow-hidden font-mono"
+      className="absolute inset-0 overflow-hidden font-mono"
+      style={{ backgroundColor: "#060d1f" }}
       onClick={ensureAudioAndBGM}
       onTouchStart={unlockAudioContext}
     >
-      {/* 🌠 背景の星空演出 (Hydration エラー回避のためマウント後に表示) */}
-      <div className="absolute inset-0 pointer-events-none">
-        {isMounted &&
-          [...Array(50)].map((_, i) => (
-            <div
-              key={i}
-              className="absolute bg-white rounded-full animate-pulse"
-              style={{
-                width: Math.random() * 2 + 1 + "px",
-                height: Math.random() * 2 + 1 + "px",
-                top: Math.random() * 100 + "%",
-                left: Math.random() * 100 + "%",
-                animationDelay: Math.random() * 5 + "s",
-                opacity: Math.random() * 0.7 + 0.3,
-              }}
-            />
-          ))}
-      </div>
-
-      {/* 🤖 タイトルロゴ (生成したスプライト) */}
-      <div className="relative mb-4 z-10">
-        <img
-          src="/sprites/ui/title_logo.png"
-          alt="MECHA ROGUE"
-          style={{ imageRendering: "pixelated" }}
-          className="drop-shadow-[0_0_15px_rgba(68,136,255,0.6)]"
-        />
-        {menuMode === "main" && (
-          <div className="absolute -bottom-4 right-0 text-[10px] text-blue-400 font-bold tracking-widest animate-bounce">
-            PRESS START
-          </div>
-        )}
-      </div>
-
-      {/* 🔘 メニュー */}
-      <div className="flex flex-col gap-2 z-10">
+      {/* 背景画像 (添付のタイトルアートワーク) */}
+      <img
+        src="/title_bg.png"
+        alt=""
+        className="absolute inset-0 w-full h-full pointer-events-none select-none"
+        style={{ objectFit: "contain", objectPosition: "center", zIndex: 0 }}
+        draggable={false}
+      />
+      {/* ===== メニュー (背景画像の中央下部に重ねる) ===== */}
+      <div
+        className="absolute left-1/2 flex flex-col gap-2 z-10"
+        style={{ bottom: "16%", transform: "translateX(-50%)" }}
+      >
         {menuMode === "main" ? (
           <div className="flex flex-col gap-2 w-56">{renderMainMenu()}</div>
         ) : (
@@ -363,7 +348,10 @@ const TitleScreen: React.FC<TitleScreenProps> = ({
         )}
       </div>
 
-      <div className="absolute bottom-4 text-[10px] text-gray-600 tracking-tighter">
+      <div
+        className="absolute bottom-3 left-1/2 text-[10px] text-gray-500 tracking-tighter z-10"
+        style={{ transform: "translateX(-50%)", whiteSpace: "nowrap" }}
+      >
         © 2026 o77bata / VER 0.1.{process.env.NEXT_PUBLIC_BUILD_VERSION ?? '0000.00.00.00.00.00'}
       </div>
 
