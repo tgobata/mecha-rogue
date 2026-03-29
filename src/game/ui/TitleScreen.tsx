@@ -324,7 +324,14 @@ const TitleScreen: React.FC<TitleScreenProps> = ({
   return (
     <div
       className="absolute inset-0 overflow-hidden font-mono"
-      style={{ backgroundColor: "#060d1f" }}
+      style={{
+        backgroundColor: "#101733",
+        backgroundImage: [
+          "linear-gradient(rgba(30,70,150,0.09) 1px, transparent 1px)",
+          "linear-gradient(90deg, rgba(30,70,150,0.09) 1px, transparent 1px)",
+        ].join(", "),
+        backgroundSize: "32px 32px",
+      }}
       onClick={ensureAudioAndBGM}
       onTouchStart={unlockAudioContext}
     >
