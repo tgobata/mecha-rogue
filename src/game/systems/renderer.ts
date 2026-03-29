@@ -554,14 +554,17 @@ export function renderGame(
       }
 
 
-      // アイテムタイル: カテゴリスプライト（未判明時は unidentified）
+      // アイテムタイル: カテゴリスプライト（未判明時はチップアイコン）
+      // cell.itemId はアイテムを踏むまで未設定のため、汎用アイコンとして machine_upgrade を使用
       if (cell.tile === TILE_ITEM) {
         const category = cell.itemId
-          ? (itemCategoryMap.get(cell.itemId) ?? 'unidentified')
-          : 'unidentified';
-        const itemSprite = sprites.get(`item_${category}`) ?? sprites.get('item_unidentified');
+          ? (itemCategoryMap.get(cell.itemId) ?? 'machine_upgrade')
+          : 'machine_upgrade';
+        const itemSprite = sprites.get(`item_${category}`) ?? sprites.get('item_machine_upgrade');
         if (itemSprite) {
-          ctx.drawImage(itemSprite, drawX, drawY, tileSize, tileSize);
+          const itemDrawSize = tileSize * 0.85;
+          const itemOfs = (tileSize - itemDrawSize) / 2;
+          ctx.drawImage(itemSprite, drawX + itemOfs, drawY + itemOfs, itemDrawSize, itemDrawSize);
         } else {
           ctx.fillStyle = '#44ff44';
           ctx.font = `bold ${Math.max(8, tileSize * 0.55)}px monospace`;

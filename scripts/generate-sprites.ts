@@ -5047,53 +5047,48 @@ async function generateItemSprites(meta: SpriteMeta): Promise<void> {
     meta.items['special'] = { file: 'public/sprites/items/special.png', width: IS, height: IS };
   }
 
-  // machine_upgrade: チップ/IC（集積回路）
+  // machine_upgrade: チップ/IC（集積回路）サンプル画像準拠
   {
-    const buf = createBuffer(IS, IS);
-    const bg         = hexToRGBA('#0d1929');
-    const chipFill   = hexToRGBA('#005566');
-    const chipBorder = hexToRGBA('#00ccdd');
-    const red        = hexToRGBA('#cc2222');
-    const circleFill = hexToRGBA('#003344');
-    const circleEdge = hexToRGBA('#0088aa');
+    const buf        = createBuffer(IS, IS);
+    const bg         = hexToRGBA('#0d1929');  // 暗いネイビー（チップ内部も同色）
+    const chipBorder = hexToRGBA('#00cccc');  // 明るいシアン
+    const red        = hexToRGBA('#cc0000');  // 赤インジケータ
+    const cyan       = hexToRGBA('#00cccc');  // 円（枠と同じシアン）
 
-    // 背景
+    // 背景（チップ内部含め全体を暗いネイビーで塗る）
     fillRect(buf, IS, 0, 0, IS, IS, bg);
 
-    // チップ本体（12×12）
-    fillRect(buf, IS, 2, 2, 12, 12, chipFill);
-    // チップ枠線
-    hLine(buf, IS, 2, 2, 12, chipBorder);
-    hLine(buf, IS, 2, 13, 12, chipBorder);
-    vLine(buf, IS, 2, 2, 12, chipBorder);
-    vLine(buf, IS, 13, 2, 12, chipBorder);
+    // チップ枠線（外周 x=2..13, y=2..13、1px幅）
+    hLine(buf, IS, 2, 2, 12, chipBorder);   // 上辺
+    hLine(buf, IS, 2, 13, 12, chipBorder);  // 下辺
+    vLine(buf, IS, 2, 2, 12, chipBorder);   // 左辺
+    vLine(buf, IS, 13, 2, 12, chipBorder);  // 右辺
 
-    // ピン（上下左右 各2本、2px長）
-    setPixel(buf, IS, 5, 0, chipBorder); setPixel(buf, IS, 5, 1, chipBorder);
-    setPixel(buf, IS, 9, 0, chipBorder); setPixel(buf, IS, 9, 1, chipBorder);
+    // ピン：上下 各2本（x=5, x=10）、2px長
+    setPixel(buf, IS, 5, 0, chipBorder);  setPixel(buf, IS, 5, 1, chipBorder);
+    setPixel(buf, IS, 10, 0, chipBorder); setPixel(buf, IS, 10, 1, chipBorder);
     setPixel(buf, IS, 5, 14, chipBorder); setPixel(buf, IS, 5, 15, chipBorder);
-    setPixel(buf, IS, 9, 14, chipBorder); setPixel(buf, IS, 9, 15, chipBorder);
-    setPixel(buf, IS, 0, 5, chipBorder); setPixel(buf, IS, 1, 5, chipBorder);
-    setPixel(buf, IS, 0, 9, chipBorder); setPixel(buf, IS, 1, 9, chipBorder);
-    setPixel(buf, IS, 14, 5, chipBorder); setPixel(buf, IS, 15, 5, chipBorder);
-    setPixel(buf, IS, 14, 9, chipBorder); setPixel(buf, IS, 15, 9, chipBorder);
+    setPixel(buf, IS, 10, 14, chipBorder);setPixel(buf, IS, 10, 15, chipBorder);
 
-    // 赤インジケータ（左上 2×2）
+    // ピン：左右 各3本（y=4, y=7, y=10）、2px長
+    setPixel(buf, IS, 0, 4, chipBorder);  setPixel(buf, IS, 1, 4, chipBorder);
+    setPixel(buf, IS, 0, 7, chipBorder);  setPixel(buf, IS, 1, 7, chipBorder);
+    setPixel(buf, IS, 0, 10, chipBorder); setPixel(buf, IS, 1, 10, chipBorder);
+    setPixel(buf, IS, 14, 4, chipBorder); setPixel(buf, IS, 15, 4, chipBorder);
+    setPixel(buf, IS, 14, 7, chipBorder); setPixel(buf, IS, 15, 7, chipBorder);
+    setPixel(buf, IS, 14, 10, chipBorder);setPixel(buf, IS, 15, 10, chipBorder);
+
+    // 赤インジケータ（左上内側 2×2）
     fillRect(buf, IS, 3, 3, 2, 2, red);
 
-    // 中央円（中心 8,9）
-    setPixel(buf, IS, 7, 7, circleEdge);
-    setPixel(buf, IS, 8, 7, circleEdge);
-    setPixel(buf, IS, 6, 8, circleEdge);
-    setPixel(buf, IS, 9, 8, circleEdge);
-    setPixel(buf, IS, 7, 8, circleFill);
-    setPixel(buf, IS, 8, 8, circleFill);
-    setPixel(buf, IS, 6, 9, circleEdge);
-    setPixel(buf, IS, 9, 9, circleEdge);
-    setPixel(buf, IS, 7, 9, circleFill);
-    setPixel(buf, IS, 8, 9, circleFill);
-    setPixel(buf, IS, 7, 10, circleEdge);
-    setPixel(buf, IS, 8, 10, circleEdge);
+    // 中央の円（中心 8,8、半径 3、シアン塗りつぶし）
+    for (let dy = -3; dy <= 3; dy++) {
+      for (let dx = -3; dx <= 3; dx++) {
+        if (dx * dx + dy * dy <= 9) {
+          setPixel(buf, IS, 8 + dx, 8 + dy, cyan);
+        }
+      }
+    }
 
     const file = path.join(outDir, 'machine_upgrade.png');
     await savePNG(buf, IS, IS, file);
