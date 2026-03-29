@@ -687,7 +687,7 @@ type PickupInfo =
 function processPlayerAction(
   state: GameState,
   action: PlayerAction,
-): { player: Player; enemies: Enemy[]; shouldTransitionFloor: boolean; pickup: PickupInfo | null; logMessages: string[]; triggeredTrapId?: number; revealedTrapId?: number; attackedTrapId?: number } {
+): { player: Player; enemies: Enemy[]; shouldTransitionFloor: boolean; pickup: PickupInfo | null; logMessages: string[]; triggeredTrapId?: number; revealedTrapIds: number[]; attackedTrapIds: number[] } {
   const player = state.player!;
   let newPlayer = { ...player };
   let newEnemies = [...state.enemies];
@@ -695,8 +695,8 @@ function processPlayerAction(
   let pickup: PickupInfo | null = null;
   const logMessages: string[] = [];
   let triggeredTrapId: number | undefined = undefined;
-  let revealedTrapId: number | undefined = undefined;
-  let attackedTrapId: number | undefined = undefined;
+  const revealedTrapIds: number[] = [];
+  const attackedTrapIds: number[] = [];
 
   const delta = actionToDelta(action);
 
@@ -821,7 +821,7 @@ function processPlayerAction(
                   triggeredTrapId = trap.id;
                   logMessages.push('罠を発見した！ そして発動した！');
                 } else {
-                  revealedTrapId = trap.id;
+                  revealedTrapIds.push(trap.id);
                   logMessages.push('罠を発見した！ 慎重に引き返せ！');
                 }
               } else {
@@ -933,7 +933,7 @@ function processPlayerAction(
       }
     }
 
-    // 罠への攻撃チェック（武器の攻撃範囲内の罠を攻撃）
+    // 罠への攻撃チェック（武器の攻撃範囲内の全罠を攻撃）
     for (const targetPos of targetPositions) {
       if (enemyAt(newEnemies, targetPos) !== undefined) continue; // 敵がいればスキップ
       const trapAtTarget = state.traps.find(
@@ -942,13 +942,11 @@ function processPlayerAction(
       if (trapAtTarget) {
         if (trapAtTarget.isVisible) {
           // 可視罠攻撃: processTurn で確率破壊処理
-          attackedTrapId = trapAtTarget.id;
+          attackedTrapIds.push(trapAtTarget.id);
         } else {
-          // 不可視罠攻撃: 発見のみ
-          revealedTrapId = trapAtTarget.id;
-          logMessages.push('罠を発見した！');
+          // 不可視罠攻撃: 発見
+          revealedTrapIds.push(trapAtTarget.id);
         }
-        break; // 最初の罠のみ処理
       }
     }
 
@@ -970,7 +968,7 @@ function processPlayerAction(
   }
   // wait: 何もしない
 
-  return { player: newPlayer, enemies: newEnemies, shouldTransitionFloor, pickup, logMessages, triggeredTrapId, revealedTrapId, attackedTrapId };
+  return { player: newPlayer, enemies: newEnemies, shouldTransitionFloor, pickup, logMessages, triggeredTrapId, revealedTrapIds, attackedTrapIds };
 }
 
 // ---------------------------------------------------------------------------
@@ -1828,8 +1826,8 @@ export function processTurn(state: GameState, action: PlayerAction): GameState {
     pickup,
     logMessages,
     triggeredTrapId,
-    revealedTrapId,
-    attackedTrapId,
+    revealedTrapIds,
+    attackedTrapIds,
   } = processPlayerAction(stateForAction, action);
 
   let stateWithPickup = stateForAction;
@@ -1865,29 +1863,47 @@ export function processTurn(state: GameState, action: PlayerAction): GameState {
     if (trapResult.shouldTransitionFloor) finalShouldTransitionFloor = true;
   }
 
-  // ─── 罠発見処理 ───────────────────────────────────────────────────────
-  if (revealedTrapId !== undefined) {
-    const idx = trapsAfterAction.findIndex(t => t.id === revealedTrapId);
-    if (idx >= 0) {
-      const updated = [...trapsAfterAction];
-      updated[idx] = { ...updated[idx], isVisible: true };
-      trapsAfterAction = updated;
-      newBattleLog.push('罠を発見した！');
+  // ─── 罠発見処理（範囲内の全不可視罠を可視化） ──────────────────────────
+  if (revealedTrapIds.length > 0) {
+    const updated = [...trapsAfterAction];
+    let foundCount = 0;
+    for (const id of revealedTrapIds) {
+      const idx = updated.findIndex(t => t.id === id);
+      if (idx >= 0) {
+        updated[idx] = { ...updated[idx], isVisible: true };
+        foundCount++;
+      }
+    }
+    trapsAfterAction = updated;
+    // logMessages に既に発見メッセージが含まれている場合（踏み込み）は追加しない
+    const alreadyHasFoundMsg = logMessages.some(m => m.includes('罠を発見した'));
+    if (foundCount > 0 && !alreadyHasFoundMsg) {
+      newBattleLog.push(foundCount === 1 ? '罠を発見した！' : `罠を${foundCount}個発見した！`);
     }
   }
 
-  // ─── 罠攻撃処理（可視罠を攻撃: 75%破壊） ──────────────────────────────
-  if (attackedTrapId !== undefined) {
-    const idx = trapsAfterAction.findIndex(t => t.id === attackedTrapId);
-    if (idx >= 0) {
-      if (Math.random() < 0.75) {
-        const updated = [...trapsAfterAction];
-        updated[idx] = { ...updated[idx], isTriggered: true };
-        trapsAfterAction = updated;
-        newBattleLog.push('罠を破壊した！');
-      } else {
-        newBattleLog.push('罠の解除に失敗した...');
+  // ─── 罠攻撃処理（範囲内の全可視罠を75%で破壊） ─────────────────────────
+  if (attackedTrapIds.length > 0) {
+    const updated = [...trapsAfterAction];
+    let destroyedCount = 0;
+    let failedCount = 0;
+    for (const id of attackedTrapIds) {
+      const idx = updated.findIndex(t => t.id === id);
+      if (idx >= 0) {
+        if (Math.random() < 0.75) {
+          updated[idx] = { ...updated[idx], isTriggered: true };
+          destroyedCount++;
+        } else {
+          failedCount++;
+        }
       }
+    }
+    trapsAfterAction = updated;
+    if (destroyedCount > 0) {
+      newBattleLog.push(destroyedCount === 1 ? '罠を破壊した！' : `罠を${destroyedCount}個破壊した！`);
+    }
+    if (failedCount > 0) {
+      newBattleLog.push('罠の解除に失敗した...');
     }
   }
 
