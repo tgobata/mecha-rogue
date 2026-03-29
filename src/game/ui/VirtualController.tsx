@@ -5,7 +5,7 @@
  *
  * レイアウト:
  *      [▲]
- * [◀] [向] [▶]   |  [攻] [待]  |  [アイ] [装備]
+ * [◀] [向] [▶]   |  [攻] [アイ]  |  [能力] [待] [装備] [？]
  *      [▼]
  *
  * - 方向ボタン: 64x64px、Dpad配置
@@ -370,13 +370,13 @@ export default function VirtualController({
           攻
         </button>
 
-        {/* 待機ボタン */}
+        {/* アイテムボタン（アクション位置） */}
         <button
-          {...makeHandler("wait")}
-          style={{ ...ACTION_BUTTON_BASE, backgroundColor: "#224488" }}
-          aria-label="待機"
+          onPointerDown={makeUIHandler("open_inventory")}
+          style={{ ...ACTION_BUTTON_BASE, backgroundColor: "#553388" }}
+          aria-label="アイテムパネルを開く"
         >
-          待
+          アイ
         </button>
       </div>
 
@@ -389,6 +389,15 @@ export default function VirtualController({
           alignItems: "center",
         }}
       >
+        {/* 装備ボタン */}
+        <button
+          onPointerDown={makeUIHandler("open_weapons")}
+          style={{ ...MENU_BUTTON_BASE, backgroundColor: "#225533" }}
+          aria-label="装備パネルを開く"
+        >
+          装備
+        </button>
+
         {/* ステータスボタン */}
         <button
           onPointerDown={makeUIHandler("open_status")}
@@ -398,22 +407,13 @@ export default function VirtualController({
           能力
         </button>
 
-        {/* アイテムボタン */}
+        {/* 待機ボタン（目立たない小ボタン） */}
         <button
-          onPointerDown={makeUIHandler("open_inventory")}
-          style={{ ...MENU_BUTTON_BASE, backgroundColor: "#553388" }}
-          aria-label="アイテムパネルを開く"
+          {...makeHandler("wait")}
+          style={{ ...MENU_BUTTON_BASE, backgroundColor: "#1a2a3a", border: "2px solid rgba(100,120,160,0.3)", color: "#8899aa" }}
+          aria-label="待機"
         >
-          アイ
-        </button>
-
-        {/* 装備ボタン */}
-        <button
-          onPointerDown={makeUIHandler("open_weapons")}
-          style={{ ...MENU_BUTTON_BASE, backgroundColor: "#225533" }}
-          aria-label="装備パネルを開く"
-        >
-          装備
+          待
         </button>
 
         {/* ヘルプボタン */}
