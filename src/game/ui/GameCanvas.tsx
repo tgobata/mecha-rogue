@@ -572,11 +572,14 @@ export default function GameCanvas() {
   /** ボス撃破演出中に保留するスキル選択状態 */
   const pendingSkillSelectRef = useRef<{ level: number; available: Skill[] } | null>(null);
   /**
-   * モンスターハウス入室時に記録した敵IDセット。
+   * モンスターハウス入室時に記録した状態。
    * null = 現在モンスターハウス BGM を再生していない。
-   * 全員倒したら null に戻して通常 BGM へ復帰する。
+   * 全員倒すか部屋を出たら null に戻して通常 BGM へ復帰する。
    */
-  const monsterHouseEnemyIdsRef = useRef<Set<number> | null>(null);
+  const monsterHouseStateRef = useRef<{
+    enemyIds: Set<number>;
+    bounds: { x: number; y: number; width: number; height: number };
+  } | null>(null);
   /** 敵VS敵撃破通知 */
   const [enemyKillNotif, setEnemyKillNotif] = useState<string | null>(null);
   const enemyKillNotifTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -1135,7 +1138,7 @@ export default function GameCanvas() {
       if (next.floor > prevFloor) {
         playSE("floor_descend");
         // フロア移動時にモンスターハウス追跡をリセット
-        monsterHouseEnemyIdsRef.current = null;
+        monsterHouseStateRef.current = null;
         // ボスフロアでも入場時は通常 BGM（ボス BGM はボスを視認した際に切り替え）
         playBGM(getExploreBGM(next.floor));
 
@@ -1166,32 +1169,40 @@ export default function GameCanvas() {
                   e.pos.y < mhRoom.bounds.y + mhRoom.bounds.height,
               );
               if (enemiesInRoom.length > 0) {
-                // 敵がいる場合のみバトル BGM & 敵ID記録
-                monsterHouseEnemyIdsRef.current = new Set(enemiesInRoom.map((e) => e.id));
+                // 敵がいる場合のみバトル BGM & 状態記録
+                monsterHouseStateRef.current = {
+                  enemyIds: new Set(enemiesInRoom.map((e) => e.id)),
+                  bounds: mhRoom.bounds,
+                };
                 playBGM("battle");
               }
               // 敵ゼロの場合は BGM 変更しない
             }
           }
 
-          // ── モンスターハウス全滅チェック ──
-          if (monsterHouseEnemyIdsRef.current !== null) {
-            const stillAlive = next.enemies.some(
-              (e) => monsterHouseEnemyIdsRef.current!.has(e.id) && e.hp > 0,
-            );
-            if (!stillAlive) {
-              // 全滅 → 通常 BGM へ復帰
-              monsterHouseEnemyIdsRef.current = null;
-              if (!hasBossVisible && next.floor % 5 !== 0) {
-                playBGM(getExploreBGM(next.floor));
-              } else if (hasBossVisible) {
+          // ── モンスターハウス 全滅 or 部屋脱出チェック ──
+          if (monsterHouseStateRef.current !== null && next.player) {
+            const { enemyIds, bounds } = monsterHouseStateRef.current;
+            const px = next.player.pos.x;
+            const py = next.player.pos.y;
+            const playerInRoom =
+              px >= bounds.x && px < bounds.x + bounds.width &&
+              py >= bounds.y && py < bounds.y + bounds.height;
+            const stillAlive = next.enemies.some((e) => enemyIds.has(e.id) && e.hp > 0);
+
+            if (!playerInRoom || !stillAlive) {
+              // 部屋脱出 or 全滅 → BGM 復帰
+              monsterHouseStateRef.current = null;
+              if (hasBossVisible) {
                 playBGM(getBossBGMName(next.floor));
+              } else if (next.floor % 5 !== 0) {
+                playBGM(getExploreBGM(next.floor));
               }
             }
           }
 
           // ── ボス BGM ──
-          if (hasBossVisible && monsterHouseEnemyIdsRef.current === null) {
+          if (hasBossVisible && monsterHouseStateRef.current === null) {
             playBGM(getBossBGMName(next.floor));
           }
         }
