@@ -6232,9 +6232,154 @@ const bossDrawers: Record<string, BossDrawFn> = {
     setPixel(buf, S, 32, 60, c1); setPixel(buf, S, 45, 60, c1);
   },
   shadow_twin: (buf, S, c1, c2) => {
-    // 双子
-    fillRect(buf, S, 12, 24, 16, 24, c1);
-    fillRect(buf, S, 36, 24, 16, 24, c2);
+    // 双子ロボ: 左(c1=紫)が右向き、右(c2=マゼンタ)が左向き、互いにキャノンビームで接続
+    const BLACK = hexToRGBA('#000000');
+    const RED   = hexToRGBA('#ff2200');
+    const DARK1 = hexToRGBA('#550099');
+    const DARK2 = hexToRGBA('#990055');
+    const BEAM  = hexToRGBA('#ffccff', 220);
+    const AURA  = hexToRGBA('#ff4400', 180);
+    const SPARK = hexToRGBA('#ffffff');
+
+    // =========================================================
+    // 左ツイン (c1=紫, 右向き) x:0-29
+    // =========================================================
+
+    // --- 頭部 ---
+    fillRect(buf, S, 3, 3, 18, 11, c1);
+    fillRect(buf, S, 6, 5, 4, 5, RED);          // 左目
+    fillRect(buf, S, 13, 5, 4, 5, RED);         // 右目
+    hLine(buf, S, 2, 2, 20, BLACK);
+    hLine(buf, S, 2, 14, 20, BLACK);
+    vLine(buf, S, 2, 3, 11, BLACK);
+    vLine(buf, S, 21, 3, 11, BLACK);
+
+    // --- 首 ---
+    fillRect(buf, S, 8, 15, 8, 3, c1);
+
+    // --- 胴体 ---
+    fillRect(buf, S, 1, 18, 21, 18, c1);
+    fillRect(buf, S, 4, 20, 13, 10, DARK1);     // チェストパネル
+    fillRect(buf, S, 9, 22, 4, 6, c2);          // コアクリスタル(c2アクセント)
+    hLine(buf, S, 1, 18, 21, BLACK);
+    hLine(buf, S, 1, 35, 21, BLACK);
+    vLine(buf, S, 1, 19, 16, BLACK);
+    vLine(buf, S, 21, 19, 16, BLACK);
+
+    // --- 左腕 (外側) ---
+    fillRect(buf, S, 0, 19, 2, 7, c1);
+
+    // --- 右キャノン腕 (内側=右方向) ---
+    fillRect(buf, S, 22, 20, 8, 5, c1);
+    fillRect(buf, S, 27, 21, 3, 3, DARK1);      // キャノン先端
+    hLine(buf, S, 22, 20, 8, BLACK);
+    hLine(buf, S, 22, 24, 8, BLACK);
+    vLine(buf, S, 29, 21, 3, BLACK);
+
+    // --- 左脚 ---
+    fillRect(buf, S, 3, 36, 5, 9, c1);
+    hLine(buf, S, 2, 36, 7, BLACK);
+    hLine(buf, S, 2, 44, 7, BLACK);
+
+    // --- 右脚 ---
+    fillRect(buf, S, 13, 36, 5, 9, c1);
+    hLine(buf, S, 12, 36, 7, BLACK);
+    hLine(buf, S, 12, 44, 7, BLACK);
+
+    // --- スラスター (c2色) ---
+    fillRect(buf, S, 4, 45, 3, 5, c2);
+    fillRect(buf, S, 14, 45, 3, 5, c2);
+
+    // --- 破砕シャード (左) ---
+    setPixel(buf, S, 3, 51, c1); setPixel(buf, S, 5, 52, c1);
+    setPixel(buf, S, 2, 53, c1); setPixel(buf, S, 6, 53, c1);
+    setPixel(buf, S, 4, 54, c1); setPixel(buf, S, 7, 51, c1);
+    // --- 破砕シャード (右) ---
+    setPixel(buf, S, 13, 51, c1); setPixel(buf, S, 15, 52, c1);
+    setPixel(buf, S, 12, 53, c1); setPixel(buf, S, 16, 53, c1);
+    setPixel(buf, S, 14, 54, c1); setPixel(buf, S, 17, 51, c1);
+
+    // =========================================================
+    // 接続ビーム (x:30-33, y:21-23)
+    // =========================================================
+    hLine(buf, S, 30, 21, 4, BEAM);
+    hLine(buf, S, 30, 22, 4, BEAM);
+    hLine(buf, S, 30, 23, 4, BEAM);
+    setPixel(buf, S, 31, 20, SPARK);
+    setPixel(buf, S, 32, 24, SPARK);
+
+    // =========================================================
+    // 右ツイン (c2=マゼンタ, 左向き) x:34-63
+    // =========================================================
+
+    // --- 頭部 ---
+    fillRect(buf, S, 43, 3, 18, 11, c2);
+    fillRect(buf, S, 44, 5, 4, 5, RED);         // 左目
+    fillRect(buf, S, 51, 5, 4, 5, RED);         // 右目
+    hLine(buf, S, 42, 2, 20, BLACK);
+    hLine(buf, S, 42, 14, 20, BLACK);
+    vLine(buf, S, 42, 3, 11, BLACK);
+    vLine(buf, S, 61, 3, 11, BLACK);
+
+    // --- 首 ---
+    fillRect(buf, S, 48, 15, 8, 3, c2);
+
+    // --- 胴体 ---
+    fillRect(buf, S, 42, 18, 21, 18, c2);
+    fillRect(buf, S, 47, 20, 13, 10, DARK2);    // チェストパネル
+    fillRect(buf, S, 51, 22, 4, 6, c1);         // コアクリスタル(c1アクセント)
+    hLine(buf, S, 42, 18, 21, BLACK);
+    hLine(buf, S, 42, 35, 21, BLACK);
+    vLine(buf, S, 42, 19, 16, BLACK);
+    vLine(buf, S, 62, 19, 16, BLACK);
+
+    // --- 右腕 (外側) ---
+    fillRect(buf, S, 63, 19, 1, 7, c2);
+
+    // --- 左キャノン腕 (内側=左方向) ---
+    fillRect(buf, S, 34, 20, 8, 5, c2);
+    fillRect(buf, S, 34, 21, 3, 3, DARK2);      // キャノン先端
+    hLine(buf, S, 34, 20, 8, BLACK);
+    hLine(buf, S, 34, 24, 8, BLACK);
+    vLine(buf, S, 34, 21, 3, BLACK);
+
+    // --- 左脚 ---
+    fillRect(buf, S, 46, 36, 5, 9, c2);
+    hLine(buf, S, 45, 36, 7, BLACK);
+    hLine(buf, S, 45, 44, 7, BLACK);
+
+    // --- 右脚 ---
+    fillRect(buf, S, 56, 36, 5, 9, c2);
+    hLine(buf, S, 55, 36, 7, BLACK);
+    hLine(buf, S, 55, 44, 7, BLACK);
+
+    // --- スラスター (c1色) ---
+    fillRect(buf, S, 47, 45, 3, 5, c1);
+    fillRect(buf, S, 57, 45, 3, 5, c1);
+
+    // --- 破砕シャード (左) ---
+    setPixel(buf, S, 46, 51, c2); setPixel(buf, S, 48, 52, c2);
+    setPixel(buf, S, 45, 53, c2); setPixel(buf, S, 49, 53, c2);
+    setPixel(buf, S, 47, 54, c2); setPixel(buf, S, 50, 51, c2);
+    // --- 破砕シャード (右) ---
+    setPixel(buf, S, 56, 51, c2); setPixel(buf, S, 58, 52, c2);
+    setPixel(buf, S, 55, 53, c2); setPixel(buf, S, 59, 53, c2);
+    setPixel(buf, S, 57, 54, c2); setPixel(buf, S, 60, 51, c2);
+
+    // --- オーラ (右ツインを囲む赤/オレンジの炎) ---
+    // 上部
+    for (let ax = 40; ax <= 63; ax += 2) setPixel(buf, S, ax, 1, AURA);
+    for (let ax = 41; ax <= 62; ax += 4) setPixel(buf, S, ax, 0, AURA);
+    // 左サイド (ビーム位置y:21-23を避ける)
+    for (let ay = 0; ay <= 19; ay += 2) setPixel(buf, S, 38, ay, AURA);
+    for (let ay = 25; ay <= 60; ay += 2) setPixel(buf, S, 38, ay, AURA);
+    for (let ay = 1; ay <= 18; ay += 3) setPixel(buf, S, 37, ay, AURA);
+    for (let ay = 26; ay <= 59; ay += 3) setPixel(buf, S, 37, ay, AURA);
+    // 右サイド
+    for (let ay = 0; ay <= 60; ay += 2) setPixel(buf, S, 63, ay, AURA);
+    // 下部
+    for (let ax = 41; ax <= 62; ax += 3) setPixel(buf, S, ax, 58, AURA);
+    for (let ax = 40; ax <= 63; ax += 4) setPixel(buf, S, ax, 59, AURA);
   },
   queen_of_shadow: (buf, S, c1, c2) => {
     // シルエットと王冠

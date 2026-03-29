@@ -47,8 +47,12 @@ interface InventoryPanelProps {
   onClose: () => void;
   /** アイテム使用コールバック */
   onUseItem: (index: number) => void;
-  /** アイテムを捨てるコールバック */
+  /** アイテムを消去するコールバック */
   onDropItem: (index: number) => void;
+  /** アイテムを置くコールバック */
+  onPlaceItem?: (index: number) => void;
+  /** アイテムを投げるコールバック（方向選択後に呼ばれる） */
+  onThrowItem?: (index: number) => void;
   /** 識別スコープを持っているか */
   hasIdentifyScope?: boolean;
   /** アイテム鑑定コールバック */
@@ -72,6 +76,8 @@ export default function InventoryPanel({
   onClose,
   onUseItem,
   onDropItem,
+  onPlaceItem,
+  onThrowItem,
   hasIdentifyScope = false,
   onIdentifyItem,
   onSortChange,
@@ -244,7 +250,7 @@ export default function InventoryPanel({
                       onUseItem(originalIndex);
                     }}
                     style={{
-                      padding: '2px 8px',
+                      padding: '2px 6px',
                       fontSize: 11,
                       backgroundColor: '#224466',
                       border: '1px solid #446688',
@@ -257,6 +263,50 @@ export default function InventoryPanel({
                     使う
                   </button>
 
+                  {/* [置く] ボタン */}
+                  {onPlaceItem && (
+                    <button
+                      onPointerDown={(e) => {
+                        e.stopPropagation();
+                        onPlaceItem(originalIndex);
+                      }}
+                      style={{
+                        padding: '2px 6px',
+                        fontSize: 11,
+                        backgroundColor: '#224433',
+                        border: '1px solid #446655',
+                        borderRadius: 4,
+                        color: '#aaddbb',
+                        cursor: 'pointer',
+                        flexShrink: 0,
+                      }}
+                    >
+                      置く
+                    </button>
+                  )}
+
+                  {/* [投げる] ボタン */}
+                  {onThrowItem && (
+                    <button
+                      onPointerDown={(e) => {
+                        e.stopPropagation();
+                        onThrowItem(originalIndex);
+                      }}
+                      style={{
+                        padding: '2px 6px',
+                        fontSize: 11,
+                        backgroundColor: '#443322',
+                        border: '1px solid #665544',
+                        borderRadius: 4,
+                        color: '#ffcc88',
+                        cursor: 'pointer',
+                        flexShrink: 0,
+                      }}
+                    >
+                      投げる
+                    </button>
+                  )}
+
                   {/* [鑑定] ボタン（未鑑定 & スコープ所持時のみ） */}
                   {item.unidentified && hasIdentifyScope && (
                     <button
@@ -265,7 +315,7 @@ export default function InventoryPanel({
                         onIdentifyItem?.(originalIndex);
                       }}
                       style={{
-                        padding: '2px 8px',
+                        padding: '2px 6px',
                         fontSize: 11,
                         backgroundColor: '#224422',
                         border: '1px solid #448844',
@@ -279,14 +329,14 @@ export default function InventoryPanel({
                     </button>
                   )}
 
-                  {/* [捨] ボタン */}
+                  {/* [消] ボタン */}
                   <button
                     onPointerDown={(e) => {
                       e.stopPropagation();
                       onDropItem(originalIndex);
                     }}
                     style={{
-                      padding: '2px 8px',
+                      padding: '2px 6px',
                       fontSize: 11,
                       backgroundColor: '#442222',
                       border: '1px solid #664444',
@@ -296,7 +346,7 @@ export default function InventoryPanel({
                       flexShrink: 0,
                     }}
                   >
-                    捨
+                    消
                   </button>
                   </div>
 

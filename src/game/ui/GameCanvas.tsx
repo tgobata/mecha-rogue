@@ -71,6 +71,16 @@ import {
   type BGMName,
 } from "../systems/audio";
 import { useTool, useInventoryItem, getItemName } from "../core/tool-system";
+import {
+  throwInventoryItem,
+  throwWeapon,
+  throwShield,
+  throwArmor,
+  placeInventoryItem,
+  placeWeaponItem,
+  placeShieldItem,
+  placeArmorItem,
+} from "../core/throw-system";
 import { learnSkill, useActiveSkill, getAvailableSkills, getSkillDefinition } from "../core/skill-system";
 import type { Skill } from "../core/skill-system";
 import { checkAchievements } from "../systems/achievement-system";
@@ -561,6 +571,12 @@ export default function GameCanvas() {
   const prevPilotLevelRef = useRef<number>(1);
   /** ボス撃破演出中に保留するスキル選択状態 */
   const pendingSkillSelectRef = useRef<{ level: number; available: Skill[] } | null>(null);
+  /**
+   * モンスターハウス入室時に記録した敵IDセット。
+   * null = 現在モンスターハウス BGM を再生していない。
+   * 全員倒したら null に戻して通常 BGM へ復帰する。
+   */
+  const monsterHouseEnemyIdsRef = useRef<Set<number> | null>(null);
   /** 敵VS敵撃破通知 */
   const [enemyKillNotif, setEnemyKillNotif] = useState<string | null>(null);
   const enemyKillNotifTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -1118,6 +1134,8 @@ export default function GameCanvas() {
 
       if (next.floor > prevFloor) {
         playSE("floor_descend");
+        // フロア移動時にモンスターハウス追跡をリセット
+        monsterHouseEnemyIdsRef.current = null;
         // ボスフロアでも入場時は通常 BGM（ボス BGM はボスを視認した際に切り替え）
         playBGM(getExploreBGM(next.floor));
 
@@ -1126,23 +1144,55 @@ export default function GameCanvas() {
           saveGame(next, activeSaveSlot);
         }
       } else {
-        // 同じフロア内での BGM 切り替え（モンスターハウス入室時）
+        // 同じフロア内での BGM 切り替え
         if (next.exploration?.currentFloor && next.player) {
-          const room = getRoomAt(
-            next.exploration.currentFloor,
-            next.player.pos,
-          );
           const hasBossVisible = next.enemies.some(
             (e) => e.isBoss === true && next.map?.cells[e.pos.y]?.[e.pos.x]?.isVisible === true,
           );
-          if (room?.type === RoomType.MONSTER_HOUSE) {
-            playBGM("battle");
-          } else if (hasBossVisible) {
-            // ボスが視界内: ボス BGM を維持（または開始）
+
+          // ── モンスターハウス入室判定 ──
+          // triggeredMonsterHouses に新しい部屋IDが追加された = 今ターンで初入室
+          const prevTriggered = prev.triggeredMonsterHouses ?? [];
+          const nextTriggered = next.triggeredMonsterHouses ?? [];
+          if (nextTriggered.length > prevTriggered.length) {
+            const newRoomId = nextTriggered[nextTriggered.length - 1];
+            const mhRoom = next.map?.rooms.find((r: any) => r.id === newRoomId);
+            if (mhRoom) {
+              const enemiesInRoom = next.enemies.filter(
+                (e) =>
+                  e.pos.x >= mhRoom.bounds.x &&
+                  e.pos.x < mhRoom.bounds.x + mhRoom.bounds.width &&
+                  e.pos.y >= mhRoom.bounds.y &&
+                  e.pos.y < mhRoom.bounds.y + mhRoom.bounds.height,
+              );
+              if (enemiesInRoom.length > 0) {
+                // 敵がいる場合のみバトル BGM & 敵ID記録
+                monsterHouseEnemyIdsRef.current = new Set(enemiesInRoom.map((e) => e.id));
+                playBGM("battle");
+              }
+              // 敵ゼロの場合は BGM 変更しない
+            }
+          }
+
+          // ── モンスターハウス全滅チェック ──
+          if (monsterHouseEnemyIdsRef.current !== null) {
+            const stillAlive = next.enemies.some(
+              (e) => monsterHouseEnemyIdsRef.current!.has(e.id) && e.hp > 0,
+            );
+            if (!stillAlive) {
+              // 全滅 → 通常 BGM へ復帰
+              monsterHouseEnemyIdsRef.current = null;
+              if (!hasBossVisible && next.floor % 5 !== 0) {
+                playBGM(getExploreBGM(next.floor));
+              } else if (hasBossVisible) {
+                playBGM(getBossBGMName(next.floor));
+              }
+            }
+          }
+
+          // ── ボス BGM ──
+          if (hasBossVisible && monsterHouseEnemyIdsRef.current === null) {
             playBGM(getBossBGMName(next.floor));
-          } else if (next.floor % 5 !== 0) {
-            // ボスフロア以外かつボス非視認: 通常探索 BGM
-            playBGM(getExploreBGM(next.floor));
           }
         }
       }
@@ -1865,6 +1915,138 @@ export default function GameCanvas() {
     ].slice(-BATTLE_LOG_MAX));
   }, []);
 
+  // ── アイテム置く処理 ─────────────────────────────────────────
+  const handlePlaceItem = useCallback((index: number) => {
+    const state = stateRef.current;
+    if (state.phase !== 'exploring') return;
+
+    const item = state.inventory.items[index];
+    if (!item) return;
+
+    // 時限爆弾系は置く = 使う
+    const itemsData = (itemsRaw as any[]);
+    const def = itemsData.find((d: any) => d.id === item.itemId);
+    if (def?.effect === 'place_bomb') {
+      handleUseItem(index);
+      return;
+    }
+
+    const { nextState, log, blocked } = placeInventoryItem(state, index);
+    if (blocked) {
+      playSE('ui_cancel');
+      setBattleLog((prev) => [...prev, log].slice(-BATTLE_LOG_MAX));
+      return;
+    }
+    playSE('item_pickup');
+    setGameState(nextState);
+    stateRef.current = nextState;
+    setMenuPanel(null);
+    setBattleLog((prev) => [...prev, log].slice(-BATTLE_LOG_MAX));
+  }, [handleUseItem]);
+
+  // ── 武器置く処理 ────────────────────────────────────────────
+  const handlePlaceWeapon = useCallback((index: number) => {
+    const state = stateRef.current;
+    if (state.phase !== 'exploring') return;
+    const weapon = state.player?.weaponSlots?.[index];
+    if (!weapon) return;
+    const { nextState, log, blocked } = placeWeaponItem(state, index);
+    if (blocked) {
+      playSE('ui_cancel');
+      setBattleLog((prev) => [...prev, log].slice(-BATTLE_LOG_MAX));
+      return;
+    }
+    playSE('item_pickup');
+    setGameState(nextState);
+    stateRef.current = nextState;
+    setMenuPanel(null);
+    setBattleLog((prev) => [...prev, log].slice(-BATTLE_LOG_MAX));
+  }, []);
+
+  // ── 盾置く処理 ──────────────────────────────────────────────
+  const handlePlaceShield = useCallback((index: number) => {
+    const state = stateRef.current;
+    if (state.phase !== 'exploring') return;
+    const { nextState, log, blocked } = placeShieldItem(state, index);
+    if (blocked) {
+      playSE('ui_cancel');
+      setBattleLog((prev) => [...prev, log].slice(-BATTLE_LOG_MAX));
+      return;
+    }
+    playSE('item_pickup');
+    setGameState(nextState);
+    stateRef.current = nextState;
+    setMenuPanel(null);
+    setBattleLog((prev) => [...prev, log].slice(-BATTLE_LOG_MAX));
+  }, []);
+
+  // ── アーマー置く処理 ─────────────────────────────────────────
+  const handlePlaceArmor = useCallback((index: number) => {
+    const state = stateRef.current;
+    if (state.phase !== 'exploring') return;
+    const { nextState, log, blocked } = placeArmorItem(state, index);
+    if (blocked) {
+      playSE('ui_cancel');
+      setBattleLog((prev) => [...prev, log].slice(-BATTLE_LOG_MAX));
+      return;
+    }
+    playSE('item_pickup');
+    setGameState(nextState);
+    stateRef.current = nextState;
+    setMenuPanel(null);
+    setBattleLog((prev) => [...prev, log].slice(-BATTLE_LOG_MAX));
+  }, []);
+
+  // ── 投げる共通処理（主人公の向いている方向へ即投げ） ──────────────────
+  const executeThrow = useCallback((result: { nextState: GameState; logs: string[]; path: { x: number; y: number }[] }) => {
+    // 軌道アニメーション: パスに沿って各タイルを時差フラッシュ（飛行している点が流れる演出）
+    const STEP_MS = 50; // タイルごとの遅延(ms)
+    const FLASH_DURATION = 120; // 各フラッシュの表示時間(ms)
+    const TRAIL_COLOR = 'rgba(255, 220, 80, 0.75)';  // 先頭（明るい黄）
+    const TRAIL_FADE  = 'rgba(255, 160, 40, 0.35)';  // 軌跡（薄いオレンジ）
+
+    result.path.forEach((pos, i) => {
+      const isHead = i === result.path.length - 1;
+      setTimeout(() => {
+        addFlash(pos.x, pos.y, isHead ? TRAIL_COLOR : TRAIL_FADE);
+      }, i * STEP_MS);
+    });
+
+    // 状態更新はアニメーション開始と同時（一瞬で処理、描画は非同期）
+    playSE('item_pickup');
+    setGameState(result.nextState);
+    stateRef.current = result.nextState;
+    setMenuPanel(null);
+    setBattleLog((prev) => {
+      const merged = [...prev, ...result.logs];
+      return merged.length > BATTLE_LOG_MAX ? merged.slice(-BATTLE_LOG_MAX) : merged;
+    });
+  }, []);
+
+  const handleThrowItem = useCallback((index: number) => {
+    const state = stateRef.current;
+    if (state.phase !== 'exploring' || !state.player) return;
+    executeThrow(throwInventoryItem(state, index, state.player.facing));
+  }, [executeThrow]);
+
+  const handleThrowWeapon = useCallback((index: number) => {
+    const state = stateRef.current;
+    if (state.phase !== 'exploring' || !state.player) return;
+    executeThrow(throwWeapon(state, index, state.player.facing));
+  }, [executeThrow]);
+
+  const handleThrowShield = useCallback((index: number) => {
+    const state = stateRef.current;
+    if (state.phase !== 'exploring' || !state.player) return;
+    executeThrow(throwShield(state, index, state.player.facing));
+  }, [executeThrow]);
+
+  const handleThrowArmor = useCallback((index: number) => {
+    const state = stateRef.current;
+    if (state.phase !== 'exploring' || !state.player) return;
+    executeThrow(throwArmor(state, index, state.player.facing));
+  }, [executeThrow]);
+
   // ── UIAction 処理 ────────────────────────────────────────────
   const handleUIAction = useCallback(
     (action: UIAction) => {
@@ -2052,6 +2234,8 @@ export default function GameCanvas() {
                   onClose={() => setMenuPanel(null)}
                   onUseItem={handleUseItem}
                   onDropItem={handleDropItem}
+                  onPlaceItem={handlePlaceItem}
+                  onThrowItem={handleThrowItem}
                   hasIdentifyScope={gameState.inventory.items.some(it => it.itemId === 'id_scope' && !it.unidentified)}
                   onIdentifyItem={handleIdentifyItem}
                   onSortChange={handleSortChange}
@@ -2072,10 +2256,12 @@ export default function GameCanvas() {
                     const weapon = gameState.player?.weaponSlots?.[index];
                     if (!weapon) return;
                     setConfirmDialog({
-                      message: `${weapon.name} を捨てますか？`,
+                      message: `${weapon.name} を消去しますか？`,
                       onConfirm: () => handleDropWeapon(index),
                     });
                   }}
+                  onPlaceWeapon={handlePlaceWeapon}
+                  onThrowWeapon={handleThrowWeapon}
                   shieldSlots={gameState.player?.shieldSlots ?? []}
                   maxShieldSlots={gameState.machine.shieldSlots ?? 1}
                   activeShield={gameState.player?.equippedShield}
@@ -2085,10 +2271,12 @@ export default function GameCanvas() {
                     const shield = gameState.player?.shieldSlots?.[index];
                     if (!shield) return;
                     setConfirmDialog({
-                      message: `${shield.name} を捨てますか？`,
+                      message: `${shield.name} を消去しますか？`,
                       onConfirm: () => handleDropShield(index),
                     });
                   }}
+                  onPlaceShield={handlePlaceShield}
+                  onThrowShield={handleThrowShield}
                   armorSlots={gameState.player?.armorSlots ?? []}
                   maxArmorSlots={gameState.machine.armorSlots ?? 1}
                   activeArmor={gameState.player?.equippedArmor}
@@ -2098,10 +2286,12 @@ export default function GameCanvas() {
                     const armor = gameState.player?.armorSlots?.[index];
                     if (!armor) return;
                     setConfirmDialog({
-                      message: `${armor.name} を捨てますか？`,
+                      message: `${armor.name} を消去しますか？`,
                       onConfirm: () => handleDropArmor(index),
                     });
                   }}
+                  onPlaceArmor={handlePlaceArmor}
+                  onThrowArmor={handleThrowArmor}
                 />
               )}
 

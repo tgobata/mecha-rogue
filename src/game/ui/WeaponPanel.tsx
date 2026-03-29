@@ -62,8 +62,12 @@ interface WeaponPanelProps {
   onClose: () => void;
   /** 武器装備コールバック */
   onEquipWeapon: (index: number) => void;
-  /** 武器破棄コールバック */
+  /** 武器消去コールバック */
   onDropWeapon: (index: number) => void;
+  /** 武器を置くコールバック */
+  onPlaceWeapon?: (index: number) => void;
+  /** 武器を投げるコールバック */
+  onThrowWeapon?: (index: number) => void;
   /** 所持盾リスト (player.shieldSlots) */
   shieldSlots?: EquippedShield[];
   /** 盾スロット最大数 */
@@ -74,8 +78,12 @@ interface WeaponPanelProps {
   onEquipShield?: (index: number) => void;
   /** 盾外すコールバック */
   onUnequipShield?: () => void;
-  /** 盾破棄コールバック */
+  /** 盾消去コールバック */
   onDropShield?: (index: number) => void;
+  /** 盾を置くコールバック */
+  onPlaceShield?: (index: number) => void;
+  /** 盾を投げるコールバック */
+  onThrowShield?: (index: number) => void;
   /** 所持アーマーリスト (player.armorSlots) */
   armorSlots?: EquippedArmor[];
   /** アーマースロット最大数 */
@@ -86,8 +94,12 @@ interface WeaponPanelProps {
   onEquipArmor?: (index: number) => void;
   /** アーマー外すコールバック */
   onUnequipArmor?: () => void;
-  /** アーマー破棄コールバック */
+  /** アーマー消去コールバック */
   onDropArmor?: (index: number) => void;
+  /** アーマーを置くコールバック */
+  onPlaceArmor?: (index: number) => void;
+  /** アーマーを投げるコールバック */
+  onThrowArmor?: (index: number) => void;
 }
 
 // ---------------------------------------------------------------------------
@@ -128,18 +140,24 @@ export default function WeaponPanel({
   onClose,
   onEquipWeapon,
   onDropWeapon,
+  onPlaceWeapon,
+  onThrowWeapon,
   shieldSlots = [],
   maxShieldSlots = 1,
   activeShield,
   onEquipShield,
   onUnequipShield,
   onDropShield,
+  onPlaceShield,
+  onThrowShield,
   armorSlots = [],
   maxArmorSlots = 1,
   activeArmor,
   onEquipArmor,
   onUnequipArmor,
   onDropArmor,
+  onPlaceArmor,
+  onThrowArmor,
 }: WeaponPanelProps) {
   return (
     <div
@@ -311,14 +329,14 @@ export default function WeaponPanel({
                     </span>
 
                     {/* ボタン群 */}
-                    <div style={{ display: 'flex', gap: 4 }}>
+                    <div style={{ display: 'flex', gap: 3 }}>
                       <button
                         onClick={(e) => {
                           e.stopPropagation();
                           onEquipWeapon(i);
                         }}
                         style={{
-                          padding: '2px 8px',
+                          padding: '2px 6px',
                           fontSize: 11,
                           backgroundColor: isActive ? '#333322' : '#224433',
                           border: `1px solid ${isActive ? '#665533' : '#446644'}`,
@@ -329,13 +347,29 @@ export default function WeaponPanel({
                       >
                         {isActive ? '装備中' : '装備'}
                       </button>
+                      {onPlaceWeapon && (
+                        <button
+                          onClick={(e) => { e.stopPropagation(); onPlaceWeapon(i); }}
+                          style={{ padding: '2px 5px', fontSize: 11, backgroundColor: '#224433', border: '1px solid #446655', borderRadius: 4, color: '#aaddbb', cursor: 'pointer' }}
+                        >
+                          置く
+                        </button>
+                      )}
+                      {onThrowWeapon && (
+                        <button
+                          onClick={(e) => { e.stopPropagation(); onThrowWeapon(i); }}
+                          style={{ padding: '2px 5px', fontSize: 11, backgroundColor: '#443322', border: '1px solid #665544', borderRadius: 4, color: '#ffcc88', cursor: 'pointer' }}
+                        >
+                          投げる
+                        </button>
+                      )}
                       <button
                         onClick={(e) => {
                           e.stopPropagation();
                           onDropWeapon(i);
                         }}
                         style={{
-                          padding: '2px 6px',
+                          padding: '2px 5px',
                           fontSize: 11,
                           backgroundColor: '#442222',
                           border: '1px solid #664444',
@@ -344,7 +378,7 @@ export default function WeaponPanel({
                           cursor: 'pointer',
                         }}
                       >
-                        破棄
+                        消
                       </button>
                     </div>
                   </div>
@@ -472,29 +506,43 @@ export default function WeaponPanel({
                       <span style={{ flexGrow: 1, fontSize: 13, color: isActive ? '#ffeeaa' : '#ccddee', fontWeight: isActive ? 'bold' : 'normal' }}>
                         {isActive ? '★ ' : ''}{shield.name}
                       </span>
-                      <div style={{ display: 'flex', gap: 4 }}>
+                      <div style={{ display: 'flex', gap: 3 }}>
                         {isActive ? (
                           <button
                             onClick={() => onUnequipShield?.()}
-                            style={{ padding: '2px 8px', fontSize: 11, backgroundColor: '#333322', border: '1px solid #665533', borderRadius: 4, color: '#aa9955', cursor: 'pointer' }}
+                            style={{ padding: '2px 6px', fontSize: 11, backgroundColor: '#333322', border: '1px solid #665533', borderRadius: 4, color: '#aa9955', cursor: 'pointer' }}
                           >
                             外す
                           </button>
                         ) : (
                           <button
                             onClick={() => onEquipShield?.(i)}
-                            style={{ padding: '2px 8px', fontSize: 11, backgroundColor: '#224433', border: '1px solid #446644', borderRadius: 4, color: '#aaccaa', cursor: 'pointer' }}
+                            style={{ padding: '2px 6px', fontSize: 11, backgroundColor: '#224433', border: '1px solid #446644', borderRadius: 4, color: '#aaccaa', cursor: 'pointer' }}
                           >
                             装備
                           </button>
                         )}
+                        {onPlaceShield && (
+                          <button
+                            onClick={() => onPlaceShield(i)}
+                            style={{ padding: '2px 5px', fontSize: 11, backgroundColor: '#224433', border: '1px solid #446655', borderRadius: 4, color: '#aaddbb', cursor: 'pointer' }}
+                          >
+                            置く
+                          </button>
+                        )}
+                        {onThrowShield && (
+                          <button
+                            onClick={() => onThrowShield(i)}
+                            style={{ padding: '2px 5px', fontSize: 11, backgroundColor: '#443322', border: '1px solid #665544', borderRadius: 4, color: '#ffcc88', cursor: 'pointer' }}
+                          >
+                            投げる
+                          </button>
+                        )}
                         <button
-                          onClick={() => {
-                            onDropShield?.(i);
-                          }}
-                          style={{ padding: '2px 6px', fontSize: 11, backgroundColor: '#442222', border: '1px solid #664444', borderRadius: 4, color: '#ccaaaa', cursor: 'pointer' }}
+                          onClick={() => { onDropShield?.(i); }}
+                          style={{ padding: '2px 5px', fontSize: 11, backgroundColor: '#442222', border: '1px solid #664444', borderRadius: 4, color: '#ccaaaa', cursor: 'pointer' }}
                         >
-                          破棄
+                          消
                         </button>
                       </div>
                     </div>
@@ -569,29 +617,43 @@ export default function WeaponPanel({
                       <span style={{ flexGrow: 1, fontSize: 13, color: isActive ? '#ffeeaa' : '#ccddee', fontWeight: isActive ? 'bold' : 'normal' }}>
                         {isActive ? '★ ' : ''}{armor.name}
                       </span>
-                      <div style={{ display: 'flex', gap: 4 }}>
+                      <div style={{ display: 'flex', gap: 3 }}>
                         {isActive ? (
                           <button
                             onClick={() => onUnequipArmor?.()}
-                            style={{ padding: '2px 8px', fontSize: 11, backgroundColor: '#333322', border: '1px solid #665533', borderRadius: 4, color: '#aa9955', cursor: 'pointer' }}
+                            style={{ padding: '2px 6px', fontSize: 11, backgroundColor: '#333322', border: '1px solid #665533', borderRadius: 4, color: '#aa9955', cursor: 'pointer' }}
                           >
                             外す
                           </button>
                         ) : (
                           <button
                             onClick={() => onEquipArmor?.(i)}
-                            style={{ padding: '2px 8px', fontSize: 11, backgroundColor: '#442244', border: '1px solid #664466', borderRadius: 4, color: '#ccaaee', cursor: 'pointer' }}
+                            style={{ padding: '2px 6px', fontSize: 11, backgroundColor: '#442244', border: '1px solid #664466', borderRadius: 4, color: '#ccaaee', cursor: 'pointer' }}
                           >
                             装備
                           </button>
                         )}
+                        {onPlaceArmor && (
+                          <button
+                            onClick={() => onPlaceArmor(i)}
+                            style={{ padding: '2px 5px', fontSize: 11, backgroundColor: '#224433', border: '1px solid #446655', borderRadius: 4, color: '#aaddbb', cursor: 'pointer' }}
+                          >
+                            置く
+                          </button>
+                        )}
+                        {onThrowArmor && (
+                          <button
+                            onClick={() => onThrowArmor(i)}
+                            style={{ padding: '2px 5px', fontSize: 11, backgroundColor: '#443322', border: '1px solid #665544', borderRadius: 4, color: '#ffcc88', cursor: 'pointer' }}
+                          >
+                            投げる
+                          </button>
+                        )}
                         <button
-                          onClick={() => {
-                            onDropArmor?.(i);
-                          }}
-                          style={{ padding: '2px 6px', fontSize: 11, backgroundColor: '#442222', border: '1px solid #664444', borderRadius: 4, color: '#ccaaaa', cursor: 'pointer' }}
+                          onClick={() => { onDropArmor?.(i); }}
+                          style={{ padding: '2px 5px', fontSize: 11, backgroundColor: '#442222', border: '1px solid #664444', borderRadius: 4, color: '#ccaaaa', cursor: 'pointer' }}
                         >
-                          破棄
+                          消
                         </button>
                       </div>
                     </div>
