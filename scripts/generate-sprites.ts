@@ -442,12 +442,12 @@ async function generateWarpTile(outDir: string): Promise<SpriteFrame> {
 async function generateTrapTile(outDir: string): Promise<SpriteFrame> {
   const S      = TILE_SIZE; // 32
   const buf    = createBuffer(S, S);
-  const bg     = hexToRGBA('#1a1a1a');
-  const yellow = hexToRGBA('#ffcc00');
-  const orange = hexToRGBA('#ff8800');
-  const red    = hexToRGBA('#ff4400');
-  const redDot = hexToRGBA('#ff0000');
-  const darkOg = hexToRGBA('#cc5500');
+  const bg     = hexToRGBA('#111111');
+  const yellow = hexToRGBA('#aa8833');
+  const orange = hexToRGBA('#885522');
+  const red    = hexToRGBA('#773322');
+  const redDot = hexToRGBA('#882222');
+  const darkOg = hexToRGBA('#553311');
 
   // 背景
   clearBuffer(buf, S, S, bg);
@@ -4341,9 +4341,9 @@ async function generateEnemyDirectional(
 async function generateShopNpc(outDir: string): Promise<SpriteFrame> {
   const S    = TILE_SIZE;
   const buf  = createBuffer(S, S);
-  const cyan = hexToRGBA('#00f0ff');
+  const cyan = hexToRGBA('#ffcc00');
   const red  = hexToRGBA('#ff4444');
-  const navy = hexToRGBA('#071428');
+  const navy = hexToRGBA('#1a0a00');
 
   // ---- 巾着袋 (y=0..4, x=12..19, 中央配置) ----
   // 巾着本体: fillRect(x=13, y=1, w=6, h=4, red)

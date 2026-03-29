@@ -526,7 +526,7 @@ export function renderGame(
               ctx.drawImage(trapSprite, drawX, drawY, tileSize, tileSize);
             } else {
               drawSFFloor(ctx, drawX, drawY, tileSize, floorPalette);
-              ctx.fillStyle = '#ff8800';
+              ctx.fillStyle = '#887755';
               ctx.font = `bold ${Math.max(8, tileSize * 0.7)}px monospace`;
               ctx.textAlign = 'center';
               ctx.textBaseline = 'middle';
@@ -679,10 +679,10 @@ export function renderGame(
         // 背景（暗いネイビー）
         ctx.fillStyle = '#071428';
         ctx.fillRect(signX, signY, signW, signH);
-        // ネオン枠線（シアン）
-        ctx.strokeStyle = '#00f0ff';
+        // ネオン枠線（ゴールド）
+        ctx.strokeStyle = '#ffcc00';
         ctx.lineWidth = 1.5;
-        ctx.shadowColor = '#00f0ff';
+        ctx.shadowColor = '#ffcc00';
         ctx.shadowBlur = 4;
         ctx.strokeRect(signX, signY, signW, signH);
         // 文字（明るい赤）

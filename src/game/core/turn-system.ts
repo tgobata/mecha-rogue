@@ -696,6 +696,7 @@ function processPlayerAction(
   const logMessages: string[] = [];
   let triggeredTrapId: number | undefined = undefined;
   let revealedTrapId: number | undefined = undefined;
+  let attackedTrapId: number | undefined = undefined;
 
   const delta = actionToDelta(action);
 
@@ -764,38 +765,6 @@ function processPlayerAction(
       const mapData = state.map!;
       const targetTile = getTileAt(mapData, targetPos);
 
-      // ─── 罠バンプ処理 ───────────────────────────────────────────────────
-      // TILE_TRAP マスへのバンプ: 可視罠は攻撃(75%破壊), 不可視罠は発見
-      if (targetTile === TILE_TRAP) {
-        const trapAtTarget = state.traps.find(
-          t => t.pos.x === targetPos.x && t.pos.y === targetPos.y && !t.isTriggered
-        );
-        if (trapAtTarget) {
-          if (trapAtTarget.isVisible) {
-            // 可視罠への攻撃: attackedTrapId を返して processTurn で60%破壊処理
-            return {
-              player: newPlayer,
-              enemies: newEnemies,
-              shouldTransitionFloor,
-              pickup: null,
-              logMessages,
-              attackedTrapId: trapAtTarget.id,
-            };
-          } else {
-            // 不可視罠の発見（踏まずに発見）
-            return {
-              player: newPlayer,
-              enemies: newEnemies,
-              shouldTransitionFloor,
-              pickup: null,
-              logMessages,
-              revealedTrapId: trapAtTarget.id,
-            };
-          }
-        }
-      }
-      // ────────────────────────────────────────────────────────────────────
-
       if (isWalkable(targetTile)) {
         let slidePos = targetPos;
         let slideTile = targetTile;
@@ -856,9 +825,13 @@ function processPlayerAction(
                   logMessages.push('罠を発見した！ 慎重に引き返せ！');
                 }
               } else {
-                // 可視罠: 踏んだら必ず発動
-                triggeredTrapId = trap.id;
-                logMessages.push('罠を踏んだ！');
+                // 可視罠: 75%の確率で発動
+                if (Math.random() < 0.75) {
+                  triggeredTrapId = trap.id;
+                  logMessages.push('罠を踏んだ！');
+                } else {
+                  logMessages.push('罠をかろうじて回避した！');
+                }
               }
            }
         }
@@ -960,6 +933,25 @@ function processPlayerAction(
       }
     }
 
+    // 罠への攻撃チェック（武器の攻撃範囲内の罠を攻撃）
+    for (const targetPos of targetPositions) {
+      if (enemyAt(newEnemies, targetPos) !== undefined) continue; // 敵がいればスキップ
+      const trapAtTarget = state.traps.find(
+        t => t.pos.x === targetPos.x && t.pos.y === targetPos.y && !t.isTriggered
+      );
+      if (trapAtTarget) {
+        if (trapAtTarget.isVisible) {
+          // 可視罠攻撃: processTurn で確率破壊処理
+          attackedTrapId = trapAtTarget.id;
+        } else {
+          // 不可視罠攻撃: 発見のみ
+          revealedTrapId = trapAtTarget.id;
+          logMessages.push('罠を発見した！');
+        }
+        break; // 最初の罠のみ処理
+      }
+    }
+
     // 武器耐久度消費
     if (weapon) {
       const updatedWeapon = consumeDurability(weapon);
@@ -978,7 +970,7 @@ function processPlayerAction(
   }
   // wait: 何もしない
 
-  return { player: newPlayer, enemies: newEnemies, shouldTransitionFloor, pickup, logMessages, triggeredTrapId, revealedTrapId };
+  return { player: newPlayer, enemies: newEnemies, shouldTransitionFloor, pickup, logMessages, triggeredTrapId, revealedTrapId, attackedTrapId };
 }
 
 // ---------------------------------------------------------------------------
