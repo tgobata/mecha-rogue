@@ -12,6 +12,10 @@ import {
   TILE_FLOOR,
   TILE_ITEM,
   TILE_WEAPON,
+  TILE_TRAP,
+  TILE_SHOP,
+  TILE_LAVA,
+  TILE_HINT,
 } from './constants';
 import itemsRaw from '../assets/data/items.json';
 
@@ -42,6 +46,8 @@ const ITEM_DEGRADE_MAP: Record<string, string | null> = {
   'nanobot_repair_l': 'nanobot_repair_m',
   'nanobot_repair_m': 'nanobot_repair_s',
   'nanobot_repair_s': null,
+  'boost_engine_ii': 'boost_engine_i',
+  'boost_engine_i': null,
 };
 
 // ---------------------------------------------------------------------------
@@ -128,38 +134,57 @@ function calcThrowTrajectory(
 // フロアへのアイテム設置ヘルパー
 // ---------------------------------------------------------------------------
 
-/** 設置可能なタイルか判定 */
+/** 着地・武器配置可能タイルか判定（isPlaceable と同一ロジック） */
 function canPlaceItemOnCell(cell: Cell): boolean {
-  const t = cell.tile;
-  return (
-    t === TILE_FLOOR ||
-    t === 'S' ||
-    t === '>' ||
-    t === 'R' ||
-    t === 'W'
-  );
+  return !IMPLACEABLE_TILES.has(cell.tile as any);
 }
 
-/** アイテムをフロアに落とす（50%確率版） */
+/**
+ * 着地点から最も近い設置可能タイルを Chebyshev 距離で探す。
+ * maxRadius まで探して見つからなければ null を返す。
+ */
+function findNearestPlaceablePos(cells: Cell[][], fromPos: Position, maxRadius: number = 4): Position | null {
+  const mapHeight = cells.length;
+  const mapWidth = cells[0]?.length ?? 0;
+
+  for (let r = 0; r <= maxRadius; r++) {
+    for (let dy = -r; dy <= r; dy++) {
+      for (let dx = -r; dx <= r; dx++) {
+        if (Math.max(Math.abs(dx), Math.abs(dy)) !== r) continue;
+        const nx = fromPos.x + dx;
+        const ny = fromPos.y + dy;
+        if (ny < 0 || ny >= mapHeight || nx < 0 || nx >= mapWidth) continue;
+        const cell = cells[ny]?.[nx];
+        if (cell && canPlaceItemOnCell(cell)) return { x: nx, y: ny };
+      }
+    }
+  }
+  return null;
+}
+
+/** アイテムをフロアに落とす。設置不可なら周囲を探し、見つからなければ消滅ログを出す。 */
 function dropItemOnFloor(
   state: GameState,
   itemId: string,
   pos: Position,
-  alwaysDrop: boolean = false
+  alwaysDrop: boolean = false,
+  logs?: string[],
+  itemName?: string,
 ): GameState {
   if (!state.map) return state;
   if (!alwaysDrop && Math.random() >= 0.5) return state; // 50%で消える
 
   const cells = state.map.cells.map(row => [...row]) as Cell[][];
-  const cell = cells[pos.y]?.[pos.x];
-  if (!cell) return state;
+  const placePos = findNearestPlaceablePos(cells, pos);
 
-  // TILE_FLOOR 系のみ設置可能
-  if (canPlaceItemOnCell(cell)) {
-    cells[pos.y][pos.x] = { ...cell, tile: TILE_ITEM, itemId };
-    return { ...state, map: { ...state.map, cells } };
+  if (!placePos) {
+    if (logs && itemName) logs.push(`${itemName} は消えた`);
+    return state;
   }
-  return state;
+
+  const cell = cells[placePos.y][placePos.x];
+  cells[placePos.y][placePos.x] = { ...cell, tile: TILE_ITEM, itemId };
+  return { ...state, map: { ...state.map, cells } };
 }
 
 // ---------------------------------------------------------------------------
@@ -269,16 +294,18 @@ export function throwWeapon(
       ...weapon,
       durability: weapon.durability !== null ? Math.max(1, Math.floor(weapon.durability / 2)) : null,
     };
-    nextState = placeWeaponOnFloor(nextState, degradedWeapon, landPos);
-    logs.push(`${weapon.name} は足元に落ちた（耐久度半減）`);
+    const beforePlace = nextState;
+    nextState = placeWeaponOnFloor(nextState, degradedWeapon, landPos, logs, weapon.name);
+    if (nextState !== beforePlace) logs.push(`${weapon.name} は足元に落ちた（耐久度半減）`);
   } else {
     // 着地
     const degradedWeapon: WeaponInstance = {
       ...weapon,
       durability: weapon.durability !== null ? Math.max(1, Math.floor(weapon.durability / 2)) : null,
     };
-    nextState = placeWeaponOnFloor(nextState, degradedWeapon, landPos);
-    logs.push(`${weapon.name} は着地した`);
+    const beforePlace = nextState;
+    nextState = placeWeaponOnFloor(nextState, degradedWeapon, landPos, logs, weapon.name);
+    if (nextState !== beforePlace) logs.push(`${weapon.name} は着地した`);
   }
 
   return { nextState, logs, path };
@@ -318,8 +345,9 @@ export function throwShield(
     logs.push(`${hitEnemy.name ?? hitEnemy.enemyType} に${dmg}ダメージ！`);
     nextState = dealDamageToEnemy(nextState, hitEnemy.id, dmg);
   }
-  nextState = dropShieldOnFloor(nextState, shield, landPos);
-  logs.push(`${shield.name} は落ちた`);
+  const beforeShield = nextState;
+  nextState = dropShieldOnFloor(nextState, shield, landPos, logs, shield.name);
+  if (nextState !== beforeShield) logs.push(`${shield.name} は落ちた`);
 
   return { nextState, logs, path };
 }
@@ -357,8 +385,9 @@ export function throwArmor(
     logs.push(`${hitEnemy.name ?? hitEnemy.enemyType} に${dmg}ダメージ！`);
     nextState = dealDamageToEnemy(nextState, hitEnemy.id, dmg);
   }
-  nextState = dropArmorOnFloor(nextState, armor, landPos);
-  logs.push(`${armor.name} は落ちた`);
+  const beforeArmor = nextState;
+  nextState = dropArmorOnFloor(nextState, armor, landPos, logs, armor.name);
+  if (nextState !== beforeArmor) logs.push(`${armor.name} は落ちた`);
 
   return { nextState, logs, path };
 }
@@ -497,12 +526,16 @@ function directionLabel(dir: Direction): string {
   }
 }
 
-/** 設置可能タイルか判定 */
+/** 設置不可タイルセット（アイテム・武器・罠・ショップ・溶岩・石碑・壁） */
+const IMPLACEABLE_TILES = new Set([
+  TILE_WALL, TILE_CRACKED_WALL,
+  TILE_ITEM, TILE_WEAPON,
+  TILE_TRAP, TILE_SHOP, TILE_LAVA, TILE_HINT,
+]);
+
+/** 置く/着地可能タイルか判定（上記以外の通行可能タイルは全て可） */
 function isPlaceable(cell: Cell): boolean {
-  const t = cell.tile;
-  // 設置不可: アイテム・武器存在, トラップ, ショップ, 溶岩, 壁, 石碑, 休憩ポイント（置き換え防止）
-  // 設置可能: 通路, スタート地点, 階段
-  return t === TILE_FLOOR || t === 'S' || t === '>' || t === 'R' || t === 'W';
+  return !IMPLACEABLE_TILES.has(cell.tile as any);
 }
 
 /** 敵にダメージを与えて新しい state を返す */
@@ -545,38 +578,64 @@ function applyStatusInArea(
   return { nextState: { ...state, enemies: newEnemies }, count };
 }
 
-/** 武器をフロアに置く */
-function placeWeaponOnFloor(state: GameState, weapon: WeaponInstance, pos: Position): GameState {
+/** 武器をフロアに置く。設置不可なら周囲を探し、見つからなければ消滅ログを出す。 */
+function placeWeaponOnFloor(
+  state: GameState,
+  weapon: WeaponInstance,
+  pos: Position,
+  logs?: string[],
+  name?: string,
+): GameState {
   if (!state.map) return state;
-  const cells = state.map.cells as Cell[][];
-  const cell = cells[pos.y]?.[pos.x];
-  if (!cell) return state;
-  if (!canPlaceItemOnCell(cell)) return state;
-  const newCells = cells.map(row => [...row]) as Cell[][];
-  newCells[pos.y][pos.x] = { ...cell, tile: TILE_WEAPON, weaponId: weapon.id };
-  return { ...state, map: { ...state.map, cells: newCells } };
+  const cells = state.map.cells.map(row => [...row]) as Cell[][];
+  const placePos = findNearestPlaceablePos(cells, pos);
+  if (!placePos) {
+    if (logs && name) logs.push(`${name} は消えた`);
+    return state;
+  }
+  const cell = cells[placePos.y][placePos.x];
+  cells[placePos.y][placePos.x] = { ...cell, tile: TILE_WEAPON, weaponId: weapon.id };
+  return { ...state, map: { ...state.map, cells } };
 }
 
-/** 盾をフロアに置く（TILE_WEAPON タイルとして id = shieldId） */
-function dropShieldOnFloor(state: GameState, shield: EquippedShield, pos: Position): GameState {
+/** 盾をフロアに置く（TILE_WEAPON タイルとして id = shieldId）。設置不可なら周囲を探す。 */
+function dropShieldOnFloor(
+  state: GameState,
+  shield: EquippedShield,
+  pos: Position,
+  logs?: string[],
+  name?: string,
+): GameState {
   if (!state.map) return state;
-  const cells = state.map.cells as Cell[][];
-  const cell = cells[pos.y]?.[pos.x];
-  if (!cell || !canPlaceItemOnCell(cell)) return state;
-  const newCells = cells.map(row => [...row]) as Cell[][];
-  newCells[pos.y][pos.x] = { ...cell, tile: TILE_WEAPON, weaponId: shield.shieldId };
-  return { ...state, map: { ...state.map, cells: newCells } };
+  const cells = state.map.cells.map(row => [...row]) as Cell[][];
+  const placePos = findNearestPlaceablePos(cells, pos);
+  if (!placePos) {
+    if (logs && name) logs.push(`${name} は消えた`);
+    return state;
+  }
+  const cell = cells[placePos.y][placePos.x];
+  cells[placePos.y][placePos.x] = { ...cell, tile: TILE_WEAPON, weaponId: shield.shieldId };
+  return { ...state, map: { ...state.map, cells } };
 }
 
-/** アーマーをフロアに置く */
-function dropArmorOnFloor(state: GameState, armor: EquippedArmor, pos: Position): GameState {
+/** アーマーをフロアに置く。設置不可なら周囲を探し、見つからなければ消滅ログを出す。 */
+function dropArmorOnFloor(
+  state: GameState,
+  armor: EquippedArmor,
+  pos: Position,
+  logs?: string[],
+  name?: string,
+): GameState {
   if (!state.map) return state;
-  const cells = state.map.cells as Cell[][];
-  const cell = cells[pos.y]?.[pos.x];
-  if (!cell || !canPlaceItemOnCell(cell)) return state;
-  const newCells = cells.map(row => [...row]) as Cell[][];
-  newCells[pos.y][pos.x] = { ...cell, tile: TILE_WEAPON, weaponId: armor.armorId };
-  return { ...state, map: { ...state.map, cells: newCells } };
+  const cells = state.map.cells.map(row => [...row]) as Cell[][];
+  const placePos = findNearestPlaceablePos(cells, pos);
+  if (!placePos) {
+    if (logs && name) logs.push(`${name} は消えた`);
+    return state;
+  }
+  const cell = cells[placePos.y][placePos.x];
+  cells[placePos.y][placePos.x] = { ...cell, tile: TILE_WEAPON, weaponId: armor.armorId };
+  return { ...state, map: { ...state.map, cells } };
 }
 
 /** 武器スロットから武器を除去し、装備中なら解除する */
@@ -703,8 +762,9 @@ function applyItemEffectOnEnemy(
       const degradedId = ITEM_DEGRADE_MAP[itemId];
       let nextState: GameState = { ...state, enemies: healed };
       if (degradedId) {
-        nextState = dropItemOnFloor(nextState, degradedId, landPos, true);
-        logs.push(`${def.name} は ${getItemName(degradedId)} になって落ちた`);
+        const degradedName = getItemName(degradedId);
+        nextState = dropItemOnFloor(nextState, degradedId, landPos, true, logs, degradedName);
+        if (nextState !== state) logs.push(`${def.name} は ${degradedName} になって落ちた`);
       }
       return nextState;
     }
@@ -726,7 +786,7 @@ function applyItemEffectOnEnemy(
       const degradedId = ITEM_DEGRADE_MAP[itemId];
       let nextState: GameState = { ...state, enemies: upgraded };
       if (degradedId) {
-        nextState = dropItemOnFloor(nextState, degradedId, landPos, true);
+        nextState = dropItemOnFloor(nextState, degradedId, landPos, true, logs, getItemName(degradedId));
       }
       return nextState;
     }
@@ -736,6 +796,24 @@ function applyItemEffectOnEnemy(
       const stunEffect: StatusEffect = { type: 'stunned', remainingTurns: 3, sourceId: itemId };
       logs.push(`${enemy.name ?? enemy.enemyType} が煙幕に包まれ、3ターン追跡不能になった！`);
       return applyStatusToEnemy(state, enemy.id, stunEffect);
+    }
+
+    // ── ブーストエンジン系（一時スピードアップ + グレードダウン） ──
+    case 'speed_up_permanent': {
+      const turns = 4;
+      const magnitude: number = def.value ?? 1;
+      const speedEff: StatusEffect = { type: 'speed_up', remainingTurns: turns, magnitude, sourceId: itemId };
+      logs.push(`${enemy.name ?? enemy.enemyType} の移動速度が${turns}ターン上がった！`);
+      let nextState = applyStatusToEnemy(state, enemy.id, speedEff);
+      const degradedId = ITEM_DEGRADE_MAP[itemId];
+      if (degradedId) {
+        const degradedName = getItemName(degradedId);
+        nextState = dropItemOnFloor(nextState, degradedId, landPos, true, logs, degradedName);
+        logs.push(`${def.name} は ${degradedName} になって落ちた`);
+      } else {
+        logs.push(`${def.name} は消えた`);
+      }
+      return nextState;
     }
 
     // ── EMP グレネード（3×3スタン） ──
@@ -757,18 +835,12 @@ function applyItemEffectOnEnemy(
       return stunned;
     }
 
-    // ── 加速ブースト系 ──
+    // ── 加速ブースト（アイテムは必ず消える） ──
     case 'speed_up': {
       const turns: number = def.effectTurns ?? 4;
-      const magnitude = itemId.startsWith('boost_engine') ? 1 : 2;
-      const speedEff: StatusEffect = { type: 'speed_up', remainingTurns: turns, magnitude, sourceId: itemId };
+      const speedEff: StatusEffect = { type: 'speed_up', remainingTurns: turns, magnitude: 2, sourceId: itemId };
       logs.push(`${enemy.name ?? enemy.enemyType} の移動速度が上がった！（${turns}ターン）`);
-      let nextState = applyStatusToEnemy(state, enemy.id, speedEff);
-      // 50%でアイテムが消えるか落ちる
-      if (Math.random() < 0.5) {
-        nextState = dropItemOnFloor(nextState, itemId, landPos, true);
-      }
-      return nextState;
+      return applyStatusToEnemy(state, enemy.id, speedEff);
     }
 
     // ── 装甲プレート系（敵DEFアップ） ──
@@ -781,7 +853,7 @@ function applyItemEffectOnEnemy(
       const degradedId = ITEM_DEGRADE_MAP[itemId];
       let nextState: GameState = { ...state, enemies: upgraded };
       if (degradedId) {
-        nextState = dropItemOnFloor(nextState, degradedId, landPos, true);
+        nextState = dropItemOnFloor(nextState, degradedId, landPos, true, logs, getItemName(degradedId));
       }
       return nextState;
     }
@@ -802,7 +874,7 @@ function applyItemEffectOnEnemy(
         logs.push(`${enemy.name ?? enemy.enemyType} がワープした！`);
         let nextState: GameState = { ...state, enemies: warped };
         if (Math.random() < 0.5) {
-          nextState = dropItemOnFloor(nextState, itemId, landPos, true);
+          nextState = dropItemOnFloor(nextState, itemId, landPos, true, logs, def.name);
         }
         return nextState;
       }
@@ -821,7 +893,7 @@ function applyItemEffectOnEnemy(
       logs.push(`${enemy.name ?? enemy.enemyType} に${dmg}ダメージ！`);
       let nextState = dealDamageToEnemy(state, enemy.id, dmg);
       if (Math.random() < 0.5) {
-        nextState = dropItemOnFloor(nextState, itemId, landPos, true);
+        nextState = dropItemOnFloor(nextState, itemId, landPos, true, logs, def.name);
       }
       return nextState;
     }
@@ -833,7 +905,7 @@ function applyItemEffectOnEnemy(
         logs.push(`${enemy.name ?? enemy.enemyType} に希少回路の電撃で${bigDmg}大ダメージ！`);
         let nextState = dealDamageToEnemy(state, enemy.id, bigDmg);
         if (Math.random() < 0.5) {
-          nextState = dropItemOnFloor(nextState, itemId, landPos, true);
+          nextState = dropItemOnFloor(nextState, itemId, landPos, true, logs, def.name);
         }
         return nextState;
       }
@@ -842,7 +914,7 @@ function applyItemEffectOnEnemy(
       logs.push(`${enemy.name ?? enemy.enemyType} に${smallDmg}ダメージ！`);
       let nextState = dealDamageToEnemy(state, enemy.id, smallDmg);
       if (Math.random() < 0.5) {
-        nextState = dropItemOnFloor(nextState, itemId, landPos, true);
+        nextState = dropItemOnFloor(nextState, itemId, landPos, true, logs, def.name);
       }
       return nextState;
     }
@@ -853,7 +925,7 @@ function applyItemEffectOnEnemy(
       logs.push(`${enemy.name ?? enemy.enemyType} に${smallDmg}ダメージ！`);
       let nextState = dealDamageToEnemy(state, enemy.id, smallDmg);
       if (Math.random() < 0.5) {
-        nextState = dropItemOnFloor(nextState, itemId, landPos, true);
+        nextState = dropItemOnFloor(nextState, itemId, landPos, true, logs, def.name);
       }
       return nextState;
     }
@@ -877,15 +949,6 @@ function applyItemEffectOnLand(
     case 'place_bomb':
       return detonateBombAtPos(state, def, landPos, logs);
 
-    case 'flash_grenade':
-    case 'stun_radius_2': {
-      const stunTurns: number = def.stunTurns ?? 2;
-      const stunEff: StatusEffect = { type: 'stunned', remainingTurns: stunTurns, sourceId: itemId };
-      const { nextState: stunned, count } = applyStatusInArea(state, landPos, stunEff);
-      if (count > 0) logs.push(`フラッシュ炸裂！ 周囲${count}体を${stunTurns}ターンスタン！`);
-      return stunned;
-    }
-
     case 'stun_area': {
       const stunEff: StatusEffect = { type: 'stunned', remainingTurns: 3, sourceId: itemId };
       const { nextState: stunned, count } = applyStatusInArea(state, landPos, stunEff);
@@ -893,9 +956,21 @@ function applyItemEffectOnLand(
       return stunned;
     }
 
-    default:
-      // 非爆発アイテムは着地してフロアに落ちる（アイテムはすでに消費済みなので落ちない）
+    // ── speed_up_permanent（ブーストエンジン系）着地: グレードダウンして設置 ──
+    case 'speed_up_permanent': {
+      const degradedId = ITEM_DEGRADE_MAP[itemId];
+      if (degradedId) {
+        const degradedName = getItemName(degradedId);
+        logs.push(`${def.name} は ${degradedName} になって落ちた`);
+        return dropItemOnFloor(state, degradedId, landPos, true, logs, degradedName);
+      }
+      logs.push(`${def.name} は消えた`);
       return state;
+    }
+
+    default:
+      // flash_grenade / stun_radius_2 も含む非爆発アイテムは着地点にそのまま設置
+      return dropItemOnFloor(state, itemId, landPos, true, logs, def.name);
   }
 }
 

@@ -352,7 +352,7 @@ export default function WeaponPanel({
                           onClick={(e) => { e.stopPropagation(); onPlaceWeapon(i); }}
                           style={{ padding: '2px 5px', fontSize: 11, backgroundColor: '#224433', border: '1px solid #446655', borderRadius: 4, color: '#aaddbb', cursor: 'pointer' }}
                         >
-                          置く
+                          置
                         </button>
                       )}
                       {onThrowWeapon && (
@@ -360,7 +360,7 @@ export default function WeaponPanel({
                           onClick={(e) => { e.stopPropagation(); onThrowWeapon(i); }}
                           style={{ padding: '2px 5px', fontSize: 11, backgroundColor: '#443322', border: '1px solid #665544', borderRadius: 4, color: '#ffcc88', cursor: 'pointer' }}
                         >
-                          投げる
+                          投
                         </button>
                       )}
                       <button

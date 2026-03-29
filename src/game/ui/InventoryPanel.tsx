@@ -260,7 +260,7 @@ export default function InventoryPanel({
                       flexShrink: 0,
                     }}
                   >
-                    使う
+                    使
                   </button>
 
                   {/* [置く] ボタン */}
@@ -281,7 +281,7 @@ export default function InventoryPanel({
                         flexShrink: 0,
                       }}
                     >
-                      置く
+                      置
                     </button>
                   )}
 
@@ -303,7 +303,7 @@ export default function InventoryPanel({
                         flexShrink: 0,
                       }}
                     >
-                      投げる
+                      投
                     </button>
                   )}
 
