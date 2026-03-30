@@ -51,6 +51,10 @@ export const TILE_WARP = 'X' as const;
 export const TILE_MAGNETIC = 'M' as const;
 /** 拠点倉庫アクセスポイント（休憩所フロア専用） */
 export const TILE_STORAGE = 'A' as const;
+/** オイルマス（2階以降。滑走。爆発で炎マスに変化） */
+export const TILE_OIL = 'o' as const;
+/** 炎マス（3階以降。毎ターンダメージ。3ターンで消滅） */
+export const TILE_FIRE = 'f' as const;
 
 // ---------------------------------------------------------------------------
 // マップサイズ（階層別）
@@ -96,6 +100,16 @@ export const ICE_MIN_FLOOR = 15;
 export const WARP_MIN_FLOOR = 20;
 /** 磁場が出現し始める階 */
 export const MAGNETIC_MIN_FLOOR = 25;
+/** オイルマスが出現し始める階 */
+export const OIL_MIN_FLOOR = 2;
+/** 炎マスが出現し始める階 */
+export const FIRE_MIN_FLOOR = 3;
+/** 炎マスが消えるまでのターン数 */
+export const FIRE_TILE_DURATION = 3;
+/** 炎マスのプレイヤーへの毎ターンダメージ率（最大HPに対する割合） */
+export const FIRE_DAMAGE_PLAYER_RATE = 0.07;
+/** 炎マスの敵への毎ターンダメージ率（最大HPに対する割合） */
+export const FIRE_DAMAGE_ENEMY_RATE = 0.13;
 
 // ---------------------------------------------------------------------------
 // ボス・特殊部屋
@@ -122,6 +136,12 @@ export const TRAP_SPAWN_RATE = 0.015;
 export const CRACKED_WALL_RATE = 0.06;
 /** 特殊地形1マスあたりの配置確率 */
 export const SPECIAL_TERRAIN_RATE = 0.03;
+/** オイルマスの配置確率（床1マスあたり） */
+export const OIL_SPAWN_RATE = 0.025;
+/** 炎マスの配置確率（3〜6F: 稀, 7〜9F: 小, 10F〜: 溶岩同等） */
+export const FIRE_SPAWN_RATE_RARE = 0.004;
+export const FIRE_SPAWN_RATE_SMALL = 0.008;
+export const FIRE_SPAWN_RATE_NORMAL = 0.025;
 /** 休憩ポイントの配置確率（部屋1つあたり） */
 export const REST_SPAWN_RATE = 0.08;
 /** 武器修理ポイントの配置確率（部屋1つあたり） */
@@ -174,6 +194,8 @@ export const WALKABLE_TILES = new Set([
   TILE_WARP,
   TILE_MAGNETIC,
   TILE_STORAGE,
+  TILE_OIL,
+  TILE_FIRE,
 ]);
 
 /** 破壊可能タイル一覧 */

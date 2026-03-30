@@ -22,6 +22,8 @@ import {
   TILE_WATER,
   TILE_MAGNETIC,
   TILE_STORAGE,
+  TILE_OIL,
+  TILE_FIRE,
 } from '../core/constants';
 import spriteMetaRaw from '../assets/data/sprites.json';
 import itemsRaw from '../assets/data/items.json';
@@ -393,6 +395,8 @@ const TILE_FALLBACK_COLORS: Record<string, string> = {
   'X':                '#30155a', // ワープ: 紫い床
   'M':                '#15301a', // 磁場: 緑がかった床
   'A':                '#1a3040', // 倉庫アクセス: 青みがかった床
+  'o':                '#2a2a20', // オイル: 暗い緑がかった黒
+  'f':                '#5a1a00', // 炎: 暗いオレンジ赤
 };
 
 /**
@@ -412,6 +416,8 @@ function tileToSpriteKey(tile: string): string | null {
     case TILE_HINT:        return 'tile_hint';
     case TILE_SHOP:        return 'tile_shop';
     case TILE_STORAGE:     return 'tile_shop'; // 倉庫アイコンはショップスプライトを流用
+    case TILE_OIL:         return 'tile_oil';
+    case TILE_FIRE:        return 'tile_fire';
     default:               return 'tile_floor'; // 通行可能タイルは床にフォールバック
   }
 }

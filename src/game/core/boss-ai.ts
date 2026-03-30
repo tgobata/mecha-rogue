@@ -281,6 +281,84 @@ export function decideBossAction(
       }
       break;
 
+    case 'big_oil_drum': {
+      // ビッグ！オイルドラム (8F/16F/24F/32F)
+      // 行動1: 毎ターンオイルを撒く
+      // 行動2: rollCooldown ターンごとにドラムロール（高速突進）
+      // 行動3: 隣接時に通常攻撃
+
+      if (!boss.bossState) (boss as any).bossState = {};
+      const bossState = boss.bossState;
+      const oilRadius = bossState.oilSpreadRadius ?? 4;
+      const rollDist = bossState.rollDistance ?? 3;
+      const rollCooldown = bossState.rollCooldown ?? 3;
+      if (bossState.rollCooldownLeft === undefined) bossState.rollCooldownLeft = rollCooldown;
+      let rollCooldownLeft: number = bossState.rollCooldownLeft;
+
+      // オイル撒き（毎ターン周囲にオイルを配置）
+      const map = state.map;
+      if (map) {
+        const oilPositions: Position[] = [];
+        for (let dy = -oilRadius; dy <= oilRadius; dy++) {
+          for (let dx = -oilRadius; dx <= oilRadius; dx++) {
+            if (dx === 0 && dy === 0) continue;
+            const nx = boss.pos.x + dx;
+            const ny = boss.pos.y + dy;
+            if (ny < 0 || ny >= map.height || nx < 0 || nx >= map.width) continue;
+            if (map.cells[ny][nx].tile === TILE_FLOOR) {
+              oilPositions.push({ x: nx, y: ny });
+            }
+          }
+        }
+        if (oilPositions.length > 0) {
+          actions.push({ type: 'spread_oil', positions: oilPositions });
+        }
+      }
+
+      // ドラムロールクールダウン管理
+      rollCooldownLeft--;
+      if (rollCooldownLeft <= 0) {
+        // ドラムロール: プレイヤー方向に一直線に突進
+        const dx = player.pos.x - boss.pos.x;
+        const dy = player.pos.y - boss.pos.y;
+        // 主方向を決める
+        const moveDir = Math.abs(dx) >= Math.abs(dy)
+          ? { x: dx > 0 ? 1 : -1, y: 0 }
+          : { x: 0, y: dy > 0 ? 1 : -1 };
+
+        let rollPos = { ...boss.pos };
+        let moved = 0;
+        const bmap = state.map;
+        while (moved < rollDist && bmap) {
+          const nx = rollPos.x + moveDir.x;
+          const ny = rollPos.y + moveDir.y;
+          const nextTile = bmap.cells[ny]?.[nx]?.tile;
+          if (!nextTile || !isWalkable(nextTile)) break;
+          // プレイヤーに当たったら攻撃
+          if (nx === player.pos.x && ny === player.pos.y) {
+            actions.push({ type: 'attack', targetId: 'player' });
+            break;
+          }
+          rollPos = { x: nx, y: ny };
+          moved++;
+        }
+        if (moved > 0) {
+          actions.push({ type: 'move', to: rollPos });
+        }
+        bossState.rollCooldownLeft = rollCooldown;
+      } else {
+        // 通常移動または攻撃
+        bossState.rollCooldownLeft = rollCooldownLeft;
+        const dist = bossEdgeDist(boss, player.pos);
+        if (dist <= 1) {
+          actions.push({ type: 'attack', targetId: 'player' });
+        } else {
+          actions.push(decideChaseWithAttack(boss, player.pos, state));
+        }
+      }
+      break;
+    }
+
     case 'final_boss':
       // ラスボス (50F): 5ターンごとに過去の全ボスの特殊能力をランダムで使用
       if (!boss.bossState.currentCooldown) boss.bossState.currentCooldown = boss.bossState.abilityRotationTurns || 5;

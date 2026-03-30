@@ -26,6 +26,8 @@ import type {
   TILE_WARP,
   TILE_MAGNETIC,
   TILE_STORAGE,
+  TILE_OIL,
+  TILE_FIRE,
 } from './constants';
 
 // ---------------------------------------------------------------------------
@@ -58,7 +60,9 @@ export type TileType =
   | typeof TILE_ICE
   | typeof TILE_WARP
   | typeof TILE_MAGNETIC
-  | typeof TILE_STORAGE;
+  | typeof TILE_STORAGE
+  | typeof TILE_OIL
+  | typeof TILE_FIRE;
 
 // ---------------------------------------------------------------------------
 // 座標

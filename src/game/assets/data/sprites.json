@@ -44,6 +44,16 @@
       "file": "public/sprites/tiles/shop.png",
       "width": 32,
       "height": 32
+    },
+    "oil": {
+      "file": "public/sprites/tile_oil.png",
+      "width": 32,
+      "height": 32
+    },
+    "fire": {
+      "file": "public/sprites/tile_fire.png",
+      "width": 32,
+      "height": 32
     }
   },
   "player": {
@@ -2715,6 +2725,27 @@
       },
       {
         "file": "public/sprites/enemies/final_boss_dead_2.png",
+        "width": 64,
+        "height": 64
+      }
+    ],
+    "oil_drum": [
+      {
+        "file": "public/sprites/enemy_oil_drum.png",
+        "width": 32,
+        "height": 32
+      }
+    ],
+    "fire_people": [
+      {
+        "file": "public/sprites/enemy_fire_people.png",
+        "width": 32,
+        "height": 32
+      }
+    ],
+    "big_oil_drum": [
+      {
+        "file": "public/sprites/boss_big_oil_drum.png",
         "width": 64,
         "height": 64
       }

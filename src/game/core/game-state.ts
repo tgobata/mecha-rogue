@@ -242,6 +242,9 @@ export type EnemyAiType =
   | 'flee'       // 逃走型
   | 'group'      // 群体型
   | 'explode'    // 自爆型
+  | 'oil_drum'   // オイルドラム: 周囲にオイルを撒く
+  | 'igniter'    // 着火ロボ: オイルマスを見つけて着火
+  | 'fire_body'  // ファイヤーピーポー: オイルマス上で着火、炎ダメージ無効
   | 'boss';      // ボス型（boss-ai.ts で専用処理）
 
 // ---------------------------------------------------------------------------
@@ -322,6 +325,8 @@ export interface Enemy {
   equipDropChance?: number;
   /** 直前に攻撃した敵のID（ターン内重複攻撃防止用） */
   lastAttackedEnemyId?: number | null;
+  /** 特殊能力ID（enemies.json の special フィールド）。fire_immune など */
+  special?: string | null;
 }
 
 // ---------------------------------------------------------------------------
@@ -822,6 +827,11 @@ export interface GameState {
    * 撃破済みボスのIDリスト（achievement-system がボス撃破実績の判定に使用）。
    */
   bossesDefeated: string[];
+  /**
+   * 炎マスの残りターン数マップ。キーは "x,y" 形式、値は残りターン数。
+   * ターン終了時にデクリメントし、0になったら通常マスへ戻す。
+   */
+  fireTileTimers?: Record<string, number>;
 }
 
 // ---------------------------------------------------------------------------
@@ -943,6 +953,7 @@ export function createInitialGameState(): GameState {
     upgradeCount: {},
     achievements: [],
     bossesDefeated: [],
+    fireTileTimers: {},
   };
 }
 

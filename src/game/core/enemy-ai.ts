@@ -21,6 +21,7 @@ import type { Enemy, Player, GameState, EnemyAiType } from './game-state';
 import type { Position } from './types';
 import { getTileAt, isWalkable, manhattanDistance } from './floorUtils';
 import { nextStep, findPath } from './pathfinding';
+import { TILE_OIL, TILE_FIRE, FIRE_TILE_DURATION } from './constants';
 
 // ---------------------------------------------------------------------------
 // 型定義
@@ -36,7 +37,9 @@ export type EnemyAction =
   | { type: 'absorb_wall'; wallPos: Position }
   | { type: 'cannon_aoe'; centerPos: Position; radius: number; damage: number }
   | { type: 'slash_attack' }
-  | { type: 'iaido'; range: number; damage: number };
+  | { type: 'iaido'; range: number; damage: number }
+  | { type: 'spread_oil'; positions: Position[] }
+  | { type: 'ignite_oil'; pos: Position };
 
 // ---------------------------------------------------------------------------
 // 定数
@@ -521,9 +524,139 @@ export function decideEnemyAction(
     case 'explode':
       return decideExplode(enemy, playerPos);
 
+    case 'oil_drum':
+      return decideOilDrum(enemy, playerPos, state, otherEnemies);
+
+    case 'igniter':
+      return decideIgniter(enemy, playerPos, state, otherEnemies);
+
+    case 'fire_body':
+      return decideFireBody(enemy, playerPos, state, otherEnemies);
+
     default:
       return decideChase(enemy, playerPos, state, otherEnemies);
   }
+}
+
+// ---------------------------------------------------------------------------
+// オイルドラムAI: 周囲にオイルを撒き、プレイヤーへ近づく
+// ---------------------------------------------------------------------------
+
+function decideOilDrum(
+  enemy: Enemy,
+  playerPos: Position,
+  state: GameState,
+  otherEnemies: Enemy[],
+): EnemyAction {
+  const map = state.map;
+  if (!map) return { type: 'skip' };
+
+  // 1ターンおきにオイルを撒く（偶数ターンのみ）
+  const turn = state.exploration?.turn ?? 0;
+  const level = enemy.level ?? 1;
+  // レベルに応じてオイルを撒く量（半径）: Lv1=1, Lv2=2, Lv3=3...
+  const spreadRadius = Math.min(level, 3);
+
+  if (turn % 2 === 0) {
+    const oilPositions: Position[] = [];
+    for (let dy = -spreadRadius; dy <= spreadRadius; dy++) {
+      for (let dx = -spreadRadius; dx <= spreadRadius; dx++) {
+        if (dx === 0 && dy === 0) continue;
+        const nx = enemy.pos.x + dx;
+        const ny = enemy.pos.y + dy;
+        if (ny < 0 || ny >= map.height || nx < 0 || nx >= map.width) continue;
+        const tile = map.cells[ny][nx].tile;
+        if (tile === '.' || tile === 'S') { // TILE_FLOOR or TILE_START
+          oilPositions.push({ x: nx, y: ny });
+        }
+      }
+    }
+    if (oilPositions.length > 0) {
+      return { type: 'spread_oil', positions: oilPositions };
+    }
+  }
+
+  // オイルを撒かないターンはプレイヤーへ接近
+  const dist = manhattanDistance(enemy.pos, playerPos);
+  if (dist === 1) return { type: 'attack', targetId: 'player' };
+  return decideChase(enemy, playerPos, state, otherEnemies);
+}
+
+// ---------------------------------------------------------------------------
+// 着火ロボAI: 近くのオイルマスを探して着火し、それ以外はプレイヤーへ接近
+// ---------------------------------------------------------------------------
+
+function decideIgniter(
+  enemy: Enemy,
+  playerPos: Position,
+  state: GameState,
+  otherEnemies: Enemy[],
+): EnemyAction {
+  const map = state.map;
+  if (!map) return { type: 'skip' };
+
+  // 周囲3マス以内のオイルマスを探す
+  const searchRadius = 3;
+  let nearestOil: Position | null = null;
+  let nearestDist = Infinity;
+
+  for (let dy = -searchRadius; dy <= searchRadius; dy++) {
+    for (let dx = -searchRadius; dx <= searchRadius; dx++) {
+      const nx = enemy.pos.x + dx;
+      const ny = enemy.pos.y + dy;
+      if (ny < 0 || ny >= map.height || nx < 0 || nx >= map.width) continue;
+      if (map.cells[ny][nx].tile === TILE_OIL) {
+        const d = Math.abs(dx) + Math.abs(dy);
+        if (d < nearestDist) {
+          nearestDist = d;
+          nearestOil = { x: nx, y: ny };
+        }
+      }
+    }
+  }
+
+  // 隣接オイルマスがあれば即着火
+  if (nearestOil && nearestDist === 1) {
+    return { type: 'ignite_oil', pos: nearestOil };
+  }
+
+  // 近くにオイルがあれば向かう（プレイヤーより優先）
+  if (nearestOil && nearestDist <= searchRadius) {
+    const step = nextStep(enemy.pos, nearestOil, map, otherEnemies);
+    if (step && (step.x !== enemy.pos.x || step.y !== enemy.pos.y)) {
+      return { type: 'move', to: step };
+    }
+  }
+
+  // オイルがなければプレイヤーへ接近
+  const dist = manhattanDistance(enemy.pos, playerPos);
+  if (dist === 1) return { type: 'attack', targetId: 'player' };
+  return decideChase(enemy, playerPos, state, otherEnemies);
+}
+
+// ---------------------------------------------------------------------------
+// ファイヤーピーポーAI: オイルマス上で着火、炎ダメージ無効、プレイヤーへ接近
+// ---------------------------------------------------------------------------
+
+function decideFireBody(
+  enemy: Enemy,
+  playerPos: Position,
+  state: GameState,
+  otherEnemies: Enemy[],
+): EnemyAction {
+  const map = state.map;
+  if (!map) return { type: 'skip' };
+
+  // 自分が今オイルマスの上にいる場合は着火
+  const currentTile = map.cells[enemy.pos.y]?.[enemy.pos.x]?.tile;
+  if (currentTile === TILE_OIL) {
+    return { type: 'ignite_oil', pos: enemy.pos };
+  }
+
+  // 通常はプレイヤーへ接近
+  const dist = manhattanDistance(enemy.pos, playerPos);
+  if (dist === 1) return { type: 'attack', targetId: 'player' };
+  return decideChase(enemy, playerPos, state, otherEnemies);
 }
 
 // ---------------------------------------------------------------------------

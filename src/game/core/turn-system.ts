@@ -41,6 +41,11 @@ import {
   TILE_ICE,
   TILE_LAVA,
   TILE_WARP,
+  TILE_OIL,
+  TILE_FIRE,
+  FIRE_TILE_DURATION,
+  FIRE_DAMAGE_PLAYER_RATE,
+  FIRE_DAMAGE_ENEMY_RATE,
   ENEMY_SIGHT_RANGE,
   MIN_DAMAGE,
   INITIAL_PLAYER_ATK,
@@ -284,6 +289,81 @@ function effectiveAtk(player: Player): number {
 }
 
 // ---------------------------------------------------------------------------
+// 炎マスタイマー初期化ヘルパー
+// ---------------------------------------------------------------------------
+
+/**
+ * フロアの TILE_FIRE タイルをスキャンして fireTileTimers を初期化する。
+ */
+function initFireTileTimers(map: import('./types').Floor): Record<string, number> {
+  const timers: Record<string, number> = {};
+  for (let y = 0; y < map.height; y++) {
+    for (let x = 0; x < map.width; x++) {
+      if (map.cells[y][x].tile === TILE_FIRE) {
+        timers[`${x},${y}`] = FIRE_TILE_DURATION;
+      }
+    }
+  }
+  return timers;
+}
+
+/**
+ * 爆発/火炎系アイテムの効果範囲内のオイルマスを炎マスへ変換する。
+ * fireTileTimers も更新する。
+ */
+export function convertOilToFire(
+  map: import('./types').Floor,
+  blastTiles: import('./types').Position[],
+  fireTileTimers: Record<string, number>,
+): { map: import('./types').Floor; fireTileTimers: Record<string, number>; converted: number } {
+  let converted = 0;
+  const newTimers = { ...fireTileTimers };
+  // mutable copy of cells
+  const newCells = map.cells.map(row => row.map(cell => ({ ...cell })));
+  for (const pos of blastTiles) {
+    if (pos.y >= 0 && pos.y < map.height && pos.x >= 0 && pos.x < map.width) {
+      if (newCells[pos.y][pos.x].tile === TILE_OIL) {
+        newCells[pos.y][pos.x].tile = TILE_FIRE;
+        newTimers[`${pos.x},${pos.y}`] = FIRE_TILE_DURATION;
+        converted++;
+      }
+    }
+  }
+  return {
+    map: converted > 0 ? { ...map, cells: newCells } : map,
+    fireTileTimers: newTimers,
+    converted,
+  };
+}
+
+/**
+ * フローズンボム/水系アイテムの効果範囲内の炎マスを消火する。
+ */
+export function extinguishFireTiles(
+  map: import('./types').Floor,
+  blastTiles: import('./types').Position[],
+  fireTileTimers: Record<string, number>,
+): { map: import('./types').Floor; fireTileTimers: Record<string, number>; extinguished: number } {
+  let extinguished = 0;
+  const newTimers = { ...fireTileTimers };
+  const newCells = map.cells.map(row => row.map(cell => ({ ...cell })));
+  for (const pos of blastTiles) {
+    if (pos.y >= 0 && pos.y < map.height && pos.x >= 0 && pos.x < map.width) {
+      if (newCells[pos.y][pos.x].tile === TILE_FIRE) {
+        newCells[pos.y][pos.x].tile = TILE_FLOOR;
+        delete newTimers[`${pos.x},${pos.y}`];
+        extinguished++;
+      }
+    }
+  }
+  return {
+    map: extinguished > 0 ? { ...map, cells: newCells } : map,
+    fireTileTimers: newTimers,
+    extinguished,
+  };
+}
+
+// ---------------------------------------------------------------------------
 // フロア遷移
 // ---------------------------------------------------------------------------
 
@@ -296,7 +376,7 @@ function effectiveAtk(player: Player): number {
  */
 export function transitionToNextFloor(
   state: GameState,
-): Pick<GameState, 'exploration' | 'player' | 'enemies' | 'map' | 'floor' | 'traps' | 'hints' | 'triggeredMonsterHouses' | 'isBlackMarket' | 'isRestFloor' | 'battleLog'> {
+): Pick<GameState, 'exploration' | 'player' | 'enemies' | 'map' | 'floor' | 'traps' | 'hints' | 'triggeredMonsterHouses' | 'isBlackMarket' | 'isRestFloor' | 'battleLog' | 'fireTileTimers'> {
   const currentPlayer = state.player;
 
   // ── 休憩所からの退場: 次の通常フロアへ ──
@@ -338,6 +418,7 @@ export function transitionToNextFloor(
       map: visibleMap,
       floor: nextFloorNumber,
       battleLog: state.battleLog,
+      fireTileTimers: initFireTileTimers(visibleMap),
     };
   }
 
@@ -421,6 +502,7 @@ export function transitionToNextFloor(
       map: restMap,
       floor: state.floor,
       battleLog: [...(state.battleLog ?? []), ...healLogs],
+      fireTileTimers: {},
     };
   }
 
@@ -473,6 +555,7 @@ export function transitionToNextFloor(
     map: visibleMap,
     floor: nextFloorNumber,
     battleLog: state.battleLog,
+    fireTileTimers: initFireTileTimers(visibleMap),
   };
 }
 
@@ -482,7 +565,7 @@ export function transitionToNextFloor(
  */
 export function transitionToPrevFloor(
   state: GameState,
-): Pick<GameState, 'exploration' | 'player' | 'enemies' | 'map' | 'floor' | 'traps' | 'hints' | 'triggeredMonsterHouses' | 'isBlackMarket'> {
+): Pick<GameState, 'exploration' | 'player' | 'enemies' | 'map' | 'floor' | 'traps' | 'hints' | 'triggeredMonsterHouses' | 'isBlackMarket' | 'fireTileTimers'> {
   const prevFloorNumber = Math.max(1, state.floor - 1);
   const newMap = generateFloor(prevFloorNumber);
   const currentPlayer = state.player;
@@ -519,6 +602,7 @@ export function transitionToPrevFloor(
     isBlackMarket,
     map: visibleMap,
     floor: prevFloorNumber,
+    fireTileTimers: initFireTileTimers(visibleMap),
   };
 }
 
@@ -643,8 +727,26 @@ export function spawnEnemiesFromMap(
   );
 
   // 出現可能な定義がなければ fallback として先頭要素を使う
-  const pool: EnemyDefinition[] =
+  // preferredFloorMod と spawnWeight に基づいて重み付きプールを構築する
+  const rawPool: EnemyDefinition[] =
     availableDefs.length > 0 ? availableDefs : ENEMY_DEFS.slice(0, 1);
+
+  // spawnWeight / preferredFloorMod で重みを付けたプールを構築
+  const pool: EnemyDefinition[] = [];
+  for (const def of rawPool) {
+    const prefMod = (def as any).preferredFloorMod as number | undefined;
+    const spawnW = (def as any).spawnWeight as number | undefined;
+    let weight = 1.0;
+    if (prefMod !== undefined && spawnW !== undefined) {
+      // preferredFloorMod の倍数階は通常重み、それ以外は spawnWeight で低下
+      weight = (floorNumber % prefMod === 0) ? 1.0 : spawnW;
+    }
+    // weight に基づいて何回プールに追加するか（小数は確率的に丸める）
+    const times = Math.floor(weight) + (Math.random() < (weight % 1) ? 1 : 0);
+    for (let i = 0; i < Math.max(1, times); i++) {
+      pool.push(def);
+    }
+  }
 
   // 対象フロアのボス定義を取得
   const bossDef = BOSS_DEFS.find((def) => def.floor === floorNumber);
@@ -682,6 +784,7 @@ export function spawnEnemiesFromMap(
           equippedShieldId: def.equippedShield ?? null,
           equipDropChance: def.equipDropChance ?? 0,
           lastAttackedEnemyId: null,
+          special: (def as any).special ?? null,
         });
       } else if (floor.cells[y][x].tile === 'B' && bossDef) {
         if (bossDef.id === 'bug_swarm') {
@@ -752,6 +855,11 @@ export function spawnEnemiesFromMap(
           }
         } else {
           // 通常ボスの生成（ボスはスケール適用せずそのままのステータスを使用）
+          const bossInitState: any = { ...bossDef };
+          // big_oil_drum: ロールクールダウンカウンターを初期化
+          if (bossDef.special === 'big_oil_drum') {
+            bossInitState.rollCooldownLeft = (bossDef as any).rollCooldown ?? 3;
+          }
           enemies.push({
             id: idCounter++,
             enemyType: bossDef.id,
@@ -765,7 +873,7 @@ export function spawnEnemiesFromMap(
             facing: 'down',
             isBoss: true,
             bossSize: (bossDef as any).size ?? 2,
-            bossState: { ...bossDef }, // ボス専用パラメータを保持
+            bossState: bossInitState, // ボス専用パラメータを保持
           });
         }
       }
@@ -918,6 +1026,21 @@ function processPlayerAction(
               if (slideTile !== TILE_ICE) break; // 氷から出たら止まる
            }
         }
+
+        // オイルの滑走処理: オイルマスに乗ると同方向に滑り続ける
+        // 次のマスが壁・敵の場合はオイルマス上で停止できる
+        if (slideTile === TILE_OIL) {
+           while (true) {
+              const nextTile = getTileAt(mapData, { x: slidePos.x + delta.dx, y: slidePos.y + delta.dy });
+              if (!isWalkable(nextTile)) break; // 壁にぶつかる → 現在オイルマスで停止
+              const nx = slidePos.x + delta.dx;
+              const ny = slidePos.y + delta.dy;
+              if (enemyAt(newEnemies, { x: nx, y: ny }) !== undefined) break; // 敵にぶつかる → 停止
+              slidePos = { x: nx, y: ny };
+              slideTile = getTileAt(mapData, slidePos);
+              if (slideTile !== TILE_OIL) break; // オイルから出たら止まる
+           }
+        }
         
         // ワープ処理
         if (slideTile === TILE_WARP) {
@@ -945,6 +1068,16 @@ function processPlayerAction(
            newPlayer = { ...newPlayer, hp: newPlayer.hp - 5, hpEverDroppedBelowMax: true };
            logMessages.push('溶岩の熱で5ダメージを受けた！');
         }
+
+        // 炎マスダメージ（最大HPの7%）
+        if (slideTile === TILE_FIRE) {
+           const fireDmg = Math.max(1, Math.floor(newPlayer.maxHp * FIRE_DAMAGE_PLAYER_RATE));
+           newPlayer = { ...newPlayer, hp: newPlayer.hp - fireDmg, hpEverDroppedBelowMax: true };
+           logMessages.push(`炎に焼かれた！ ${fireDmg}ダメージ！`);
+        }
+
+        // オイルマス上のファイヤーピーポー効果: 着地時に炎マスへ変換（enemy-aiで処理）
+        // オイルマス上でのアイテム置きは後続処理で対応
 
         // トラップチェック
         if (slideTile === TILE_TRAP) {
@@ -1127,7 +1260,7 @@ function processEnemyActions(
   state: GameState,
   currentPlayer: Player,
   currentEnemies: Enemy[],
-): { player: Player; enemies: Enemy[]; enemyEventMessages: string[] } {
+): { player: Player; enemies: Enemy[]; enemyEventMessages: string[]; updatedState: GameState } {
   let newPlayer = { ...currentPlayer };
   const processedEnemies: Enemy[] = [];
   const enemyEventMessages: string[] = [];
@@ -1527,6 +1660,61 @@ function processEnemyActions(
           break;
         }
 
+        case 'spread_oil': {
+          // オイルドラムがオイルを撒く
+          const oilAction = action as { type: 'spread_oil'; positions: import('./types').Position[] };
+          if (state.map) {
+            const oilCells = state.map.cells.map(row => row.map(cell => ({ ...cell })));
+            let oilCount = 0;
+            for (const oPos of oilAction.positions) {
+              if (oPos.y >= 0 && oPos.y < state.map.height && oPos.x >= 0 && oPos.x < state.map.width) {
+                if (oilCells[oPos.y][oPos.x].tile === TILE_FLOOR) {
+                  oilCells[oPos.y][oPos.x].tile = TILE_OIL;
+                  oilCount++;
+                }
+              }
+            }
+            if (oilCount > 0) {
+              const updatedOilMap = { ...state.map, cells: oilCells };
+              state = {
+                ...state,
+                map: updatedOilMap,
+                exploration: state.exploration
+                  ? { ...state.exploration, currentFloor: updatedOilMap }
+                  : state.exploration,
+              };
+              enemyEventMessages.push(`オイルドラムがオイルを撒いた！`);
+            }
+          }
+          currentEnemyState = { ...currentEnemyState, animState: 'attack' as const };
+          break;
+        }
+
+        case 'ignite_oil': {
+          // 着火ロボ/ファイヤーピーポーがオイルを着火
+          const igniteAction = action as { type: 'ignite_oil'; pos: import('./types').Position };
+          const iPos = igniteAction.pos;
+          if (state.map && iPos.y >= 0 && iPos.y < state.map.height && iPos.x >= 0 && iPos.x < state.map.width) {
+            if (state.map.cells[iPos.y][iPos.x].tile === TILE_OIL) {
+              const igniteCells = state.map.cells.map(row => row.map(cell => ({ ...cell })));
+              igniteCells[iPos.y][iPos.x].tile = TILE_FIRE;
+              const igniteMap = { ...state.map, cells: igniteCells };
+              const newFireTimers = { ...(state.fireTileTimers ?? {}), [`${iPos.x},${iPos.y}`]: FIRE_TILE_DURATION };
+              state = {
+                ...state,
+                map: igniteMap,
+                fireTileTimers: newFireTimers,
+                exploration: state.exploration
+                  ? { ...state.exploration, currentFloor: igniteMap }
+                  : state.exploration,
+              };
+              enemyEventMessages.push(`オイルマスに火がついた！`);
+            }
+          }
+          currentEnemyState = { ...currentEnemyState, animState: 'attack' as const };
+          break;
+        }
+
         case 'skip':
         default:
           break;
@@ -1535,7 +1723,7 @@ function processEnemyActions(
     processedEnemies.push(currentEnemyState);
   }
 
-  return { player: newPlayer, enemies: processedEnemies, enemyEventMessages };
+  return { player: newPlayer, enemies: processedEnemies, enemyEventMessages, updatedState: state };
 }
 
 /**
@@ -2381,6 +2569,23 @@ export function processTurn(state: GameState, action: PlayerAction): GameState {
       }
       // 爆発範囲内の罠に反応
       bombTraps = applyBlastToTraps(bombTraps, blastTiles, newBattleLog);
+
+      // 爆発範囲内のオイルマスを炎マスへ変換
+      if (bombsState.map) {
+        const oilResult = convertOilToFire(bombsState.map, blastTiles, bombsState.fireTileTimers ?? {});
+        if (oilResult.converted > 0) {
+          bombsState = {
+            ...bombsState,
+            map: oilResult.map,
+            fireTileTimers: oilResult.fireTileTimers,
+            exploration: bombsState.exploration
+              ? { ...bombsState.exploration, currentFloor: oilResult.map }
+              : bombsState.exploration,
+          };
+          newBattleLog.push(`爆発でオイルが引火し炎上した！`);
+        }
+      }
+
       newBattleLog.push(`爆弾が爆発した！（ダメージ${bomb.damage}）`);
     }
     // 爆弾で倒した敵を除去
@@ -2396,6 +2601,56 @@ export function processTurn(state: GameState, action: PlayerAction): GameState {
     bombsState = { ...bombsState, placedBombs: [] };
   }
   stateWithPickup = bombsState;
+
+  // ─── 炎マス タイマー & ダメージ処理 ──────────────────────────────────
+  {
+    const currentMap = stateWithPickup.map;
+    if (currentMap) {
+      let fireTimers = { ...(stateWithPickup.fireTileTimers ?? {}) };
+      let fireMap = currentMap;
+      const fireMapCells = fireMap.cells.map(row => row.map(cell => ({ ...cell })));
+      let fireMapsModified = false;
+
+      // 炎マスタイマーをデクリメントし、0になったら通常マスへ
+      for (const key of Object.keys(fireTimers)) {
+        const newT = fireTimers[key] - 1;
+        if (newT <= 0) {
+          const [fx, fy] = key.split(',').map(Number);
+          if (fireMapCells[fy]?.[fx]?.tile === TILE_FIRE) {
+            fireMapCells[fy][fx].tile = TILE_FLOOR;
+            fireMapsModified = true;
+          }
+          delete fireTimers[key];
+        } else {
+          fireTimers[key] = newT;
+        }
+      }
+
+      // 敵の炎マスダメージ
+      enemiesAfterTrap = enemiesAfterTrap.map((e) => {
+        const tile = fireMapCells[e.pos.y]?.[e.pos.x]?.tile;
+        if (tile !== TILE_FIRE) return e;
+        // ファイヤーピーポーは炎ダメージ無効
+        if (e.special === 'fire_immune') return e;
+        const fireDmg = Math.max(1, Math.floor((e.maxHp ?? e.hp) * FIRE_DAMAGE_ENEMY_RATE));
+        return { ...e, hp: e.hp - fireDmg };
+      });
+
+      if (fireMapsModified) {
+        fireMap = { ...fireMap, cells: fireMapCells };
+        stateWithPickup = {
+          ...stateWithPickup,
+          map: fireMap,
+          fireTileTimers: fireTimers,
+          exploration: stateWithPickup.exploration
+            ? { ...stateWithPickup.exploration, currentFloor: fireMap }
+            : stateWithPickup.exploration,
+        };
+      } else {
+        stateWithPickup = { ...stateWithPickup, fireTileTimers: fireTimers };
+      }
+    }
+  }
 
   // ─── 修理ナノボット HoT 処理 ──────────────────────────────────────────
   if (playerAfterTrap.healTurnsLeft && playerAfterTrap.healTurnsLeft > 0) {
@@ -2434,11 +2689,20 @@ export function processTurn(state: GameState, action: PlayerAction): GameState {
     player: playerAfterEnemies,
     enemies: enemiesAfterEnemies,
     enemyEventMessages,
+    updatedState: stateAfterEnemyActions,
   } = processEnemyActions(
     { ...stateWithPickup, enemies: enemiesAfterTrap },
     playerAfterTrap,
     enemiesAfterTrap,
   );
+
+  // 敵AIによるマップ変更（オイル撒き・着火など）を反映
+  stateWithPickup = {
+    ...stateWithPickup,
+    map: stateAfterEnemyActions.map,
+    fireTileTimers: stateAfterEnemyActions.fireTileTimers,
+    exploration: stateAfterEnemyActions.exploration,
+  };
 
   // 敵VS敵イベントメッセージを battleLog に追記
   if (enemyEventMessages.length > 0) {

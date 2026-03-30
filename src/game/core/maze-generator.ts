@@ -35,6 +35,14 @@ import {
   TILE_WARP,
   TILE_MAGNETIC,
   TILE_STORAGE,
+  TILE_OIL,
+  TILE_FIRE,
+  OIL_MIN_FLOOR,
+  FIRE_MIN_FLOOR,
+  OIL_SPAWN_RATE,
+  FIRE_SPAWN_RATE_RARE,
+  FIRE_SPAWN_RATE_SMALL,
+  FIRE_SPAWN_RATE_NORMAL,
   PARTITION_MIN_SIZE,
   ROOM_MIN_INNER_SIZE,
   LAVA_MIN_FLOOR,
@@ -449,6 +457,83 @@ function placeSpecialTerrain(
 }
 
 // ---------------------------------------------------------------------------
+// オイルマス配置
+// ---------------------------------------------------------------------------
+
+/**
+ * 2階以降にオイルマスをランダム配置する。
+ * 階段・スタート地点は除外し、BFS で到達可能性を担保するため、
+ * 配置後に階段への経路が塞がれないよう隣接チェックを行う。
+ */
+function placeOilTiles(
+  floor: Floor,
+  floorNumber: number,
+  rng: () => number,
+): void {
+  if (floorNumber < OIL_MIN_FLOOR) return;
+
+  // 4の倍数階（オイルドラム多出現）は2倍の密度
+  const rate = (floorNumber % 4 === 0) ? OIL_SPAWN_RATE * 2 : OIL_SPAWN_RATE;
+
+  for (let y = 1; y < floor.height - 1; y++) {
+    for (let x = 1; x < floor.width - 1; x++) {
+      if (floor.cells[y][x].tile !== TILE_FLOOR) continue;
+      if (x === floor.startPos.x && y === floor.startPos.y) continue;
+      if (x === floor.stairsPos.x && y === floor.stairsPos.y) continue;
+      // 階段の隣接マスもオイルで埋めない（移動不能防止）
+      const nearStairs =
+        Math.abs(x - floor.stairsPos.x) + Math.abs(y - floor.stairsPos.y) <= 1;
+      if (nearStairs) continue;
+
+      if (rng() < rate) {
+        floor.cells[y][x].tile = TILE_OIL;
+      }
+    }
+  }
+}
+
+// ---------------------------------------------------------------------------
+// 炎マス配置
+// ---------------------------------------------------------------------------
+
+/**
+ * 3階以降に炎マスをランダム配置する（初期配置のみ。残りターン管理はターンシステム側）。
+ * 3〜6F: 稀、7〜9F: 小、10F〜: 溶岩と同程度。
+ * スタート・階段付近には配置しない。
+ */
+function placeFireTiles(
+  floor: Floor,
+  floorNumber: number,
+  rng: () => number,
+): void {
+  if (floorNumber < FIRE_MIN_FLOOR) return;
+
+  let rate: number;
+  if (floorNumber >= 10) {
+    rate = FIRE_SPAWN_RATE_NORMAL;
+  } else if (floorNumber >= 7) {
+    rate = FIRE_SPAWN_RATE_SMALL;
+  } else {
+    rate = FIRE_SPAWN_RATE_RARE;
+  }
+
+  for (let y = 1; y < floor.height - 1; y++) {
+    for (let x = 1; x < floor.width - 1; x++) {
+      if (floor.cells[y][x].tile !== TILE_FLOOR) continue;
+      if (x === floor.startPos.x && y === floor.startPos.y) continue;
+      if (x === floor.stairsPos.x && y === floor.stairsPos.y) continue;
+      const nearStairs =
+        Math.abs(x - floor.stairsPos.x) + Math.abs(y - floor.stairsPos.y) <= 1;
+      if (nearStairs) continue;
+
+      if (rng() < rate) {
+        floor.cells[y][x].tile = TILE_FIRE;
+      }
+    }
+  }
+}
+
+// ---------------------------------------------------------------------------
 // ひび割れ壁配置
 // ---------------------------------------------------------------------------
 
@@ -828,6 +913,12 @@ function attemptGenerate(
 
   // 特殊地形配置
   placeSpecialTerrain(tempFloor, floorNumber, rng);
+
+  // オイルマス配置
+  placeOilTiles(tempFloor, floorNumber, rng);
+
+  // 炎マス配置
+  placeFireTiles(tempFloor, floorNumber, rng);
 
   // ひび割れ壁配置
   placeCrackedWalls(tempFloor, rng);
