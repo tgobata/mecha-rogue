@@ -16,6 +16,7 @@ import {
   TILE_SHOP,
   TILE_LAVA,
   TILE_HINT,
+  TILE_FIRE,
 } from './constants';
 import itemsRaw from '../assets/data/items.json';
 import { applyBlastToTraps } from './turn-system';
@@ -447,7 +448,34 @@ export function placeInventoryItem(
     newItems = state.inventory.items.filter((_, i) => i !== itemIndex);
   }
 
-  // マップにアイテム設置
+  // 炎マスに置く場合の特殊処理
+  if (cell.tile === TILE_FIRE) {
+    const effect: string = def?.effect ?? '';
+    let nextState: GameState = { ...state, inventory: { ...state.inventory, items: newItems } };
+
+    if (FIRE_TRIGGER_EFFECTS.has(effect)) {
+      // 爆弾系・グレネード系: 即効果発動
+      const logs: string[] = [`${itemName} が炎に触れて即発動！`];
+      nextState = applyItemEffectOnLand(nextState, def, item.itemId, pos, logs);
+      return { nextState, log: logs.join(' '), blocked: false };
+    } else {
+      // その他: 高確率で焼失、低確率で隣の非炎マスへ落ちる
+      if (Math.random() < 0.8) {
+        return { nextState, log: `${itemName} は炎で焼失した！`, blocked: false };
+      } else {
+        const cells = (state.map.cells as Cell[][]).map(row => [...row]) as Cell[][];
+        const nearbyPos = findNearestNonFirePlaceablePos(cells, pos);
+        if (nearbyPos) {
+          cells[nearbyPos.y][nearbyPos.x] = { ...cells[nearbyPos.y][nearbyPos.x], tile: TILE_ITEM, itemId: item.itemId };
+          nextState = { ...nextState, map: { ...state.map, cells } };
+          return { nextState, log: `${itemName} は炎で弾かれ、隣のマスに落ちた`, blocked: false };
+        }
+        return { nextState, log: `${itemName} は炎で焼失した！`, blocked: false };
+      }
+    }
+  }
+
+  // マップにアイテム設置（通常）
   const cells = (state.map.cells as Cell[][]).map(row => [...row]) as Cell[][];
   cells[pos.y][pos.x] = { ...cell, tile: TILE_ITEM, itemId: item.itemId };
 
@@ -550,6 +578,33 @@ const IMPLACEABLE_TILES = new Set([
 /** 置く/着地可能タイルか判定（上記以外の通行可能タイルは全て可） */
 function isPlaceable(cell: Cell): boolean {
   return !IMPLACEABLE_TILES.has(cell.tile as any);
+}
+
+/** 炎マスで即発動するアイテムエフェクト */
+const FIRE_TRIGGER_EFFECTS = new Set([
+  'place_bomb', 'throw_bomb', 'ice_bomb', 'stun_area', 'flash_grenade', 'stun_radius_2',
+]);
+
+/**
+ * 炎マス以外の最も近い設置可能タイルを探す（設置元を除く）。
+ * 炎に触れたアイテムが隣のマスへ落ちる際に使用。
+ */
+function findNearestNonFirePlaceablePos(cells: Cell[][], fromPos: Position, maxRadius: number = 4): Position | null {
+  const mapHeight = cells.length;
+  const mapWidth = cells[0]?.length ?? 0;
+  for (let r = 1; r <= maxRadius; r++) {
+    for (let dy = -r; dy <= r; dy++) {
+      for (let dx = -r; dx <= r; dx++) {
+        if (Math.max(Math.abs(dx), Math.abs(dy)) !== r) continue;
+        const nx = fromPos.x + dx;
+        const ny = fromPos.y + dy;
+        if (ny < 0 || ny >= mapHeight || nx < 0 || nx >= mapWidth) continue;
+        const cell = cells[ny]?.[nx];
+        if (cell && canPlaceItemOnCell(cell) && cell.tile !== TILE_FIRE) return { x: nx, y: ny };
+      }
+    }
+  }
+  return null;
 }
 
 /** 敵にダメージを与えて新しい state を返す */
@@ -995,11 +1050,34 @@ function applyItemEffectOnLand(
       return stunned;
     }
 
+    // ── フラッシュグレネード系: 炎マスに着地した場合のみ即発動、それ以外は設置 ──
+    case 'flash_grenade':
+    case 'stun_radius_2': {
+      const landCell = state.map?.cells[landPos.y]?.[landPos.x];
+      if (landCell?.tile === TILE_FIRE) {
+        const stunTurns: number = def.stunTurns ?? 2;
+        const stunEff: StatusEffect = { type: 'stunned', remainingTurns: stunTurns, sourceId: itemId };
+        const { nextState: stunned, count, trapLogs } = applyStatusInArea(state, landPos, stunEff);
+        logs.push(`フラッシュ炸裂！ 周囲${count}体を${stunTurns}ターンスタン！`);
+        logs.push(...trapLogs);
+        return stunned;
+      }
+      return dropItemOnFloor(state, itemId, landPos, true, logs, def.name);
+    }
+
     // ── speed_up_permanent（ブーストエンジン系）着地: グレードダウンして設置 ──
     case 'speed_up_permanent': {
       const degradedId = ITEM_DEGRADE_MAP[itemId];
       if (degradedId) {
         const degradedName = getItemName(degradedId);
+        // 炎マス着地: 80%焼失
+        const landCell = state.map?.cells[landPos.y]?.[landPos.x];
+        if (landCell?.tile === TILE_FIRE) {
+          if (Math.random() < 0.8) {
+            logs.push(`${def.name} は炎で焼失した！`);
+            return state;
+          }
+        }
         logs.push(`${def.name} は ${degradedName} になって落ちた`);
         return dropItemOnFloor(state, degradedId, landPos, true, logs, degradedName);
       }
@@ -1007,9 +1085,27 @@ function applyItemEffectOnLand(
       return state;
     }
 
-    default:
-      // flash_grenade / stun_radius_2 も含む非爆発アイテムは着地点にそのまま設置
+    default: {
+      // 炎マスに着地した場合: 高確率で焼失、低確率で隣マスへ落ちる
+      const landCell = state.map?.cells[landPos.y]?.[landPos.x];
+      if (landCell?.tile === TILE_FIRE) {
+        if (Math.random() < 0.8) {
+          logs.push(`${def.name ?? itemId} は炎で焼失した！`);
+          return state;
+        } else {
+          const cells = (state.map!.cells as Cell[][]).map(row => [...row]) as Cell[][];
+          const nearbyPos = findNearestNonFirePlaceablePos(cells, landPos);
+          if (nearbyPos) {
+            cells[nearbyPos.y][nearbyPos.x] = { ...cells[nearbyPos.y][nearbyPos.x], tile: TILE_ITEM, itemId };
+            logs.push(`${def.name ?? itemId} は炎で弾かれ、隣のマスに落ちた`);
+            return { ...state, map: { ...state.map!, cells } };
+          }
+          logs.push(`${def.name ?? itemId} は炎で焼失した！`);
+          return state;
+        }
+      }
       return dropItemOnFloor(state, itemId, landPos, true, logs, def.name);
+    }
   }
 }
 
