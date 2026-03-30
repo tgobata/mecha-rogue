@@ -98,6 +98,10 @@ export interface WeaponInstance {
   special: string | null;
   /** weapons.json の元の rangeType 文字列（詳細判定用） */
   rawRangeType: string;
+  /** この修理屋訪問中に修理済みか（1回限り制限） */
+  repairedAtShop?: boolean;
+  /** この修理屋訪問中に強化済みか（1回限り制限） */
+  upgradedAtShop?: boolean;
 }
 
 // ---------------------------------------------------------------------------
@@ -212,7 +216,7 @@ export interface StatusEffect {
  * - 'shop'      : ショップ画面表示中
  * - 'gameover'  : ゲームオーバー（マシンHP0 → スタート帰還ペナルティ適用後）
  */
-export type GamePhase = 'title' | 'base' | 'exploring' | 'combat' | 'shop' | 'storage' | 'gameover' | 'bossIntro' | 'achievements';
+export type GamePhase = 'title' | 'base' | 'exploring' | 'combat' | 'shop' | 'repair' | 'storage' | 'gameover' | 'bossIntro' | 'achievements';
 
 // ---------------------------------------------------------------------------
 // 方向
@@ -701,6 +705,8 @@ export interface ExplorationState {
     type: 'weapon' | 'item';
     buy: number;
     sell: number;
+    /** 残り在庫数（0 = 売り切れ） */
+    stock: number;
   }>;
   /**
    * フロア内の各ショップ座標ごとの在庫データ。
@@ -711,7 +717,11 @@ export interface ExplorationState {
     type: 'weapon' | 'item';
     buy: number;
     sell: number;
+    /** 残り在庫数（0 = 売り切れ） */
+    stock: number;
   }>>;
+  /** 現在開いているショップの座標キー（"x,y"）。buyItem の在庫同期に使用 */
+  currentShopKey?: string;
 }
 
 // ---------------------------------------------------------------------------

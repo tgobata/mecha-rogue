@@ -34,6 +34,7 @@ import {
   TILE_WEAPON,
   TILE_GOLD,
   TILE_SHOP,
+  TILE_REPAIR,
   TILE_STORAGE,
   TILE_FLOOR,
   TILE_TRAP,
@@ -925,6 +926,7 @@ type PickupInfo =
   | { type: 'weapon'; pos: Position; weaponId: string }
   | { type: 'gold'; pos: Position; amount: number }
   | { type: 'shop'; pos: Position }
+  | { type: 'repair'; pos: Position }
   | { type: 'storage'; pos: Position };
 
 function processPlayerAction(
@@ -1150,6 +1152,9 @@ function processPlayerAction(
         }
         if (slideTile === TILE_SHOP) {
           pickup = { type: 'shop', pos: slidePos };
+        }
+        if (slideTile === TILE_REPAIR) {
+          pickup = { type: 'repair', pos: slidePos };
         }
         if (slideTile === TILE_STORAGE) {
           pickup = { type: 'storage', pos: slidePos };
@@ -2428,7 +2433,14 @@ export function processTurn(state: GameState, action: PlayerAction): GameState {
           ...state.exploration!,
           shopInventory,
           shopInventories,
+          currentShopKey: shopKey,
         },
+        player: playerAfterAction,
+      };
+    } else if (pickup.type === 'repair') {
+      return {
+        ...state,
+        phase: 'repair',
         player: playerAfterAction,
       };
     } else if (pickup.type === 'storage') {

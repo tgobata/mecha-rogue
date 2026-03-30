@@ -76,6 +76,8 @@ export interface ShopItem {
   buy: number;
   /** 売却価格（プレイヤーが受け取るゴールド） */
   sell: number;
+  /** 残り在庫数（武器は常に1、アイテムは1〜3。0 = 売り切れ） */
+  stock: number;
 }
 
 // ---------------------------------------------------------------------------
@@ -207,16 +209,20 @@ export function getShopInventory(floorNumber: number, rng: () => number): ShopIt
       type: 'weapon' as const,
       buy: priceEntry?.buy ?? 0,
       sell: priceEntry?.sell ?? 0,
+      stock: 1, // 武器は常に在庫1
     };
   });
 
   const itemItems: ShopItem[] = selectedItemIds.map((id) => {
     const priceEntry = SHOP_PRICES.items[id];
+    // アイテムの在庫は 1〜3 のランダム
+    const stock = 1 + Math.floor(rng() * 3);
     return {
       id,
       type: 'item' as const,
       buy: priceEntry?.buy ?? 0,
       sell: priceEntry?.sell ?? 0,
+      stock,
     };
   });
 
@@ -245,10 +251,34 @@ export function buyItem(
   const priceEntry = priceTable[itemId];
   if (!priceEntry) return state;
 
+  // 在庫チェック（stock が 0 以下なら購入不可）
+  const currentShopInventory = state.exploration?.shopInventory ?? [];
+  const shopItemIdx = currentShopInventory.findIndex(
+    (si) => si.id === itemId && si.type === itemType,
+  );
+  const currentStock = shopItemIdx >= 0
+    ? (currentShopInventory[shopItemIdx].stock ?? 1)
+    : 1; // shopInventory がない（旧データ互換）場合は購入可とする
+  if (currentStock <= 0) return state;
+
   const cost = priceEntry.buy;
   if (state.inventory.gold < cost) return state;
 
   const newGold = state.inventory.gold - cost;
+
+  // shopInventory の在庫を 1 減らす
+  const newShopInventory = shopItemIdx >= 0
+    ? currentShopInventory.map((si, i) =>
+        i === shopItemIdx ? { ...si, stock: Math.max(0, si.stock - 1) } : si,
+      )
+    : currentShopInventory;
+
+  // shopInventories（座標キー別の永続在庫）も同期する
+  const currentShopKey = state.exploration?.currentShopKey;
+  const newShopInventories =
+    currentShopKey && state.exploration?.shopInventories
+      ? { ...state.exploration.shopInventories, [currentShopKey]: newShopInventory }
+      : state.exploration?.shopInventories;
 
   if (itemType === 'weapon') {
     const def = WEAPON_DEFS.find((w) => w.id === itemId);
@@ -272,8 +302,12 @@ export function buyItem(
       weaponLevel: 1,
       rarity: 'C',
     };
+    const explorationWithStock = state.exploration
+      ? { ...state.exploration, shopInventory: newShopInventory, shopInventories: newShopInventories }
+      : state.exploration;
     return {
       ...state,
+      exploration: explorationWithStock,
       inventory: {
         ...state.inventory,
         gold: newGold,
@@ -308,8 +342,12 @@ export function buyItem(
       ];
     }
 
+    const explorationWithStock = state.exploration
+      ? { ...state.exploration, shopInventory: newShopInventory, shopInventories: newShopInventories }
+      : state.exploration;
     return {
       ...state,
+      exploration: explorationWithStock,
       inventory: { ...state.inventory, gold: newGold, items: newItems },
     };
   }

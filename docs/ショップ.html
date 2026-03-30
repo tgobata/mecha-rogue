@@ -236,19 +236,133 @@
   <!-- 修理タブ -->
   <div class="table-wrap" id="tab-repair">
     <div class="info-box">
-      <p><strong>武器修理コスト</strong></p>
-      <p>耐久度1あたりの修理費用: <span class="repair-cost">15G</span></p>
+      <p><strong>🔧 修理屋 — 修理コスト</strong></p>
+      <p style="margin-top:8px">耐久度1あたりの修理費用: <span class="repair-cost">15G</span></p>
       <p style="color:#aaa;font-size:0.82rem;margin-top:8px">
-        修理費用 = 現在の耐久度不足量 × 15G<br>
-        例: 最大耐久30の武器が耐久10の場合 → 修理費用 = (30 - 10) × 15 = 300G
+        修理費用 = 回復する耐久量 × 15G<br>
+        例: 最大耐久30の武器が耐久10の場合、50%修理 → 回復量15 × 15G = <strong style="color:#ffcc88">225G</strong>
       </p>
+      <table style="margin-top:12px;width:100%;border-collapse:collapse;font-size:0.82rem">
+        <thead>
+          <tr>
+            <th style="text-align:left;padding:5px 8px;background:#0f3460;color:#7ecfff;border-bottom:1px solid #2a2a5e">修理プラン</th>
+            <th style="text-align:left;padding:5px 8px;background:#0f3460;color:#7ecfff;border-bottom:1px solid #2a2a5e">回復量</th>
+            <th style="text-align:left;padding:5px 8px;background:#0f3460;color:#7ecfff;border-bottom:1px solid #2a2a5e">費用目安（MaxDUR=30）</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr style="border-bottom:1px solid #1e1e3e">
+            <td style="padding:5px 8px">25%修理</td>
+            <td style="padding:5px 8px;color:#88ccff">MaxDUR × 25%</td>
+            <td style="padding:5px 8px;color:#ffcc88">8 × 15 = 120G</td>
+          </tr>
+          <tr style="border-bottom:1px solid #1e1e3e">
+            <td style="padding:5px 8px">50%修理</td>
+            <td style="padding:5px 8px;color:#88ccff">MaxDUR × 50%</td>
+            <td style="padding:5px 8px;color:#ffcc88">15 × 15 = 225G</td>
+          </tr>
+          <tr>
+            <td style="padding:5px 8px">全回復</td>
+            <td style="padding:5px 8px;color:#88ccff">消耗量すべて</td>
+            <td style="padding:5px 8px;color:#ffcc88">（消耗量）× 15G</td>
+          </tr>
+        </tbody>
+      </table>
+      <p style="color:#cc8888;font-size:0.78rem;margin-top:10px">⚠ 各装備につき修理は1回のみ（修理済みバッジが表示される）</p>
     </div>
+
     <div class="info-box" style="margin-top:0">
-      <p><strong>ショップ仕入れ数（constants.ts 設定値）</strong></p>
+      <p><strong>🎲 修理ランダムイベント</strong></p>
+      <table style="margin-top:10px;width:100%;border-collapse:collapse;font-size:0.82rem">
+        <thead>
+          <tr>
+            <th style="text-align:left;padding:5px 8px;background:#0f3460;color:#7ecfff;border-bottom:1px solid #2a2a5e">確率</th>
+            <th style="text-align:left;padding:5px 8px;background:#0f3460;color:#7ecfff;border-bottom:1px solid #2a2a5e">結果</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr style="border-bottom:1px solid #1e1e3e">
+            <td style="padding:5px 8px;color:#ff8888">5%</td>
+            <td style="padding:5px 8px;color:#ff8888">⚠ 失敗 — 耐久値が修理予定量の半分だけ逆に減少（最低1）</td>
+          </tr>
+          <tr style="border-bottom:1px solid #1e1e3e">
+            <td style="padding:5px 8px;color:#aaddee">60%</td>
+            <td style="padding:5px 8px">✓ 成功 — 通常通りに修理</td>
+          </tr>
+          <tr style="border-bottom:1px solid #1e1e3e">
+            <td style="padding:5px 8px;color:#88eebb">25%</td>
+            <td style="padding:5px 8px;color:#88eebb">★ 好調 — 修理量 +10%ボーナス</td>
+          </tr>
+          <tr>
+            <td style="padding:5px 8px;color:#ffdd44">10%</td>
+            <td style="padding:5px 8px;color:#ffdd44">✦ 最高 — 修理量に加え ATK+1 または MaxDUR+5 のいずれかランダム上昇</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="info-box" style="margin-top:0">
+      <p><strong>⬆ 修理屋 — 強化メニュー</strong></p>
       <p style="color:#aaa;font-size:0.82rem;margin-top:6px">
-        武器: <span style="color:#ffcc88">3〜5点</span><br>
-        アイテム: <span style="color:#ffcc88">3〜4点</span>
+        強化費用 = 耐久あり武器: <span style="color:#ffcc88">MaxDUR × 25G</span>　／　耐久なし武器: <span style="color:#ffcc88">ATK × 50G</span>
       </p>
+      <table style="margin-top:10px;width:100%;border-collapse:collapse;font-size:0.82rem">
+        <thead>
+          <tr>
+            <th style="text-align:left;padding:5px 8px;background:#0f3460;color:#7ecfff;border-bottom:1px solid #2a2a5e">強化プラン</th>
+            <th style="text-align:left;padding:5px 8px;background:#0f3460;color:#7ecfff;border-bottom:1px solid #2a2a5e">効果</th>
+            <th style="text-align:left;padding:5px 8px;background:#0f3460;color:#7ecfff;border-bottom:1px solid #2a2a5e">費用例（MaxDUR=40）</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr style="border-bottom:1px solid #1e1e3e">
+            <td style="padding:5px 8px">攻撃強化</td>
+            <td style="padding:5px 8px;color:#88ccff">ATK +2</td>
+            <td style="padding:5px 8px;color:#ffcc88">40 × 25 = 1000G</td>
+          </tr>
+          <tr>
+            <td style="padding:5px 8px">耐久強化</td>
+            <td style="padding:5px 8px;color:#88ccff">MaxDUR +10（耐久なし武器は不可）</td>
+            <td style="padding:5px 8px;color:#ffcc88">40 × 25 = 1000G</td>
+          </tr>
+        </tbody>
+      </table>
+      <p style="color:#cc8888;font-size:0.78rem;margin-top:10px">⚠ 各装備につき強化は1回のみ（強化済みバッジが表示される）</p>
+    </div>
+
+    <div class="info-box" style="margin-top:0">
+      <p><strong>🛒 ショップ仕様</strong></p>
+      <table style="margin-top:10px;width:100%;border-collapse:collapse;font-size:0.82rem">
+        <thead>
+          <tr>
+            <th style="text-align:left;padding:5px 8px;background:#0f3460;color:#7ecfff;border-bottom:1px solid #2a2a5e">項目</th>
+            <th style="text-align:left;padding:5px 8px;background:#0f3460;color:#7ecfff;border-bottom:1px solid #2a2a5e">値</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr style="border-bottom:1px solid #1e1e3e">
+            <td style="padding:5px 8px">仕入れ数（武器）</td>
+            <td style="padding:5px 8px;color:#ffcc88">3〜5点、各在庫1個</td>
+          </tr>
+          <tr style="border-bottom:1px solid #1e1e3e">
+            <td style="padding:5px 8px">仕入れ数（アイテム）</td>
+            <td style="padding:5px 8px;color:#ffcc88">3〜4点、各在庫1〜3個</td>
+          </tr>
+          <tr style="border-bottom:1px solid #1e1e3e">
+            <td style="padding:5px 8px">在庫切れ</td>
+            <td style="padding:5px 8px;color:#aaa">購入不可（売切バッジ表示）。別ショップには独立した在庫あり</td>
+          </tr>
+          <tr style="border-bottom:1px solid #1e1e3e">
+            <td style="padding:5px 8px">ショップ出現確率（休憩所以外）</td>
+            <td style="padding:5px 8px;color:#ffcc88">10%（SHOP_SPAWN_RATE = 0.10）</td>
+          </tr>
+          <tr>
+            <td style="padding:5px 8px">修理屋出現確率（休憩所以外）</td>
+            <td style="padding:5px 8px;color:#ffcc88">2%（REPAIR_SPAWN_RATE = 0.02）</td>
+          </tr>
+        </tbody>
+      </table>
+      <p style="color:#aaa;font-size:0.78rem;margin-top:8px">退出するとショップ在庫は更新されます。売却価格は購入価格の約45〜50%。</p>
     </div>
   </div>
 
@@ -256,1515 +370,409 @@
 const SHOP_PRICES = {
   "version": "1.0",
   "weapons": {
-    "machine_punch":      { "buy": 0,    "sell": 0    },
-    "blade_arm":          { "buy": 200,  "sell": 90   },
-    "double_blade":       { "buy": 250,  "sell": 110  },
-    "tri_cutter":         { "buy": 280,  "sell": 120  },
-    "heavy_axe":          { "buy": 320,  "sell": 140  },
-    "chainsaw":           { "buy": 450,  "sell": 200  },
-    "plasma_blade":       { "buy": 900,  "sell": 400  },
-    "thunder_hammer":     { "buy": 1200, "sell": 550  },
-    "muramasa_blade":     { "buy": 3500, "sell": 1750 },
-    "machine_gun":        { "buy": 300,  "sell": 130  },
-    "shotgun":            { "buy": 380,  "sell": 170  },
-    "sniper_rifle":       { "buy": 550,  "sell": 250  },
-    "missile_pod":        { "buy": 600,  "sell": 270  },
-    "homing_missile":     { "buy": 750,  "sell": 340  },
-    "laser_cannon":       { "buy": 1500, "sell": 680  },
-    "plasma_cannon":      { "buy": 2800, "sell": 1260 },
-    "meteor_launcher":    { "buy": 4000, "sell": 2000 },
-    "emp_pulse":          { "buy": 350,  "sell": 155  },
-    "gravity_well":       { "buy": 500,  "sell": 225  },
-    "freeze_ray":         { "buy": 600,  "sell": 270  },
-    "shield_bash":        { "buy": 250,  "sell": 110  },
-    "drain_lance":        { "buy": 700,  "sell": 315  },
-    "time_bomb":          { "buy": 800,  "sell": 360  },
-    "long_spear":         { "buy": 320,  "sell": 140  },
-    "sniper_cannon":      { "buy": 500,  "sell": 225  },
-    "scatter_gun":        { "buy": 260,  "sell": 115  },
-    "volley_missile":     { "buy": 420,  "sell": 190  },
-    "carbon_blade":       { "buy": 380,  "sell": 170  },
-    "plasma_emitter":     { "buy": 650,  "sell": 295  },
-    "grenade_launcher":   { "buy": 560,  "sell": 255  },
-    "thunder_wave":       { "buy": 350,  "sell": 160  },
-    "beam_cannon":        { "buy": 580,  "sell": 265  },
-    "scrap_sword":        { "buy": 120,  "sell": 55   }
+    "machine_punch": {
+      "buy": 0,
+      "sell": 0
+    },
+    "blade_arm": {
+      "buy": 200,
+      "sell": 90
+    },
+    "double_blade": {
+      "buy": 250,
+      "sell": 110
+    },
+    "tri_cutter": {
+      "buy": 280,
+      "sell": 120
+    },
+    "heavy_axe": {
+      "buy": 320,
+      "sell": 140
+    },
+    "chainsaw": {
+      "buy": 450,
+      "sell": 200
+    },
+    "plasma_blade": {
+      "buy": 900,
+      "sell": 400
+    },
+    "thunder_hammer": {
+      "buy": 1200,
+      "sell": 550
+    },
+    "muramasa_blade": {
+      "buy": 3500,
+      "sell": 1750
+    },
+    "machine_gun": {
+      "buy": 300,
+      "sell": 130
+    },
+    "shotgun": {
+      "buy": 380,
+      "sell": 170
+    },
+    "sniper_rifle": {
+      "buy": 550,
+      "sell": 250
+    },
+    "missile_pod": {
+      "buy": 600,
+      "sell": 270
+    },
+    "homing_missile": {
+      "buy": 750,
+      "sell": 340
+    },
+    "laser_cannon": {
+      "buy": 1500,
+      "sell": 680
+    },
+    "plasma_cannon": {
+      "buy": 2800,
+      "sell": 1260
+    },
+    "meteor_launcher": {
+      "buy": 4000,
+      "sell": 2000
+    },
+    "emp_pulse": {
+      "buy": 350,
+      "sell": 155
+    },
+    "gravity_well": {
+      "buy": 500,
+      "sell": 225
+    },
+    "freeze_ray": {
+      "buy": 600,
+      "sell": 270
+    },
+    "shield_bash": {
+      "buy": 250,
+      "sell": 110
+    },
+    "drain_lance": {
+      "buy": 700,
+      "sell": 315
+    },
+    "time_bomb": {
+      "buy": 800,
+      "sell": 360
+    },
+    "long_spear": {
+      "buy": 320,
+      "sell": 140
+    },
+    "sniper_cannon": {
+      "buy": 500,
+      "sell": 225
+    },
+    "scatter_gun": {
+      "buy": 260,
+      "sell": 115
+    },
+    "volley_missile": {
+      "buy": 420,
+      "sell": 190
+    },
+    "carbon_blade": {
+      "buy": 380,
+      "sell": 170
+    },
+    "plasma_emitter": {
+      "buy": 650,
+      "sell": 295
+    },
+    "grenade_launcher": {
+      "buy": 560,
+      "sell": 255
+    },
+    "thunder_wave": {
+      "buy": 350,
+      "sell": 160
+    },
+    "beam_cannon": {
+      "buy": 580,
+      "sell": 265
+    },
+    "scrap_sword": {
+      "buy": 120,
+      "sell": 55
+    }
   },
   "items": {
-    "repair_kit_small":       { "buy": 50,   "sell": 20  },
-    "repair_kit_medium":      { "buy": 120,  "sell": 50  },
-    "repair_kit_large":       { "buy": 280,  "sell": 115 },
-    "full_repair_kit":        { "buy": 800,  "sell": 360 },
-    "energy_pack":            { "buy": 80,   "sell": 32  },
-    "energy_pack_large":      { "buy": 180,  "sell": 75  },
-    "weapon_repair_kit":      { "buy": 100,  "sell": 40  },
-    "upgrade_core_i":         { "buy": 200,  "sell": 90  },
-    "upgrade_core_ii":        { "buy": 500,  "sell": 225 },
-    "upgrade_core_iii":       { "buy": 1200, "sell": 540 },
-    "floor_map":              { "buy": 150,  "sell": 60  },
-    "enemy_radar_map":        { "buy": 250,  "sell": 100 },
-    "smoke_bomb":             { "buy": 70,   "sell": 28  },
-    "emp_grenade":            { "buy": 300,  "sell": 135 },
-    "flash_grenade":          { "buy": 150,  "sell": 60  },
-    "speed_boost":            { "buy": 100,  "sell": 40  },
-    "barrier_capsule":        { "buy": 350,  "sell": 155 },
-    "holy_oil":               { "buy": 500,  "sell": 225 },
-    "escape_module":          { "buy": 400,  "sell": 180 },
-    "teleport_beacon":        { "buy": 200,  "sell": 80  },
-    "decoy_drone":            { "buy": 180,  "sell": 72  },
-    "id_scope":               { "buy": 60,   "sell": 24  },
-    "armor_plate_i":          { "buy": 300,  "sell": 135 },
-    "armor_plate_ii":         { "buy": 800,  "sell": 360 },
-    "armor_plate_iii":        { "buy": 2500, "sell": 1125 },
-    "boost_engine_i":         { "buy": 600,  "sell": 270 },
-    "boost_engine_ii":        { "buy": 2000, "sell": 900 },
-    "weapon_rack_expansion":  { "buy": 1500, "sell": 675 },
-    "tool_bay_expansion":     { "buy": 1500, "sell": 675 },
-    "cargo_expansion":        { "buy": 400,  "sell": 180 },
-    "reactor_upgrade":        { "buy": 700,  "sell": 315 },
-    "frame_upgrade_i":        { "buy": 350,  "sell": 155 },
-    "frame_upgrade_ii":       { "buy": 1000, "sell": 450 },
-    "frame_upgrade_iii":      { "buy": 3000, "sell": 1350 },
-    "warehouse_ticket":       { "buy": 1000, "sell": 450 },
-    "unknown_part_a":         { "buy": 0,    "sell": 50  },
-    "unknown_part_b":         { "buy": 0,    "sell": 130 },
-    "scrap_metal":            { "buy": 0,    "sell": 30  },
-    "rare_circuit":           { "buy": 0,    "sell": 150 }
+    "repair_kit_small": {
+      "buy": 50,
+      "sell": 20
+    },
+    "repair_kit_medium": {
+      "buy": 120,
+      "sell": 50
+    },
+    "repair_kit_large": {
+      "buy": 280,
+      "sell": 115
+    },
+    "full_repair_kit": {
+      "buy": 800,
+      "sell": 360
+    },
+    "energy_pack": {
+      "buy": 80,
+      "sell": 32
+    },
+    "energy_pack_large": {
+      "buy": 180,
+      "sell": 75
+    },
+    "weapon_repair_kit": {
+      "buy": 100,
+      "sell": 40
+    },
+    "upgrade_core_i": {
+      "buy": 200,
+      "sell": 90
+    },
+    "upgrade_core_ii": {
+      "buy": 500,
+      "sell": 225
+    },
+    "upgrade_core_iii": {
+      "buy": 1200,
+      "sell": 540
+    },
+    "floor_map": {
+      "buy": 150,
+      "sell": 60
+    },
+    "enemy_radar_map": {
+      "buy": 250,
+      "sell": 100
+    },
+    "smoke_bomb": {
+      "buy": 70,
+      "sell": 28
+    },
+    "smoke_bomb_2": {
+      "buy": 140,
+      "sell": 56
+    },
+    "smoke_bomb_3": {
+      "buy": 260,
+      "sell": 104
+    },
+    "smoke_bomb_4": {
+      "buy": 420,
+      "sell": 168
+    },
+    "emp_grenade": {
+      "buy": 300,
+      "sell": 135
+    },
+    "flash_grenade": {
+      "buy": 150,
+      "sell": 60
+    },
+    "speed_boost": {
+      "buy": 100,
+      "sell": 40
+    },
+    "barrier_capsule": {
+      "buy": 350,
+      "sell": 155
+    },
+    "holy_oil": {
+      "buy": 500,
+      "sell": 225
+    },
+    "escape_module": {
+      "buy": 400,
+      "sell": 180
+    },
+    "teleport_beacon": {
+      "buy": 200,
+      "sell": 80
+    },
+    "decoy_drone": {
+      "buy": 180,
+      "sell": 72
+    },
+    "id_scope": {
+      "buy": 60,
+      "sell": 24
+    },
+    "armor_plate_i": {
+      "buy": 300,
+      "sell": 135
+    },
+    "armor_plate_ii": {
+      "buy": 800,
+      "sell": 360
+    },
+    "armor_plate_iii": {
+      "buy": 2500,
+      "sell": 1125
+    },
+    "boost_engine_i": {
+      "buy": 600,
+      "sell": 270
+    },
+    "boost_engine_ii": {
+      "buy": 2000,
+      "sell": 900
+    },
+    "weapon_rack_expansion": {
+      "buy": 1500,
+      "sell": 675
+    },
+    "tool_bay_expansion": {
+      "buy": 1500,
+      "sell": 675
+    },
+    "cargo_expansion": {
+      "buy": 400,
+      "sell": 180
+    },
+    "reactor_upgrade": {
+      "buy": 700,
+      "sell": 315
+    },
+    "frame_upgrade_i": {
+      "buy": 350,
+      "sell": 155
+    },
+    "frame_upgrade_ii": {
+      "buy": 1000,
+      "sell": 450
+    },
+    "frame_upgrade_iii": {
+      "buy": 3000,
+      "sell": 1350
+    },
+    "warehouse_ticket": {
+      "buy": 1000,
+      "sell": 450
+    },
+    "unknown_part_a": {
+      "buy": 0,
+      "sell": 50
+    },
+    "unknown_part_b": {
+      "buy": 0,
+      "sell": 130
+    },
+    "scrap_metal_i": {
+      "buy": 0,
+      "sell": 20
+    },
+    "scrap_metal_ii": {
+      "buy": 0,
+      "sell": 50
+    },
+    "scrap_metal_iii": {
+      "buy": 0,
+      "sell": 100
+    },
+    "rare_circuit": {
+      "buy": 0,
+      "sell": 150
+    },
+    "warp_chip_down": {
+      "buy": 300,
+      "sell": 135
+    },
+    "warp_chip_up": {
+      "buy": 250,
+      "sell": 112
+    },
+    "warp_chip_random": {
+      "buy": 100,
+      "sell": 45
+    },
+    "bomb_1_s": {
+      "buy": 50,
+      "sell": 22
+    },
+    "bomb_1_m": {
+      "buy": 100,
+      "sell": 45
+    },
+    "bomb_1_h": {
+      "buy": 180,
+      "sell": 81
+    },
+    "bomb_2_s": {
+      "buy": 80,
+      "sell": 36
+    },
+    "bomb_2_m": {
+      "buy": 150,
+      "sell": 67
+    },
+    "bomb_2_h": {
+      "buy": 250,
+      "sell": 112
+    },
+    "bomb_3_s": {
+      "buy": 100,
+      "sell": 45
+    },
+    "bomb_3_m": {
+      "buy": 200,
+      "sell": 90
+    },
+    "bomb_3_h": {
+      "buy": 350,
+      "sell": 157
+    },
+    "bomb_4_s": {
+      "buy": 120,
+      "sell": 54
+    },
+    "bomb_4_m": {
+      "buy": 220,
+      "sell": 99
+    },
+    "bomb_4_h": {
+      "buy": 380,
+      "sell": 171
+    },
+    "flash_grenade_weak": {
+      "buy": 60,
+      "sell": 27
+    },
+    "flash_grenade_normal": {
+      "buy": 120,
+      "sell": 54
+    },
+    "flash_grenade_strong": {
+      "buy": 220,
+      "sell": 99
+    },
+    "flash_grenade_ultra": {
+      "buy": 400,
+      "sell": 180
+    },
+    "nanobot_s": {
+      "buy": 80,
+      "sell": 36
+    },
+    "nanobot_m": {
+      "buy": 180,
+      "sell": 81
+    },
+    "nanobot_l": {
+      "buy": 350,
+      "sell": 157
+    }
   },
   "repair": {
     "cost_per_durability": 15
   }
 };
-
-const WEAPONS_DATA = [
-  {
-    "id": "machine_punch",
-    "name": "マシンパンチ",
-    "category": "melee",
-    "atk": 8,
-    "range": 1,
-    "rangeType": "adjacent",
-    "attackRange": 1,
-    "attackPattern": "single",
-    "durability": null,
-    "durabilityLoss": 0,
-    "appearsFrom": 0,
-    "weight": 0,
-    "energyCost": 0,
-    "special": null,
-    "description": "初期装備。壊れない。正面1タイルを攻撃する。"
-  },
-  {
-    "id": "blade_arm",
-    "name": "ブレードアーム",
-    "category": "melee",
-    "atk": 18,
-    "range": 1,
-    "rangeType": "adjacent",
-    "attackRange": 1,
-    "attackPattern": "single",
-    "durability": 40,
-    "durabilityLoss": 1,
-    "appearsFrom": 1,
-    "weight": 30,
-    "energyCost": 0,
-    "special": null,
-    "description": "バランス型の刃型近接武器。攻撃力と耐久のバランスが良い。"
-  },
-  {
-    "id": "double_blade",
-    "name": "ダブルブレード",
-    "category": "melee",
-    "atk": 14,
-    "range": 1,
-    "rangeType": "bidirectional",
-    "attackRange": 1,
-    "attackPattern": "bidirectional",
-    "durability": 35,
-    "durabilityLoss": 1,
-    "appearsFrom": 3,
-    "weight": 20,
-    "energyCost": 0,
-    "special": null,
-    "description": "前後2方向を同時に攻撃できる双刃。挟み撃ちを受けた際に有効。"
-  },
-  {
-    "id": "tri_cutter",
-    "name": "トライカッター",
-    "category": "melee",
-    "atk": 12,
-    "range": 1,
-    "rangeType": "tri_front",
-    "attackRange": 1,
-    "attackPattern": "spread3",
-    "durability": 30,
-    "durabilityLoss": 1,
-    "appearsFrom": 5,
-    "weight": 15,
-    "energyCost": 0,
-    "special": null,
-    "description": "前方＋斜め前の3方向を同時攻撃できる広範囲型。威力は低いが群敵に有効。"
-  },
-  {
-    "id": "heavy_axe",
-    "name": "ヘビーアクス",
-    "category": "melee",
-    "atk": 35,
-    "range": 1,
-    "rangeType": "adjacent",
-    "attackRange": 1,
-    "attackPattern": "single",
-    "durability": 25,
-    "durabilityLoss": 1,
-    "appearsFrom": 5,
-    "weight": 15,
-    "energyCost": 0,
-    "special": null,
-    "description": "高威力・低耐久の重斧。一撃の破壊力は高いが消耗が激しい。"
-  },
-  {
-    "id": "chainsaw",
-    "name": "チェーンソー",
-    "category": "melee",
-    "atk": 22,
-    "range": 2,
-    "rangeType": "line_2_pierce",
-    "attackRange": 2,
-    "attackPattern": "pierce",
-    "durability": 20,
-    "durabilityLoss": 1,
-    "appearsFrom": 8,
-    "weight": 10,
-    "energyCost": 0,
-    "special": "wall_break",
-    "description": "正面2タイルを貫通して攻撃し、壁も破壊できる回転刃。"
-  },
-  {
-    "id": "plasma_blade",
-    "name": "プラズマブレード",
-    "category": "melee",
-    "atk": 45,
-    "range": 1,
-    "rangeType": "adjacent",
-    "attackRange": 1,
-    "attackPattern": "single",
-    "durability": 50,
-    "durabilityLoss": 1,
-    "appearsFrom": 15,
-    "weight": 10,
-    "energyCost": 0,
-    "special": "armor_pierce",
-    "description": "装甲貫通効果を持つ高出力プラズマ刃。高防御の敵にも安定したダメージを与える。"
-  },
-  {
-    "id": "thunder_hammer",
-    "name": "雷神の槌",
-    "category": "melee",
-    "atk": 60,
-    "range": 1,
-    "rangeType": "omnidirectional",
-    "attackRange": 1,
-    "attackPattern": "all8",
-    "durability": 15,
-    "durabilityLoss": 1,
-    "appearsFrom": 20,
-    "weight": 5,
-    "energyCost": 0,
-    "special": null,
-    "description": "周囲8タイルの全方向を同時に攻撃する超高出力電磁槌。耐久が非常に低い。"
-  },
-  {
-    "id": "muramasa_blade",
-    "name": "ムラマサブレード",
-    "category": "melee",
-    "atk": 80,
-    "range": 1,
-    "rangeType": "tri_front",
-    "attackRange": 1,
-    "attackPattern": "spread3",
-    "durability": 60,
-    "durabilityLoss": 1,
-    "appearsFrom": 30,
-    "weight": 3,
-    "energyCost": 0,
-    "special": "critical_x2",
-    "description": "前＋斜め前3方向を攻撃する最強近接武器。クリティカル率が2倍になる伝説の刃。"
-  },
-  {
-    "id": "machine_gun",
-    "name": "マシンガン",
-    "category": "ranged",
-    "atk": 10,
-    "range": 4,
-    "rangeType": "line_4",
-    "attackRange": 4,
-    "attackPattern": "single",
-    "durability": 50,
-    "durabilityLoss": 1,
-    "appearsFrom": 2,
-    "weight": 25,
-    "energyCost": 0,
-    "special": "double_shot",
-    "description": "直線4タイルに1ターン2発連射できる機関銃。手数が多く安定して戦える。"
-  },
-  {
-    "id": "shotgun",
-    "name": "ショットガン",
-    "category": "ranged",
-    "atk": 20,
-    "range": 2,
-    "rangeType": "spread_3x2",
-    "attackRange": 2,
-    "attackPattern": "spread3",
-    "durability": 30,
-    "durabilityLoss": 1,
-    "appearsFrom": 4,
-    "weight": 20,
-    "energyCost": 0,
-    "special": null,
-    "description": "前方3方向×2タイルの近距離広範囲攻撃。群れた敵に絶大な効果を発揮する。"
-  },
-  {
-    "id": "sniper_rifle",
-    "name": "スナイパーライフル",
-    "category": "ranged",
-    "atk": 40,
-    "range": 8,
-    "rangeType": "line_8",
-    "attackRange": 8,
-    "attackPattern": "single",
-    "durability": 25,
-    "durabilityLoss": 1,
-    "appearsFrom": 7,
-    "weight": 12,
-    "energyCost": 0,
-    "special": null,
-    "description": "直線8タイルの長射程狙撃銃。壁越しには攻撃できないが高威力で遠距離の敵を仕留められる。"
-  },
-  {
-    "id": "missile_pod",
-    "name": "ミサイルポッド",
-    "category": "ranged",
-    "atk": 30,
-    "range": 6,
-    "rangeType": "line_6",
-    "attackRange": 6,
-    "attackPattern": "single",
-    "durability": 20,
-    "durabilityLoss": 1,
-    "appearsFrom": 8,
-    "weight": 10,
-    "energyCost": 0,
-    "special": "splash_1",
-    "description": "直線6タイルに発射し着弾点周囲1タイルも巻き込むミサイル兵器。"
-  },
-  {
-    "id": "homing_missile",
-    "name": "ホーミングミサイル",
-    "category": "ranged",
-    "atk": 25,
-    "range": 6,
-    "rangeType": "homing_6",
-    "attackRange": 6,
-    "attackPattern": "single",
-    "durability": 15,
-    "durabilityLoss": 1,
-    "appearsFrom": 12,
-    "weight": 8,
-    "energyCost": 0,
-    "special": null,
-    "description": "壁を避けながら最大6タイル追尾する誘導ミサイル。障害物の多い迷路でも確実に敵を追う。"
-  },
-  {
-    "id": "laser_cannon",
-    "name": "レーザーカノン",
-    "category": "ranged",
-    "atk": 50,
-    "range": 99,
-    "rangeType": "line_all_pierce",
-    "attackRange": 99,
-    "attackPattern": "pierce",
-    "durability": 10,
-    "durabilityLoss": 1,
-    "appearsFrom": 18,
-    "weight": 5,
-    "energyCost": 0,
-    "special": null,
-    "description": "直線上の全タイルを貫通し、その上にいる全敵にダメージを与える高出力レーザー。"
-  },
-  {
-    "id": "plasma_cannon",
-    "name": "プラズマキャノン",
-    "category": "ranged",
-    "atk": 70,
-    "range": 5,
-    "rangeType": "line_5",
-    "attackRange": 5,
-    "attackPattern": "single",
-    "durability": 8,
-    "durabilityLoss": 1,
-    "appearsFrom": 25,
-    "weight": 4,
-    "energyCost": 0,
-    "special": "splash_2",
-    "description": "直線5タイルに発射し着弾点周囲2タイルを爆発で吹き飛ばす大型プラズマ砲。"
-  },
-  {
-    "id": "meteor_launcher",
-    "name": "メテオランチャー",
-    "category": "ranged",
-    "atk": 55,
-    "range": 99,
-    "rangeType": "any_visible",
-    "attackRange": 99,
-    "attackPattern": "single",
-    "durability": 5,
-    "durabilityLoss": 1,
-    "appearsFrom": 28,
-    "weight": 2,
-    "energyCost": 20,
-    "special": "splash_3x3",
-    "description": "視界内の任意のタイルを指定して3×3範囲の爆発を起こす。エネルギー20消費。耐久が極めて低い。"
-  },
-  {
-    "id": "emp_pulse",
-    "name": "EMPパルス",
-    "category": "special",
-    "atk": 0,
-    "range": 3,
-    "rangeType": "omnidirectional",
-    "attackRange": 3,
-    "attackPattern": "all8",
-    "durability": 8,
-    "durabilityLoss": 1,
-    "appearsFrom": 6,
-    "weight": 12,
-    "energyCost": 0,
-    "special": "stun_3tiles_2turns",
-    "description": "周囲3タイルの全敵を2ターン行動不能にする電磁パルス。ダメージは与えない。"
-  },
-  {
-    "id": "gravity_well",
-    "name": "グラビティウェル",
-    "category": "special",
-    "atk": 0,
-    "range": 5,
-    "rangeType": "omnidirectional",
-    "attackRange": 5,
-    "attackPattern": "all8",
-    "durability": 10,
-    "durabilityLoss": 1,
-    "appearsFrom": 10,
-    "weight": 8,
-    "energyCost": 0,
-    "special": "pull_5tiles",
-    "description": "周囲5タイルの全敵を1タイル引き寄せる重力兵器。集団戦で範囲武器と組み合わせると強力。"
-  },
-  {
-    "id": "freeze_ray",
-    "name": "フリーズレイ",
-    "category": "special",
-    "atk": 0,
-    "range": 3,
-    "rangeType": "line",
-    "attackRange": 3,
-    "attackPattern": "single",
-    "durability": 12,
-    "durabilityLoss": 1,
-    "appearsFrom": 13,
-    "weight": 7,
-    "energyCost": 0,
-    "special": "freeze_3turns",
-    "description": "正面3タイルの敵を3ターン凍結させる冷凍光線。凍結中に受けるダメージが1.5倍になる。"
-  },
-  {
-    "id": "shield_bash",
-    "name": "シールドバッシュ",
-    "category": "special",
-    "atk": 15,
-    "range": 1,
-    "rangeType": "adjacent",
-    "attackRange": 1,
-    "attackPattern": "single",
-    "durability": 20,
-    "durabilityLoss": 1,
-    "appearsFrom": 4,
-    "weight": 18,
-    "energyCost": 0,
-    "special": "knockback_2",
-    "description": "正面1タイルを攻撃し、敵を2タイル押し戻す盾打撃。落とし穴に押し込むことも可能。"
-  },
-  {
-    "id": "drain_lance",
-    "name": "ドレインランス",
-    "category": "special",
-    "atk": 20,
-    "range": 1,
-    "rangeType": "adjacent",
-    "attackRange": 1,
-    "attackPattern": "single",
-    "durability": 15,
-    "durabilityLoss": 1,
-    "appearsFrom": 10,
-    "weight": 8,
-    "energyCost": 0,
-    "special": "drain_30pct",
-    "description": "正面1タイルを攻撃し与えたダメージの30%をHP回復する吸収型ランス。回復手段として優秀。"
-  },
-  {
-    "id": "time_bomb",
-    "name": "時限爆弾",
-    "category": "special",
-    "atk": 80,
-    "range": 0,
-    "rangeType": "placed",
-    "attackRange": 0,
-    "attackPattern": "single",
-    "durability": 3,
-    "durabilityLoss": 1,
-    "appearsFrom": 15,
-    "weight": 4,
-    "energyCost": 0,
-    "special": "placed_3turn_3x3",
-    "description": "設置後3ターンで3×3範囲に爆発（攻撃力80）する時限爆弾。自分も巻き込まれるので注意。"
-  },
-  {
-    "id": "long_spear",
-    "name": "ロングスピア",
-    "category": "melee",
-    "atk": 24,
-    "range": 2,
-    "rangeType": "line_2_pierce",
-    "attackRange": 2,
-    "attackPattern": "pierce",
-    "durability": 35,
-    "durabilityLoss": 1,
-    "appearsFrom": 3,
-    "weight": 22,
-    "energyCost": 0,
-    "special": null,
-    "description": "正面2タイルを貫通攻撃するリーチ型槍。縦一列の敵を一度に仕留められる。"
-  },
-  {
-    "id": "sniper_cannon",
-    "name": "スナイパーキャノン",
-    "category": "ranged",
-    "atk": 55,
-    "range": 3,
-    "rangeType": "line_3",
-    "attackRange": 3,
-    "attackPattern": "single",
-    "durability": 20,
-    "durabilityLoss": 1,
-    "appearsFrom": 6,
-    "weight": 14,
-    "energyCost": 0,
-    "special": null,
-    "description": "直線3タイルを高威力で狙撃する中距離キャノン。精度が高く遠距離の敵に有効。"
-  },
-  {
-    "id": "scatter_gun",
-    "name": "スキャッターガン",
-    "category": "ranged",
-    "atk": 16,
-    "range": 1,
-    "rangeType": "spread_3x1",
-    "attackRange": 1,
-    "attackPattern": "spread3",
-    "durability": 28,
-    "durabilityLoss": 1,
-    "appearsFrom": 3,
-    "weight": 22,
-    "energyCost": 0,
-    "special": null,
-    "description": "前方3方向×1タイルを同時攻撃する散弾銃。近距離の複数敵を一掃できる。"
-  },
-  {
-    "id": "volley_missile",
-    "name": "ボレーミサイル",
-    "category": "ranged",
-    "atk": 22,
-    "range": 2,
-    "rangeType": "spread_3x2",
-    "attackRange": 2,
-    "attackPattern": "spread3",
-    "durability": 18,
-    "durabilityLoss": 1,
-    "appearsFrom": 9,
-    "weight": 10,
-    "energyCost": 0,
-    "special": null,
-    "description": "前方3方向×2タイルへ同時発射する多連装ミサイル。中距離の扇状エリアを制圧する。"
-  },
-  {
-    "id": "carbon_blade",
-    "name": "カーボンブレード",
-    "category": "melee",
-    "atk": 20,
-    "range": 1,
-    "rangeType": "cross_1",
-    "attackRange": 1,
-    "attackPattern": "cross",
-    "durability": 30,
-    "durabilityLoss": 1,
-    "appearsFrom": 7,
-    "weight": 14,
-    "energyCost": 0,
-    "special": null,
-    "description": "上下左右4方向を同時に薙ぎ払うクロス型炭素刃。群に囲まれたとき真価を発揮する。"
-  },
-  {
-    "id": "plasma_emitter",
-    "name": "プラズマエミッター",
-    "category": "special",
-    "atk": 28,
-    "range": 2,
-    "rangeType": "all8_2",
-    "attackRange": 2,
-    "attackPattern": "all8",
-    "durability": 12,
-    "durabilityLoss": 1,
-    "appearsFrom": 14,
-    "weight": 6,
-    "energyCost": 5,
-    "special": null,
-    "description": "周囲8方向×2タイルへプラズマを放射する全方位兵器。エネルギー5消費。囲まれた状況を一気に打開できる。"
-  },
-  {
-    "id": "grenade_launcher",
-    "name": "グレネードランチャー",
-    "category": "ranged",
-    "atk": 35,
-    "range": 2,
-    "rangeType": "spread_3x2",
-    "attackRange": 2,
-    "attackPattern": "spread3",
-    "durability": 15,
-    "durabilityLoss": 1,
-    "appearsFrom": 11,
-    "weight": 8,
-    "energyCost": 0,
-    "special": "splash_1",
-    "description": "前方3方向×2タイルへ爆発物を投擲し着弾点周囲も巻き込む。高火力の扇状攻撃。"
-  },
-  {
-    "id": "thunder_wave",
-    "name": "サンダーウェーブ",
-    "category": "special",
-    "atk": 18,
-    "range": 1,
-    "rangeType": "cross_1",
-    "attackRange": 1,
-    "attackPattern": "cross",
-    "durability": 20,
-    "durabilityLoss": 1,
-    "appearsFrom": 8,
-    "weight": 12,
-    "energyCost": 0,
-    "special": "shocked",
-    "description": "上下左右4方向へ電撃波を放ち感電状態を付与する十字型電撃器。隣接する4方向の敵全員に効果的。"
-  },
-  {
-    "id": "beam_cannon",
-    "name": "ビームキャノン",
-    "category": "ranged",
-    "atk": 42,
-    "range": 3,
-    "rangeType": "line_3_pierce",
-    "attackRange": 3,
-    "attackPattern": "pierce",
-    "durability": 18,
-    "durabilityLoss": 1,
-    "appearsFrom": 10,
-    "weight": 10,
-    "energyCost": 0,
-    "special": null,
-    "description": "正面3タイルを貫通するビーム砲。直線上に並んだ複数の敵を一度に撃ち抜く。"
-  },
-  {
-    "id": "scrap_sword",
-    "name": "スクラップソード",
-    "category": "melee",
-    "atk": 13,
-    "range": 1,
-    "rangeType": "adjacent",
-    "attackRange": 1,
-    "attackPattern": "single",
-    "durability": 15,
-    "durabilityLoss": 1,
-    "appearsFrom": 1,
-    "weight": 25,
-    "energyCost": 0,
-    "special": null,
-    "description": "廃材から作られた粗削りの剣。低耐久だが序盤の武器として代用できる。"
-  },
-  {
-    "id": "light_shield",
-    "name": "ライトシールド",
-    "category": "shield",
-    "atk": 0,
-    "range": 0,
-    "rangeType": "none",
-    "attackRange": 0,
-    "attackPattern": "none",
-    "durability": 30,
-    "durabilityLoss": 1,
-    "appearsFrom": 2,
-    "weight": 20,
-    "energyCost": 0,
-    "special": null,
-    "def": 3,
-    "blockChance": 0,
-    "description": "軽量で扱いやすい基本シールド。DEF+3。"
-  },
-  {
-    "id": "iron_shield",
-    "name": "アイアンシールド",
-    "category": "shield",
-    "atk": 0,
-    "range": 0,
-    "rangeType": "none",
-    "attackRange": 0,
-    "attackPattern": "none",
-    "durability": 40,
-    "durabilityLoss": 1,
-    "appearsFrom": 4,
-    "weight": 15,
-    "energyCost": 0,
-    "special": null,
-    "def": 6,
-    "blockChance": 0.05,
-    "description": "鉄製の堅牢なシールド。DEF+6、5%の確率でダメージを完全ブロック。"
-  },
-  {
-    "id": "reactive_shield",
-    "name": "リアクティブシールド",
-    "category": "shield",
-    "atk": 0,
-    "range": 0,
-    "rangeType": "none",
-    "attackRange": 0,
-    "attackPattern": "none",
-    "durability": 35,
-    "durabilityLoss": 1,
-    "appearsFrom": 7,
-    "weight": 12,
-    "energyCost": 0,
-    "special": null,
-    "def": 8,
-    "blockChance": 0.1,
-    "description": "反応型エネルギーシールド。DEF+8、10%の確率でダメージを完全ブロック。"
-  },
-  {
-    "id": "barrier_plate",
-    "name": "バリアプレート",
-    "category": "shield",
-    "atk": 0,
-    "range": 0,
-    "rangeType": "none",
-    "attackRange": 0,
-    "attackPattern": "none",
-    "durability": 50,
-    "durabilityLoss": 1,
-    "appearsFrom": 11,
-    "weight": 10,
-    "energyCost": 0,
-    "special": null,
-    "def": 11,
-    "blockChance": 0.15,
-    "description": "高出力バリアを張り続けるプレート。DEF+11、15%の確率でダメージを完全ブロック。"
-  },
-  {
-    "id": "plasma_barrier",
-    "name": "プラズマバリア",
-    "category": "shield",
-    "atk": 0,
-    "range": 0,
-    "rangeType": "none",
-    "attackRange": 0,
-    "attackPattern": "none",
-    "durability": 45,
-    "durabilityLoss": 1,
-    "appearsFrom": 16,
-    "weight": 8,
-    "energyCost": 0,
-    "special": null,
-    "def": 13,
-    "blockChance": 0.2,
-    "description": "プラズマで形成された高密度シールド。DEF+13、20%の確率でダメージを完全ブロック。"
-  },
-  {
-    "id": "aegis_shield",
-    "name": "イージスシールド",
-    "category": "shield",
-    "atk": 0,
-    "range": 0,
-    "rangeType": "none",
-    "attackRange": 0,
-    "attackPattern": "none",
-    "durability": 60,
-    "durabilityLoss": 1,
-    "appearsFrom": 22,
-    "weight": 5,
-    "energyCost": 0,
-    "special": null,
-    "def": 15,
-    "blockChance": 0.25,
-    "description": "最強クラスの防護シールド。DEF+15、25%の確率でダメージを完全ブロック。"
-  },
-  {
-    "id": "titanium_plate",
-    "name": "チタニウムプレート",
-    "category": "armor",
-    "atk": 0,
-    "range": 0,
-    "rangeType": "none",
-    "attackRange": 0,
-    "attackPattern": "none",
-    "durability": 40,
-    "durabilityLoss": 1,
-    "appearsFrom": 3,
-    "weight": 25,
-    "energyCost": 0,
-    "special": null,
-    "def": 5,
-    "maxHpBonus": 0,
-    "description": "軽量チタン合金製の装甲板。DEF+5。序盤の基本アーマー。"
-  },
-  {
-    "id": "composite_armor",
-    "name": "コンポジットアーマー",
-    "category": "armor",
-    "atk": 0,
-    "range": 0,
-    "rangeType": "none",
-    "attackRange": 0,
-    "attackPattern": "none",
-    "durability": 50,
-    "durabilityLoss": 1,
-    "appearsFrom": 5,
-    "weight": 20,
-    "energyCost": 0,
-    "special": null,
-    "def": 8,
-    "maxHpBonus": 10,
-    "description": "複合素材のアーマー。DEF+8、最大HP+10。"
-  },
-  {
-    "id": "reactive_armor",
-    "name": "リアクティブアーマー",
-    "category": "armor",
-    "atk": 0,
-    "range": 0,
-    "rangeType": "none",
-    "attackRange": 0,
-    "attackPattern": "none",
-    "durability": 45,
-    "durabilityLoss": 1,
-    "appearsFrom": 8,
-    "weight": 16,
-    "energyCost": 0,
-    "special": null,
-    "def": 11,
-    "maxHpBonus": 15,
-    "description": "衝撃反応素材を用いたアーマー。DEF+11、最大HP+15。"
-  },
-  {
-    "id": "heavy_armor",
-    "name": "ヘビーアーマー",
-    "category": "armor",
-    "atk": 0,
-    "range": 0,
-    "rangeType": "none",
-    "attackRange": 0,
-    "attackPattern": "none",
-    "durability": 60,
-    "durabilityLoss": 1,
-    "appearsFrom": 12,
-    "weight": 12,
-    "energyCost": 0,
-    "special": null,
-    "def": 14,
-    "maxHpBonus": 20,
-    "description": "重装甲型の全身鎧。DEF+14、最大HP+20。移動は鈍るが防御は鉄壁。"
-  },
-  {
-    "id": "ceramic_armor",
-    "name": "セラミックアーマー",
-    "category": "armor",
-    "atk": 0,
-    "range": 0,
-    "rangeType": "none",
-    "attackRange": 0,
-    "attackPattern": "none",
-    "durability": 55,
-    "durabilityLoss": 1,
-    "appearsFrom": 17,
-    "weight": 10,
-    "energyCost": 0,
-    "special": null,
-    "def": 17,
-    "maxHpBonus": 25,
-    "description": "超硬セラミック複合装甲。DEF+17、最大HP+25。中〜後半戦の主力アーマー。"
-  },
-  {
-    "id": "plasma_armor",
-    "name": "プラズマアーマー",
-    "category": "armor",
-    "atk": 0,
-    "range": 0,
-    "rangeType": "none",
-    "attackRange": 0,
-    "attackPattern": "none",
-    "durability": 65,
-    "durabilityLoss": 1,
-    "appearsFrom": 23,
-    "weight": 7,
-    "energyCost": 0,
-    "special": null,
-    "def": 20,
-    "maxHpBonus": 30,
-    "description": "プラズマフィールドで包まれた究極のアーマー。DEF+20、最大HP+30。最高峰の防御力を誇る。"
-  }
-];
-
-const ITEMS_DATA = [
-  {
-    "id": "repair_kit_small",
-    "name": "リペアキット小",
-    "category": "recovery",
-    "effect": "hp_restore",
-    "value": 30,
-    "appearsFrom": 1,
-    "shopPrice": 50,
-    "dropWeight": 12,
-    "description": "マシンHPを30回復する。最も基本的な修理キット。"
-  },
-  {
-    "id": "repair_kit_medium",
-    "name": "リペアキット中",
-    "category": "recovery",
-    "effect": "hp_restore",
-    "value": 80,
-    "appearsFrom": 5,
-    "shopPrice": 120,
-    "dropWeight": 9,
-    "description": "マシンHPを80回復する。中盤以降の標準的な修理キット。"
-  },
-  {
-    "id": "repair_kit_large",
-    "name": "リペアキット大",
-    "category": "recovery",
-    "effect": "hp_restore",
-    "value": 200,
-    "appearsFrom": 12,
-    "shopPrice": 280,
-    "dropWeight": 5,
-    "description": "マシンHPを200回復する。深層探索に欠かせない大型キット。"
-  },
-  {
-    "id": "full_repair_kit",
-    "name": "フルリペアキット",
-    "category": "recovery",
-    "effect": "hp_restore_full",
-    "value": 9999,
-    "appearsFrom": 20,
-    "shopPrice": 800,
-    "dropWeight": 2,
-    "description": "マシンHPを全回復する。希少だが緊急時に非常に有効。"
-  },
-  {
-    "id": "energy_pack",
-    "name": "エネルギーパック",
-    "category": "recovery",
-    "effect": "energy_restore",
-    "value": 50,
-    "appearsFrom": 3,
-    "shopPrice": 80,
-    "dropWeight": 10,
-    "description": "エネルギーを50回復する。特殊武器や道具の使用に必要。"
-  },
-  {
-    "id": "energy_pack_large",
-    "name": "エネルギーパック大",
-    "category": "recovery",
-    "effect": "energy_restore",
-    "value": 100,
-    "appearsFrom": 12,
-    "shopPrice": 180,
-    "dropWeight": 5,
-    "description": "エネルギーを100回復する。特殊武器を多用する戦術での必需品。"
-  },
-  {
-    "id": "weapon_repair_kit",
-    "name": "修理キット",
-    "category": "weapon",
-    "effect": "weapon_durability_restore_full",
-    "value": 1,
-    "appearsFrom": 5,
-    "shopPrice": 100,
-    "dropWeight": 8,
-    "description": "武器1つの耐久度を最大値まで完全回復する。"
-  },
-  {
-    "id": "upgrade_core_i",
-    "name": "強化コアI",
-    "category": "weapon",
-    "effect": "weapon_upgrade_material",
-    "tier": 1,
-    "value": 1,
-    "appearsFrom": 3,
-    "shopPrice": 200,
-    "dropWeight": 7,
-    "description": "武器Lv1→2のアップグレードに使用する強化素材。3個必要。"
-  },
-  {
-    "id": "upgrade_core_ii",
-    "name": "強化コアII",
-    "category": "weapon",
-    "effect": "weapon_upgrade_material",
-    "tier": 2,
-    "value": 1,
-    "appearsFrom": 8,
-    "shopPrice": 500,
-    "dropWeight": 4,
-    "description": "武器Lv2→3のアップグレードに使用する強化素材。3個必要。"
-  },
-  {
-    "id": "upgrade_core_iii",
-    "name": "強化コアIII",
-    "category": "weapon",
-    "effect": "weapon_upgrade_material",
-    "tier": 3,
-    "value": 1,
-    "appearsFrom": 18,
-    "shopPrice": 1200,
-    "dropWeight": 2,
-    "description": "武器Lv3→4、Lv4→5のアップグレードに使用する上位素材。それぞれ5個・10個必要。"
-  },
-  {
-    "id": "floor_map",
-    "name": "フロアマップ",
-    "category": "exploration",
-    "effect": "reveal_floor",
-    "value": 1,
-    "appearsFrom": 3,
-    "shopPrice": 150,
-    "dropWeight": 7,
-    "description": "そのフロアの地形を全て明らかにする。敵の位置は表示されない。"
-  },
-  {
-    "id": "enemy_radar_map",
-    "name": "敵探知マップ",
-    "category": "exploration",
-    "effect": "reveal_enemies",
-    "value": 1,
-    "appearsFrom": 8,
-    "shopPrice": 250,
-    "dropWeight": 5,
-    "description": "そのフロアの全敵の位置を明らかにする。地形は表示されない。"
-  },
-  {
-    "id": "smoke_bomb",
-    "name": "煙幕弾",
-    "category": "combat",
-    "effect": "enemy_lose_tracking",
-    "value": 3,
-    "appearsFrom": 2,
-    "shopPrice": 70,
-    "dropWeight": 9,
-    "description": "3ターンの間、敵がプレイヤーを追跡できなくなる。ボス戦での緊急回避にも有効。"
-  },
-  {
-    "id": "emp_grenade",
-    "name": "EMPグレネード",
-    "category": "combat",
-    "effect": "stun_area",
-    "value": 3,
-    "radius": 1,
-    "appearsFrom": 12,
-    "shopPrice": 300,
-    "dropWeight": 4,
-    "description": "投擲地点の3×3範囲内の全敵を3ターン行動不能にする。"
-  },
-  {
-    "id": "flash_grenade",
-    "name": "フラッシュグレネード",
-    "category": "combat",
-    "effect": "stun_radius_2",
-    "value": 2,
-    "radius": 2,
-    "appearsFrom": 5,
-    "shopPrice": 150,
-    "dropWeight": 7,
-    "description": "強烈な閃光で周囲2タイルの敵を2ターン行動不能にする。序盤から使える範囲スタン手段。"
-  },
-  {
-    "id": "speed_boost",
-    "name": "加速ブースト",
-    "category": "combat",
-    "effect": "speed_up",
-    "value": 2,
-    "duration": 5,
-    "appearsFrom": 4,
-    "shopPrice": 100,
-    "dropWeight": 6,
-    "description": "5ターンの間、移動速度が+2される。逃走や先制攻撃に活用できる。"
-  },
-  {
-    "id": "barrier_capsule",
-    "name": "バリアカプセル",
-    "category": "combat",
-    "effect": "damage_nullify",
-    "value": 3,
-    "appearsFrom": 10,
-    "shopPrice": 350,
-    "dropWeight": 4,
-    "description": "次の3回のダメージを無効化するバリアを展開する。"
-  },
-  {
-    "id": "holy_oil",
-    "name": "聖なるオイル",
-    "category": "combat",
-    "effect": "boss_damage_up",
-    "value": 1.5,
-    "duration": 5,
-    "appearsFrom": 8,
-    "shopPrice": 500,
-    "dropWeight": 3,
-    "description": "5ターンの間、ボスへのダメージを+50%にする。ボス戦の切り札。"
-  },
-  {
-    "id": "escape_module",
-    "name": "エスケープモジュール",
-    "category": "special",
-    "effect": "return_to_start",
-    "value": 1,
-    "appearsFrom": 5,
-    "shopPrice": 400,
-    "dropWeight": 3,
-    "description": "即座にスタート地点へ帰還する。所持品は全て保持される。ラスボス戦では使用不可。"
-  },
-  {
-    "id": "teleport_beacon",
-    "name": "テレポートビーコン",
-    "category": "special",
-    "effect": "set_warp_point",
-    "value": 1,
-    "appearsFrom": 7,
-    "shopPrice": 200,
-    "dropWeight": 5,
-    "description": "設置した地点にいつでも瞬間移動できるビーコンを設置する（1フロア限定）。"
-  },
-  {
-    "id": "decoy_drone",
-    "name": "デコイドローン",
-    "category": "special",
-    "effect": "decoy",
-    "value": 5,
-    "duration": 5,
-    "appearsFrom": 8,
-    "shopPrice": 180,
-    "dropWeight": 5,
-    "description": "5ターンの間、敵の注意をドローンに引きつける。強敵から逃げる際に有効。"
-  },
-  {
-    "id": "id_scope",
-    "name": "識別スコープ",
-    "category": "special",
-    "effect": "identify_item",
-    "value": 1,
-    "appearsFrom": 1,
-    "shopPrice": 60,
-    "dropWeight": 10,
-    "description": "未鑑定アイテムを鑑定して正体を明らかにする。ハズレアイテムを掴まされるリスクを回避できる。"
-  },
-  {
-    "id": "armor_plate_i",
-    "name": "装甲プレートI",
-    "category": "machine_upgrade",
-    "effect": "armor_up",
-    "value": 5,
-    "appearsFrom": 1,
-    "shopPrice": 300,
-    "dropWeight": 6,
-    "description": "マシンの装甲値を永続的に+5する強化パーツ。"
-  },
-  {
-    "id": "armor_plate_ii",
-    "name": "装甲プレートII",
-    "category": "machine_upgrade",
-    "effect": "armor_up",
-    "value": 15,
-    "appearsFrom": 10,
-    "shopPrice": 800,
-    "dropWeight": 4,
-    "description": "マシンの装甲値を永続的に+15する強化パーツ。"
-  },
-  {
-    "id": "armor_plate_iii",
-    "name": "装甲プレートIII",
-    "category": "machine_upgrade",
-    "effect": "armor_up",
-    "value": 40,
-    "appearsFrom": 25,
-    "shopPrice": 2500,
-    "dropWeight": 2,
-    "description": "マシンの装甲値を永続的に+40する上位強化パーツ。"
-  },
-  {
-    "id": "boost_engine_i",
-    "name": "ブーストエンジンI",
-    "category": "machine_upgrade",
-    "effect": "speed_up_permanent",
-    "value": 1,
-    "appearsFrom": 5,
-    "shopPrice": 600,
-    "dropWeight": 3,
-    "description": "マシンの移動速度を永続的に+1する強化パーツ。"
-  },
-  {
-    "id": "boost_engine_ii",
-    "name": "ブーストエンジンII",
-    "category": "machine_upgrade",
-    "effect": "speed_up_permanent",
-    "value": 1,
-    "appearsFrom": 20,
-    "shopPrice": 2000,
-    "dropWeight": 2,
-    "description": "マシンの移動速度を永続的に+1する上位強化パーツ。"
-  },
-  {
-    "id": "weapon_rack_expansion",
-    "name": "拡張ウェポンラック",
-    "category": "machine_upgrade",
-    "effect": "weapon_slot_up",
-    "value": 1,
-    "appearsFrom": 8,
-    "shopPrice": 1500,
-    "dropWeight": 2,
-    "description": "武器スロットを永続的に+1する拡張パーツ。"
-  },
-  {
-    "id": "tool_bay_expansion",
-    "name": "拡張ツールベイ",
-    "category": "machine_upgrade",
-    "effect": "tool_slot_up",
-    "value": 1,
-    "appearsFrom": 8,
-    "shopPrice": 1500,
-    "dropWeight": 2,
-    "description": "道具スロットを永続的に+1する拡張パーツ。"
-  },
-  {
-    "id": "cargo_expansion",
-    "name": "カーゴ拡張",
-    "category": "machine_upgrade",
-    "effect": "pouch_capacity_up",
-    "value": 5,
-    "appearsFrom": 3,
-    "shopPrice": 400,
-    "dropWeight": 4,
-    "description": "アイテムポーチの容量を永続的に+5する拡張パーツ。"
-  },
-  {
-    "id": "reactor_upgrade",
-    "name": "リアクター強化",
-    "category": "machine_upgrade",
-    "effect": "energy_max_up",
-    "value": 50,
-    "appearsFrom": 5,
-    "shopPrice": 700,
-    "dropWeight": 3,
-    "description": "エネルギーの最大値を永続的に+50する強化パーツ。"
-  },
-  {
-    "id": "frame_upgrade_i",
-    "name": "フレーム強化I",
-    "category": "machine_upgrade",
-    "effect": "max_hp_up",
-    "value": 30,
-    "appearsFrom": 1,
-    "shopPrice": 350,
-    "dropWeight": 6,
-    "description": "マシンHPの最大値を永続的に+30する強化パーツ。"
-  },
-  {
-    "id": "frame_upgrade_ii",
-    "name": "フレーム強化II",
-    "category": "machine_upgrade",
-    "effect": "max_hp_up",
-    "value": 80,
-    "appearsFrom": 10,
-    "shopPrice": 1000,
-    "dropWeight": 3,
-    "description": "マシンHPの最大値を永続的に+80する強化パーツ。"
-  },
-  {
-    "id": "frame_upgrade_iii",
-    "name": "フレーム強化III",
-    "category": "machine_upgrade",
-    "effect": "max_hp_up",
-    "value": 200,
-    "appearsFrom": 25,
-    "shopPrice": 3000,
-    "dropWeight": 1,
-    "description": "マシンHPの最大値を永続的に+200する上位強化パーツ。"
-  },
-  {
-    "id": "warehouse_ticket",
-    "name": "倉庫拡張チケット",
-    "category": "special",
-    "effect": "warehouse_expansion",
-    "value": 1,
-    "appearsFrom": 5,
-    "shopPrice": 1000,
-    "dropWeight": 2,
-    "description": "倉庫の拡張に使用するチケット。ゴールドと一緒に倉庫管理人に渡す。"
-  },
-  {
-    "id": "unknown_part_a",
-    "name": "???のパーツ（A型）",
-    "category": "unidentified",
-    "effect": "unknown",
-    "value": 1,
-    "appearsFrom": 5,
-    "shopPrice": 0,
-    "dropWeight": 6,
-    "description": "未鑑定の不明パーツ。識別スコープで正体を明かせる。良いものもハズレもある。"
-  },
-  {
-    "id": "unknown_part_b",
-    "name": "???のパーツ（B型）",
-    "category": "unidentified",
-    "effect": "unknown",
-    "value": 1,
-    "appearsFrom": 10,
-    "shopPrice": 0,
-    "dropWeight": 4,
-    "description": "未鑑定の上位不明パーツ。識別スコープで正体を明かせる。深層ほど高価値な可能性がある。"
-  },
-  {
-    "id": "scrap_metal",
-    "name": "廃金属",
-    "category": "material",
-    "effect": "sell_only",
-    "value": 30,
-    "appearsFrom": 1,
-    "shopPrice": 0,
-    "sellPrice": 30,
-    "dropWeight": 10,
-    "description": "売却専用の素材アイテム。ショップで売ってゴールドにする。"
-  },
-  {
-    "id": "rare_circuit",
-    "name": "希少回路",
-    "category": "material",
-    "effect": "sell_only",
-    "value": 150,
-    "appearsFrom": 10,
-    "shopPrice": 0,
-    "sellPrice": 150,
-    "dropWeight": 4,
-    "description": "売却専用の希少素材。高値がつく。"
-  }
-];
-
-    let currentTab = 'weapons';
-    let sortStates = { weapons: { key: '', asc: true }, items: { key: '', asc: true } };
-
-    // データを価格情報と結合して拡張する
-    function mergeWeapons() {
-      return WEAPONS_DATA.map(w => {
-        const price = SHOP_PRICES.weapons[w.id] || { buy: 0, sell: 0 };
-        return Object.assign({}, w, { buy: price.buy, sell: price.sell });
-      });
-    }
-
-    function mergeItems() {
-      return ITEMS_DATA.map(it => {
-        const price = SHOP_PRICES.items[it.id] || { buy: it.shopPrice || 0, sell: 0 };
-        return Object.assign({}, it, { buy: price.buy, sell: price.sell });
-      });
-    }
-
-    const allWeapons = mergeWeapons();
-    const allItems   = mergeItems();
-
-    function catBadgeClass(cat) {
-      const map = { melee: 'cat-melee', ranged: 'cat-ranged', special: 'cat-special', shield: 'cat-shield', armor: 'cat-armor' };
-      return map[cat] || '';
-    }
-
-    function buyLabel(buy) {
-      if (buy === 0) return '<span class="no-sale-badge">非売品</span>';
-      return buy.toLocaleString() + 'G';
-    }
-
-    function renderWeaponRow(w) {
-      const notForSale = w.buy === 0 && w.sell === 0;
-      const cls = notForSale ? ' class="not-for-sale"' : '';
-      const durVal = w.durability === null ? '&#x221E;' : (w.durability !== undefined ? w.durability : '-');
-      return `<tr${cls} data-id="${w.id}" data-name="${w.name}" data-category="${w.category||''}" data-buy="${w.buy}" data-sell="${w.sell}">
-        <td class="id-cell" title="${w.id}">${w.id}</td>
-        <td class="name-cell">${w.name}</td>
-        <td><span class="cat-badge ${catBadgeClass(w.category)}">${w.category || '-'}</span></td>
-        <td class="num-cell" style="color:#ff9999">${w.atk !== undefined && w.atk > 0 ? w.atk : '-'}</td>
-        <td class="num-cell">${w.range > 0 ? w.range : '-'}</td>
-        <td class="buy-cell">${buyLabel(w.buy)}</td>
-        <td class="sell-cell">${w.sell > 0 ? w.sell.toLocaleString() + 'G' : '-'}</td>
-        <td class="desc-cell">${w.description || ''}</td>
-      </tr>`;
-    }
-
-    function renderItemRow(it) {
-      const notForSale = it.buy === 0;
-      const cls = notForSale ? ' class="not-for-sale"' : '';
-      return `<tr${cls} data-id="${it.id}" data-name="${it.name}" data-category="${it.category||''}" data-buy="${it.buy}" data-sell="${it.sell}">
-        <td class="id-cell" title="${it.id}">${it.id}</td>
-        <td class="name-cell">${it.name}</td>
-        <td><span class="cat-badge">${it.category || '-'}</span></td>
-        <td class="buy-cell">${buyLabel(it.buy)}</td>
-        <td class="sell-cell">${it.sell > 0 ? it.sell.toLocaleString() + 'G' : '-'}</td>
-        <td class="desc-cell">${it.description || ''}</td>
-      </tr>`;
-    }
-
-    function getCurrentData() {
-      return { weapons: allWeapons, items: allItems }[currentTab];
-    }
-
-    function applyFilters() {
-      if (currentTab === 'repair') {
-        document.getElementById('stats').textContent = '';
-        return;
-      }
-      const nameQ = document.getElementById('filter-name').value.toLowerCase();
-      const catQ  = document.getElementById('filter-category').value;
-      const saleQ = document.getElementById('filter-sale').value;
-
-      const tbodyId = currentTab + '-tbody';
-      const rows = document.querySelectorAll(`#${tbodyId} tr`);
-      let visible = 0;
-      rows.forEach(tr => {
-        const id   = (tr.dataset.id || '').toLowerCase();
-        const name = (tr.dataset.name || '').toLowerCase();
-        const cat  = tr.dataset.category || '';
-        const buy  = parseInt(tr.dataset.buy) || 0;
-
-        let show = true;
-        if (nameQ && !id.includes(nameQ) && !name.includes(nameQ)) show = false;
-        if (catQ && cat !== catQ) show = false;
-        if (saleQ === 'buyable' && buy === 0) show = false;
-        if (saleQ === 'sellonly' && buy > 0) show = false;
-
-        tr.classList.toggle('hidden', !show);
-        if (show) visible++;
-      });
-
-      const total = getCurrentData().length;
-      document.getElementById('no-results').style.display = visible === 0 ? 'block' : 'none';
-      document.getElementById('stats').textContent = `表示: ${visible} / ${total} 件`;
-    }
-
-    function updateCategoryFilter() {
-      if (currentTab === 'repair') {
-        document.getElementById('filter-category').innerHTML = '<option value="">全て</option>';
-        return;
-      }
-      const data = getCurrentData();
-      const cats = [...new Set(data.map(d => d.category).filter(Boolean))].sort();
-      const sel = document.getElementById('filter-category');
-      const prev = sel.value;
-      sel.innerHTML = '<option value="">全て</option>';
-      cats.forEach(c => {
-        const opt = document.createElement('option');
-        opt.value = c;
-        opt.textContent = c;
-        sel.appendChild(opt);
-      });
-      if (cats.includes(prev)) sel.value = prev;
-    }
-
-    function sortTable(tableKey, key) {
-      if (tableKey === 'repair') return;
-      const state = sortStates[tableKey];
-      if (state.key === key) state.asc = !state.asc;
-      else { state.key = key; state.asc = true; }
-
-      document.querySelectorAll(`#tab-${tableKey} thead th`).forEach(th => {
-        th.classList.remove('sorted');
-        const icon = th.querySelector('.sort-icon');
-        if (icon) icon.textContent = '\u25B2';
-      });
-      const activeTh = document.querySelector(`#tab-${tableKey} thead th[data-sort="${key}"]`);
-      if (activeTh) {
-        activeTh.classList.add('sorted');
-        const icon = activeTh.querySelector('.sort-icon');
-        if (icon) icon.textContent = state.asc ? '\u25B2' : '\u25BC';
-      }
-
-      const data = { weapons: allWeapons, items: allItems }[tableKey];
-      const tbodyId = tableKey + '-tbody';
-      const tbody = document.getElementById(tbodyId);
-      const rows = Array.from(tbody.querySelectorAll('tr'));
-      rows.sort((a, b) => {
-        const aD = data.find(d => d.id === a.querySelector('.id-cell')?.title);
-        const bD = data.find(d => d.id === b.querySelector('.id-cell')?.title);
-        if (!aD || !bD) return 0;
-        let av = aD[key], bv = bD[key];
-        if (typeof av === 'string') av = av.toLowerCase();
-        if (typeof bv === 'string') bv = bv.toLowerCase();
-        av = av ?? -Infinity;
-        bv = bv ?? -Infinity;
-        if (av < bv) return state.asc ? -1 : 1;
-        if (av > bv) return state.asc ? 1 : -1;
-        return 0;
-      });
-      rows.forEach(r => tbody.appendChild(r));
-    }
-
-    function switchTab(tab) {
-      currentTab = tab;
-      document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.dataset.tab === tab));
-      document.querySelectorAll('.table-wrap').forEach(w => w.classList.toggle('active', w.id === 'tab-' + tab));
-      updateCategoryFilter();
-      applyFilters();
-    }
-
-    // 初期化
-    (function init() {
-      document.getElementById('weapons-tbody').innerHTML = allWeapons.map(renderWeaponRow).join('');
-      document.getElementById('items-tbody').innerHTML   = allItems.map(renderItemRow).join('');
-
-      document.getElementById('badge-weapons').textContent = allWeapons.length;
-      document.getElementById('badge-items').textContent   = allItems.length;
-
-      updateCategoryFilter();
-      applyFilters();
-
-      document.querySelectorAll('.tab').forEach(t => {
-        t.addEventListener('click', () => switchTab(t.dataset.tab));
-      });
-
-      ['filter-name', 'filter-category', 'filter-sale'].forEach(id => {
-        document.getElementById(id).addEventListener('input', applyFilters);
-      });
-
-      document.getElementById('btn-reset').addEventListener('click', () => {
-        document.getElementById('filter-name').value     = '';
-        document.getElementById('filter-category').value = '';
-        document.getElementById('filter-sale').value     = '';
-        applyFilters();
-      });
-
-      document.querySelectorAll('thead th[data-sort][data-table]').forEach(th => {
-        th.addEventListener('click', () => {
-          sortTable(th.dataset.table, th.dataset.sort);
-          applyFilters();
-        });
-      });
-    })();
-  </script>
+</script>
 </body>
 </html>

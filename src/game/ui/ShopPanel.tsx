@@ -200,28 +200,47 @@ export default function ShopPanel({
             ) : (
               shopInventory.map((item, idx) => {
                 const isSelected = idx === selectedIndex;
-                const canAfford = gold >= item.buy;
+                const stock = item.stock ?? 1;
+                const soldOut = stock <= 0;
+                const canAfford = !soldOut && gold >= item.buy;
+                const canBuy = canAfford;
                 return (
                   <div
                     key={`buy-${idx}`}
                     style={{
                       display: 'flex', alignItems: 'center', justifyContent: 'space-between',
                       padding: '8px 12px', marginBottom: 4, borderRadius: 4,
-                      backgroundColor: isSelected ? 'rgba(100, 80, 50, 0.8)' : 'rgba(0, 0, 0, 0.3)',
-                      border: isSelected ? '1px solid #dcb56e' : '1px solid transparent',
+                      backgroundColor: soldOut
+                        ? 'rgba(30, 30, 30, 0.5)'
+                        : isSelected ? 'rgba(100, 80, 50, 0.8)' : 'rgba(0, 0, 0, 0.3)',
+                      border: isSelected && !soldOut ? '1px solid #dcb56e' : '1px solid transparent',
                       cursor: 'default',
+                      opacity: soldOut ? 0.6 : 1,
                     }}
                   >
                     <div style={{ display: 'flex', flexDirection: 'column' }}>
-                      <span style={{ fontSize: 13, fontWeight: 'bold' }}>{getDisplayName(item.id)}</span>
-                      <span style={{ fontSize: 10, color: '#aaa' }}>{item.type === 'weapon' ? '武器' : 'パーツ'}</span>
+                      <span style={{ fontSize: 13, fontWeight: 'bold', color: soldOut ? '#666' : undefined }}>
+                        {getDisplayName(item.id)}
+                      </span>
+                      <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+                        <span style={{ fontSize: 10, color: '#aaa' }}>{item.type === 'weapon' ? '武器' : 'パーツ'}</span>
+                        {item.type === 'item' && (
+                          <span style={{ fontSize: 10, color: soldOut ? '#ff6644' : '#88ccaa' }}>
+                            {soldOut ? '売切' : `残り ${stock}`}
+                          </span>
+                        )}
+                        {item.type === 'weapon' && soldOut && (
+                          <span style={{ fontSize: 10, color: '#ff6644' }}>売切</span>
+                        )}
+                      </div>
                     </div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                      <span style={{ fontSize: 13, color: canAfford ? '#ffff88' : '#ff4444' }}>{item.buy} G</span>
+                      <span style={{ fontSize: 13, color: soldOut ? '#555' : canAfford ? '#ffff88' : '#ff4444' }}>{item.buy} G</span>
                       <button
-                        onClick={(e) => { e.stopPropagation(); if (canAfford) onBuy(item); }}
-                        style={{ padding: '4px 8px', backgroundColor: canAfford ? '#44aa44' : '#444', borderRadius: 4, color: '#fff', cursor: 'pointer', fontSize: 11 }}
-                      >購入</button>
+                        onClick={(e) => { e.stopPropagation(); if (canBuy) onBuy(item); }}
+                        disabled={!canBuy}
+                        style={{ padding: '4px 8px', backgroundColor: canBuy ? '#44aa44' : '#333', borderRadius: 4, color: canBuy ? '#fff' : '#666', cursor: canBuy ? 'pointer' : 'not-allowed', fontSize: 11 }}
+                      >{soldOut ? '売切' : '購入'}</button>
                     </div>
                   </div>
                 )

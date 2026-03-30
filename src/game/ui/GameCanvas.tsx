@@ -22,6 +22,7 @@ import BaseScreen from "./BaseScreen";
 import StatusPanel from "./StatusPanel";
 import HelpManualOverlay from "./HelpManualOverlay";
 import ShopPanel from "./ShopPanel";
+import RepairPanel from "./RepairPanel";
 import RestStoragePanel from "./RestStoragePanel";
 import {
   getShopInventory,
@@ -1555,6 +1556,13 @@ export default function GameCanvas() {
     // playSE('menu_cancel'); // 仮
   }, []);
 
+  const handleRepairClose = useCallback(() => {
+    const state = stateRef.current;
+    if (state.phase !== "repair") return;
+    setGameState({ ...state, phase: "exploring" });
+    stateRef.current = { ...stateRef.current, phase: "exploring" };
+  }, []);
+
   // ── アイテム使用処理 ─────────────────────────────────────────
   const handleUseItem = useCallback((index: number) => {
     const state = stateRef.current;
@@ -1782,7 +1790,7 @@ export default function GameCanvas() {
   // ── アイテムドロップ処理 ────────────────────────────────────
   const handleDropItem = useCallback((index: number) => {
     const state = stateRef.current;
-    if (state.phase !== "exploring" && state.phase !== "shop" && state.phase !== "storage") return;
+    if (state.phase !== "exploring" && state.phase !== "shop" && state.phase !== "repair" && state.phase !== "storage") return;
 
     const item = state.inventory.items[index];
     if (!item) return;
@@ -3167,6 +3175,15 @@ export default function GameCanvas() {
           onUpdateState={setGameState}
           onSaveAndExit={handleSaveAndExit}
           onReturnToTitle={handleReturnToTitleWithoutSave}
+        />
+      )}
+
+      {/* 修理屋パネルオーバーレイ（フル画面で表示） */}
+      {gameState.phase === "repair" && (
+        <RepairPanel
+          gameState={gameState}
+          onUpdateState={(next) => { setGameState(next); stateRef.current = next; }}
+          onClose={handleRepairClose}
         />
       )}
 

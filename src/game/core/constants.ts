@@ -144,10 +144,10 @@ export const FIRE_SPAWN_RATE_SMALL = 0.008;
 export const FIRE_SPAWN_RATE_NORMAL = 0.025;
 /** 休憩ポイントの配置確率（部屋1つあたり） */
 export const REST_SPAWN_RATE = 0.08;
-/** 武器修理ポイントの配置確率（部屋1つあたり） */
-export const REPAIR_SPAWN_RATE = 0.06;
+/** 武器修理ポイントの配置確率（部屋1つあたり。ショップの 1/6） */
+export const REPAIR_SPAWN_RATE = 0.02;
 /** ショップの配置確率（部屋1つあたり） */
-export const SHOP_SPAWN_RATE = 0.12;
+export const SHOP_SPAWN_RATE = 0.10;
 /** ヒント石碑の配置確率（部屋1つあたり） */
 export const HINT_SPAWN_RATE = 0.05;
 /** 宝物部屋の配置確率（全部屋中） */
