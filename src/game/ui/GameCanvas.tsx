@@ -554,6 +554,8 @@ export default function GameCanvas() {
   const [goldEarned, setGoldEarned] = useState(0);
   const [activeSaveSlot, setActiveSaveSlot] = useState<number | null>(null);
   const [confirmDialog, setConfirmDialog] = useState<ConfirmDialog>(null);
+  /** 休憩所倉庫: 開く前の確認が完了したか */
+  const [storageConfirmed, setStorageConfirmed] = useState(false);
   const [breakNotif, setBreakNotif] = useState<string | null>(null);
   const [bossWarning, setBossWarning] = useState(false);
   const [floorNotif, setFloorNotif] = useState<string | null>(null);
@@ -2363,14 +2365,67 @@ export default function GameCanvas() {
               />
             )}
 
+            {/* 休憩所倉庫: 開く前の確認ダイアログ */}
+            {gameState.phase === "storage" && !storageConfirmed && (
+              <div className="absolute inset-0 z-40 flex items-center justify-center bg-black/70">
+                <div
+                  className="rounded-lg p-6 max-w-xs w-full mx-4 font-mono shadow-lg"
+                  style={{ background: 'rgba(20,12,5,0.98)', border: '1px solid #8a5a2a' }}
+                >
+                  <p className="text-sm text-amber-200 mb-2 font-bold text-center">拠点倉庫へアクセス</p>
+                  <p className="text-xs text-gray-300 mb-4 text-center leading-relaxed">
+                    倉庫を一度閉じると、<br />
+                    <span style={{ color: '#ff9944', fontWeight: 'bold' }}>このマスは消滅します。</span><br />
+                    再アクセスはできません。<br />
+                    本当に使いますか？
+                  </p>
+                  <div className="flex gap-3 justify-center">
+                    <button
+                      onClick={() => setStorageConfirmed(true)}
+                      className="px-5 py-2 rounded text-sm font-bold transition-colors"
+                      style={{ background: '#7a4a1a', border: '1px solid #aa7a3a', color: '#ffddaa' }}
+                    >
+                      使う
+                    </button>
+                    <button
+                      onClick={() => {
+                        setGameState((s) => ({ ...s, phase: "exploring" as const }));
+                        stateRef.current = { ...stateRef.current, phase: "exploring" };
+                      }}
+                      className="px-5 py-2 rounded text-sm font-bold transition-colors"
+                      style={{ background: '#333', border: '1px solid #555', color: '#aaa' }}
+                    >
+                      やめる
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+
             {/* 休憩所倉庫パネルオーバーレイ */}
-            {gameState.phase === "storage" && (
+            {gameState.phase === "storage" && storageConfirmed && (
               <RestStoragePanel
                 gameState={gameState}
                 onUpdateState={(next) => { setGameState(next); stateRef.current = next; }}
                 onClose={() => {
-                  setGameState((s) => ({ ...s, phase: "exploring" }));
-                  stateRef.current = { ...stateRef.current, phase: "exploring" };
+                  // タイルを TILE_FLOOR に変更して消滅させる
+                  const s = stateRef.current;
+                  if (s.map && s.player) {
+                    const { x, y } = s.player.pos;
+                    const newCells = s.map.cells.map((row, ry) =>
+                      ry === y
+                        ? row.map((cell, cx) => cx === x ? { ...cell, tile: '.' as const } : cell)
+                        : row
+                    );
+                    const newMap = { ...s.map, cells: newCells };
+                    const newState = { ...s, phase: "exploring" as const, map: newMap };
+                    setGameState(newState);
+                    stateRef.current = newState;
+                  } else {
+                    setGameState((s) => ({ ...s, phase: "exploring" as const }));
+                    stateRef.current = { ...stateRef.current, phase: "exploring" };
+                  }
+                  setStorageConfirmed(false);
                 }}
               />
             )}

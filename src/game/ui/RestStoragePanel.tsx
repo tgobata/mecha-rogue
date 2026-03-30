@@ -34,6 +34,8 @@ export default function RestStoragePanel({ gameState, onUpdateState, onClose }: 
   const [goldError, setGoldError] = useState('');
   const [tab, setTab] = useState<'inventory' | 'storage'>('inventory');
   const [sortKey, setSortKey] = useState<'default' | 'name' | 'type'>('default');
+  /** 閉じる前の確認ダイアログ表示フラグ */
+  const [showCloseConfirm, setShowCloseConfirm] = useState(false);
 
   const getItemName = (itemId: string) => ALL_ITEMS.find((d) => d.id === itemId)?.name ?? itemId;
   const getWeaponName = (weaponId: string) => ALL_WEAPONS.find((d) => d.id === weaponId)?.name ?? weaponId;
@@ -150,7 +152,7 @@ export default function RestStoragePanel({ gameState, onUpdateState, onClose }: 
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
         <span style={{ color: '#ddbb88', fontWeight: 'bold', fontSize: 15 }}>拠点倉庫（休憩所）</span>
         <button
-          onClick={onClose}
+          onClick={() => setShowCloseConfirm(true)}
           style={{
             background: 'none',
             border: '1px solid #6a4a2a',
@@ -353,6 +355,75 @@ export default function RestStoragePanel({ gameState, onUpdateState, onClose }: 
       <div style={{ marginTop: 12, color: '#665544', fontSize: 11, textAlign: 'center' }}>
         倉庫の金とアイテムはゲームオーバー後も失われません
       </div>
+
+      {/* 閉じる前確認ダイアログ */}
+      {showCloseConfirm && (
+        <div
+          style={{
+            position: 'absolute',
+            inset: 0,
+            backgroundColor: 'rgba(0, 0, 0, 0.85)',
+            borderRadius: 8,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 50,
+          }}
+        >
+          <div
+            style={{
+              background: 'rgba(20, 12, 5, 0.99)',
+              border: '1px solid #8a5a2a',
+              borderRadius: 8,
+              padding: '20px 24px',
+              maxWidth: 280,
+              textAlign: 'center',
+              fontFamily: 'monospace',
+            }}
+          >
+            <p style={{ color: '#ff9944', fontWeight: 'bold', fontSize: 13, marginBottom: 8 }}>
+              倉庫を閉じますか？
+            </p>
+            <p style={{ color: '#ccbbaa', fontSize: 12, lineHeight: 1.6, marginBottom: 16 }}>
+              閉じると、このマスは<br />
+              <span style={{ color: '#ff6633', fontWeight: 'bold' }}>消滅します。</span><br />
+              再アクセスはできません。
+            </p>
+            <div style={{ display: 'flex', gap: 12, justifyContent: 'center' }}>
+              <button
+                onClick={() => { playSE('ui_select'); onClose(); }}
+                style={{
+                  background: '#7a2a1a',
+                  border: '1px solid #aa4a3a',
+                  borderRadius: 4,
+                  color: '#ffddcc',
+                  padding: '6px 16px',
+                  cursor: 'pointer',
+                  fontSize: 12,
+                  fontFamily: 'monospace',
+                }}
+              >
+                閉じる
+              </button>
+              <button
+                onClick={() => setShowCloseConfirm(false)}
+                style={{
+                  background: '#333',
+                  border: '1px solid #555',
+                  borderRadius: 4,
+                  color: '#aaa',
+                  padding: '6px 16px',
+                  cursor: 'pointer',
+                  fontSize: 12,
+                  fontFamily: 'monospace',
+                }}
+              >
+                戻る
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
