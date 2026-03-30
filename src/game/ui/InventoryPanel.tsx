@@ -7,7 +7,7 @@
  * キーボード（↑↓/Z/Enter/I/Escape）またはボタンクリックで操作する。
  */
 
-import { useEffect, useRef, useState, useMemo } from 'react';
+import { useEffect, useRef, useMemo } from 'react';
 import type { Inventory } from '../core/game-state';
 import itemsRaw from '../assets/data/items.json';
 import toolsRaw from '../assets/data/tools-equipment.json';
@@ -20,13 +20,13 @@ const ALL_ITEMS = [...(itemsRaw as any[]), ...(toolsRaw as any[])];
 // ---------------------------------------------------------------------------
 
 /** パネル幅 (px) */
-const PANEL_WIDTH = 320;
+const PANEL_WIDTH = 380;
 /** パネル最大高さ (px) */
 const PANEL_MAX_HEIGHT = 400;
 /** z-index（HUD より上に表示） */
 const PANEL_Z_INDEX = 20;
 /** パネル背景色 */
-const PANEL_BG = 'rgba(10, 10, 26, 0.96)';
+const PANEL_BG = 'rgba(10, 10, 26, 0.82)';
 /** パネルボーダー色 */
 const PANEL_BORDER = '1px solid #445566';
 /** 選択行ハイライト色 */
@@ -203,26 +203,15 @@ export default function InventoryPanel({
                   style={{
                     display: 'flex',
                     flexDirection: 'column',
-                    padding: '6px 12px',
+                    padding: '6px 4px 6px 0',
                     gap: 8,
                     backgroundColor: isSelected ? SELECTED_ROW_BG : 'transparent',
                     borderBottom: '1px solid rgba(68, 85, 102, 0.3)',
+                    borderLeft: isSelected ? '3px solid #55aaff' : '3px solid transparent',
                     cursor: 'default',
                   }}
                 >
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, width: '100%' }}>
-                  {/* 選択インジケーター */}
-                  <span
-                    style={{
-                      width: 10,
-                      color: '#55aaff',
-                      fontSize: 12,
-                      flexShrink: 0,
-                    }}
-                  >
-                    {isSelected ? '▶' : ''}
-                  </span>
-
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 4, paddingLeft: 8 }}>
                   {/* アイテム名 */}
                   <span
                     style={{
@@ -250,8 +239,8 @@ export default function InventoryPanel({
                       onUseItem(originalIndex);
                     }}
                     style={{
-                      padding: '2px 6px',
-                      fontSize: 11,
+                      padding: '6px 12px',
+                      fontSize: 14,
                       backgroundColor: '#224466',
                       border: '1px solid #446688',
                       borderRadius: 4,
@@ -271,8 +260,8 @@ export default function InventoryPanel({
                         onPlaceItem(originalIndex);
                       }}
                       style={{
-                        padding: '2px 6px',
-                        fontSize: 11,
+                        padding: '6px 12px',
+                        fontSize: 14,
                         backgroundColor: '#224433',
                         border: '1px solid #446655',
                         borderRadius: 4,
@@ -293,8 +282,8 @@ export default function InventoryPanel({
                         onThrowItem(originalIndex);
                       }}
                       style={{
-                        padding: '2px 6px',
-                        fontSize: 11,
+                        padding: '6px 12px',
+                        fontSize: 14,
                         backgroundColor: '#443322',
                         border: '1px solid #665544',
                         borderRadius: 4,
@@ -315,8 +304,8 @@ export default function InventoryPanel({
                         onIdentifyItem?.(originalIndex);
                       }}
                       style={{
-                        padding: '2px 6px',
-                        fontSize: 11,
+                        padding: '6px 12px',
+                        fontSize: 14,
                         backgroundColor: '#224422',
                         border: '1px solid #448844',
                         borderRadius: 4,
@@ -336,8 +325,8 @@ export default function InventoryPanel({
                       onDropItem(originalIndex);
                     }}
                     style={{
-                      padding: '2px 6px',
-                      fontSize: 11,
+                      padding: '6px 12px',
+                      fontSize: 14,
                       backgroundColor: '#442222',
                       border: '1px solid #664444',
                       borderRadius: 4,
@@ -359,7 +348,7 @@ export default function InventoryPanel({
                         lineHeight: 1.4,
                         whiteSpace: 'normal',
                         wordBreak: 'break-word',
-                        paddingLeft: 18,
+                        paddingLeft: 8,
                       }}
                     >
                       {item.unidentified

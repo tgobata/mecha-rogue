@@ -31,13 +31,13 @@ const ATTACK_PATTERN_LABEL: Record<string, string> = {
 // ---------------------------------------------------------------------------
 
 /** パネル幅 (px) */
-const PANEL_WIDTH = 320;
+const PANEL_WIDTH = 380;
 /** パネル最大高さ (px) */
 const PANEL_MAX_HEIGHT = 400;
 /** z-index（HUD より上に表示） */
 const PANEL_Z_INDEX = 20;
 /** パネル背景色 */
-const PANEL_BG = 'rgba(10, 10, 26, 0.96)';
+const PANEL_BG = 'rgba(10, 10, 26, 0.82)';
 /** パネルボーダー色 */
 const PANEL_BORDER = '1px solid #445566';
 /** 選択行ハイライト色 */
@@ -257,33 +257,23 @@ export default function WeaponPanel({
                   style={{
                     display: 'flex',
                     flexDirection: 'column',
-                    padding: '6px 12px',
+                    padding: '6px 4px 6px 0',
                     gap: 4,
                     backgroundColor: isSelected ? SELECTED_ROW_BG : 'transparent',
                     borderBottom: '1px solid rgba(68, 85, 102, 0.3)',
+                    borderLeft: isSelected ? '3px solid #55aaff' : '3px solid transparent',
                     cursor: 'default',
                   }}
                 >
-                  {/* 上行: 選択インジケーター + 武器ID + ★ + レアリティ + [装備/捨てる]ボタン */}
+                  {/* 上行: 武器ID + ★ + レアリティ + [装備/捨てる]ボタン */}
                   <div
                     style={{
                       display: 'flex',
                       alignItems: 'center',
-                      gap: 8,
+                      gap: 4,
+                      paddingLeft: 8,
                     }}
                   >
-                    {/* 選択インジケーター */}
-                    <span
-                      style={{
-                        width: 10,
-                        color: '#55aaff',
-                        fontSize: 12,
-                        flexShrink: 0,
-                      }}
-                    >
-                      {isSelected ? '▶' : ''}
-                    </span>
-
                     {/* 現在装備中の ★ マーク */}
                     {isActive && (
                       <span
@@ -336,8 +326,8 @@ export default function WeaponPanel({
                           onEquipWeapon(i);
                         }}
                         style={{
-                          padding: '2px 6px',
-                          fontSize: 11,
+                          padding: '5px 10px',
+                          fontSize: 13,
                           backgroundColor: isActive ? '#333322' : '#224433',
                           border: `1px solid ${isActive ? '#665533' : '#446644'}`,
                           borderRadius: 4,
@@ -350,7 +340,7 @@ export default function WeaponPanel({
                       {onPlaceWeapon && (
                         <button
                           onClick={(e) => { e.stopPropagation(); onPlaceWeapon(i); }}
-                          style={{ padding: '2px 5px', fontSize: 11, backgroundColor: '#224433', border: '1px solid #446655', borderRadius: 4, color: '#aaddbb', cursor: 'pointer' }}
+                          style={{ padding: '5px 10px', fontSize: 13, backgroundColor: '#224433', border: '1px solid #446655', borderRadius: 4, color: '#aaddbb', cursor: 'pointer' }}
                         >
                           置
                         </button>
@@ -358,7 +348,7 @@ export default function WeaponPanel({
                       {onThrowWeapon && (
                         <button
                           onClick={(e) => { e.stopPropagation(); onThrowWeapon(i); }}
-                          style={{ padding: '2px 5px', fontSize: 11, backgroundColor: '#443322', border: '1px solid #665544', borderRadius: 4, color: '#ffcc88', cursor: 'pointer' }}
+                          style={{ padding: '5px 10px', fontSize: 13, backgroundColor: '#443322', border: '1px solid #665544', borderRadius: 4, color: '#ffcc88', cursor: 'pointer' }}
                         >
                           投
                         </button>
@@ -388,7 +378,7 @@ export default function WeaponPanel({
                     style={{
                       fontSize: 11,
                       color: '#9aabb8',
-                      paddingLeft: 18,
+                      paddingLeft: 8,
                       lineHeight: 1.4,
                     }}
                   >
@@ -406,7 +396,7 @@ export default function WeaponPanel({
                       display: 'flex',
                       alignItems: 'center',
                       gap: 8,
-                      paddingLeft: 18,
+                      paddingLeft: 8,
                     }}
                   >
                     <span style={{ fontSize: 10, color: '#667788', flexShrink: 0 }}>
@@ -445,7 +435,7 @@ export default function WeaponPanel({
                         lineHeight: 1.4,
                         whiteSpace: 'normal',
                         wordBreak: 'break-word',
-                        paddingLeft: 18,
+                        paddingLeft: 8,
                       }}
                     >
                       {weaponDef.description}
@@ -510,14 +500,14 @@ export default function WeaponPanel({
                         {isActive ? (
                           <button
                             onClick={() => onUnequipShield?.()}
-                            style={{ padding: '2px 6px', fontSize: 11, backgroundColor: '#333322', border: '1px solid #665533', borderRadius: 4, color: '#aa9955', cursor: 'pointer' }}
+                            style={{ padding: '5px 10px', fontSize: 13, backgroundColor: '#333322', border: '1px solid #665533', borderRadius: 4, color: '#aa9955', cursor: 'pointer' }}
                           >
                             外す
                           </button>
                         ) : (
                           <button
                             onClick={() => onEquipShield?.(i)}
-                            style={{ padding: '2px 6px', fontSize: 11, backgroundColor: '#224433', border: '1px solid #446644', borderRadius: 4, color: '#aaccaa', cursor: 'pointer' }}
+                            style={{ padding: '5px 10px', fontSize: 13, backgroundColor: '#224433', border: '1px solid #446644', borderRadius: 4, color: '#aaccaa', cursor: 'pointer' }}
                           >
                             装備
                           </button>
@@ -525,36 +515,36 @@ export default function WeaponPanel({
                         {onPlaceShield && (
                           <button
                             onClick={() => onPlaceShield(i)}
-                            style={{ padding: '2px 5px', fontSize: 11, backgroundColor: '#224433', border: '1px solid #446655', borderRadius: 4, color: '#aaddbb', cursor: 'pointer' }}
+                            style={{ padding: '5px 10px', fontSize: 13, backgroundColor: '#224433', border: '1px solid #446655', borderRadius: 4, color: '#aaddbb', cursor: 'pointer' }}
                           >
-                            置く
+                            置
                           </button>
                         )}
                         {onThrowShield && (
                           <button
                             onClick={() => onThrowShield(i)}
-                            style={{ padding: '2px 5px', fontSize: 11, backgroundColor: '#443322', border: '1px solid #665544', borderRadius: 4, color: '#ffcc88', cursor: 'pointer' }}
+                            style={{ padding: '5px 10px', fontSize: 13, backgroundColor: '#443322', border: '1px solid #665544', borderRadius: 4, color: '#ffcc88', cursor: 'pointer' }}
                           >
-                            投げる
+                            投
                           </button>
                         )}
                         <button
                           onClick={() => { onDropShield?.(i); }}
-                          style={{ padding: '2px 5px', fontSize: 11, backgroundColor: '#442222', border: '1px solid #664444', borderRadius: 4, color: '#ccaaaa', cursor: 'pointer' }}
+                          style={{ padding: '5px 10px', fontSize: 13, backgroundColor: '#442222', border: '1px solid #664444', borderRadius: 4, color: '#ccaaaa', cursor: 'pointer' }}
                         >
                           消
                         </button>
                       </div>
                     </div>
                     {/* 盾ステータス行 */}
-                    <div style={{ fontSize: 11, color: '#9aabb8', paddingLeft: 18, lineHeight: 1.4 }}>
+                    <div style={{ fontSize: 11, color: '#9aabb8', paddingLeft: 8, lineHeight: 1.4 }}>
                       {`DEF +${shield.def}`}
                       {(shield.blockChance ?? 0) > 0 && (
                         <span style={{ marginLeft: 6 }}>{`ブロック率:${Math.round((shield.blockChance ?? 0) * 100)}%`}</span>
                       )}
                       <span style={{ marginLeft: 6 }}>{`耐久:${shield.durability}/${shield.maxDurability}`}</span>
                     </div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, paddingLeft: 18 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, paddingLeft: 8 }}>
                       <span style={{ fontSize: 10, color: '#667788', flexShrink: 0 }}>耐久</span>
                       <div style={{ width: DURABILITY_BAR_MAX_WIDTH, height: 4, backgroundColor: '#223344', borderRadius: 2, overflow: 'hidden', flexShrink: 0 }}>
                         <div style={{ width: durWidth, height: '100%', backgroundColor: durColor, borderRadius: 2 }} />
@@ -621,14 +611,14 @@ export default function WeaponPanel({
                         {isActive ? (
                           <button
                             onClick={() => onUnequipArmor?.()}
-                            style={{ padding: '2px 6px', fontSize: 11, backgroundColor: '#333322', border: '1px solid #665533', borderRadius: 4, color: '#aa9955', cursor: 'pointer' }}
+                            style={{ padding: '5px 10px', fontSize: 13, backgroundColor: '#333322', border: '1px solid #665533', borderRadius: 4, color: '#aa9955', cursor: 'pointer' }}
                           >
                             外す
                           </button>
                         ) : (
                           <button
                             onClick={() => onEquipArmor?.(i)}
-                            style={{ padding: '2px 6px', fontSize: 11, backgroundColor: '#442244', border: '1px solid #664466', borderRadius: 4, color: '#ccaaee', cursor: 'pointer' }}
+                            style={{ padding: '5px 10px', fontSize: 13, backgroundColor: '#442244', border: '1px solid #664466', borderRadius: 4, color: '#ccaaee', cursor: 'pointer' }}
                           >
                             装備
                           </button>
@@ -636,36 +626,36 @@ export default function WeaponPanel({
                         {onPlaceArmor && (
                           <button
                             onClick={() => onPlaceArmor(i)}
-                            style={{ padding: '2px 5px', fontSize: 11, backgroundColor: '#224433', border: '1px solid #446655', borderRadius: 4, color: '#aaddbb', cursor: 'pointer' }}
+                            style={{ padding: '5px 10px', fontSize: 13, backgroundColor: '#224433', border: '1px solid #446655', borderRadius: 4, color: '#aaddbb', cursor: 'pointer' }}
                           >
-                            置く
+                            置
                           </button>
                         )}
                         {onThrowArmor && (
                           <button
                             onClick={() => onThrowArmor(i)}
-                            style={{ padding: '2px 5px', fontSize: 11, backgroundColor: '#443322', border: '1px solid #665544', borderRadius: 4, color: '#ffcc88', cursor: 'pointer' }}
+                            style={{ padding: '5px 10px', fontSize: 13, backgroundColor: '#443322', border: '1px solid #665544', borderRadius: 4, color: '#ffcc88', cursor: 'pointer' }}
                           >
-                            投げる
+                            投
                           </button>
                         )}
                         <button
                           onClick={() => { onDropArmor?.(i); }}
-                          style={{ padding: '2px 5px', fontSize: 11, backgroundColor: '#442222', border: '1px solid #664444', borderRadius: 4, color: '#ccaaaa', cursor: 'pointer' }}
+                          style={{ padding: '5px 10px', fontSize: 13, backgroundColor: '#442222', border: '1px solid #664444', borderRadius: 4, color: '#ccaaaa', cursor: 'pointer' }}
                         >
                           消
                         </button>
                       </div>
                     </div>
                     {/* アーマーステータス行 */}
-                    <div style={{ fontSize: 11, color: '#9aabb8', paddingLeft: 18, lineHeight: 1.4 }}>
+                    <div style={{ fontSize: 11, color: '#9aabb8', paddingLeft: 8, lineHeight: 1.4 }}>
                       {`DEF +${armor.def}`}
                       {(armor.maxHpBonus ?? 0) > 0 && (
                         <span style={{ marginLeft: 6 }}>{`MaxHP +${armor.maxHpBonus}`}</span>
                       )}
                       <span style={{ marginLeft: 6 }}>{`耐久:${armor.durability}/${armor.maxDurability}`}</span>
                     </div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, paddingLeft: 18 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, paddingLeft: 8 }}>
                       <span style={{ fontSize: 10, color: '#667788', flexShrink: 0 }}>耐久</span>
                       <div style={{ width: DURABILITY_BAR_MAX_WIDTH, height: 4, backgroundColor: '#223344', borderRadius: 2, overflow: 'hidden', flexShrink: 0 }}>
                         <div style={{ width: durWidth, height: '100%', backgroundColor: durColor, borderRadius: 2 }} />
