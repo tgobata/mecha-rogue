@@ -18,6 +18,7 @@ import {
   TILE_HINT,
 } from './constants';
 import itemsRaw from '../assets/data/items.json';
+import { applyBlastToTraps } from './turn-system';
 
 const ALL_ITEMS = itemsRaw as any[];
 
@@ -562,8 +563,14 @@ function applyStatusInArea(
   state: GameState,
   center: Position,
   effect: StatusEffect,
-): { nextState: GameState; count: number } {
+): { nextState: GameState; count: number; trapLogs: string[] } {
   let count = 0;
+  const blastTiles: Position[] = [];
+  for (let dy = -1; dy <= 1; dy++) {
+    for (let dx = -1; dx <= 1; dx++) {
+      blastTiles.push({ x: center.x + dx, y: center.y + dy });
+    }
+  }
   const newEnemies = state.enemies.map(e => {
     const dx = Math.abs(e.pos.x - center.x);
     const dy = Math.abs(e.pos.y - center.y);
@@ -575,7 +582,9 @@ function applyStatusInArea(
     }
     return e;
   });
-  return { nextState: { ...state, enemies: newEnemies }, count };
+  const trapLogs: string[] = [];
+  const newTraps = applyBlastToTraps(state.traps, blastTiles, trapLogs);
+  return { nextState: { ...state, enemies: newEnemies, traps: newTraps }, count, trapLogs };
 }
 
 /** 武器をフロアに置く。設置不可なら周囲を探し、見つからなければ消滅ログを出す。 */
@@ -820,8 +829,8 @@ function applyItemEffectOnEnemy(
     case 'stun_area': {
       const stunTurns = 3;
       const stunEff: StatusEffect = { type: 'stunned', remainingTurns: stunTurns, sourceId: itemId };
-      const { nextState: stunned, count } = applyStatusInArea(state, landPos, stunEff);
-      logs.push(`EMP爆発！ 周囲${count}体を${stunTurns}ターンスタン！`);
+      const { nextState: stunned, count, trapLogs } = applyStatusInArea(state, landPos, stunEff);
+      logs.push(`EMP爆発！ 周囲${count}体を${stunTurns}ターンスタン！`, ...trapLogs);
       return stunned;
     }
 
@@ -830,8 +839,8 @@ function applyItemEffectOnEnemy(
     case 'stun_radius_2': {
       const stunTurns: number = def.stunTurns ?? 2;
       const stunEff: StatusEffect = { type: 'stunned', remainingTurns: stunTurns, sourceId: itemId };
-      const { nextState: stunned, count } = applyStatusInArea(state, landPos, stunEff);
-      logs.push(`フラッシュ炸裂！ 周囲${count}体を${stunTurns}ターンスタン！`);
+      const { nextState: stunned, count, trapLogs } = applyStatusInArea(state, landPos, stunEff);
+      logs.push(`フラッシュ炸裂！ 周囲${count}体を${stunTurns}ターンスタン！`, ...trapLogs);
       return stunned;
     }
 
@@ -885,6 +894,16 @@ function applyItemEffectOnEnemy(
     // ── 時限爆弾（着地点で即爆発） ──
     case 'place_bomb': {
       return detonateBombAtPos(state, def, landPos, logs);
+    }
+
+    // ── 爆弾（着地点で即爆発） ──
+    case 'throw_bomb': {
+      return detonateBombAtPos(state, def, landPos, logs);
+    }
+
+    // ── アイスボム（着地点で爆発+凍結） ──
+    case 'ice_bomb': {
+      return detonateIceBombAtPos(state, def, landPos, logs);
     }
 
     // ── 聖なるオイル ──
@@ -949,10 +968,17 @@ function applyItemEffectOnLand(
     case 'place_bomb':
       return detonateBombAtPos(state, def, landPos, logs);
 
+    case 'throw_bomb':
+      return detonateBombAtPos(state, def, landPos, logs);
+
+    case 'ice_bomb':
+      return detonateIceBombAtPos(state, def, landPos, logs);
+
     case 'stun_area': {
       const stunEff: StatusEffect = { type: 'stunned', remainingTurns: 3, sourceId: itemId };
-      const { nextState: stunned, count } = applyStatusInArea(state, landPos, stunEff);
+      const { nextState: stunned, count, trapLogs } = applyStatusInArea(state, landPos, stunEff);
       if (count > 0) logs.push(`EMP爆発！ 周囲${count}体を3ターンスタン！`);
+      logs.push(...trapLogs);
       return stunned;
     }
 
@@ -1009,8 +1035,56 @@ function detonateBombAtPos(state: GameState, def: any, pos: Position, logs: stri
     logs.push(`爆弾の爆発がプレイヤーに${playerDmg}ダメージ！`);
   }
 
+  const newTraps = applyBlastToTraps(state.traps, blastTiles, logs);
   logs.push(`爆弾が着地点で爆発！（ダメージ${damage}）`);
-  return { ...state, enemies: newEnemies, player: newPlayer ?? state.player };
+  return { ...state, enemies: newEnemies, player: newPlayer ?? state.player, traps: newTraps };
+}
+
+/** アイスボムを着地点で即時起爆する（ダメージ＋凍結） */
+function detonateIceBombAtPos(state: GameState, def: any, pos: Position, logs: string[]): GameState {
+  const radius: number = def.bombRadius ?? 0;
+  const damage: number = def.value ?? 20;
+  const frozenTurns: number = def.frozenTurns ?? 1;
+
+  // 爆発範囲（detonateBombAtPos と同一ロジック）
+  const blastTiles: Position[] = [];
+  if (radius === 0) {
+    blastTiles.push(pos);
+  } else {
+    const range = radius <= 1 ? 1 : radius === 2 ? 1 : 2;
+    const orthOnly = radius === 1;
+    for (let dy = -range; dy <= range; dy++) {
+      for (let dx = -range; dx <= range; dx++) {
+        if (orthOnly && dx !== 0 && dy !== 0) continue;
+        blastTiles.push({ x: pos.x + dx, y: pos.y + dy });
+      }
+    }
+  }
+
+  const frozenEffect: StatusEffect = { type: 'frozen', remainingTurns: frozenTurns, sourceId: def.id ?? 'ice_bomb' };
+
+  const newEnemies = state.enemies.map(e => {
+    if (!blastTiles.some(t => t.x === e.pos.x && t.y === e.pos.y)) return e;
+    const dmg = Math.max(1, damage - (e.def ?? 0));
+    const existing = e.statusEffects ?? [];
+    const prevFrozen = existing.find(s => s.type === 'frozen');
+    const newFrozen: StatusEffect = prevFrozen && prevFrozen.remainingTurns >= frozenTurns
+      ? prevFrozen
+      : frozenEffect;
+    const withoutFrozen = existing.filter(s => s.type !== 'frozen');
+    return { ...e, hp: e.hp - dmg, statusEffects: [...withoutFrozen, newFrozen] };
+  });
+
+  let newPlayer = state.player;
+  if (newPlayer && blastTiles.some(t => t.x === newPlayer!.pos.x && t.y === newPlayer!.pos.y)) {
+    const playerDmg = Math.max(1, Math.floor(damage * 0.5) - (newPlayer.def ?? 0));
+    newPlayer = { ...newPlayer, hp: newPlayer.hp - playerDmg, hpEverDroppedBelowMax: true };
+    logs.push(`アイスボムの爆発がプレイヤーに${playerDmg}ダメージ！`);
+  }
+
+  const newTraps = applyBlastToTraps(state.traps, blastTiles, logs);
+  logs.push(`アイスボム爆発！（ダメージ${damage}、${frozenTurns}ターン凍結）`);
+  return { ...state, enemies: newEnemies, player: newPlayer ?? state.player, traps: newTraps };
 }
 
 /** ランダムな床タイルを返す */

@@ -1775,6 +1775,41 @@ function handleTrapTrigger(
 }
 
 // ---------------------------------------------------------------------------
+// ユーティリティ: 範囲攻撃と罠の相互作用
+// ---------------------------------------------------------------------------
+
+/**
+ * 爆発・範囲攻撃の対象タイル内にある罠を処理する。
+ * - 不可視罠: 可視化
+ * - 可視罠: 75%で破壊（isTriggered=true）
+ */
+export function applyBlastToTraps(
+  traps: Trap[],
+  blastTiles: Position[],
+  logs: string[],
+): Trap[] {
+  let revealed = 0;
+  let destroyed = 0;
+  const updated = traps.map(trap => {
+    if (trap.isTriggered) return trap;
+    if (!blastTiles.some(t => t.x === trap.pos.x && t.y === trap.pos.y)) return trap;
+    if (trap.isVisible) {
+      if (Math.random() < 0.75) {
+        destroyed++;
+        return { ...trap, isTriggered: true };
+      }
+      return trap;
+    } else {
+      revealed++;
+      return { ...trap, isVisible: true };
+    }
+  });
+  if (revealed > 0) logs.push(revealed === 1 ? '爆発で罠を発見した！' : `爆発で罠を${revealed}個発見した！`);
+  if (destroyed > 0) logs.push(destroyed === 1 ? '爆発で罠を破壊した！' : `爆発で罠を${destroyed}個破壊した！`);
+  return updated;
+}
+
+// ---------------------------------------------------------------------------
 // メイン: processTurn
 // ---------------------------------------------------------------------------
 
@@ -2170,6 +2205,7 @@ export function processTurn(state: GameState, action: PlayerAction): GameState {
     // 爆発処理
     let bombPlayer = playerAfterTrap;
     let bombEnemies = enemiesAfterTrap;
+    let bombTraps = bombsState.traps;
     for (const bomb of explosions) {
       // 爆発範囲のタイル計算
       const blastTiles: Position[] = [];
@@ -2199,6 +2235,8 @@ export function processTurn(state: GameState, action: PlayerAction): GameState {
         bombPlayer = { ...bombPlayer, hp: bombPlayer.hp - playerDmg, hpEverDroppedBelowMax: true };
         newBattleLog.push(`爆弾が爆発！ プレイヤーに${playerDmg}ダメージ！`);
       }
+      // 爆発範囲内の罠に反応
+      bombTraps = applyBlastToTraps(bombTraps, blastTiles, newBattleLog);
       newBattleLog.push(`爆弾が爆発した！（ダメージ${bomb.damage}）`);
     }
     // 爆弾で倒した敵を除去
@@ -2209,7 +2247,7 @@ export function processTurn(state: GameState, action: PlayerAction): GameState {
     }
     playerAfterTrap = bombPlayer;
     enemiesAfterTrap = bombEnemies;
-    bombsState = { ...bombsState, placedBombs: remainingBombs };
+    bombsState = { ...bombsState, placedBombs: remainingBombs, traps: bombTraps };
   } else {
     bombsState = { ...bombsState, placedBombs: [] };
   }
