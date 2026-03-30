@@ -104,8 +104,9 @@ export default function InventoryPanel({
         position: 'absolute',
         inset: 0,
         display: 'flex',
-        alignItems: 'center',
+        alignItems: 'flex-start',
         justifyContent: 'center',
+        paddingTop: 4,
         zIndex: PANEL_Z_INDEX,
         pointerEvents: 'auto',
       }}
@@ -114,7 +115,8 @@ export default function InventoryPanel({
         onPointerDown={(e) => e.stopPropagation()}
         style={{
           width: PANEL_WIDTH,
-          maxHeight: PANEL_MAX_HEIGHT,
+          maxWidth: '100%',
+          maxHeight: 'min(400px, calc(100% - 8px))',
           background: PANEL_BG,
           border: PANEL_BORDER,
           borderRadius: 8,
