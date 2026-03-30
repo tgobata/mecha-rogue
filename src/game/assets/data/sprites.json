@@ -2975,6 +2975,11 @@
       "file": "public/sprites/npc/black_market_npc.png",
       "width": 32,
       "height": 32
+    },
+    "repair_npc": {
+      "file": "public/sprites/npc/repair_npc.png",
+      "width": 32,
+      "height": 32
     }
   }
 }

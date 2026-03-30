@@ -2532,33 +2532,6 @@ export default function GameCanvas() {
               </div>
             )}
 
-            {/* 休憩所倉庫パネルオーバーレイ */}
-            {gameState.phase === "storage" && storageConfirmed && (
-              <RestStoragePanel
-                gameState={gameState}
-                onUpdateState={(next) => { setGameState(next); stateRef.current = next; }}
-                onClose={() => {
-                  // タイルを TILE_FLOOR に変更して消滅させる
-                  const s = stateRef.current;
-                  if (s.map && s.player) {
-                    const { x, y } = s.player.pos;
-                    const newCells = s.map.cells.map((row, ry) =>
-                      ry === y
-                        ? row.map((cell, cx) => cx === x ? { ...cell, tile: '.' as const } : cell)
-                        : row
-                    );
-                    const newMap = { ...s.map, cells: newCells };
-                    const newState = { ...s, phase: "exploring" as const, map: newMap };
-                    setGameState(newState);
-                    stateRef.current = newState;
-                  } else {
-                    setGameState((s) => ({ ...s, phase: "exploring" as const }));
-                    stateRef.current = { ...stateRef.current, phase: "exploring" };
-                  }
-                  setStorageConfirmed(false);
-                }}
-              />
-            )}
 
             {/* ⏸ ポーズメニューオーバーレイ */}
             {menuPanel?.type === "pause" && (
@@ -3194,6 +3167,34 @@ export default function GameCanvas() {
           onUpdateState={setGameState}
           onSaveAndExit={handleSaveAndExit}
           onReturnToTitle={handleReturnToTitleWithoutSave}
+        />
+      )}
+
+      {/* 休憩所倉庫パネルオーバーレイ（フル画面で表示） */}
+      {gameState.phase === "storage" && storageConfirmed && (
+        <RestStoragePanel
+          gameState={gameState}
+          onUpdateState={(next) => { setGameState(next); stateRef.current = next; }}
+          onClose={() => {
+            // タイルを TILE_FLOOR に変更して消滅させる
+            const s = stateRef.current;
+            if (s.map && s.player) {
+              const { x, y } = s.player.pos;
+              const newCells = s.map.cells.map((row, ry) =>
+                ry === y
+                  ? row.map((cell, cx) => cx === x ? { ...cell, tile: '.' as const } : cell)
+                  : row
+              );
+              const newMap = { ...s.map, cells: newCells };
+              const newState = { ...s, phase: "exploring" as const, map: newMap };
+              setGameState(newState);
+              stateRef.current = newState;
+            } else {
+              setGameState((s) => ({ ...s, phase: "exploring" as const }));
+              stateRef.current = { ...stateRef.current, phase: "exploring" };
+            }
+            setStorageConfirmed(false);
+          }}
         />
       )}
 

@@ -944,11 +944,11 @@ function attemptGenerate(
  * @returns 休憩所フロアの Floor オブジェクト
  */
 export function generateRestFloor(parentFloor: number): Floor {
-  const width = 22;
-  const height = 22;
+  const width = 14;
+  const height = 14;
   const cells = createEmptyCells(width, height);
 
-  // 内部 (1..20, 1..20) すべて TILE_FLOOR にする
+  // 内部 (1..12, 1..12) すべて TILE_FLOOR にする
   for (let y = 1; y < height - 1; y++) {
     for (let x = 1; x < width - 1; x++) {
       cells[y][x] = { tile: TILE_FLOOR, isVisible: true, isExplored: true };
@@ -962,16 +962,16 @@ export function generateRestFloor(parentFloor: number): Floor {
     }
   }
 
-  const startPos: Position = { x: 3, y: 11 };
-  const stairsPos: Position = { x: 19, y: 11 };
+  const startPos: Position = { x: 2, y: 7 };
+  const stairsPos: Position = { x: 12, y: 7 };
 
   cells[startPos.y][startPos.x].tile = TILE_START;
   cells[stairsPos.y][stairsPos.x].tile = TILE_STAIRS_DOWN;
 
   // NPC・設備の配置
-  cells[6][10].tile = TILE_SHOP;     // ショップ NPC
-  cells[16][10].tile = TILE_REPAIR;  // 修理屋
-  cells[11][14].tile = TILE_STORAGE; // 拠点倉庫アクセス
+  cells[3][7].tile = TILE_SHOP;     // ショップ NPC
+  cells[11][7].tile = TILE_REPAIR;  // 修理屋
+  cells[7][10].tile = TILE_STORAGE; // 拠点倉庫アクセス
 
   const bounds: Bounds = { x: 0, y: 0, width, height };
   const room: Room = {

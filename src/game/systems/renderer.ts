@@ -22,6 +22,7 @@ import {
   TILE_WATER,
   TILE_MAGNETIC,
   TILE_STORAGE,
+  TILE_REPAIR,
   TILE_OIL,
   TILE_FIRE,
 } from '../core/constants';
@@ -709,6 +710,88 @@ export function renderGame(
         ctx.shadowColor = '#ff4444';
         ctx.shadowBlur = 6;
         ctx.fillStyle = '#ff6666';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(signText, drawX + tileSize / 2, signY + signH / 2);
+        ctx.restore();
+      }
+    }
+  }
+
+  // ─── 2.8. 倉庫NPC描画（TILE_STORAGE の可視タイルにスプライトを重ねる） ─
+  const storageNpcSprite = sprites.get('npc_storage_npc');
+  if (storageNpcSprite) {
+    for (let screenY = 0; screenY < tilesY; screenY++) {
+      for (let screenX = 0; screenX < tilesX; screenX++) {
+        const mapX = startTileX + screenX;
+        const mapY = startTileY + screenY;
+        if (mapX < 0 || mapX >= map.width || mapY < 0 || mapY >= map.height) continue;
+        const cell = map.cells[mapY][mapX];
+        if (!cell.isExplored || !cell.isVisible) continue;
+        if (cell.tile !== TILE_STORAGE) continue;
+        const drawX = screenX * tileSize;
+        const drawY = screenY * tileSize;
+        ctx.drawImage(storageNpcSprite, drawX, drawY, tileSize, tileSize);
+        const signFontSize = Math.max(10, tileSize * 0.5);
+        const signText = '倉';
+        ctx.save();
+        ctx.font = `bold ${signFontSize}px sans-serif`;
+        const textMetrics = ctx.measureText(signText);
+        const signW = textMetrics.width + 8;
+        const signH = signFontSize + 6;
+        const signX = drawX + tileSize / 2 - signW / 2;
+        const signY = drawY - signH - 2;
+        ctx.fillStyle = '#071428';
+        ctx.fillRect(signX, signY, signW, signH);
+        ctx.strokeStyle = '#88ddff';
+        ctx.lineWidth = 1.5;
+        ctx.shadowColor = '#88ddff';
+        ctx.shadowBlur = 4;
+        ctx.strokeRect(signX, signY, signW, signH);
+        ctx.shadowColor = '#44aaff';
+        ctx.shadowBlur = 6;
+        ctx.fillStyle = '#aaddff';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(signText, drawX + tileSize / 2, signY + signH / 2);
+        ctx.restore();
+      }
+    }
+  }
+
+  // ─── 2.9. 修理屋NPC描画（TILE_REPAIR の可視タイルにスプライトを重ねる） ─
+  const repairNpcSprite = sprites.get('npc_repair_npc');
+  if (repairNpcSprite) {
+    for (let screenY = 0; screenY < tilesY; screenY++) {
+      for (let screenX = 0; screenX < tilesX; screenX++) {
+        const mapX = startTileX + screenX;
+        const mapY = startTileY + screenY;
+        if (mapX < 0 || mapX >= map.width || mapY < 0 || mapY >= map.height) continue;
+        const cell = map.cells[mapY][mapX];
+        if (!cell.isExplored || !cell.isVisible) continue;
+        if (cell.tile !== TILE_REPAIR) continue;
+        const drawX = screenX * tileSize;
+        const drawY = screenY * tileSize;
+        ctx.drawImage(repairNpcSprite, drawX, drawY, tileSize, tileSize);
+        const signFontSize = Math.max(10, tileSize * 0.5);
+        const signText = '修';
+        ctx.save();
+        ctx.font = `bold ${signFontSize}px sans-serif`;
+        const textMetrics = ctx.measureText(signText);
+        const signW = textMetrics.width + 8;
+        const signH = signFontSize + 6;
+        const signX = drawX + tileSize / 2 - signW / 2;
+        const signY = drawY - signH - 2;
+        ctx.fillStyle = '#071428';
+        ctx.fillRect(signX, signY, signW, signH);
+        ctx.strokeStyle = '#88ffcc';
+        ctx.lineWidth = 1.5;
+        ctx.shadowColor = '#88ffcc';
+        ctx.shadowBlur = 4;
+        ctx.strokeRect(signX, signY, signW, signH);
+        ctx.shadowColor = '#44ffaa';
+        ctx.shadowBlur = 6;
+        ctx.fillStyle = '#aaffdd';
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
         ctx.fillText(signText, drawX + tileSize / 2, signY + signH / 2);
