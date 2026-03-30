@@ -622,7 +622,7 @@ function decideIgniter(
 
   // 近くにオイルがあれば向かう（プレイヤーより優先）
   if (nearestOil && nearestDist <= searchRadius) {
-    const step = nextStep(enemy.pos, nearestOil, map, otherEnemies);
+    const step = nextStep(enemy.pos, nearestOil, map);
     if (step && (step.x !== enemy.pos.x || step.y !== enemy.pos.y)) {
       return { type: 'move', to: step };
     }
