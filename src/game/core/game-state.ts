@@ -212,7 +212,7 @@ export interface StatusEffect {
  * - 'shop'      : ショップ画面表示中
  * - 'gameover'  : ゲームオーバー（マシンHP0 → スタート帰還ペナルティ適用後）
  */
-export type GamePhase = 'title' | 'base' | 'exploring' | 'combat' | 'shop' | 'gameover' | 'bossIntro' | 'achievements';
+export type GamePhase = 'title' | 'base' | 'exploring' | 'combat' | 'shop' | 'storage' | 'gameover' | 'bossIntro' | 'achievements';
 
 // ---------------------------------------------------------------------------
 // 方向
@@ -772,6 +772,11 @@ export interface GameState {
    */
   isBlackMarket?: boolean;
   /**
+   * 現在のフロアが休憩所フロアかどうか。
+   * turn-system の transitionToNextFloor で設定される。
+   */
+  isRestFloor?: boolean;
+  /**
    * 現在フロアのマップデータ（Floor 型）。
    * exploration.currentFloor と同じ参照だが、
    * ターンシステムから直接アクセスしやすいよう別フィールドとして公開する。
@@ -928,6 +933,7 @@ export function createInitialGameState(): GameState {
     hints: [],
     triggeredMonsterHouses: [],
     isBlackMarket: false,
+    isRestFloor: false,
     map: null,
     floor: 1,
     battleLog: [],

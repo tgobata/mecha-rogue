@@ -34,6 +34,7 @@ import {
   TILE_ICE,
   TILE_WARP,
   TILE_MAGNETIC,
+  TILE_STORAGE,
   PARTITION_MIN_SIZE,
   ROOM_MIN_INNER_SIZE,
   LAVA_MIN_FLOOR,
@@ -841,6 +842,66 @@ function attemptGenerate(
   ensureMinimumItems(tempFloor, 3, rng, 1);
 
   return tempFloor;
+}
+
+/**
+ * 休憩所フロアを生成する。
+ * 4F→5F間、9F→10F間など floor % 5 === 4 の階段を降りると入る。
+ * 敵なし・一部屋構成・ゆったりした雰囲気のフロア。
+ *
+ * @param parentFloor - 休憩所に入る直前のフロア番号
+ * @returns 休憩所フロアの Floor オブジェクト
+ */
+export function generateRestFloor(parentFloor: number): Floor {
+  const width = 22;
+  const height = 22;
+  const cells = createEmptyCells(width, height);
+
+  // 内部 (1..20, 1..20) すべて TILE_FLOOR にする
+  for (let y = 1; y < height - 1; y++) {
+    for (let x = 1; x < width - 1; x++) {
+      cells[y][x] = { tile: TILE_FLOOR, isVisible: true, isExplored: true };
+    }
+  }
+  // 外縁は壁（すでに TILE_WALL）だが isExplored を true にして最初から見える
+  for (let y = 0; y < height; y++) {
+    for (let x = 0; x < width; x++) {
+      cells[y][x].isExplored = true;
+      cells[y][x].isVisible = true;
+    }
+  }
+
+  const startPos: Position = { x: 3, y: 11 };
+  const stairsPos: Position = { x: 19, y: 11 };
+
+  cells[startPos.y][startPos.x].tile = TILE_START;
+  cells[stairsPos.y][stairsPos.x].tile = TILE_STAIRS_DOWN;
+
+  // NPC・設備の配置
+  cells[6][10].tile = TILE_SHOP;     // ショップ NPC
+  cells[16][10].tile = TILE_REPAIR;  // 修理屋
+  cells[11][14].tile = TILE_STORAGE; // 拠点倉庫アクセス
+
+  const bounds: Bounds = { x: 0, y: 0, width, height };
+  const room: Room = {
+    id: 0,
+    type: RoomType.NORMAL,
+    bounds,
+    doors: [],
+    isLocked: false,
+  };
+
+  return {
+    floorNumber: parentFloor,
+    width,
+    height,
+    cells,
+    rooms: [room],
+    startPos,
+    stairsPos,
+    seed: parentFloor * 7777,
+    isRestFloor: true,
+  };
 }
 
 /**

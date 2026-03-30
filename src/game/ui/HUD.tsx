@@ -44,6 +44,8 @@ interface HUDProps {
   gold: number;
   /** ボスを視界内で確認済みかどうか（true になったら HP バーを表示し続ける） */
   bossHPVisible?: boolean;
+  /** 現在フロアが休憩所かどうか */
+  isRestFloor?: boolean;
 }
 
 function getHpBarColor(hp: number, maxHp: number): string {
@@ -54,7 +56,7 @@ function getHpBarColor(hp: number, maxHp: number): string {
 }
 
 
-export default function HUD({ player, floorNumber, floor, enemies, inventory, level, gold, bossHPVisible }: HUDProps) {
+export default function HUD({ player, floorNumber, floor, enemies, inventory, level, gold, bossHPVisible, isRestFloor }: HUDProps) {
   const hpBarColor = getHpBarColor(player.hp, player.maxHp);
   const hpPercent  = `${Math.max(0, Math.floor((player.hp / player.maxHp) * 100))}%`;
   const boss = bossHPVisible ? enemies.find(
@@ -122,7 +124,7 @@ export default function HUD({ player, floorNumber, floor, enemies, inventory, le
           style={{ backgroundColor: 'rgba(0,0,0,0.75)', border: '1px solid #554400', borderRadius: 4, padding: '4px 6px' }}
         >
           <span className="text-sm font-bold text-yellow-300" style={{ fontFamily: 'monospace' }}>
-            B{floorNumber}F
+            {isRestFloor ? '休憩所' : `B${floorNumber}F`}
           </span>
           {floor !== null && (
             <MiniMap floor={floor} playerPos={player.pos} enemies={enemies} viewRadius={VIEW_RADIUS} />

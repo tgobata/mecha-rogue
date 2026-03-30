@@ -20,7 +20,7 @@
 
 import { useRef, useEffect } from 'react';
 import type { Floor, Position } from '../core/types';
-import { TILE_WALL, TILE_STAIRS_DOWN, TILE_ITEM, TILE_GOLD, TILE_SHOP, TILE_WEAPON } from '../core/constants';
+import { TILE_WALL, TILE_STAIRS_DOWN, TILE_ITEM, TILE_GOLD, TILE_SHOP, TILE_WEAPON, TILE_STORAGE } from '../core/constants';
 import type { Enemy } from '../core/game-state';
 
 // ---------------------------------------------------------------------------
@@ -102,8 +102,8 @@ export default function MiniMap({
             ctx.fillStyle = isDim ? '#333344' : '#444455';
           } else if (cell.tile === TILE_STAIRS_DOWN) {
             ctx.fillStyle = isDim ? '#998800' : '#ffdd00';
-          } else if (cell.tile === TILE_SHOP) {
-            ctx.fillStyle = isDim ? '#aa00aa' : '#ff00ff'; // Magenta
+          } else if (cell.tile === TILE_SHOP || cell.tile === TILE_STORAGE) {
+            ctx.fillStyle = isDim ? '#0044aa' : '#4488cc'; // Blue (shop/storage)
           } else if (cell.tile === TILE_ITEM) {
             ctx.fillStyle = isDim ? '#008800' : '#44ff44'; // Green
           } else if (cell.tile === TILE_WEAPON) {

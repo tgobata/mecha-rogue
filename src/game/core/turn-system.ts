@@ -34,6 +34,7 @@ import {
   TILE_WEAPON,
   TILE_GOLD,
   TILE_SHOP,
+  TILE_STORAGE,
   TILE_FLOOR,
   TILE_TRAP,
   TILE_HINT,
@@ -44,10 +45,14 @@ import {
   MIN_DAMAGE,
   INITIAL_PLAYER_ATK,
   INITIAL_PLAYER_DEF,
+  REST_FLOOR_HP_LOW_THRESHOLD,
+  REST_FLOOR_HP_RECOVERY_LOW,
+  REST_FLOOR_HP_RECOVERY_RATE,
+  REST_FLOOR_DURABILITY_RATE,
 } from './constants';
 import { addExp } from './level-system';
 import { getTileAt, isWalkable, manhattanDistance, getDirection } from './floorUtils';
-import { generateFloor } from './maze-generator';
+import { generateFloor, generateRestFloor } from './maze-generator';
 import type { GameState, Enemy, Player, Direction, EnemyAiType, Trap, Hint, TrapType } from './game-state';
 import { INITIAL_FACING } from './game-state';
 import { getShopInventory } from './shop-system';
@@ -291,12 +296,139 @@ function effectiveAtk(player: Player): number {
  */
 export function transitionToNextFloor(
   state: GameState,
-): Pick<GameState, 'exploration' | 'player' | 'enemies' | 'map' | 'floor' | 'traps' | 'hints' | 'triggeredMonsterHouses' | 'isBlackMarket'> {
+): Pick<GameState, 'exploration' | 'player' | 'enemies' | 'map' | 'floor' | 'traps' | 'hints' | 'triggeredMonsterHouses' | 'isBlackMarket' | 'isRestFloor' | 'battleLog'> {
+  const currentPlayer = state.player;
+
+  // ── 休憩所からの退場: 次の通常フロアへ ──
+  if (state.isRestFloor === true) {
+    const nextFloorNumber = state.floor + 1;
+    const newMap = generateFloor(nextFloorNumber);
+    const newPlayer: Player = {
+      ...(currentPlayer ?? {}),
+      pos: newMap.startPos,
+      hp: currentPlayer?.hp ?? state.machine.hp,
+      maxHp: currentPlayer?.maxHp ?? state.machine.maxHp,
+      atk: currentPlayer?.atk ?? INITIAL_PLAYER_ATK,
+      def: currentPlayer?.def ?? INITIAL_PLAYER_DEF,
+      facing: INITIAL_FACING,
+      animState: 'idle' as const,
+    };
+    const newEnemies = spawnEnemiesFromMap(newMap, nextFloorNumber);
+    const newTraps = spawnTrapsFromMap(newMap);
+    const newHints = spawnHintsFromMap(newMap, nextFloorNumber);
+    let isBlackMarket = false;
+    if (nextFloorNumber % 10 === 0) {
+      isBlackMarket = newMap.cells.some(row => row.some(c => c.tile === TILE_SHOP));
+    }
+    const visibleMap = updateVisibility(newMap, newMap.startPos, VIEW_RADIUS);
+    return {
+      exploration: {
+        currentFloor: visibleMap,
+        playerPos: newMap.startPos,
+        floorNumber: nextFloorNumber,
+        turn: state.exploration?.turn ?? 0,
+      },
+      player: newPlayer,
+      enemies: newEnemies,
+      traps: newTraps,
+      hints: newHints,
+      triggeredMonsterHouses: [],
+      isBlackMarket,
+      isRestFloor: false,
+      map: visibleMap,
+      floor: nextFloorNumber,
+      battleLog: state.battleLog,
+    };
+  }
+
+  // ── 休憩所フロアへの入場: floor % 5 === 4 ──
+  if ((state.floor + 1) % 5 === 0) {
+    const restMap = generateRestFloor(state.floor);
+
+    // HP 回復計算
+    const currentHp = currentPlayer?.hp ?? state.machine.hp;
+    const maxHp = currentPlayer?.maxHp ?? state.machine.maxHp;
+    const threshold = maxHp * REST_FLOOR_HP_LOW_THRESHOLD;
+    const newHp = currentHp <= threshold
+      ? Math.min(maxHp, Math.ceil(maxHp * REST_FLOOR_HP_RECOVERY_LOW))
+      : Math.min(maxHp, currentHp + Math.ceil(currentHp * REST_FLOOR_HP_RECOVERY_RATE));
+
+    // 装備耐久値回復
+    let newEquippedWeapon = currentPlayer?.equippedWeapon ?? null;
+    if (newEquippedWeapon && typeof newEquippedWeapon.durability === 'number' && typeof newEquippedWeapon.maxDurability === 'number') {
+      const { durability, maxDurability } = newEquippedWeapon;
+      newEquippedWeapon = {
+        ...newEquippedWeapon,
+        durability: Math.min(maxDurability, durability + Math.floor(maxDurability * REST_FLOOR_DURABILITY_RATE)),
+      };
+    }
+
+    let newEquippedShield = currentPlayer?.equippedShield ?? null;
+    if (newEquippedShield && typeof newEquippedShield.durability === 'number' && typeof newEquippedShield.maxDurability === 'number') {
+      newEquippedShield = {
+        ...newEquippedShield,
+        durability: Math.min(newEquippedShield.maxDurability, newEquippedShield.durability + Math.floor(newEquippedShield.maxDurability * REST_FLOOR_DURABILITY_RATE)),
+      };
+    }
+
+    let newEquippedArmor = currentPlayer?.equippedArmor ?? null;
+    if (newEquippedArmor && typeof newEquippedArmor.durability === 'number' && typeof newEquippedArmor.maxDurability === 'number') {
+      newEquippedArmor = {
+        ...newEquippedArmor,
+        durability: Math.min(newEquippedArmor.maxDurability, newEquippedArmor.durability + Math.floor(newEquippedArmor.maxDurability * REST_FLOOR_DURABILITY_RATE)),
+      };
+    }
+
+    const newPlayer: Player = {
+      ...(currentPlayer ?? {}),
+      pos: restMap.startPos,
+      hp: newHp,
+      maxHp,
+      atk: currentPlayer?.atk ?? INITIAL_PLAYER_ATK,
+      def: currentPlayer?.def ?? INITIAL_PLAYER_DEF,
+      facing: INITIAL_FACING,
+      animState: 'idle' as const,
+      equippedWeapon: newEquippedWeapon,
+      equippedShield: newEquippedShield,
+      equippedArmor: newEquippedArmor,
+    };
+
+    // 回復ログ
+    const healLogs: string[] = [];
+    if (newHp > currentHp) {
+      healLogs.push(`休憩所に入った。HP が ${currentHp} → ${newHp} に回復した。`);
+    } else {
+      healLogs.push('休憩所に入った。');
+    }
+    if (newEquippedWeapon && newEquippedWeapon.durability !== (currentPlayer?.equippedWeapon?.durability ?? newEquippedWeapon.durability)) {
+      healLogs.push('装備の耐久値が回復した。');
+    }
+
+    return {
+      exploration: {
+        currentFloor: restMap,
+        playerPos: restMap.startPos,
+        floorNumber: state.floor,
+        turn: state.exploration?.turn ?? 0,
+      },
+      player: newPlayer,
+      enemies: [],
+      traps: [],
+      hints: [],
+      triggeredMonsterHouses: [],
+      isBlackMarket: false,
+      isRestFloor: true,
+      map: restMap,
+      floor: state.floor,
+      battleLog: [...(state.battleLog ?? []), ...healLogs],
+    };
+  }
+
+  // ── 通常フロア遷移 ──
   const nextFloorNumber = state.floor + 1;
   const newMap = generateFloor(nextFloorNumber);
 
   // 新フロアのスタート座標にプレイヤーを配置（装備・道具・ステータス異常を引き継ぐ）
-  const currentPlayer = state.player;
   const newPlayer: Player = {
     ...(currentPlayer ?? {}),
     pos: newMap.startPos,
@@ -310,7 +442,7 @@ export function transitionToNextFloor(
 
   // 新フロアの敵を生成（マップ上の TILE_ENEMY タイルから）
   const newEnemies = spawnEnemiesFromMap(newMap, nextFloorNumber);
-  
+
   // 新フロアのトラップ・ヒントを生成
   const newTraps = spawnTrapsFromMap(newMap);
   const newHints = spawnHintsFromMap(newMap, nextFloorNumber);
@@ -337,8 +469,10 @@ export function transitionToNextFloor(
     hints: newHints,
     triggeredMonsterHouses: [],
     isBlackMarket,
+    isRestFloor: false,
     map: visibleMap,
     floor: nextFloorNumber,
+    battleLog: state.battleLog,
   };
 }
 
@@ -682,7 +816,8 @@ type PickupInfo =
   | { type: 'item'; pos: Position; itemId: string }
   | { type: 'weapon'; pos: Position; weaponId: string }
   | { type: 'gold'; pos: Position; amount: number }
-  | { type: 'shop'; pos: Position };
+  | { type: 'shop'; pos: Position }
+  | { type: 'storage'; pos: Position };
 
 function processPlayerAction(
   state: GameState,
@@ -882,6 +1017,9 @@ function processPlayerAction(
         }
         if (slideTile === TILE_SHOP) {
           pickup = { type: 'shop', pos: slidePos };
+        }
+        if (slideTile === TILE_STORAGE) {
+          pickup = { type: 'storage', pos: slidePos };
         }
       }
       // 壁などの場合は移動しない（方向だけ更新済み）
@@ -2103,6 +2241,12 @@ export function processTurn(state: GameState, action: PlayerAction): GameState {
           shopInventory,
           shopInventories,
         },
+        player: playerAfterAction,
+      };
+    } else if (pickup.type === 'storage') {
+      return {
+        ...state,
+        phase: 'storage',
         player: playerAfterAction,
       };
     } else {

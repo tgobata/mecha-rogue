@@ -25,6 +25,7 @@ import type {
   TILE_ICE,
   TILE_WARP,
   TILE_MAGNETIC,
+  TILE_STORAGE,
 } from './constants';
 
 // ---------------------------------------------------------------------------
@@ -56,7 +57,8 @@ export type TileType =
   | typeof TILE_LAVA
   | typeof TILE_ICE
   | typeof TILE_WARP
-  | typeof TILE_MAGNETIC;
+  | typeof TILE_MAGNETIC
+  | typeof TILE_STORAGE;
 
 // ---------------------------------------------------------------------------
 // 座標
@@ -177,4 +179,6 @@ export interface Floor {
   stairsPos: Position;
   /** 生成に使用したシード値（再現性のため保持） */
   seed: number;
+  /** 休憩所フロアかどうか */
+  isRestFloor?: boolean;
 }

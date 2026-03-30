@@ -1,0 +1,358 @@
+'use client';
+
+/**
+ * @fileoverview 休憩所フロアの倉庫パネルコンポーネント
+ *
+ * 休憩所フロアで TILE_STORAGE を踏んだときに表示される。
+ * BaseScreen の StorageOverlay と同等の機能を提供する。
+ */
+
+import { useState, useMemo } from 'react';
+import type { GameState } from '../core/game-state';
+import { playSE } from '../systems/audio';
+import { depositItem, withdrawItem } from '../core/storage-system';
+import itemsRaw from '../assets/data/items.json';
+import toolsRaw from '../assets/data/tools-equipment.json';
+import weaponsRaw from '../assets/data/weapons.json';
+
+const ALL_ITEMS = [...(itemsRaw as any[]), ...(toolsRaw as any[])];
+const ALL_WEAPONS = weaponsRaw as any[];
+
+interface RestStoragePanelProps {
+  gameState: GameState;
+  onUpdateState: (next: GameState) => void;
+  onClose: () => void;
+}
+
+export default function RestStoragePanel({ gameState, onUpdateState, onClose }: RestStoragePanelProps) {
+  const storage = gameState.storage;
+  const storedGold = gameState.storedGold;
+  const carriedGold = gameState.inventory.gold;
+
+  const [depositAmount, setDepositAmount] = useState('');
+  const [withdrawAmount, setWithdrawAmount] = useState('');
+  const [goldError, setGoldError] = useState('');
+  const [tab, setTab] = useState<'inventory' | 'storage'>('inventory');
+  const [sortKey, setSortKey] = useState<'default' | 'name' | 'type'>('default');
+
+  const getItemName = (itemId: string) => ALL_ITEMS.find((d) => d.id === itemId)?.name ?? itemId;
+  const getWeaponName = (weaponId: string) => ALL_WEAPONS.find((d) => d.id === weaponId)?.name ?? weaponId;
+
+  const sortedStorage = useMemo(() => {
+    const items = storage.map((item, originalIndex) => ({ item, originalIndex }));
+    if (sortKey === 'name') {
+      items.sort((a, b) => {
+        const nameA = a.item.type === 'weapon' ? getWeaponName(a.item.id) : getItemName(a.item.id);
+        const nameB = b.item.type === 'weapon' ? getWeaponName(b.item.id) : getItemName(b.item.id);
+        return nameA.localeCompare(nameB, 'ja');
+      });
+    } else if (sortKey === 'type') {
+      items.sort((a, b) => a.item.type.localeCompare(b.item.type));
+    }
+    return items;
+  }, [storage, sortKey]);
+
+  const sortedInventoryWeapons = useMemo(() => {
+    const ws = gameState.inventory.equippedWeapons.map((w, i) => ({ w, i }));
+    if (sortKey === 'name') {
+      ws.sort((a, b) => getWeaponName(a.w.weaponId).localeCompare(getWeaponName(b.w.weaponId), 'ja'));
+    }
+    return ws;
+  }, [gameState.inventory.equippedWeapons, sortKey]);
+
+  const sortedInventoryItems = useMemo(() => {
+    const its = gameState.inventory.items.map((it, i) => ({ it, i }));
+    if (sortKey === 'name') {
+      its.sort((a, b) => {
+        if ((a.it as any).unidentified && (b.it as any).unidentified) return 0;
+        if ((a.it as any).unidentified) return 1;
+        if ((b.it as any).unidentified) return -1;
+        return getItemName(a.it.itemId).localeCompare(getItemName(b.it.itemId), 'ja');
+      });
+    }
+    return its;
+  }, [gameState.inventory.items, sortKey]);
+
+  const handleDepositItemClick = (type: 'weapon' | 'item', index: number, id: string) => {
+    const nextState = depositItem(gameState, id, type, index);
+    if (nextState !== gameState) {
+      playSE('ui_select');
+      onUpdateState(nextState);
+    } else {
+      playSE('ui_cancel');
+    }
+  };
+
+  const handleWithdrawItemClick = (storageIndex: number) => {
+    const nextState = withdrawItem(gameState, storageIndex);
+    if (nextState !== gameState) {
+      playSE('ui_select');
+      onUpdateState(nextState);
+    } else {
+      playSE('ui_cancel');
+    }
+  };
+
+  const handleDeposit = () => {
+    const amount = parseInt(depositAmount, 10);
+    if (isNaN(amount) || amount <= 0) {
+      setGoldError('正の整数を入力してください');
+      return;
+    }
+    if (amount > carriedGold) {
+      setGoldError(`所持金が足りません（所持: ${carriedGold.toLocaleString()} G）`);
+      return;
+    }
+    onUpdateState({
+      ...gameState,
+      inventory: { ...gameState.inventory, gold: carriedGold - amount },
+      storedGold: storedGold + amount,
+    });
+    setDepositAmount('');
+    setGoldError('');
+  };
+
+  const handleWithdraw = () => {
+    const amount = parseInt(withdrawAmount, 10);
+    if (isNaN(amount) || amount <= 0) {
+      setGoldError('正の整数を入力してください');
+      return;
+    }
+    if (amount > storedGold) {
+      setGoldError(`倉庫の金が足りません（倉庫: ${storedGold.toLocaleString()} G）`);
+      return;
+    }
+    onUpdateState({
+      ...gameState,
+      inventory: { ...gameState.inventory, gold: carriedGold + amount },
+      storedGold: storedGold - amount,
+    });
+    setWithdrawAmount('');
+    setGoldError('');
+  };
+
+  return (
+    <div
+      style={{
+        position: 'absolute',
+        inset: 0,
+        backgroundColor: 'rgba(5, 5, 20, 0.97)',
+        border: '1px solid #6a4a2a',
+        borderRadius: 8,
+        display: 'flex',
+        flexDirection: 'column',
+        padding: '16px 20px',
+        zIndex: 30,
+        fontFamily: 'monospace',
+      }}
+    >
+      {/* ヘッダー */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+        <span style={{ color: '#ddbb88', fontWeight: 'bold', fontSize: 15 }}>拠点倉庫（休憩所）</span>
+        <button
+          onClick={onClose}
+          style={{
+            background: 'none',
+            border: '1px solid #6a4a2a',
+            borderRadius: 4,
+            color: '#aaaacc',
+            padding: '2px 10px',
+            cursor: 'pointer',
+            fontSize: 12,
+          }}
+        >
+          閉じる
+        </button>
+      </div>
+
+      {/* 区切り */}
+      <div style={{ height: 1, backgroundColor: '#6a4a2a', marginBottom: 12 }} />
+
+      {/* ゴールド預け入れ/引き出し */}
+      <div
+        style={{
+          backgroundColor: 'rgba(50, 30, 10, 0.6)',
+          border: '1px solid #6a4a2a',
+          borderRadius: 6,
+          padding: '10px 12px',
+          marginBottom: 12,
+        }}
+      >
+        <div style={{ color: '#ddbb88', fontWeight: 'bold', fontSize: 13, marginBottom: 8 }}>ゴールド管理</div>
+        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, color: '#aaaacc', marginBottom: 10 }}>
+          <span>所持金: <strong style={{ color: '#ffcc44' }}>{carriedGold.toLocaleString()} G</strong></span>
+          <span>倉庫: <strong style={{ color: '#ffdd88' }}>{storedGold.toLocaleString()} G</strong></span>
+        </div>
+
+        {/* 預け入れ */}
+        <div style={{ display: 'flex', gap: 6, marginBottom: 6 }}>
+          <input
+            type="number"
+            min={1}
+            max={carriedGold}
+            value={depositAmount}
+            onChange={(e) => { setDepositAmount(e.target.value); setGoldError(''); }}
+            placeholder="預け入れ額"
+            style={{
+              flex: 1,
+              background: 'rgba(10,20,40,0.8)',
+              border: '1px solid #6a4a2a',
+              borderRadius: 4,
+              color: '#ccddee',
+              padding: '4px 8px',
+              fontSize: 12,
+              fontFamily: 'monospace',
+            }}
+          />
+          <button
+            onClick={handleDeposit}
+            style={{
+              background: 'rgba(80,50,20,0.6)',
+              border: '1px solid #bb8844',
+              borderRadius: 4,
+              color: '#ddbb88',
+              padding: '4px 12px',
+              cursor: 'pointer',
+              fontSize: 12,
+              whiteSpace: 'nowrap',
+            }}
+          >
+            預ける
+          </button>
+        </div>
+
+        {/* 引き出し */}
+        <div style={{ display: 'flex', gap: 6 }}>
+          <input
+            type="number"
+            min={1}
+            max={storedGold}
+            value={withdrawAmount}
+            onChange={(e) => { setWithdrawAmount(e.target.value); setGoldError(''); }}
+            placeholder="引き出し額"
+            style={{
+              flex: 1,
+              background: 'rgba(10,20,40,0.8)',
+              border: '1px solid #6a4a2a',
+              borderRadius: 4,
+              color: '#ccddee',
+              padding: '4px 8px',
+              fontSize: 12,
+              fontFamily: 'monospace',
+            }}
+          />
+          <button
+            onClick={handleWithdraw}
+            style={{
+              background: 'rgba(40,80,20,0.6)',
+              border: '1px solid #44aa44',
+              borderRadius: 4,
+              color: '#88ee88',
+              padding: '4px 12px',
+              cursor: 'pointer',
+              fontSize: 12,
+              whiteSpace: 'nowrap',
+            }}
+          >
+            引き出す
+          </button>
+        </div>
+
+        {goldError && (
+          <div style={{ color: '#ff8888', fontSize: 11, marginTop: 6 }}>{goldError}</div>
+        )}
+      </div>
+
+      {/* アイテム管理タブ */}
+      <div style={{ display: 'flex', gap: 4, marginBottom: 4 }}>
+        <button
+          onClick={() => setTab('inventory')}
+          style={{
+            flex: 1, padding: '6px',
+            background: tab === 'inventory' ? '#5a3a1a' : 'rgba(20, 20, 40, 0.8)',
+            color: tab === 'inventory' ? '#fff' : '#aa8866',
+            border: '1px solid #6a4a2a', borderRadius: 4, cursor: 'pointer', fontSize: 12,
+          }}
+        >
+          所持品から預ける
+        </button>
+        <button
+          onClick={() => setTab('storage')}
+          style={{
+            flex: 1, padding: '6px',
+            background: tab === 'storage' ? '#5a3a1a' : 'rgba(20, 20, 40, 0.8)',
+            color: tab === 'storage' ? '#fff' : '#aa8866',
+            border: '1px solid #6a4a2a', borderRadius: 4, cursor: 'pointer', fontSize: 12,
+          }}
+        >
+          倉庫から引き出す
+        </button>
+      </div>
+
+      {/* ソートボタン */}
+      <div style={{ display: 'flex', gap: 4, marginBottom: 8 }}>
+        {(['default', 'name', 'type'] as const).map((key) => (
+          <button
+            key={key}
+            onClick={() => setSortKey(key)}
+            style={{
+              padding: '2px 8px', fontSize: 11,
+              background: sortKey === key ? '#4a2a0a' : 'rgba(10,20,40,0.6)',
+              color: sortKey === key ? '#ddbb88' : '#776655',
+              border: `1px solid ${sortKey === key ? '#6a4a2a' : '#443322'}`,
+              borderRadius: 4, cursor: 'pointer',
+            }}
+          >
+            {key === 'default' ? '標準' : key === 'name' ? '名前順' : '種類順'}
+          </button>
+        ))}
+      </div>
+
+      <div style={{ flex: 1, overflowY: 'auto', border: '1px solid #6a4a2a', borderRadius: 4, padding: 8, background: 'rgba(0,0,0,0.3)' }}>
+        {tab === 'inventory' && (
+          <>
+            <div style={{ color: '#ddbb88', fontSize: 12, marginBottom: 4 }}>【 武器 】</div>
+            {sortedInventoryWeapons.map(({ w, i }) => (
+              <div key={`inv-w-${i}`} style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4, fontSize: 12, color: '#ccddee' }}>
+                <span>{getWeaponName(w.weaponId)}</span>
+                <button onClick={() => handleDepositItemClick('weapon', i, w.weaponId)} style={{ background: '#4a3a2a', color: '#fff', border: 'none', borderRadius: 4, padding: '2px 8px', cursor: 'pointer' }}>預ける</button>
+              </div>
+            ))}
+            {gameState.inventory.equippedWeapons.length === 0 && <div style={{ fontSize: 11, color: '#665544', marginBottom: 8 }}>なし</div>}
+
+            <div style={{ color: '#ddbb88', fontSize: 12, marginBottom: 4, marginTop: 8 }}>【 アイテム 】</div>
+            {sortedInventoryItems.map(({ it, i }) => (
+              <div key={`inv-i-${i}`} style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4, fontSize: 12, color: '#ccddee' }}>
+                <span>{(it as any).unidentified ? '？？？' : getItemName(it.itemId)} ×{it.quantity}</span>
+                <button onClick={() => handleDepositItemClick('item', i, it.itemId)} style={{ background: '#4a3a2a', color: '#fff', border: 'none', borderRadius: 4, padding: '2px 8px', cursor: 'pointer' }}>預ける</button>
+              </div>
+            ))}
+            {gameState.inventory.items.length === 0 && <div style={{ fontSize: 11, color: '#665544' }}>なし</div>}
+          </>
+        )}
+        {tab === 'storage' && (
+          <>
+            {storage.length === 0 ? (
+              <div style={{ color: '#665544', textAlign: 'center', marginTop: 16, fontSize: 12 }}>空っぽです</div>
+            ) : (
+              sortedStorage.map(({ item, originalIndex }) => {
+                const displayName = item.type === 'weapon' ? getWeaponName(item.id) : getItemName(item.id);
+                return (
+                  <div key={`store-${originalIndex}`} style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4, fontSize: 12, color: '#ccddee' }}>
+                    <span>{displayName} <span style={{ color: '#887766', fontSize: 10 }}>({item.type === 'weapon' ? '武器' : 'アイテム'})</span></span>
+                    <button onClick={() => handleWithdrawItemClick(originalIndex)} style={{ background: '#4a3a2a', color: '#fff', border: 'none', borderRadius: 4, padding: '2px 8px', cursor: 'pointer' }}>引き出す</button>
+                  </div>
+                );
+              })
+            )}
+          </>
+        )}
+      </div>
+
+      {/* フッター */}
+      <div style={{ marginTop: 12, color: '#665544', fontSize: 11, textAlign: 'center' }}>
+        倉庫の金とアイテムはゲームオーバー後も失われません
+      </div>
+    </div>
+  );
+}

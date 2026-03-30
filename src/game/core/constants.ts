@@ -49,6 +49,8 @@ export const TILE_ICE = 'i' as const;
 export const TILE_WARP = 'X' as const;
 /** 磁場（25階以降） */
 export const TILE_MAGNETIC = 'M' as const;
+/** 拠点倉庫アクセスポイント（休憩所フロア専用） */
+export const TILE_STORAGE = 'A' as const;
 
 // ---------------------------------------------------------------------------
 // マップサイズ（階層別）
@@ -171,6 +173,7 @@ export const WALKABLE_TILES = new Set([
   TILE_ICE,
   TILE_WARP,
   TILE_MAGNETIC,
+  TILE_STORAGE,
 ]);
 
 /** 破壊可能タイル一覧 */
@@ -334,3 +337,16 @@ export const SAVE_VERSION = 'v1';
 export const SAVE_KEY_PREFIX = 'mechaRogue_save_v1_slot_';
 /** セーブスロットの最大数 */
 export const MAX_SAVE_SLOTS = 5;
+
+// ---------------------------------------------------------------------------
+// 休憩所フロアシステム
+// ---------------------------------------------------------------------------
+
+/** 休憩所フロアへ移行するHPしきい値（最大HPに対する割合） */
+export const REST_FLOOR_HP_LOW_THRESHOLD = 1 / 3;
+/** HP が低い場合の回復目標割合（最大HPの50%まで回復） */
+export const REST_FLOOR_HP_RECOVERY_LOW = 0.5;
+/** HP が高い場合の回復量割合（現在HPの50%分を追加） */
+export const REST_FLOOR_HP_RECOVERY_RATE = 0.5;
+/** 装備耐久値の回復割合（maxDurabilityの2/5分回復） */
+export const REST_FLOOR_DURABILITY_RATE = 2 / 5;

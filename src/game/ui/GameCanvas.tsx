@@ -22,6 +22,7 @@ import BaseScreen from "./BaseScreen";
 import StatusPanel from "./StatusPanel";
 import HelpManualOverlay from "./HelpManualOverlay";
 import ShopPanel from "./ShopPanel";
+import RestStoragePanel from "./RestStoragePanel";
 import {
   getShopInventory,
   buyItem,
@@ -1135,15 +1136,35 @@ export default function GameCanvas() {
 
       if (next.player && prevHp > next.player.hp) playSE("hit_player");
 
-      if (next.floor > prevFloor) {
+      // 休憩所への入場検出
+      const enteredRestFloor = (next.isRestFloor ?? false) && !(prev.isRestFloor ?? false);
+      // 休憩所からの退場検出
+      const exitedRestFloor = !(next.isRestFloor ?? false) && (prev.isRestFloor ?? false);
+
+      if (enteredRestFloor) {
         playSE("floor_descend");
+        monsterHouseStateRef.current = null;
+        playBGM("rest");
+        const restMsg = `休憩所へ入った（B${prev.floor}F - B${prev.floor + 1}F）`;
+        setFloorNotif(restMsg);
+        if (floorNotifTimerRef.current) clearTimeout(floorNotifTimerRef.current);
+        floorNotifTimerRef.current = setTimeout(() => setFloorNotif(null), 3000);
+        if (activeSaveSlot !== null) saveGame(next, activeSaveSlot);
+      }
+
+      if (next.floor > prevFloor || exitedRestFloor) {
+        if (!enteredRestFloor) {
+          playSE("floor_descend");
+        }
         // フロア移動時にモンスターハウス追跡をリセット
         monsterHouseStateRef.current = null;
         // ボスフロアでも入場時は通常 BGM（ボス BGM はボスを視認した際に切り替え）
-        playBGM(getExploreBGM(next.floor));
+        if (!enteredRestFloor) {
+          playBGM(getExploreBGM(next.floor));
+        }
 
         // オートセーブ（フロア移動時）
-        if (activeSaveSlot !== null) {
+        if (activeSaveSlot !== null && !enteredRestFloor) {
           saveGame(next, activeSaveSlot);
         }
       } else {
@@ -1298,14 +1319,19 @@ export default function GameCanvas() {
         newLogs.push(`${name}を倒した！（+${e.expReward} EXP）`);
       }
 
-      if (next.floor > prevFloor) {
+      if (enteredRestFloor) {
+        newLogs.push('休憩所へ入った');
+        // HP 回復ログは turn-system の battleLog から取得済み（next.battleLog に含まれる）
+      } else if (exitedRestFloor || next.floor > prevFloor) {
         newLogs.push(`B${next.floor}F へ降りた`);
-        const msg = `▼ B${next.floor}F へ降りた`;
-        setFloorNotif(msg);
-        if (floorNotifTimerRef.current) clearTimeout(floorNotifTimerRef.current);
-        floorNotifTimerRef.current = setTimeout(() => setFloorNotif(null), 3000);
+        if (!enteredRestFloor) {
+          const msg = `▼ B${next.floor}F へ降りた`;
+          setFloorNotif(msg);
+          if (floorNotifTimerRef.current) clearTimeout(floorNotifTimerRef.current);
+          floorNotifTimerRef.current = setTimeout(() => setFloorNotif(null), 3000);
+        }
       }
-      if (next.floor < prevFloor) {
+      if (next.floor < prevFloor && !exitedRestFloor) {
         newLogs.push(`B${next.floor}F へ上がった`);
         const msg = `▲ B${next.floor}F へ上がった`;
         setFloorNotif(msg);
@@ -1673,7 +1699,7 @@ export default function GameCanvas() {
   // ── アイテムドロップ処理 ────────────────────────────────────
   const handleDropItem = useCallback((index: number) => {
     const state = stateRef.current;
-    if (state.phase !== "exploring" && state.phase !== "shop") return;
+    if (state.phase !== "exploring" && state.phase !== "shop" && state.phase !== "storage") return;
 
     const item = state.inventory.items[index];
     if (!item) return;
@@ -2232,6 +2258,7 @@ export default function GameCanvas() {
                 level={gameState.pilot.level}
                 gold={gameState.inventory.gold}
                 bossHPVisible={bossSeenFloors.has(gameState.floor)}
+                isRestFloor={gameState.isRestFloor ?? false}
               />
             )}
 
@@ -2333,6 +2360,18 @@ export default function GameCanvas() {
                 onSell={handleSellItem}
                 onClose={handleShopClose}
                 lastMessage={battleLog[battleLog.length - 1]}
+              />
+            )}
+
+            {/* 休憩所倉庫パネルオーバーレイ */}
+            {gameState.phase === "storage" && (
+              <RestStoragePanel
+                gameState={gameState}
+                onUpdateState={(next) => { setGameState(next); stateRef.current = next; }}
+                onClose={() => {
+                  setGameState((s) => ({ ...s, phase: "exploring" }));
+                  stateRef.current = { ...stateRef.current, phase: "exploring" };
+                }}
               />
             )}
 

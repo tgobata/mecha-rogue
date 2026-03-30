@@ -21,6 +21,7 @@ import {
   TILE_HINT,
   TILE_WATER,
   TILE_MAGNETIC,
+  TILE_STORAGE,
 } from '../core/constants';
 import spriteMetaRaw from '../assets/data/sprites.json';
 import itemsRaw from '../assets/data/items.json';
@@ -366,7 +367,7 @@ function drawSFWater(
  */
 const SF_FLOOR_TILES = new Set<string>([
   TILE_FLOOR, TILE_START,
-  'E', 'B', TILE_ITEM, TILE_GOLD, TILE_WEAPON, 'R', 'W', TILE_SHOP, TILE_MAGNETIC,
+  'E', 'B', TILE_ITEM, TILE_GOLD, TILE_WEAPON, 'R', 'W', TILE_SHOP, TILE_MAGNETIC, TILE_STORAGE,
 ]);
 
 /** タイルのフォールバック色マップ（#011: 全体的な明度を引き上げ視認性を改善） */
@@ -391,6 +392,7 @@ const TILE_FALLBACK_COLORS: Record<string, string> = {
   'i':                '#183030', // 氷: シアンがかった床
   'X':                '#30155a', // ワープ: 紫い床
   'M':                '#15301a', // 磁場: 緑がかった床
+  'A':                '#1a3040', // 倉庫アクセス: 青みがかった床
 };
 
 /**
@@ -409,6 +411,7 @@ function tileToSpriteKey(tile: string): string | null {
     case TILE_TRAP:        return 'tile_trap';
     case TILE_HINT:        return 'tile_hint';
     case TILE_SHOP:        return 'tile_shop';
+    case TILE_STORAGE:     return 'tile_shop'; // 倉庫アイコンはショップスプライトを流用
     default:               return 'tile_floor'; // 通行可能タイルは床にフォールバック
   }
 }
@@ -478,7 +481,18 @@ export function renderGame(
   const startTileY = centerY - halfY;
 
   // フロア番号に応じた SF カラーパレット（5F ごとに切り替わる）
-  const floorPalette = getFloorPalette(state.floor);
+  // 休憩所フロアは暖かいブラウン系パレットを使用
+  const floorPalette: FloorPalette = (state.isRestFloor === true)
+    ? {
+        wallBase:   '#6a4a2a',
+        wallInner:  '#8a6a4a',
+        wallHL:     '#ddbb88',
+        wallShadow: '#2a1c0a',
+        wallAccent: '#bb8844',
+        floorBase:  '#3a2820',
+        floorGrid:  '#4a3830',
+      }
+    : getFloorPalette(state.floor);
 
   // ─── 2. タイル層 ─────────────────────────────────────────────────────
   for (let screenY = 0; screenY < tilesY; screenY++) {

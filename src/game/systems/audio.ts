@@ -52,7 +52,8 @@ export type BGMName =
   | 'base'
   | 'gameOver'
   | 'bossDefeat'
-  | 'deep';
+  | 'deep'
+  | 'rest';
 
 // ---------------------------------------------------------------------------
 // モジュールスコープの状態
@@ -100,6 +101,7 @@ const BGM_META: Partial<Record<BGMName, { bpm: number; loopBars: number }>> = {
   shop:              { bpm: 100, loopBars: 4 },
   base:              { bpm: 118, loopBars: 8 },
   deep:              { bpm: 110, loopBars: 8 },
+  rest:              { bpm: 70,  loopBars: 8 },
   // gameOver, bossDefeat はループなしのジングルなのでキャッシュしない
 };
 
@@ -2153,5 +2155,83 @@ const BGM_PLAYERS: Record<BGMName, (dest: any) => void> = {
     bellPart.start(0);
     transport.start();
     activeBGMParts = [padPart, bellPart, pad, bell];
+  },
+
+  /**
+   * 休憩所 BGM
+   * C major, 70 BPM, 穏やかなパッドサウンド
+   * コード進行: C - Am - F - G (各2小節、8小節ループ)
+   */
+  rest: (dest: any) => {
+    const transport = Tone.getTransport();
+    transport.bpm.value = 70;
+
+    // 穏やかなパッド（FM サイン波）
+    const pad = new Tone.PolySynth(Tone.Synth, {
+      oscillator: { type: 'fmsine', modulationType: 'sine' },
+      envelope: { attack: 1.2, decay: 0.8, sustain: 0.9, release: 2.0 },
+    }).connect(dest);
+    pad.volume.value = -10;
+
+    // ベル（優しい高音）
+    const bell = new Tone.Synth({
+      oscillator: { type: 'sine' },
+      envelope: { attack: 0.01, decay: 0.8, sustain: 0.0, release: 1.5 },
+    }).connect(dest);
+    bell.volume.value = -18;
+
+    // ベースライン（低音パッド）
+    const bass = new Tone.Synth({
+      oscillator: { type: 'fmsine' },
+      envelope: { attack: 1.5, decay: 1.0, sustain: 0.8, release: 2.0 },
+    }).connect(dest);
+    bass.volume.value = -16;
+
+    // C major コード進行: C - Am - F - G (各2小節)
+    const padNotes: [string, string[]][] = [
+      ['0:0:0', ['C3', 'E3', 'G3']], // C
+      ['2:0:0', ['A2', 'C3', 'E3']], // Am
+      ['4:0:0', ['F2', 'A2', 'C3']], // F
+      ['6:0:0', ['G2', 'B2', 'D3']], // G
+    ];
+    const padPart = new Tone.Part((time: number, chord: string[]) => {
+      pad.triggerAttackRelease(chord, '2m', time);
+    }, padNotes);
+    padPart.loop = true;
+    padPart.loopEnd = '8m';
+
+    // ベルのメロディ
+    const bellNotes: [string, string][] = [
+      ['0:0:0', 'E5'], ['0:2:0', 'G5'],
+      ['1:0:0', 'C5'], ['1:2:0', 'E5'],
+      ['2:0:0', 'A4'], ['2:3:0', 'C5'],
+      ['3:0:0', 'E5'],
+      ['4:0:0', 'F4'], ['4:2:0', 'A4'],
+      ['5:0:0', 'C5'], ['5:2:0', 'F5'],
+      ['6:0:0', 'G4'], ['6:2:0', 'B4'],
+      ['7:0:0', 'D5'], ['7:2:0', 'G5'],
+    ];
+    const bellPart = new Tone.Part((time: number, note: string) => {
+      bell.triggerAttackRelease(note, '4n', time);
+    }, bellNotes);
+    bellPart.loop = true;
+    bellPart.loopEnd = '8m';
+
+    // ベースライン
+    const bassNotes: [string, string][] = [
+      ['0:0:0', 'C2'], ['2:0:0', 'A1'],
+      ['4:0:0', 'F1'], ['6:0:0', 'G1'],
+    ];
+    const bassPart = new Tone.Part((time: number, note: string) => {
+      bass.triggerAttackRelease(note, '2m', time);
+    }, bassNotes);
+    bassPart.loop = true;
+    bassPart.loopEnd = '8m';
+
+    padPart.start(0);
+    bellPart.start(0);
+    bassPart.start(0);
+    transport.start();
+    activeBGMParts = [padPart, bellPart, bassPart, pad, bell, bass];
   },
 };
