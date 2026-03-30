@@ -20,6 +20,7 @@
         { "item_id": "repair_kit_small",   "type": "item",   "weight": 25, "floor_min": 1 },
         { "item_id": "id_scope",           "type": "item",   "weight": 5,  "floor_min": 1 },
         { "item_id": "smoke_bomb",         "type": "item",   "weight": 15, "floor_min": 1 },
+        { "item_id": "smoke_bomb_2",       "type": "item",   "weight": 6,  "floor_min": 8 },
         { "item_id": "bomb_1_s",           "type": "item",   "weight": 7,  "floor_min": 1 },
         { "item_id": "flash_grenade_weak", "type": "item",   "weight": 7,  "floor_min": 1 }
       ]
@@ -31,6 +32,7 @@
         { "item_id": "scrap_metal_i",      "type": "item",   "weight": 10, "floor_min": 1 },
         { "item_id": "repair_kit_small",   "type": "item",   "weight": 20, "floor_min": 1 },
         { "item_id": "smoke_bomb",         "type": "item",   "weight": 18, "floor_min": 1 },
+        { "item_id": "smoke_bomb_2",       "type": "item",   "weight": 6,  "floor_min": 8 },
         { "item_id": "id_scope",           "type": "item",   "weight": 5,  "floor_min": 1 },
         { "item_id": "blade_arm",          "type": "weapon", "weight": 12, "floor_min": 1 },
         { "item_id": "bomb_1_s",           "type": "item",   "weight": 6,  "floor_min": 1 },
@@ -44,6 +46,7 @@
         { "item_id": "scrap_metal_i",      "type": "item",   "weight": 16, "floor_min": 1 },
         { "item_id": "repair_kit_small",   "type": "item",   "weight": 28, "floor_min": 1 },
         { "item_id": "smoke_bomb",         "type": "item",   "weight": 18, "floor_min": 1 },
+        { "item_id": "smoke_bomb_2",       "type": "item",   "weight": 6,  "floor_min": 8 },
         { "item_id": "armor_plate_i",      "type": "item",   "weight": 7,  "floor_min": 2 },
         { "item_id": "bomb_1_s",           "type": "item",   "weight": 10, "floor_min": 1 },
         { "item_id": "flash_grenade_weak", "type": "item",   "weight": 8,  "floor_min": 1 }
@@ -56,6 +59,7 @@
         { "item_id": "scrap_metal_i",       "type": "item",   "weight": 13, "floor_min": 1 },
         { "item_id": "repair_kit_small",    "type": "item",   "weight": 30, "floor_min": 1 },
         { "item_id": "smoke_bomb",          "type": "item",   "weight": 20, "floor_min": 1 },
+        { "item_id": "smoke_bomb_2",        "type": "item",   "weight": 6,  "floor_min": 8 },
         { "item_id": "upgrade_core_i",      "type": "item",   "weight": 10, "floor_min": 1 },
         { "item_id": "bomb_2_s",            "type": "item",   "weight": 8,  "floor_min": 3 },
         { "item_id": "flash_grenade_normal","type": "item",   "weight": 7,  "floor_min": 3 }
@@ -68,6 +72,7 @@
         { "item_id": "scrap_metal_i",       "type": "item",   "weight": 30, "floor_min": 1 },
         { "item_id": "repair_kit_small",    "type": "item",   "weight": 25, "floor_min": 1 },
         { "item_id": "smoke_bomb",          "type": "item",   "weight": 20, "floor_min": 1 },
+        { "item_id": "smoke_bomb_2",        "type": "item",   "weight": 6,  "floor_min": 8 },
         { "item_id": "upgrade_core_i",      "type": "item",   "weight": 15, "floor_min": 1 },
         { "item_id": "blade_arm",           "type": "weapon", "weight": 10, "floor_min": 1 },
         { "item_id": "bomb_2_s",            "type": "item",   "weight": 7,  "floor_min": 3 },
@@ -156,6 +161,7 @@
         { "item_id": "repair_kit_small",   "type": "item",   "weight": 28, "floor_min": 2 },
         { "item_id": "energy_pack",        "type": "item",   "weight": 22, "floor_min": 3 },
         { "item_id": "smoke_bomb",         "type": "item",   "weight": 15, "floor_min": 2 },
+        { "item_id": "smoke_bomb_2",       "type": "item",   "weight": 6,  "floor_min": 8 },
         { "item_id": "bomb_2_s",           "type": "item",   "weight": 6,  "floor_min": 5 },
         { "item_id": "nanobot_s",          "type": "item",   "weight": 5,  "floor_min": 5 }
       ]
@@ -184,6 +190,7 @@
         { "item_id": "scrap_metal_i",      "type": "item",   "weight": 17, "floor_min": 3 },
         { "item_id": "repair_kit_small",   "type": "item",   "weight": 28, "floor_min": 3 },
         { "item_id": "smoke_bomb",         "type": "item",   "weight": 14, "floor_min": 3 },
+        { "item_id": "smoke_bomb_2",       "type": "item",   "weight": 6,  "floor_min": 8 },
         { "item_id": "armor_plate_i",      "type": "item",   "weight": 6,  "floor_min": 3 },
         { "item_id": "light_shield",       "type": "weapon", "weight": 2,  "floor_min": 3 },
         { "item_id": "bomb_2_s",           "type": "item",   "weight": 7,  "floor_min": 3 },
@@ -197,6 +204,7 @@
         { "item_id": "scrap_metal_i",       "type": "item",   "weight": 13, "floor_min": 3 },
         { "item_id": "repair_kit_small",    "type": "item",   "weight": 25, "floor_min": 3 },
         { "item_id": "smoke_bomb",          "type": "item",   "weight": 15, "floor_min": 3 },
+        { "item_id": "smoke_bomb_2",        "type": "item",   "weight": 6,  "floor_min": 8 },
         { "item_id": "speed_boost",         "type": "item",   "weight": 9,  "floor_min": 3 },
         { "item_id": "armor_plate_i",       "type": "item",   "weight": 8,  "floor_min": 3 },
         { "item_id": "light_shield",        "type": "weapon", "weight": 3,  "floor_min": 3 },
@@ -211,6 +219,7 @@
         { "item_id": "scrap_metal_i",      "type": "item",   "weight": 11, "floor_min": 3 },
         { "item_id": "repair_kit_small",   "type": "item",   "weight": 25, "floor_min": 3 },
         { "item_id": "smoke_bomb",         "type": "item",   "weight": 18, "floor_min": 3 },
+        { "item_id": "smoke_bomb_2",       "type": "item",   "weight": 6,  "floor_min": 8 },
         { "item_id": "speed_boost",        "type": "item",   "weight": 12, "floor_min": 3 },
         { "item_id": "double_blade",       "type": "weapon", "weight": 10, "floor_min": 4 },
         { "item_id": "bomb_2_s",           "type": "item",   "weight": 7,  "floor_min": 5 },
@@ -391,6 +400,8 @@
       "drops": [
         { "item_id": "scrap_metal_i",       "type": "item",   "weight": 35, "floor_min": 7 },
         { "item_id": "smoke_bomb",          "type": "item",   "weight": 28, "floor_min": 7 },
+        { "item_id": "smoke_bomb_2",        "type": "item",   "weight": 6,  "floor_min": 8 },
+        { "item_id": "smoke_bomb_3",        "type": "item",   "weight": 4,  "floor_min": 15 },
         { "item_id": "repair_kit_medium",   "type": "item",   "weight": 22, "floor_min": 7 },
         { "item_id": "upgrade_core_i",      "type": "item",   "weight": 15, "floor_min": 7 },
         { "item_id": "flash_grenade_normal","type": "item",   "weight": 6,  "floor_min": 5 },
@@ -402,6 +413,8 @@
       "gold": { "min": 32, "max": 58 },
       "drops": [
         { "item_id": "smoke_bomb",          "type": "item",   "weight": 28, "floor_min": 7 },
+        { "item_id": "smoke_bomb_2",        "type": "item",   "weight": 6,  "floor_min": 8 },
+        { "item_id": "smoke_bomb_3",        "type": "item",   "weight": 4,  "floor_min": 15 },
         { "item_id": "repair_kit_medium",   "type": "item",   "weight": 25, "floor_min": 7 },
         { "item_id": "upgrade_core_i",      "type": "item",   "weight": 22, "floor_min": 7 },
         { "item_id": "teleport_beacon",     "type": "item",   "weight": 15, "floor_min": 7 },
@@ -415,6 +428,9 @@
       "gold": { "min": 48, "max": 85 },
       "drops": [
         { "item_id": "smoke_bomb",         "type": "item",   "weight": 25, "floor_min": 7 },
+        { "item_id": "smoke_bomb_2",       "type": "item",   "weight": 6,  "floor_min": 8 },
+        { "item_id": "smoke_bomb_3",       "type": "item",   "weight": 4,  "floor_min": 15 },
+        { "item_id": "smoke_bomb_4",       "type": "item",   "weight": 2,  "floor_min": 22 },
         { "item_id": "repair_kit_medium",  "type": "item",   "weight": 22, "floor_min": 7 },
         { "item_id": "upgrade_core_i",     "type": "item",   "weight": 18, "floor_min": 7 },
         { "item_id": "teleport_beacon",    "type": "item",   "weight": 18, "floor_min": 7 },

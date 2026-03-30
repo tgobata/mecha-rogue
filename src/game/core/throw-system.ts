@@ -197,6 +197,12 @@ export interface ThrowResult {
   logs: string[];
   /** 軌道アニメーション用の通過タイル一覧 */
   path: Position[];
+  /** 着地点（エリアエフェクト用） */
+  landPos?: Position;
+  /** 投げたアイテムのeffect文字列 */
+  thrownEffect?: string;
+  /** 投げたアイテムの有効半径 */
+  thrownRadius?: number;
 }
 
 /**
@@ -252,7 +258,14 @@ export function throwInventoryItem(
     nextState = applyItemEffectOnLand(nextState, def, item.itemId, landPos, logs);
   }
 
-  return { nextState, logs, path };
+  return {
+    nextState,
+    logs,
+    path,
+    landPos,
+    thrownEffect: def?.effect,
+    thrownRadius: def?.bombRadius ?? def?.radius ?? def?.flashRadius ?? def?.smokeRadius,
+  };
 }
 
 /**

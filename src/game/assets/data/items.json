@@ -136,14 +136,51 @@
   },
   {
     "id": "smoke_bomb",
-    "name": "煙幕弾",
+    "name": "煙幕弾I",
     "category": "combat",
     "effect": "enemy_lose_tracking",
     "value": 3,
+    "smokeRadius": 2,
     "appearsFrom": 2,
     "shopPrice": 70,
     "dropWeight": 9,
     "description": "3ターンの間、敵がプレイヤーを追跡できなくなる。ボス戦での緊急回避にも有効。"
+  },
+  {
+    "id": "smoke_bomb_2",
+    "name": "煙幕弾II",
+    "category": "combat",
+    "effect": "enemy_lose_tracking",
+    "value": 5,
+    "smokeRadius": 2,
+    "appearsFrom": 8,
+    "shopPrice": 140,
+    "dropWeight": 6,
+    "description": "5ターンの間、敵がプレイヤーを追跡できなくなる。範囲が広く長時間の煙幕。"
+  },
+  {
+    "id": "smoke_bomb_3",
+    "name": "煙幕弾III",
+    "category": "combat",
+    "effect": "enemy_lose_tracking",
+    "value": 8,
+    "smokeRadius": 3,
+    "appearsFrom": 15,
+    "shopPrice": 260,
+    "dropWeight": 4,
+    "description": "8ターンの間、敵がプレイヤーを追跡できなくなる。高性能な広域煙幕弾。"
+  },
+  {
+    "id": "smoke_bomb_4",
+    "name": "煙幕弾IV",
+    "category": "combat",
+    "effect": "enemy_lose_tracking",
+    "value": 12,
+    "smokeRadius": 4,
+    "appearsFrom": 22,
+    "shopPrice": 420,
+    "dropWeight": 2,
+    "description": "12ターンの間、敵がプレイヤーを追跡できなくなる。最高性能の戦術煙幕。"
   },
   {
     "id": "emp_grenade",
@@ -799,7 +836,7 @@
   },
   {
     "id": "flash_grenade_weak",
-    "name": "フラッシュグレネード劣化版",
+    "name": "フラッシュグレネードI",
     "category": "combat",
     "effect": "flash_grenade",
     "value": 1,
@@ -808,11 +845,11 @@
     "appearsFrom": 1,
     "shopPrice": 60,
     "dropWeight": 10,
-    "description": "周囲1マスの敵を1ターンスタン。"
+    "description": "フラッシュグレネードI: 周囲1マスの敵を1ターンスタン。"
   },
   {
     "id": "flash_grenade_normal",
-    "name": "フラッシュグレネード",
+    "name": "フラッシュグレネードII",
     "category": "combat",
     "effect": "flash_grenade",
     "value": 2,
@@ -821,11 +858,11 @@
     "appearsFrom": 3,
     "shopPrice": 120,
     "dropWeight": 8,
-    "description": "周囲2マスの敵を2ターンスタン。"
+    "description": "フラッシュグレネードII: 周囲2マスの敵を2ターンスタン。"
   },
   {
     "id": "flash_grenade_strong",
-    "name": "フラッシュグレネード強化版",
+    "name": "フラッシュグレネードIII",
     "category": "combat",
     "effect": "flash_grenade",
     "value": 3,
@@ -834,11 +871,11 @@
     "appearsFrom": 8,
     "shopPrice": 220,
     "dropWeight": 5,
-    "description": "周囲3マスの敵を3ターンスタン。"
+    "description": "フラッシュグレネードIII: 周囲3マスの敵を3ターンスタン。"
   },
   {
     "id": "flash_grenade_ultra",
-    "name": "フラッシュグレネード超強化版",
+    "name": "フラッシュグレネードIV",
     "category": "combat",
     "effect": "flash_grenade",
     "value": 4,
@@ -847,7 +884,7 @@
     "appearsFrom": 15,
     "shopPrice": 400,
     "dropWeight": 3,
-    "description": "周囲4マスの敵を4ターンスタン。"
+    "description": "フラッシュグレネードIV: 周囲4マスの敵を4ターンスタン。"
   },
   {
     "id": "ice_bomb_1_s",

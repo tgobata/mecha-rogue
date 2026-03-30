@@ -510,6 +510,35 @@ export default function GameCanvas() {
   }
 
   /**
+   * 指定タイルに持続時間付きフラッシュエフェクトを登録する。
+   */
+  function addFlashDuration(x: number, y: number, color: string, durationMs: number): void {
+    flashMapRef.current.set(`${x},${y}`, {
+      color,
+      expiry: performance.now() + durationMs,
+    });
+  }
+
+  /**
+   * 中心点から半径radius内の全タイルに、時差付きエリアエフェクトを登録する。
+   * stagger=true の場合、中心から外側に向かって時差を付けて展開する（爆発感）。
+   */
+  function addAreaFlash(cx: number, cy: number, radius: number, centerColor: string, outerColor: string, stagger: boolean = true): void {
+    for (let dy = -radius; dy <= radius; dy++) {
+      for (let dx = -radius; dx <= radius; dx++) {
+        const dist = Math.max(Math.abs(dx), Math.abs(dy)); // Chebyshev距離
+        if (dist > radius) continue;
+        const color = dist === 0 ? centerColor : outerColor;
+        if (stagger) {
+          setTimeout(() => addFlash(cx + dx, cy + dy, color), dist * 40);
+        } else {
+          addFlash(cx + dx, cy + dy, color);
+        }
+      }
+    }
+  }
+
+  /**
    * 画面全体を指定色でフラッシュさせる。
    */
   function triggerScreenFlash(color: string, duration: number = 1500): void {
@@ -1647,20 +1676,72 @@ export default function GameCanvas() {
     if (withAnim.player) {
       addFlash(withAnim.player.pos.x, withAnim.player.pos.y, 'rgba(0,255,136,0.6)');
     }
-    // フラッシュグレネード使用時: 影響範囲を白フラッシュ
-    const usedItemDef = (itemsRaw as unknown as Array<{id: string; effect?: string; flashRadius?: number}>)
-      .find((d) => d.id === item.itemId);
-    if (usedItemDef?.effect === 'flash_grenade' && state.player) {
-      const fr = usedItemDef.flashRadius ?? 2;
-      for (let dy = -fr; dy <= fr; dy++) {
-        for (let dx = -fr; dx <= fr; dx++) {
-          addFlash(state.player.pos.x + dx, state.player.pos.y + dy, 'rgba(255,255,200,0.85)');
+    // アイテム効果エリアエフェクト
+    const usedItemDef = (itemsRaw as unknown as Array<{
+      id: string; effect?: string; flashRadius?: number; bombRadius?: number; radius?: number; smokeRadius?: number;
+    }>).find((d) => d.id === item.itemId);
+
+    if (state.player) {
+      const px = state.player.pos.x;
+      const py = state.player.pos.y;
+      const effect = usedItemDef?.effect ?? '';
+
+      switch (effect) {
+        // フラッシュグレネード: 強烈な白/黄フラッシュ
+        case 'flash_grenade':
+        case 'stun_radius_2': {
+          const fr = usedItemDef?.flashRadius ?? usedItemDef?.radius ?? 2;
+          addAreaFlash(px, py, fr, 'rgba(255,255,255,0.98)', 'rgba(255,255,180,0.88)', true);
+          setTimeout(() => addAreaFlash(px, py, fr, 'rgba(255,255,220,0.8)', 'rgba(255,240,150,0.6)', false), 180);
+          break;
         }
+        // EMPグレネード: 青電気エフェクト
+        case 'stun_area': {
+          const er = usedItemDef?.radius ?? 1;
+          addAreaFlash(px, py, er, 'rgba(0,200,255,0.98)', 'rgba(0,100,220,0.85)', true);
+          setTimeout(() => addAreaFlash(px, py, er, 'rgba(100,220,255,0.8)', 'rgba(0,150,255,0.6)', false), 160);
+          setTimeout(() => addAreaFlash(px, py, er, 'rgba(180,230,255,0.7)', 'rgba(50,180,255,0.5)', false), 320);
+          break;
+        }
+        // 爆弾設置/時限爆弾: 爆発エフェクト
+        case 'throw_bomb':
+        case 'place_bomb': {
+          const br = usedItemDef?.bombRadius ?? 0;
+          addAreaFlash(px, py, Math.max(br, 0), 'rgba(255,60,0,0.98)', 'rgba(255,150,0,0.88)', true);
+          setTimeout(() => addAreaFlash(px, py, Math.max(br, 0), 'rgba(255,180,0,0.8)', 'rgba(255,100,0,0.6)', false), 150);
+          break;
+        }
+        // アイスボム: 氷/水エフェクト
+        case 'ice_bomb': {
+          const ir = usedItemDef?.bombRadius ?? 0;
+          addAreaFlash(px, py, Math.max(ir, 0), 'rgba(180,240,255,0.98)', 'rgba(100,200,255,0.88)', true);
+          setTimeout(() => addAreaFlash(px, py, Math.max(ir, 0), 'rgba(200,240,255,0.8)', 'rgba(150,220,255,0.65)', false), 160);
+          break;
+        }
+        // 聖なるオイル: 金/神聖エフェクト
+        case 'boss_damage_up': {
+          addAreaFlash(px, py, 2, 'rgba(255,220,50,0.98)', 'rgba(255,180,0,0.85)', true);
+          setTimeout(() => addAreaFlash(px, py, 2, 'rgba(255,240,150,0.8)', 'rgba(255,200,80,0.6)', false), 170);
+          setTimeout(() => addAreaFlash(px, py, 2, 'rgba(255,255,200,0.65)', 'rgba(255,220,100,0.5)', false), 340);
+          break;
+        }
+        // 煙幕弾: 灰色煙エフェクト
+        case 'enemy_lose_tracking': {
+          const sr = usedItemDef?.smokeRadius ?? 2;
+          addAreaFlash(px, py, sr, 'rgba(180,180,180,0.9)', 'rgba(140,140,140,0.75)', true);
+          setTimeout(() => addAreaFlash(px, py, sr + 1, 'rgba(160,160,160,0.7)', 'rgba(120,120,120,0.5)', false), 200);
+          break;
+        }
+        // デコイドローン: 長時間シアン表示（ドローンが留まる演出）
+        case 'decoy': {
+          addFlashDuration(px, py, 'rgba(0,255,200,0.9)', 5000);
+          // 周囲を短く点滅
+          addAreaFlash(px, py, 1, 'rgba(0,220,180,0.7)', 'rgba(0,180,150,0.5)', false);
+          break;
+        }
+        default:
+          break;
       }
-    }
-    // 爆弾設置時: 設置マスを赤フラッシュ
-    if (usedItemDef?.effect === 'place_bomb' && state.player) {
-      addFlash(state.player.pos.x, state.player.pos.y, 'rgba(255,50,0,0.7)');
     }
     setBattleLog((prevLogs) => {
       const merged = [...prevLogs, log];
@@ -2037,7 +2118,7 @@ export default function GameCanvas() {
   }, []);
 
   // ── 投げる共通処理（主人公の向いている方向へ即投げ） ──────────────────
-  const executeThrow = useCallback((result: { nextState: GameState; logs: string[]; path: { x: number; y: number }[] }) => {
+  const executeThrow = useCallback((result: { nextState: GameState; logs: string[]; path: { x: number; y: number }[]; landPos?: { x: number; y: number }; thrownEffect?: string; thrownRadius?: number }) => {
     // 軌道アニメーション: パスに沿って各タイルを時差フラッシュ（飛行している点が流れる演出）
     const STEP_MS = 50; // タイルごとの遅延(ms)
     const FLASH_DURATION = 120; // 各フラッシュの表示時間(ms)
@@ -2050,6 +2131,54 @@ export default function GameCanvas() {
         addFlash(pos.x, pos.y, isHead ? TRAIL_COLOR : TRAIL_FADE);
       }, i * STEP_MS);
     });
+
+    // 着地後のエリアエフェクト（軌道アニメーション完了後に発火）
+    const landPos = result.landPos ?? result.path[result.path.length - 1];
+    const totalTrajectoryMs = result.path.length * STEP_MS;
+    if (landPos && result.thrownEffect) {
+      const effect = result.thrownEffect;
+      const radius = result.thrownRadius ?? 0;
+      setTimeout(() => {
+        switch (effect) {
+          case 'flash_grenade':
+          case 'stun_radius_2': {
+            const fr = radius;
+            addAreaFlash(landPos.x, landPos.y, fr, 'rgba(255,255,255,0.98)', 'rgba(255,255,180,0.88)', true);
+            setTimeout(() => addAreaFlash(landPos.x, landPos.y, fr, 'rgba(255,255,220,0.8)', 'rgba(255,240,150,0.6)', false), 180);
+            break;
+          }
+          case 'stun_area': {
+            const er = radius || 1;
+            addAreaFlash(landPos.x, landPos.y, er, 'rgba(0,200,255,0.98)', 'rgba(0,100,220,0.85)', true);
+            setTimeout(() => addAreaFlash(landPos.x, landPos.y, er, 'rgba(100,220,255,0.8)', 'rgba(0,150,255,0.6)', false), 160);
+            setTimeout(() => addAreaFlash(landPos.x, landPos.y, er, 'rgba(180,230,255,0.7)', 'rgba(50,180,255,0.5)', false), 320);
+            break;
+          }
+          case 'throw_bomb':
+          case 'place_bomb': {
+            addAreaFlash(landPos.x, landPos.y, Math.max(radius, 0), 'rgba(255,60,0,0.98)', 'rgba(255,150,0,0.88)', true);
+            setTimeout(() => addAreaFlash(landPos.x, landPos.y, Math.max(radius, 0), 'rgba(255,180,0,0.8)', 'rgba(255,100,0,0.6)', false), 150);
+            break;
+          }
+          case 'ice_bomb': {
+            addAreaFlash(landPos.x, landPos.y, Math.max(radius, 0), 'rgba(180,240,255,0.98)', 'rgba(100,200,255,0.88)', true);
+            setTimeout(() => addAreaFlash(landPos.x, landPos.y, Math.max(radius, 0), 'rgba(200,240,255,0.8)', 'rgba(150,220,255,0.65)', false), 160);
+            break;
+          }
+          case 'boss_damage_up': {
+            addAreaFlash(landPos.x, landPos.y, 2, 'rgba(255,220,50,0.98)', 'rgba(255,180,0,0.85)', true);
+            break;
+          }
+          case 'enemy_lose_tracking': {
+            const sr = radius || 2;
+            addAreaFlash(landPos.x, landPos.y, sr, 'rgba(180,180,180,0.9)', 'rgba(140,140,140,0.75)', true);
+            break;
+          }
+          default:
+            break;
+        }
+      }, totalTrajectoryMs);
+    }
 
     // 状態更新はアニメーション開始と同時（一瞬で処理、描画は非同期）
     playSE('item_pickup');
@@ -2065,7 +2194,8 @@ export default function GameCanvas() {
   const handleThrowItem = useCallback((index: number) => {
     const state = stateRef.current;
     if (state.phase !== 'exploring' || !state.player) return;
-    executeThrow(throwInventoryItem(state, index, state.player.facing));
+    const throwResult = throwInventoryItem(state, index, state.player.facing);
+    executeThrow(throwResult);
   }, [executeThrow]);
 
   const handleThrowWeapon = useCallback((index: number) => {
