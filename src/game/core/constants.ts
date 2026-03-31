@@ -329,11 +329,11 @@ export const MAX_PILOT_LEVEL = 20;
 // ---------------------------------------------------------------------------
 
 /** スキル: power_strike のクールダウン（ターン数） */
-export const SKILL_POWER_STRIKE_COOLDOWN = 5;
+export const SKILL_POWER_STRIKE_COOLDOWN = 50;
 /** スキル: barrier のクールダウン（ターン数） */
-export const SKILL_BARRIER_COOLDOWN = 4;
+export const SKILL_BARRIER_COOLDOWN = 40;
 /** スキル: overcharge のクールダウン（ターン数） */
-export const SKILL_OVERCHARGE_COOLDOWN = 6;
+export const SKILL_OVERCHARGE_COOLDOWN = 60;
 /** スキル: barrier が付与する一時 DEF ボーナス */
 export const SKILL_BARRIER_DEF_BONUS = 10;
 /** スキル: passive_regen の毎ターン回復量 */

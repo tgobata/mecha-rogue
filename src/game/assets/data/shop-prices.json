@@ -101,7 +101,19 @@
     "flash_grenade_ultra":    { "buy": 400,  "sell": 180 },
     "nanobot_s":              { "buy": 80,   "sell": 36  },
     "nanobot_m":              { "buy": 180,  "sell": 81  },
-    "nanobot_l":              { "buy": 350,  "sell": 157 }
+    "nanobot_l":              { "buy": 350,  "sell": 157 },
+    "grenade_1_s":            { "buy": 60,   "sell": 27  },
+    "grenade_1_m":            { "buy": 120,  "sell": 54  },
+    "grenade_1_h":            { "buy": 200,  "sell": 90  },
+    "grenade_2_s":            { "buy": 90,   "sell": 40  },
+    "grenade_2_m":            { "buy": 180,  "sell": 81  },
+    "grenade_2_h":            { "buy": 300,  "sell": 135 },
+    "grenade_3_s":            { "buy": 120,  "sell": 54  },
+    "grenade_3_m":            { "buy": 240,  "sell": 108 },
+    "grenade_3_h":            { "buy": 420,  "sell": 189 },
+    "grenade_4_s":            { "buy": 150,  "sell": 67  },
+    "grenade_4_m":            { "buy": 280,  "sell": 126 },
+    "grenade_4_h":            { "buy": 500,  "sell": 225 }
   },
   "repair": {
     "cost_per_durability": 15

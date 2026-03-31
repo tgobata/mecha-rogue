@@ -63,6 +63,7 @@ import type { GameState, Enemy, Player, Direction, EnemyAiType, Trap, Hint, Trap
 import { INITIAL_FACING } from './game-state';
 import { getShopInventory } from './shop-system';
 import { applyStartReturn } from './start-return';
+import { tickSkillCooldowns } from './skill-system';
 import { decideEnemyAction, canEnemyAttackEnemy } from './enemy-ai';
 import type { EnemyAction } from './enemy-ai';
 import { findEnemyDataByBaseAndLevel, getLevelColor } from './enemy-data-loader';
@@ -2491,11 +2492,15 @@ export function processTurn(state: GameState, action: PlayerAction): GameState {
     const ew = playerAfterTrap.equippedWeapon;
     // weaponSlots 内の装備中武器を更新済みインスタンスで上書き（耐久度表示を正確に）
     // instanceId が両方あればそれで一致判定、なければ id で判定（後方互換）
-    const newWeaponSlots = (playerAfterTrap.weaponSlots ?? []).map((w) =>
-      (ew.instanceId && w.instanceId)
-        ? w.instanceId === ew.instanceId ? ew : w
-        : w.id === ew.id ? ew : w,
-    );
+    // 同名武器が複数ある場合は最初の1つだけ更新する（_weaponSlotsMatchDone フラグ）
+    let _weaponSlotsMatchDone = false;
+    const newWeaponSlots = (playerAfterTrap.weaponSlots ?? []).map((w) => {
+      const match = (ew.instanceId && w.instanceId)
+        ? w.instanceId === ew.instanceId
+        : (w.id === ew.id && !_weaponSlotsMatchDone);
+      if (match && !(ew.instanceId && w.instanceId)) _weaponSlotsMatchDone = true;
+      return match ? ew : w;
+    });
     playerAfterTrap = { ...playerAfterTrap, weaponSlots: newWeaponSlots };
     let _weaponMatchDone = false;
     const newEquippedWeapons = stateWithPickup.inventory.equippedWeapons.map((entry) => {
@@ -2822,7 +2827,7 @@ export function processTurn(state: GameState, action: PlayerAction): GameState {
     finalBattleLog = [...finalBattleLog, pickupMsg];
   }
 
-  return {
+  const stateBeforeCooldown: GameState = {
     ...stateWithPickup,
     phase: stateWithPickup.phase,
     pilot: updatedPilot,
@@ -2836,4 +2841,6 @@ export function processTurn(state: GameState, action: PlayerAction): GameState {
     bossesDefeated: updatedBossesDefeated,
     achievements: updatedAchievements,
   };
+
+  return tickSkillCooldowns(stateBeforeCooldown);
 }
