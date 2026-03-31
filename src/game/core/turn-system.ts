@@ -44,6 +44,7 @@ import {
   TILE_WARP,
   TILE_OIL,
   TILE_FIRE,
+  TILE_WATER,
   FIRE_TILE_DURATION,
   FIRE_DAMAGE_PLAYER_RATE,
   FIRE_DAMAGE_ENEMY_RATE,
@@ -59,7 +60,7 @@ import {
 import { addExp } from './level-system';
 import { getTileAt, isWalkable, manhattanDistance, getDirection } from './floorUtils';
 import { generateFloor, generateRestFloor } from './maze-generator';
-import type { GameState, Enemy, Player, Direction, EnemyAiType, Trap, Hint, TrapType } from './game-state';
+import type { GameState, Enemy, Player, Direction, EnemyAiType, Trap, Hint, TrapType, TurnEffect } from './game-state';
 import { INITIAL_FACING } from './game-state';
 import { getShopInventory } from './shop-system';
 import { applyStartReturn } from './start-return';
@@ -1187,9 +1188,35 @@ function processPlayerAction(
 
         // attack アクション: 装備武器の atk を加算した実効攻撃力でダメージ計算
         // iron_fortress の方向装甲チェック
-        const effectiveDefA = targetEnemy.enemyType === 'iron_fortress'
+        let effectiveDefA = targetEnemy.enemyType === 'iron_fortress'
           ? getIronFortressDef(targetEnemy, newPlayer.pos)
           : targetEnemy.def;
+
+        // 特殊能力による防御補正
+        if (targetEnemy.special === 'front_damage_halved' || targetEnemy.special === 'directional_armor') {
+          // 敵のfacingに対してプレイヤーが正面にいるか判定
+          const ef = targetEnemy.facing ?? 'down';
+          const isFromFront =
+            ef === 'right' ? newPlayer.pos.x > targetEnemy.pos.x :
+            ef === 'left'  ? newPlayer.pos.x < targetEnemy.pos.x :
+            ef === 'up'    ? newPlayer.pos.y < targetEnemy.pos.y :
+            /* down */       newPlayer.pos.y > targetEnemy.pos.y;
+
+          if (isFromFront) {
+            if (targetEnemy.special === 'front_damage_halved') {
+              effectiveDefA = effectiveDefA + Math.floor(effectiveAtk(newPlayer) * 0.375); // 実質ダメージ軽減（3/4に弱体化）
+            } else {
+              // directional_armor: 正面からのダメージを85%カット
+              effectiveDefA = effectiveDefA + Math.floor(effectiveAtk(newPlayer) * 0.85);
+            }
+            logMessages.push(
+              targetEnemy.special === 'front_damage_halved'
+                ? `${targetEnemy.name ?? targetEnemy.enemyType}は前方からのダメージを半減した！`
+                : `${targetEnemy.name ?? targetEnemy.enemyType}の方向装甲が攻撃を弾いた！`,
+            );
+          }
+        }
+
         const dmg = calcDamage(effectiveAtk(newPlayer), effectiveDefA);
 
         // シールド吸収
@@ -1246,6 +1273,28 @@ function processPlayerAction(
   // wait: 何もしない
 
   return { player: newPlayer, enemies: newEnemies, shouldTransitionFloor, pickup, logMessages, triggeredTrapId, revealedTrapIds, attackedTrapIds };
+}
+
+// ---------------------------------------------------------------------------
+// 敵ステータス効果ヘルパー
+// ---------------------------------------------------------------------------
+
+/** 敵エンティティに状態異常を付与するヘルパー */
+function addStatusEffectToEnemy(enemy: Enemy, effectType: import('./game-state').StatusEffectType, duration: number): Enemy {
+  const existing = (enemy.statusEffects ?? []).find(e => e.type === effectType);
+  if (existing) {
+    // 既にある場合は remainingTurns を延長
+    return {
+      ...enemy,
+      statusEffects: (enemy.statusEffects ?? []).map(e =>
+        e.type === effectType ? { ...e, remainingTurns: duration } : e
+      ),
+    };
+  }
+  return {
+    ...enemy,
+    statusEffects: [...(enemy.statusEffects ?? []), { type: effectType, remainingTurns: duration }],
+  };
 }
 
 // ---------------------------------------------------------------------------
@@ -1324,7 +1373,24 @@ function processEnemyActions(
             // 盾の blockChance 判定（確率でダメージ完全ブロック）
             const blockChance = newPlayer.equippedShield?.blockChance ?? 0;
             const isBlocked = blockChance > 0 && Math.random() < blockChance;
-            const dmg = isBlocked ? 0 : calcDamage(currentEnemyState.atk, effectiveDef);
+            // water_shock: スパークが水タイル上にいるとき攻撃力2倍
+            let attackMultiplier = 1.0;
+            if (currentEnemyState.special === 'water_shock') {
+              const currentTile = state.map?.cells[currentEnemyState.pos.y]?.[currentEnemyState.pos.x]?.tile;
+              if (currentTile === TILE_WATER) {
+                attackMultiplier = 2.0;
+                enemyEventMessages.push(`${currentEnemyState.name ?? currentEnemyState.enemyType}が水タイルで帯電攻撃！`);
+                state = {
+                  ...state,
+                  turnEffects: [
+                    ...(state.turnEffects ?? []),
+                    { type: 'electric' as const, center: currentEnemyState.pos, radius: 1, color: '#ffff00' },
+                  ],
+                };
+              }
+            }
+            const baseAtk = Math.round(currentEnemyState.atk * attackMultiplier);
+            const dmg = isBlocked ? 0 : calcDamage(baseAtk, effectiveDef);
             const { finalDamage, updatedEntity: shieldedPlayer } = absorbWithShield(newPlayer, dmg);
             // プレイヤーの向きを維持しつつ animState を 'hit' に
             newPlayer = {
@@ -1721,6 +1787,167 @@ function processEnemyActions(
           break;
         }
 
+        case 'lob_grenade': {
+          const lobAction = action as import('./enemy-ai').EnemyAction & { type: 'lob_grenade' };
+          // 爆発範囲内のプレイヤーにダメージ
+          const lobCenter = lobAction.targetPos;
+          const lobRadius = lobAction.radius;
+          const cdx = Math.abs(newPlayer.pos.x - lobCenter.x);
+          const cdy = Math.abs(newPlayer.pos.y - lobCenter.y);
+          if (cdx + cdy <= lobRadius + 1) { // 爆発半径+1 で当たり判定（グレネード爆発）
+            const shieldDefL = newPlayer.equippedShield?.def ?? 0;
+            const armorDefL = newPlayer.equippedArmor?.def ?? 0;
+            const effectiveDefL = newPlayer.def + shieldDefL + armorDefL;
+            const lobDmg = Math.max(1, lobAction.damage - effectiveDefL);
+            const { finalDamage: lobFinal, updatedEntity: lobPlayer } = absorbWithShield(newPlayer, lobDmg);
+            newPlayer = {
+              ...lobPlayer,
+              hp: lobPlayer.hp - lobFinal,
+              animState: 'hit' as const,
+              facing: newPlayer.facing,
+              ...(lobFinal > 0 && { hpEverDroppedBelowMax: true }),
+            };
+            enemyEventMessages.push(`${currentEnemyState.name ?? currentEnemyState.enemyType}がグレネードを投擲！ ${lobFinal}ダメージ！`);
+          } else {
+            enemyEventMessages.push(`${currentEnemyState.name ?? currentEnemyState.enemyType}がグレネードを投擲したが外れた！`);
+          }
+          // TurnEffect: 爆発 + 軌道
+          state = {
+            ...state,
+            turnEffects: [
+              ...(state.turnEffects ?? []),
+              { type: 'trajectory' as const, from: currentEnemyState.pos, to: lobCenter, color: '#ff8800' },
+              { type: 'explosion' as const, center: lobCenter, radius: lobRadius + 1, color: '#ff4400' },
+            ],
+          };
+          currentEnemyState = { ...currentEnemyState, animState: 'attack' as const };
+          break;
+        }
+
+        case 'ranged_attack': {
+          const rangedAction = action as import('./enemy-ai').EnemyAction & { type: 'ranged_attack' };
+          const shieldDefR = newPlayer.equippedShield?.def ?? 0;
+          const armorDefR = newPlayer.equippedArmor?.def ?? 0;
+          const effectiveDefR = newPlayer.def + shieldDefR + armorDefR;
+          const rangedDmg = Math.max(1, rangedAction.damage - effectiveDefR);
+          const { finalDamage: rangedFinal, updatedEntity: rangedPlayer } = absorbWithShield(newPlayer, rangedDmg);
+          newPlayer = {
+            ...rangedPlayer,
+            hp: rangedPlayer.hp - rangedFinal,
+            animState: 'hit' as const,
+            facing: newPlayer.facing,
+            ...(rangedFinal > 0 && { hpEverDroppedBelowMax: true }),
+          };
+          enemyEventMessages.push(`${currentEnemyState.name ?? currentEnemyState.enemyType}の遠距離攻撃！ ${rangedFinal}ダメージ！`);
+          // TurnEffect: 軌道
+          state = {
+            ...state,
+            turnEffects: [
+              ...(state.turnEffects ?? []),
+              { type: 'trajectory' as const, from: rangedAction.from, to: rangedAction.to, color: '#ff6600' },
+            ],
+          };
+          currentEnemyState = { ...currentEnemyState, animState: 'attack' as const };
+          break;
+        }
+
+        case 'call_allies': {
+          // スカウトドローンが仲間を召喚
+          const allyCount = Math.min(2, 4 - state.enemies.filter(e => e.baseEnemyId === currentEnemyState.baseEnemyId).length);
+          if (allyCount > 0) {
+            const map = state.map;
+            if (map) {
+              const spawnCandidates: import('./types').Position[] = [];
+              for (let dy = -2; dy <= 2; dy++) {
+                for (let dx = -2; dx <= 2; dx++) {
+                  if (dx === 0 && dy === 0) continue;
+                  const nx = currentEnemyState.pos.x + dx;
+                  const ny = currentEnemyState.pos.y + dy;
+                  if (ny < 0 || ny >= map.height || nx < 0 || nx >= map.width) continue;
+                  const tile = map.cells[ny][nx].tile;
+                  if (tile === '.' || tile === 'S') {
+                    const occupied = [...processedEnemies, ...currentEnemies].some(e => e.pos.x === nx && e.pos.y === ny);
+                    const isPlayer = newPlayer.pos.x === nx && newPlayer.pos.y === ny;
+                    if (!occupied && !isPlayer) spawnCandidates.push({ x: nx, y: ny });
+                  }
+                }
+              }
+              for (let i = 0; i < Math.min(allyCount, spawnCandidates.length); i++) {
+                const spawnPos = spawnCandidates[i];
+                const newAlly: Enemy = {
+                  ...currentEnemyState,
+                  id: Date.now() + i + Math.floor(Math.random() * 1000),
+                  pos: spawnPos,
+                  hp: Math.floor(currentEnemyState.maxHp * 0.8),
+                  animState: 'idle' as const,
+                };
+                processedEnemies.push(newAlly);
+              }
+              enemyEventMessages.push(`${currentEnemyState.name ?? currentEnemyState.enemyType}が仲間を呼んだ！`);
+              // TurnEffect: バフ
+              state = {
+                ...state,
+                turnEffects: [
+                  ...(state.turnEffects ?? []),
+                  { type: 'area_buff' as const, center: currentEnemyState.pos, radius: 2, color: '#00ff88' },
+                ],
+              };
+            }
+          }
+          currentEnemyState = { ...currentEnemyState, animState: 'attack' as const };
+          break;
+        }
+
+        case 'pack_howl': {
+          // ラストハウンドが咆哮して周囲の仲間を強化
+          const howlRadius = 3;
+          let buffCount = 0;
+          for (let i = 0; i < processedEnemies.length; i++) {
+            const pe = processedEnemies[i];
+            if (pe.baseEnemyId === currentEnemyState.baseEnemyId && pe.id !== currentEnemyState.id) {
+              const howlDist = manhattanDistance(currentEnemyState.pos, pe.pos);
+              if (howlDist <= howlRadius) {
+                // attack_up 状態付与
+                processedEnemies[i] = addStatusEffectToEnemy(pe, 'attack_up', 3);
+                buffCount++;
+              }
+            }
+          }
+          if (buffCount > 0) {
+            enemyEventMessages.push(`${currentEnemyState.name ?? currentEnemyState.enemyType}が咆哮した！ 仲間${buffCount}体を強化！`);
+          } else {
+            enemyEventMessages.push(`${currentEnemyState.name ?? currentEnemyState.enemyType}が咆哮した！`);
+          }
+          state = {
+            ...state,
+            turnEffects: [
+              ...(state.turnEffects ?? []),
+              { type: 'area_buff' as const, center: currentEnemyState.pos, radius: howlRadius, color: '#ff8800' },
+            ],
+          };
+          currentEnemyState = { ...currentEnemyState, animState: 'attack' as const };
+          break;
+        }
+
+        case 'lay_mine': {
+          // 地雷設置
+          const minePos = (action as { type: 'lay_mine'; pos: import('./types').Position }).pos;
+          const existingMine = state.traps.some(t => t.pos.x === minePos.x && t.pos.y === minePos.y);
+          if (!existingMine) {
+            const newTrap: Trap = {
+              id: Date.now() + Math.floor(Math.random() * 10000),
+              type: 'landmine' as TrapType,
+              pos: minePos,
+              isVisible: false,
+              isTriggered: false,
+            };
+            state = { ...state, traps: [...state.traps, newTrap] };
+            enemyEventMessages.push(`${currentEnemyState.name ?? currentEnemyState.enemyType}が地雷を設置した！`);
+          }
+          currentEnemyState = { ...currentEnemyState, animState: 'attack' as const };
+          break;
+        }
+
         case 'skip':
         default:
           break;
@@ -1916,6 +2143,45 @@ function processDefeatedEnemies(
   const dead = enemies.filter((e) => e.hp <= 0);
   const alive = enemies.filter((e) => e.hp > 0);
 
+  // split_on_death: スライムXが死んだとき、ミニスライムを2体スポーン
+  let spawnedEnemies: Enemy[] = [];
+  for (const deadEnemy of dead) {
+    if (deadEnemy.special === 'split_on_death' && state.map) {
+      const map = state.map;
+      const spawnCandidates: import('./types').Position[] = [];
+      for (let dy = -1; dy <= 1; dy++) {
+        for (let dx = -1; dx <= 1; dx++) {
+          if (dx === 0 && dy === 0) continue;
+          const nx = deadEnemy.pos.x + dx;
+          const ny = deadEnemy.pos.y + dy;
+          if (ny < 0 || ny >= map.height || nx < 0 || nx >= map.width) continue;
+          const tile = map.cells[ny][nx].tile;
+          if (tile === '.' || tile === 'S') {
+            const occupied = alive.some(e => e.pos.x === nx && e.pos.y === ny)
+              || spawnedEnemies.some(e => e.pos.x === nx && e.pos.y === ny);
+            const isPlayer = state.player?.pos.x === nx && state.player?.pos.y === ny;
+            if (!occupied && !isPlayer) spawnCandidates.push({ x: nx, y: ny });
+          }
+        }
+      }
+      for (let i = 0; i < Math.min(2, spawnCandidates.length); i++) {
+        const miniSlime: Enemy = {
+          ...deadEnemy,
+          id: Date.now() + i + Math.floor(Math.random() * 10000),
+          pos: spawnCandidates[i],
+          hp: Math.floor(deadEnemy.maxHp * 0.4),
+          maxHp: Math.floor(deadEnemy.maxHp * 0.4),
+          atk: Math.floor(deadEnemy.atk * 0.6),
+          def: Math.floor(deadEnemy.def * 0.5),
+          special: null, // ミニスライムは分裂しない
+          animState: 'idle' as const,
+          name: `ミニ${deadEnemy.name ?? 'スライム'}`,
+        };
+        spawnedEnemies.push(miniSlime);
+      }
+    }
+  }
+
   // 今回倒したボスのID（isBoss フラグが立っている敵の enemyType）
   // 複数体構成ボス（bug_swarm, shadow_twin 等）は同種が全滅した時だけ記録する
   const bossDefeatedIds = dead
@@ -1978,12 +2244,18 @@ function processDefeatedEnemies(
     }
   }
 
+  // split_on_death でスポーンした敵をログに記録
+  let spawnBattleLog = stateAfterExp.battleLog ?? [];
+  if (spawnedEnemies.length > 0) {
+    spawnBattleLog = [...spawnBattleLog, `敵が分裂した！ ${spawnedEnemies.length}体出現！`];
+  }
+
   return {
-    enemies: alive,
+    enemies: [...alive, ...spawnedEnemies],
     pilot: stateAfterExp.pilot,
     player: stateAfterExp.player,
     machine: stateAfterExp.machine,
-    battleLog: stateAfterExp.battleLog ?? [],
+    battleLog: spawnBattleLog,
     inventory,
     enemiesDefeatedCount: dead.length,
     goldEarnedCount: goldGained,
@@ -2180,6 +2452,7 @@ export function processTurn(state: GameState, action: PlayerAction): GameState {
   // ターン開始: 全 animState をリセット（前ターンのアニメ状態をクリア）
   const stateWithReset: GameState = {
     ...state,
+    turnEffects: [], // 毎ターンリセット
     player: { ...state.player, animState: 'idle' as const },
     enemies: state.enemies.map((e) => ({ ...e, animState: 'idle' as const })),
   };
@@ -2719,6 +2992,7 @@ export function processTurn(state: GameState, action: PlayerAction): GameState {
     map: stateAfterEnemyActions.map,
     fireTileTimers: stateAfterEnemyActions.fireTileTimers,
     exploration: stateAfterEnemyActions.exploration,
+    turnEffects: stateAfterEnemyActions.turnEffects,
   };
 
   // 敵VS敵イベントメッセージを battleLog に追記

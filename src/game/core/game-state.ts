@@ -338,6 +338,24 @@ export interface Enemy {
 // ---------------------------------------------------------------------------
 
 /**
+ * ターン中に発生したビジュアルエフェクト情報。
+ * processTurn から GameCanvas へ伝達するために使用。
+ */
+export interface TurnEffect {
+  type: 'explosion' | 'trajectory' | 'area_buff' | 'electric';
+  /** 爆発・バフの中心座標 */
+  center?: { x: number; y: number };
+  /** 爆発半径 */
+  radius?: number;
+  /** 軌道の始点 */
+  from?: { x: number; y: number };
+  /** 軌道の終点 */
+  to?: { x: number; y: number };
+  /** エフェクト色（省略時はデフォルト色を使用） */
+  color?: string;
+}
+
+/**
  * トラップの種別。
  */
 export type TrapType =
@@ -808,6 +826,11 @@ export interface GameState {
    * level-system などが「Lv.X → HP+N ATK+N」などのメッセージを追記する。
    */
   battleLog: string[];
+  /**
+   * 今ターンに発生したビジュアルエフェクトのリスト。
+   * processTurn が毎ターン冒頭にリセットし、特殊能力処理で追記する。
+   */
+  turnEffects?: TurnEffect[];
   /**
    * プレイヤーが習得済みのスキルのランタイムインスタンス一覧。
    * skill-system.ts が参照・更新する。

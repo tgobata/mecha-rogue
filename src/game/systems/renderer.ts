@@ -238,6 +238,21 @@ export function getDefaultSpriteList(): Array<[name: string, url: string]> {
     }
   }
 
+  // ビッグ！オイルドラム（Lv1〜Lv4 カラーバリアント）
+  const OIL_DRUM_LEVELS = ['big_oil_drum_lv1', 'big_oil_drum_lv2', 'big_oil_drum_lv3', 'big_oil_drum_lv4'];
+  for (const id of OIL_DRUM_LEVELS) {
+    for (const dir of DIRS) {
+      for (const state of ['move', 'atk', 'dmg', 'dead']) {
+        for (let f = 0; f < 2; f++) {
+          list.push([
+            `${id}_dir_${dir}_${state}_${f}`,
+            `/sprites/enemies/${id}_dir_${dir}_${state}_${f}.png`,
+          ]);
+        }
+      }
+    }
+  }
+
   // 重複エントリを除去（先勝ち）
   const seen = new Set<string>();
   return list.filter(([name]) => {

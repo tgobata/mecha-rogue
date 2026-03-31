@@ -17,7 +17,7 @@
  */
 
 import { useRef, useState, useEffect, useCallback } from "react";
-import type { GameState, Player, WeaponRarity } from "../core/game-state";
+import type { GameState, Player, WeaponRarity, TurnEffect } from "../core/game-state";
 import BaseScreen from "./BaseScreen";
 import StatusPanel from "./StatusPanel";
 import HelpManualOverlay from "./HelpManualOverlay";
@@ -1473,6 +1473,80 @@ export default function GameCanvas() {
             for (let dx = -range; dx <= range; dx++) {
               if (orthOnly && dx !== 0 && dy !== 0) continue;
               addFlash(bomb.pos.x + dx, bomb.pos.y + dy, 'rgba(255,120,0,0.9)');
+            }
+          }
+        }
+      }
+
+      // ─── turnEffects の処理 ────────────────────────────────────────────
+      if (next.turnEffects && next.turnEffects.length > 0) {
+        for (const effect of next.turnEffects) {
+          switch (effect.type) {
+            case 'explosion': {
+              if (effect.center) {
+                addAreaFlash(
+                  effect.center.x,
+                  effect.center.y,
+                  effect.radius ?? 1,
+                  effect.color ?? '#ff4400',
+                  '#ff880044',
+                  true
+                );
+                triggerScreenFlash('rgba(255,100,0,0.15)', 200);
+              }
+              break;
+            }
+            case 'trajectory': {
+              if (effect.from && effect.to) {
+                const drawTrajectory = (from: { x: number; y: number }, to: { x: number; y: number }, color: string) => {
+                  let x = from.x;
+                  let y = from.y;
+                  const dx = Math.abs(to.x - x);
+                  const dy = Math.abs(to.y - y);
+                  const sx = to.x > x ? 1 : -1;
+                  const sy = to.y > y ? 1 : -1;
+                  let err = dx - dy;
+                  const maxSteps = 20; // 無限ループ防止
+                  let steps = 0;
+                  while (!(x === to.x && y === to.y) && steps < maxSteps) {
+                    addFlashDuration(x, y, color, 350);
+                    const e2 = err * 2;
+                    if (e2 > -dy) { err -= dy; x += sx; }
+                    if (e2 < dx) { err += dx; y += sy; }
+                    steps++;
+                  }
+                  addFlashDuration(to.x, to.y, color, 400); // 着弾点は少し長め
+                };
+                drawTrajectory(effect.from, effect.to, effect.color ?? '#ff8800aa');
+              }
+              break;
+            }
+            case 'area_buff': {
+              if (effect.center) {
+                addAreaFlash(
+                  effect.center.x,
+                  effect.center.y,
+                  effect.radius ?? 2,
+                  effect.color ?? '#00ff88',
+                  '#00ff8822',
+                  false
+                );
+              }
+              break;
+            }
+            case 'electric': {
+              if (effect.center) {
+                addAreaFlash(
+                  effect.center.x,
+                  effect.center.y,
+                  effect.radius ?? 1,
+                  effect.color ?? '#ffff00',
+                  '#ffff0033',
+                  true
+                );
+                triggerScreenFlash('rgba(255,255,0,0.1)', 150);
+              }
+              break;
             }
           }
         }

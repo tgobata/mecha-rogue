@@ -39,7 +39,12 @@ export type EnemyAction =
   | { type: 'slash_attack' }
   | { type: 'iaido'; range: number; damage: number }
   | { type: 'spread_oil'; positions: Position[] }
-  | { type: 'ignite_oil'; pos: Position };
+  | { type: 'ignite_oil'; pos: Position }
+  | { type: 'lob_grenade'; targetPos: Position; radius: number; damage: number }
+  | { type: 'call_allies'; pos: Position }
+  | { type: 'pack_howl'; pos: Position }
+  | { type: 'lay_mine'; pos: Position }
+  | { type: 'ranged_attack'; targetId: 'player'; from: Position; to: Position; damage: number };
 
 // ---------------------------------------------------------------------------
 // 定数
@@ -493,6 +498,61 @@ export function decideEnemyAction(
     );
     if (adjacentEnemy) {
       return { type: 'attack', targetId: String(adjacentEnemy.id) };
+    }
+  }
+
+  // 特殊能力チェック（aiType に関係なく発動するパッシブ/アクティブ特殊行動）
+  const special = enemy.special;
+  const dist = manhattanDistance(enemy.pos, playerPos);
+
+  // mine_beetle: 隣接時に自爆 (explode_on_adjacent)
+  if (special === 'explode_on_adjacent' && dist <= 1) {
+    return { type: 'explode' };
+  }
+
+  // bomb_lobber: 射程内（5マス以内）でグレネード投擲 (lob_grenade)
+  if (special === 'lob_grenade') {
+    if (dist <= 5 && dist >= 2) {
+      if (hasLineOfSight(enemy.pos, playerPos, state)) {
+        const grenadeRadius = 1;
+        const grenadeDmg = Math.floor(enemy.atk * 1.5);
+        return { type: 'lob_grenade', targetPos: playerPos, radius: grenadeRadius, damage: grenadeDmg };
+      }
+    }
+  }
+
+  // scout_drone: 一定確率で仲間を呼ぶ (call_allies)
+  if (special === 'call_allies' && dist <= 6) {
+    const turn = state.exploration?.turn ?? 0;
+    if (turn % 3 === 0) { // 3ターンに1回
+      return { type: 'call_allies', pos: enemy.pos };
+    }
+  }
+
+  // rust_hound: 仲間と隣接しているとき咆哮 (pack_howl)
+  if (special === 'pack_howl') {
+    const packMates = otherEnemies.filter(
+      (e) => e.baseEnemyId === enemy.baseEnemyId && manhattanDistance(enemy.pos, e.pos) <= 2
+    );
+    const turn = state.exploration?.turn ?? 0;
+    if (packMates.length >= 1 && turn % 4 === 0) {
+      return { type: 'pack_howl', pos: enemy.pos };
+    }
+  }
+
+  // mine_layer: 3ターンに1回地雷設置 (lay_mines)
+  if (special === 'lay_mines') {
+    const turn = state.exploration?.turn ?? 0;
+    if (turn % 3 === 1) {
+      return { type: 'lay_mine', pos: enemy.pos };
+    }
+  }
+
+  // assault_mecha: 視線が通れば遠距離攻撃 (ranged_attack)
+  if (special === 'ranged_attack' && dist >= 2 && dist <= 8) {
+    if (hasLineOfSight(enemy.pos, playerPos, state)) {
+      const rangedDmg = Math.floor(enemy.atk * 1.2);
+      return { type: 'ranged_attack', targetId: 'player', from: enemy.pos, to: playerPos, damage: rangedDmg };
     }
   }
 

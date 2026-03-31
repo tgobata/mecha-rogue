@@ -77,6 +77,11 @@ import { RoomType } from './types';
 /** bosses.json で定義されているボスフロア番号のセット */
 const BOSS_FLOOR_SET = new Set<number>((bossDefsRaw as Array<{ floor: number }>).map((b) => b.floor));
 
+/** ボスフロア番号 → ボスサイズ（タイル数）のマップ */
+const BOSS_FLOOR_SIZE_MAP = new Map<number, number>(
+  (bossDefsRaw as Array<{ floor: number; size?: number }>).map((b) => [b.floor, b.size ?? 2]),
+);
+
 // ---------------------------------------------------------------------------
 // シードベース乱数（Mulberry32）
 // ---------------------------------------------------------------------------
@@ -285,40 +290,48 @@ function carveVertical(cells: Cell[][], x: number, y1: number, y2: number): void
 }
 
 /**
- * 2点間を2マス幅のL字型廊下で接続する（ボス部屋への通路用）。
+ * 2点間をN マス幅のL字型廊下で接続する（ボス部屋への通路用）。
+ *
+ * @param width - 廊下幅（ボスサイズに合わせる）
  */
-function carveCorridorWide(
+function carveCorridorN(
   from: Position,
   to: Position,
   cells: Cell[][],
   rng: () => number,
+  width: number,
 ): void {
   const hFirst = rng() < 0.5;
   if (hFirst) {
-    carveHorizontal(cells, from.y,     Math.min(from.x, to.x), Math.max(from.x, to.x));
-    carveHorizontal(cells, from.y + 1, Math.min(from.x, to.x), Math.max(from.x, to.x));
-    carveVertical(cells, to.x,     Math.min(from.y, to.y), Math.max(from.y, to.y));
-    carveVertical(cells, to.x + 1, Math.min(from.y, to.y), Math.max(from.y, to.y));
+    for (let d = 0; d < width; d++) {
+      carveHorizontal(cells, from.y + d, Math.min(from.x, to.x), Math.max(from.x, to.x));
+    }
+    for (let d = 0; d < width; d++) {
+      carveVertical(cells, to.x + d, Math.min(from.y, to.y), Math.max(from.y, to.y));
+    }
   } else {
-    carveVertical(cells, from.x,     Math.min(from.y, to.y), Math.max(from.y, to.y));
-    carveVertical(cells, from.x + 1, Math.min(from.y, to.y), Math.max(from.y, to.y));
-    carveHorizontal(cells, to.y,     Math.min(from.x, to.x), Math.max(from.x, to.x));
-    carveHorizontal(cells, to.y + 1, Math.min(from.x, to.x), Math.max(from.x, to.x));
+    for (let d = 0; d < width; d++) {
+      carveVertical(cells, from.x + d, Math.min(from.y, to.y), Math.max(from.y, to.y));
+    }
+    for (let d = 0; d < width; d++) {
+      carveHorizontal(cells, to.y + d, Math.min(from.x, to.x), Math.max(from.x, to.x));
+    }
   }
 }
 
-/** ボス部屋の最小内寸（縦横ともにこの値以上になるよう拡張する） */
-const BOSS_ROOM_MIN_INNER_SIZE = 7;
-
 /**
- * ボス部屋の床を拡張して最低 BOSS_ROOM_MIN_INNER_SIZE × BOSS_ROOM_MIN_INNER_SIZE にする。
+ * ボス部屋の床をボスサイズに合わせて拡張する。
+ * 内寸 = max(8, bossSize * 2 + 2) × max(8, bossSize * 2 + 2)。
  * 既存の部屋中心を基準にグリッド境界を超えないよう床タイルを追加し、bounds を更新する。
+ *
+ * @param bossSize - ボスのタイルサイズ（bosses.json の size フィールド）
  */
-function expandBossRoom(room: Room, cells: Cell[][]): void {
+function expandBossRoom(room: Room, cells: Cell[][], bossSize: number): void {
+  const innerSize = Math.max(8, bossSize * 2 + 2);
   const centerX = room.bounds.x + Math.floor(room.bounds.width / 2);
   const centerY = room.bounds.y + Math.floor(room.bounds.height / 2);
 
-  const half = Math.floor(BOSS_ROOM_MIN_INNER_SIZE / 2);
+  const half = Math.floor(innerSize / 2);
   const x1 = Math.max(1, centerX - half);
   const y1 = Math.max(1, centerY - half);
   const x2 = Math.min((cells[0]?.length ?? 2) - 2, centerX + half);
@@ -348,7 +361,7 @@ function expandBossRoom(room: Room, cells: Cell[][]): void {
  * 全部屋を順番に隣接ペアで廊下接続する。
  * シャッフルして接続順をランダム化する。
  */
-function connectRooms(rooms: Room[], cells: Cell[][], rng: () => number): void {
+function connectRooms(rooms: Room[], cells: Cell[][], rng: () => number, bossCorridorWidth: number = 1): void {
   if (rooms.length === 0) return;
 
   // Fisher-Yates シャッフル
@@ -359,14 +372,14 @@ function connectRooms(rooms: Room[], cells: Cell[][], rng: () => number): void {
   }
 
   // 隣接ペアを廊下で接続（全部屋が連結になる）
-  // ボス部屋に接続する廊下は2マス幅にする
+  // ボス部屋に接続する廊下はボスサイズ幅にする
   for (let i = 0; i < shuffled.length - 1; i++) {
     const fromCenter = roomCenter(shuffled[i].bounds);
     const toCenter = roomCenter(shuffled[i + 1].bounds);
     const isBossConnection =
       shuffled[i].type === RoomType.BOSS || shuffled[i + 1].type === RoomType.BOSS;
-    if (isBossConnection) {
-      carveCorridorWide(fromCenter, toCenter, cells, rng);
+    if (isBossConnection && bossCorridorWidth > 1) {
+      carveCorridorN(fromCenter, toCenter, cells, rng, bossCorridorWidth);
     } else {
       carveCorridor(fromCenter, toCenter, cells, rng);
     }
@@ -948,13 +961,14 @@ function attemptGenerate(
   assignRoomTypes(assignableRooms, floorNumber, rng);
 
   // ボス部屋を拡張（ボス階層のみ）
+  const bossSize = BOSS_FLOOR_SIZE_MAP.get(floorNumber) ?? 2;
   if (BOSS_FLOOR_SET.has(floorNumber)) {
     const bossRoom = assignableRooms.find(r => r.type === RoomType.BOSS);
-    if (bossRoom) expandBossRoom(bossRoom, cells);
+    if (bossRoom) expandBossRoom(bossRoom, cells, bossSize);
   }
 
-  // 部屋を廊下で接続（ボス部屋への廊下は2マス幅）
-  connectRooms(rooms, cells, rng);
+  // 部屋を廊下で接続（ボス部屋への廊下はボスサイズ幅）
+  connectRooms(rooms, cells, rng, bossSize);
 
   // 仮の Floor オブジェクトを作成（randomFloorInRoom に必要）
   const tempFloor: Floor = {
