@@ -207,6 +207,8 @@ export function getDefaultSpriteList(): Array<[name: string, url: string]> {
     ['shield_knight',  [1, 2, 3, 4]],
     ['mine_layer',     [1, 2, 3, 4]],
     ['healer_drone',   [1, 2, 3, 4]],
+    ['fire_people',    [1, 2, 3, 4]],
+    ['oil_drum',       [1, 2, 3, 4]],
   ];
   for (const [base, levels] of LV_ENEMY_BASES) {
     for (const lv of levels) {
@@ -238,6 +240,21 @@ export function getDefaultSpriteList(): Array<[name: string, url: string]> {
     }
   }
 
+  // igniter（着火ロボ Lv1〜3）: スプライトファイルは ignition_bot という名前で生成済み
+  for (const lv of [1, 2, 3]) {
+    for (const dir of DIRS) {
+      for (const state of ['idle', 'move', 'attack', 'hit']) {
+        const maxFrames = state === 'attack' ? 3 : 2;
+        for (let f = 0; f < maxFrames; f++) {
+          list.push([
+            `igniter_lv${lv}_dir_${dir}_${state}_${f}`,
+            `/sprites/enemies/ignition_bot_lv${lv}_${state}_dir_${dir}_idle_${f}.png`,
+          ]);
+        }
+      }
+    }
+  }
+
   // ビッグ！オイルドラム（Lv1〜Lv4 カラーバリアント）
   const OIL_DRUM_LEVELS = ['big_oil_drum_lv1', 'big_oil_drum_lv2', 'big_oil_drum_lv3', 'big_oil_drum_lv4'];
   for (const id of OIL_DRUM_LEVELS) {
@@ -249,6 +266,13 @@ export function getDefaultSpriteList(): Array<[name: string, url: string]> {
             `/sprites/enemies/${id}_dir_${dir}_${state}_${f}.png`,
           ]);
         }
+      }
+      // idle フレームは move フレームで代用
+      for (let f = 0; f < 2; f++) {
+        list.push([
+          `${id}_dir_${dir}_idle_${f}`,
+          `/sprites/enemies/${id}_dir_${dir}_move_${f}.png`,
+        ]);
       }
     }
   }

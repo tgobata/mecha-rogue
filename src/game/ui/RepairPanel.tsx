@@ -5,22 +5,32 @@
  *
  * TILE_REPAIR を踏んだときに表示される。
  * 修理タブ: 25%/50%/全回復の修理（各装備1回限り、確率イベントあり）
- * 強化タブ: ATK+2 または MaxDUR+10（各装備1回限り）
+ * 強化タブ: ATK+2/DEF+1 または MaxDUR+10（各装備1回限り）
+ * 対象: 武器 / 盾 / 防具
  */
 
 import { useState } from 'react';
-import type { GameState, WeaponInstance } from '../core/game-state';
+import type { GameState, WeaponInstance, EquippedShield, EquippedArmor } from '../core/game-state';
 import { playSE } from '../systems/audio';
 import {
   getRepairOptions,
   getUpgradeOptions,
   repairWeaponWithEvent,
   upgradeWeapon,
+  getRepairOptionsForShield,
+  getUpgradeOptionsForShield,
+  repairShieldWithEvent,
+  upgradeShield,
+  getRepairOptionsForArmor,
+  getUpgradeOptionsForArmor,
+  repairArmorWithEvent,
+  upgradeArmor,
   type RepairOption,
   type UpgradeOption,
 } from '../core/repair-system';
 
 type PanelTab = 'repair' | 'upgrade';
+type EquipCategory = 'weapon' | 'shield' | 'armor';
 
 interface RepairPanelProps {
   gameState: GameState;
@@ -30,21 +40,44 @@ interface RepairPanelProps {
 
 export default function RepairPanel({ gameState, onUpdateState, onClose }: RepairPanelProps) {
   const weapons = gameState.player?.weaponSlots ?? [];
+  const shields = gameState.player?.shieldSlots ?? [];
+  const armors = gameState.player?.armorSlots ?? [];
   const gold = gameState.inventory.gold;
 
   const [tab, setTab] = useState<PanelTab>('repair');
+  const [category, setCategory] = useState<EquipCategory>('weapon');
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
   const [lastMessage, setLastMessage] = useState<string>('');
 
   const selectedWeapon: WeaponInstance | null =
-    selectedIndex !== null ? (weapons[selectedIndex] ?? null) : null;
+    category === 'weapon' && selectedIndex !== null ? (weapons[selectedIndex] ?? null) : null;
+  const selectedShield: EquippedShield | null =
+    category === 'shield' && selectedIndex !== null ? (shields[selectedIndex] ?? null) : null;
+  const selectedArmor: EquippedArmor | null =
+    category === 'armor' && selectedIndex !== null ? (armors[selectedIndex] ?? null) : null;
 
-  const repairOptions = selectedWeapon ? getRepairOptions(selectedWeapon, gold) : [];
-  const upgradeOptions = selectedWeapon ? getUpgradeOptions(selectedWeapon, gold) : [];
+  const repairOptions = selectedWeapon
+    ? getRepairOptions(selectedWeapon, gold)
+    : selectedShield
+      ? getRepairOptionsForShield(selectedShield, gold)
+      : selectedArmor
+        ? getRepairOptionsForArmor(selectedArmor, gold)
+        : [];
+
+  const upgradeOptions = selectedWeapon
+    ? getUpgradeOptions(selectedWeapon, gold)
+    : selectedShield
+      ? getUpgradeOptionsForShield(selectedShield, gold)
+      : selectedArmor
+        ? getUpgradeOptionsForArmor(selectedArmor, gold)
+        : [];
 
   const handleRepair = (option: RepairOption) => {
     if (selectedIndex === null) return;
-    const result = repairWeaponWithEvent(gameState, selectedIndex, option);
+    let result;
+    if (category === 'weapon') result = repairWeaponWithEvent(gameState, selectedIndex, option);
+    else if (category === 'shield') result = repairShieldWithEvent(gameState, selectedIndex, option);
+    else result = repairArmorWithEvent(gameState, selectedIndex, option);
     if (result.state !== gameState) playSE('ui_select');
     else playSE('ui_cancel');
     onUpdateState(result.state);
@@ -53,15 +86,23 @@ export default function RepairPanel({ gameState, onUpdateState, onClose }: Repai
 
   const handleUpgrade = (option: UpgradeOption) => {
     if (selectedIndex === null) return;
-    const result = upgradeWeapon(gameState, selectedIndex, option);
+    let result;
+    if (category === 'weapon') result = upgradeWeapon(gameState, selectedIndex, option);
+    else if (category === 'shield') result = upgradeShield(gameState, selectedIndex, option);
+    else result = upgradeArmor(gameState, selectedIndex, option);
     if (result.state !== gameState) playSE('ui_select');
     else playSE('ui_cancel');
     onUpdateState(result.state);
     setLastMessage(result.message);
   };
 
-  const durBar = (cur: number | null, max: number | null) => {
-    if (cur === null || max === null) return null;
+  const changeCategory = (c: EquipCategory) => {
+    setCategory(c);
+    setSelectedIndex(null);
+    setLastMessage('');
+  };
+
+  const durBar = (cur: number, max: number) => {
     const pct = Math.max(0, Math.min(1, cur / max));
     const color = pct > 0.5 ? '#44cc44' : pct > 0.25 ? '#ffaa22' : '#ff4444';
     return (
@@ -81,6 +122,12 @@ export default function RepairPanel({ gameState, onUpdateState, onClose }: Repai
       gold: 'G不足',
     };
     return map[reason] ?? reason;
+  };
+
+  const categoryLabel: Record<EquipCategory, string> = {
+    weapon: `⚔ 武器 (${weapons.length})`,
+    shield: `🛡 盾 (${shields.length})`,
+    armor: `🔩 防具 (${armors.length})`,
   };
 
   return (
@@ -112,6 +159,26 @@ export default function RepairPanel({ gameState, onUpdateState, onClose }: Repai
         </div>
       </div>
 
+      {/* 装備カテゴリ選択 */}
+      <div style={{ display: 'flex', gap: 3, marginBottom: 6 }}>
+        {(['weapon', 'shield', 'armor'] as EquipCategory[]).map((c) => (
+          <button
+            key={c}
+            onClick={() => changeCategory(c)}
+            style={{
+              flex: 1, padding: '4px', fontSize: 11, fontFamily: 'monospace',
+              background: category === c ? 'rgba(20, 80, 110, 0.9)' : 'rgba(10, 25, 35, 0.5)',
+              border: `1px solid ${category === c ? '#33bbdd' : '#1a3344'}`,
+              borderRadius: 4, cursor: 'pointer',
+              color: category === c ? '#99ddee' : '#334455',
+              fontWeight: category === c ? 'bold' : 'normal',
+            }}
+          >
+            {categoryLabel[c]}
+          </button>
+        ))}
+      </div>
+
       {/* タブ */}
       <div style={{ display: 'flex', gap: 4, marginBottom: 8 }}>
         {(['repair', 'upgrade'] as PanelTab[]).map((t) => (
@@ -135,42 +202,88 @@ export default function RepairPanel({ gameState, onUpdateState, onClose }: Repai
       <div style={{ height: 1, backgroundColor: '#22aacc', marginBottom: 8 }} />
 
       <div style={{ display: 'flex', gap: 10, flex: 1, minHeight: 0 }}>
-        {/* 左: 武器リスト */}
+        {/* 左: 装備リスト */}
         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0 }}>
-          <div style={{ color: '#88ddee', fontSize: 11, marginBottom: 4, fontWeight: 'bold' }}>装備ポーチ</div>
+          <div style={{ color: '#88ddee', fontSize: 11, marginBottom: 4, fontWeight: 'bold' }}>
+            {category === 'weapon' ? '武器スロット' : category === 'shield' ? '盾スロット' : '防具スロット'}
+          </div>
           <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 3 }}>
-            {weapons.length === 0 && (
+            {category === 'weapon' && weapons.length === 0 && (
               <div style={{ color: '#556677', fontSize: 12 }}>武器がありません</div>
             )}
-            {weapons.map((w, i) => {
+            {category === 'shield' && shields.length === 0 && (
+              <div style={{ color: '#556677', fontSize: 12 }}>盾がありません</div>
+            )}
+            {category === 'armor' && armors.length === 0 && (
+              <div style={{ color: '#556677', fontSize: 12 }}>防具がありません</div>
+            )}
+
+            {category === 'weapon' && weapons.map((w, i) => {
               const hasDur = w.durability !== null && w.maxDurability !== null;
               const isSelected = selectedIndex === i;
-              const doneRepair = !!w.repairedAtShop;
-              const doneUpgrade = !!w.upgradedAtShop;
               return (
-                <button
-                  key={i}
-                  onClick={() => { setSelectedIndex(i); setLastMessage(''); }}
+                <button key={i} onClick={() => { setSelectedIndex(i); setLastMessage(''); }}
                   style={{
                     textAlign: 'left',
                     background: isSelected ? 'rgba(30, 100, 120, 0.7)' : 'rgba(10, 30, 40, 0.6)',
                     border: `1px solid ${isSelected ? '#55eeff' : '#223344'}`,
-                    borderRadius: 4, padding: '5px 7px', cursor: 'pointer',
-                    color: '#ccddee',
+                    borderRadius: 4, padding: '5px 7px', cursor: 'pointer', color: '#ccddee',
                   }}
                 >
                   <div style={{ fontSize: 12, fontWeight: isSelected ? 'bold' : 'normal' }}>{w.name}</div>
                   <div style={{ display: 'flex', gap: 4, marginTop: 2, flexWrap: 'wrap' }}>
                     <span style={{ fontSize: 10, color: '#8899aa' }}>ATK:{w.atk}</span>
-                    {hasDur && (
-                      <span style={{ fontSize: 10, color: '#8899aa' }}>
-                        耐久:{w.durability}/{w.maxDurability}
-                      </span>
-                    )}
-                    {doneRepair && <span style={{ fontSize: 9, color: '#55aacc', background: 'rgba(0,80,100,0.4)', borderRadius: 2, padding: '0 3px' }}>修理済</span>}
-                    {doneUpgrade && <span style={{ fontSize: 9, color: '#aacc44', background: 'rgba(40,80,0,0.4)', borderRadius: 2, padding: '0 3px' }}>強化済</span>}
+                    {hasDur && <span style={{ fontSize: 10, color: '#8899aa' }}>耐久:{w.durability}/{w.maxDurability}</span>}
+                    {w.repairedAtShop && <span style={{ fontSize: 9, color: '#55aacc', background: 'rgba(0,80,100,0.4)', borderRadius: 2, padding: '0 3px' }}>修理済</span>}
+                    {w.upgradedAtShop && <span style={{ fontSize: 9, color: '#aacc44', background: 'rgba(40,80,0,0.4)', borderRadius: 2, padding: '0 3px' }}>強化済</span>}
                   </div>
-                  {hasDur && durBar(w.durability, w.maxDurability)}
+                  {hasDur && durBar(w.durability!, w.maxDurability!)}
+                </button>
+              );
+            })}
+
+            {category === 'shield' && shields.map((s, i) => {
+              const isSelected = selectedIndex === i;
+              return (
+                <button key={i} onClick={() => { setSelectedIndex(i); setLastMessage(''); }}
+                  style={{
+                    textAlign: 'left',
+                    background: isSelected ? 'rgba(30, 100, 120, 0.7)' : 'rgba(10, 30, 40, 0.6)',
+                    border: `1px solid ${isSelected ? '#55eeff' : '#223344'}`,
+                    borderRadius: 4, padding: '5px 7px', cursor: 'pointer', color: '#ccddee',
+                  }}
+                >
+                  <div style={{ fontSize: 12, fontWeight: isSelected ? 'bold' : 'normal' }}>{s.name}</div>
+                  <div style={{ display: 'flex', gap: 4, marginTop: 2, flexWrap: 'wrap' }}>
+                    <span style={{ fontSize: 10, color: '#8899aa' }}>DEF:{s.def}</span>
+                    <span style={{ fontSize: 10, color: '#8899aa' }}>耐久:{s.durability}/{s.maxDurability}</span>
+                    {s.repairedAtShop && <span style={{ fontSize: 9, color: '#55aacc', background: 'rgba(0,80,100,0.4)', borderRadius: 2, padding: '0 3px' }}>修理済</span>}
+                    {s.upgradedAtShop && <span style={{ fontSize: 9, color: '#aacc44', background: 'rgba(40,80,0,0.4)', borderRadius: 2, padding: '0 3px' }}>強化済</span>}
+                  </div>
+                  {durBar(s.durability, s.maxDurability)}
+                </button>
+              );
+            })}
+
+            {category === 'armor' && armors.map((a, i) => {
+              const isSelected = selectedIndex === i;
+              return (
+                <button key={i} onClick={() => { setSelectedIndex(i); setLastMessage(''); }}
+                  style={{
+                    textAlign: 'left',
+                    background: isSelected ? 'rgba(30, 100, 120, 0.7)' : 'rgba(10, 30, 40, 0.6)',
+                    border: `1px solid ${isSelected ? '#55eeff' : '#223344'}`,
+                    borderRadius: 4, padding: '5px 7px', cursor: 'pointer', color: '#ccddee',
+                  }}
+                >
+                  <div style={{ fontSize: 12, fontWeight: isSelected ? 'bold' : 'normal' }}>{a.name}</div>
+                  <div style={{ display: 'flex', gap: 4, marginTop: 2, flexWrap: 'wrap' }}>
+                    <span style={{ fontSize: 10, color: '#8899aa' }}>DEF:{a.def}</span>
+                    <span style={{ fontSize: 10, color: '#8899aa' }}>耐久:{a.durability}/{a.maxDurability}</span>
+                    {a.repairedAtShop && <span style={{ fontSize: 9, color: '#55aacc', background: 'rgba(0,80,100,0.4)', borderRadius: 2, padding: '0 3px' }}>修理済</span>}
+                    {a.upgradedAtShop && <span style={{ fontSize: 9, color: '#aacc44', background: 'rgba(40,80,0,0.4)', borderRadius: 2, padding: '0 3px' }}>強化済</span>}
+                  </div>
+                  {durBar(a.durability, a.maxDurability)}
                 </button>
               );
             })}
@@ -183,8 +296,8 @@ export default function RepairPanel({ gameState, onUpdateState, onClose }: Repai
             {tab === 'repair' ? '修理メニュー' : '強化メニュー'}
           </div>
 
-          {selectedWeapon === null ? (
-            <div style={{ color: '#445566', fontSize: 12, marginTop: 8 }}>← 武器を選択</div>
+          {(selectedWeapon === null && selectedShield === null && selectedArmor === null) ? (
+            <div style={{ color: '#445566', fontSize: 12, marginTop: 8 }}>← 装備を選択</div>
           ) : tab === 'repair' ? (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
               {repairOptions.map((info) => {

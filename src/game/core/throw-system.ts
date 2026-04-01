@@ -763,8 +763,8 @@ function removeShieldFromSlot(state: GameState, shieldIndex: number): GameState 
     },
     inventory: {
       ...state.inventory,
-      equippedWeapons: state.inventory.equippedWeapons.filter(ew =>
-        shield.instanceId ? ew.instanceId !== shield.instanceId : ew.weaponId !== shield.shieldId
+      equippedShields: (state.inventory.equippedShields ?? []).filter(es =>
+        shield.instanceId ? es.instanceId !== shield.instanceId : es.shieldId !== shield.shieldId
       ),
     },
   };
@@ -798,8 +798,8 @@ function removeArmorFromSlot(state: GameState, armorIndex: number): GameState {
     player: newPlayer,
     inventory: {
       ...state.inventory,
-      equippedWeapons: state.inventory.equippedWeapons.filter(ew =>
-        armor.instanceId ? ew.instanceId !== armor.instanceId : ew.weaponId !== armor.armorId
+      equippedArmors: (state.inventory.equippedArmors ?? []).filter(ea =>
+        armor.instanceId ? ea.instanceId !== armor.instanceId : ea.armorId !== armor.armorId
       ),
     },
   };

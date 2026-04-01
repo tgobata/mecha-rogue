@@ -127,6 +127,10 @@ export interface EquippedShield {
   blockChance?: number;
   /** 表示名 */
   name: string;
+  /** 修理屋で修理済みフラグ（1回限り） */
+  repairedAtShop?: boolean;
+  /** 修理屋で強化済みフラグ（1回限り） */
+  upgradedAtShop?: boolean;
 }
 
 /**
@@ -148,6 +152,10 @@ export interface EquippedArmor {
   maxHpBonus?: number;
   /** 表示名 */
   name: string;
+  /** 修理屋で修理済みフラグ（1回限り） */
+  repairedAtShop?: boolean;
+  /** 修理屋で強化済みフラグ（1回限り） */
+  upgradedAtShop?: boolean;
 }
 
 // ---------------------------------------------------------------------------

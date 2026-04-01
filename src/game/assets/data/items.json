@@ -67,14 +67,36 @@
   },
   {
     "id": "weapon_repair_kit",
-    "name": "修理キット",
+    "name": "武器修理キット",
     "category": "weapon",
     "effect": "weapon_durability_restore_full",
     "value": 1,
     "appearsFrom": 5,
     "shopPrice": 100,
     "dropWeight": 8,
-    "description": "武器1つの耐久度を最大値まで完全回復する。"
+    "description": "装備中の武器1つの耐久度を最大値まで完全回復する。"
+  },
+  {
+    "id": "shield_repair_kit",
+    "name": "盾修理キット",
+    "category": "weapon",
+    "effect": "shield_durability_restore_full",
+    "value": 1,
+    "appearsFrom": 5,
+    "shopPrice": 100,
+    "dropWeight": 6,
+    "description": "盾1つの耐久度を最大値まで完全回復する。"
+  },
+  {
+    "id": "armor_repair_kit",
+    "name": "防具修理キット",
+    "category": "weapon",
+    "effect": "armor_durability_restore_full",
+    "value": 1,
+    "appearsFrom": 5,
+    "shopPrice": 100,
+    "dropWeight": 6,
+    "description": "防具1つの耐久度を最大値まで完全回復する。"
   },
   {
     "id": "upgrade_core_i",

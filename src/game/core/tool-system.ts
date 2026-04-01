@@ -361,6 +361,50 @@ export function useInventoryItem(
       return { nextState, log: `${itemName} を使用した（${targetWeapon.name} の耐久度を全回復）` };
     }
 
+    case 'shield_durability_restore_full': {
+      const targetShield = player?.shieldSlots?.[0] ?? null;
+      if (!targetShield) {
+        return { nextState: state, log: `${itemName}: 盾を所持していません` };
+      }
+      const repairedShield = { ...targetShield, durability: targetShield.maxDurability };
+      const newShieldSlots = player?.shieldSlots?.map((s) =>
+        s.instanceId && s.instanceId === targetShield.instanceId ? repairedShield : s,
+      ) ?? [];
+      const newEquippedShields = (nextState.inventory.equippedShields ?? []).map((es) =>
+        es.instanceId && es.instanceId === targetShield.instanceId
+          ? { ...es, durability: targetShield.maxDurability }
+          : es,
+      );
+      nextState = {
+        ...nextState,
+        inventory: { ...nextState.inventory, equippedShields: newEquippedShields },
+        player: player ? { ...player, shieldSlots: newShieldSlots } : player,
+      };
+      return { nextState, log: `${itemName} を使用した（${targetShield.name} の耐久度を全回復）` };
+    }
+
+    case 'armor_durability_restore_full': {
+      const targetArmor = player?.armorSlots?.[0] ?? null;
+      if (!targetArmor) {
+        return { nextState: state, log: `${itemName}: 防具を所持していません` };
+      }
+      const repairedArmor = { ...targetArmor, durability: targetArmor.maxDurability };
+      const newArmorSlots = player?.armorSlots?.map((a) =>
+        a.instanceId && a.instanceId === targetArmor.instanceId ? repairedArmor : a,
+      ) ?? [];
+      const newEquippedArmors = (nextState.inventory.equippedArmors ?? []).map((ea) =>
+        ea.instanceId && ea.instanceId === targetArmor.instanceId
+          ? { ...ea, durability: targetArmor.maxDurability }
+          : ea,
+      );
+      nextState = {
+        ...nextState,
+        inventory: { ...nextState.inventory, equippedArmors: newEquippedArmors },
+        player: player ? { ...player, armorSlots: newArmorSlots } : player,
+      };
+      return { nextState, log: `${itemName} を使用した（${targetArmor.name} の耐久度を全回復）` };
+    }
+
     // ── 武器強化素材（強化コアI/II/III） ──
     case 'weapon_upgrade_material': {
       // 装備中 or スロット先頭の武器を強化対象とする
