@@ -26,8 +26,8 @@ const ALL_DATA = [
 // 定数
 // ---------------------------------------------------------------------------
 
-const PANEL_WIDTH = 340;
-const PANEL_MAX_HEIGHT = 480;
+const PANEL_WIDTH = 'min(520px, 95vw)';
+const PANEL_MAX_HEIGHT = 'min(680px, 88vh)';
 const PANEL_Z_INDEX = 25;
 const PANEL_BG = 'rgba(20, 15, 30, 0.98)';
 const PANEL_BORDER = '2px solid #aa8844';
@@ -103,6 +103,7 @@ export default function ShopPanel({
         style={{
           width: PANEL_WIDTH,
           maxHeight: PANEL_MAX_HEIGHT,
+          height: PANEL_MAX_HEIGHT,
           background: PANEL_BG,
           border: PANEL_BORDER,
           borderRadius: 8,
@@ -161,13 +162,13 @@ export default function ShopPanel({
               onClick={() => { setMode('buy'); setSelectedIndex(0); }}
               style={{
                 flex: 1,
-                padding: '4px',
+                padding: '10px',
                 background: mode === 'buy' ? '#aa8844' : '#332244',
                 border: 'none',
-                borderRadius: 4,
+                borderRadius: 6,
                 color: mode === 'buy' ? '#fff' : '#8877aa',
                 cursor: 'pointer',
-                fontSize: 12,
+                fontSize: 16,
                 fontWeight: 'bold'
               }}
             >
@@ -177,13 +178,13 @@ export default function ShopPanel({
               onClick={() => { setMode('sell'); setSelectedIndex(0); }}
               style={{
                 flex: 1,
-                padding: '4px',
+                padding: '10px',
                 background: mode === 'sell' ? '#aa8844' : '#332244',
                 border: 'none',
-                borderRadius: 4,
+                borderRadius: 6,
                 color: mode === 'sell' ? '#fff' : '#8877aa',
                 cursor: 'pointer',
-                fontSize: 12,
+                fontSize: 16,
                 fontWeight: 'bold'
               }}
             >
@@ -239,7 +240,7 @@ export default function ShopPanel({
                       <button
                         onClick={(e) => { e.stopPropagation(); if (canBuy) onBuy(item); }}
                         disabled={!canBuy}
-                        style={{ padding: '4px 8px', backgroundColor: canBuy ? '#44aa44' : '#333', borderRadius: 4, color: canBuy ? '#fff' : '#666', cursor: canBuy ? 'pointer' : 'not-allowed', fontSize: 11 }}
+                        style={{ padding: '8px 14px', backgroundColor: canBuy ? '#44aa44' : '#333', borderRadius: 6, color: canBuy ? '#fff' : '#666', cursor: canBuy ? 'pointer' : 'not-allowed', fontSize: 14, fontWeight: 'bold', minWidth: 60 }}
                       >{soldOut ? '売切' : '購入'}</button>
                     </div>
                   </div>
@@ -262,7 +263,7 @@ export default function ShopPanel({
                           <span style={{ fontSize: 12, color: '#ffdd22' }}>{sellPrice} G</span>
                           <button
                             onClick={() => onSell(w.id, 'weapon', idx)}
-                            style={{ padding: '2px 6px', backgroundColor: '#883333', borderRadius: 4, color: '#fff', fontSize: 10, cursor: 'pointer' }}
+                            style={{ padding: '8px 14px', backgroundColor: '#883333', borderRadius: 6, color: '#fff', fontSize: 14, fontWeight: 'bold', cursor: 'pointer', minWidth: 60 }}
                           >売る</button>
                         </div>
                       </div>
@@ -284,7 +285,7 @@ export default function ShopPanel({
                           <span style={{ fontSize: 12, color: '#ffdd22' }}>{sellPrice} G</span>
                           <button
                             onClick={() => onSell(it.itemId, 'item', originalIndex)}
-                            style={{ padding: '2px 6px', backgroundColor: '#883333', borderRadius: 4, color: '#fff', fontSize: 10, cursor: 'pointer' }}
+                            style={{ padding: '8px 14px', backgroundColor: '#883333', borderRadius: 6, color: '#fff', fontSize: 14, fontWeight: 'bold', cursor: 'pointer', minWidth: 60 }}
                           >売る</button>
                         </div>
                       </div>
@@ -299,35 +300,33 @@ export default function ShopPanel({
           )}
         </div>
         
-        <div style={{ padding: '8px', borderTop: '1px solid #665533', display: 'flex', flexDirection: 'column', gap: 4, alignItems: 'center' }}>
+        <div style={{ padding: '10px 12px', borderTop: '1px solid #665533', display: 'flex', flexDirection: 'column', gap: 6, alignItems: 'center' }}>
           {lastMessage && (
             <div style={{
               width: '100%',
-              padding: '5px 10px',
+              padding: '4px 10px',
               backgroundColor: 'rgba(255, 220, 100, 0.12)',
               border: '1px solid rgba(200, 160, 60, 0.4)',
               borderRadius: 4,
-              fontSize: 12,
+              fontSize: 11,
               color: '#ffdd88',
               textAlign: 'center',
             }}>
               {lastMessage}
             </div>
           )}
-          <div style={{ fontSize: 10, color: '#998877' }}>
-            {mode === 'buy' ? '退出すると在庫は更新されます' : '売却価格は購入価格の約45-50%です'}
-          </div>
           <button
             onClick={onClose}
             style={{
-              padding: '4px 16px',
+              width: '100%',
+              padding: '12px 16px',
               backgroundColor: '#445566',
               border: '1px solid #667788',
-              borderRadius: 4,
+              borderRadius: 6,
               color: '#fff',
-              fontSize: 11,
+              fontSize: 15,
+              fontWeight: 'bold',
               cursor: 'pointer',
-              marginTop: 4
             }}
           >
             ショップを閉じる

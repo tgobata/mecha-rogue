@@ -1548,6 +1548,33 @@ export default function GameCanvas() {
               }
               break;
             }
+            case 'reflect': {
+              // 反射シールドの反撃エフェクト：プレイヤー→敵へシアン色の軌道 + 敵タイルをフラッシュ
+              if (effect.from && effect.to) {
+                const drawReflect = (from: { x: number; y: number }, to: { x: number; y: number }, color: string) => {
+                  let x = from.x;
+                  let y = from.y;
+                  const dx = Math.abs(to.x - x);
+                  const dy = Math.abs(to.y - y);
+                  const sx = to.x > x ? 1 : -1;
+                  const sy = to.y > y ? 1 : -1;
+                  let err = dx - dy;
+                  const maxSteps = 20;
+                  let steps = 0;
+                  while (!(x === to.x && y === to.y) && steps < maxSteps) {
+                    addFlashDuration(x, y, color, 400);
+                    const e2 = err * 2;
+                    if (e2 > -dy) { err -= dy; x += sx; }
+                    if (e2 < dx) { err += dx; y += sy; }
+                    steps++;
+                  }
+                  addFlashDuration(to.x, to.y, color, 500); // 着弾点（敵）を長めに光らせる
+                };
+                drawReflect(effect.from, effect.to, effect.color ?? '#00eeffcc');
+                triggerScreenFlash('rgba(0,220,255,0.12)', 200);
+              }
+              break;
+            }
           }
         }
       }

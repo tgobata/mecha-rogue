@@ -150,6 +150,8 @@ export interface EquippedArmor {
   def: number;
   /** 最大HP増加量。省略時は 0 扱い */
   maxHpBonus?: number;
+  /** 特殊効果識別子（weapons.json の special フィールドと対応） */
+  special?: string | null;
   /** 表示名 */
   name: string;
   /** 修理屋で修理済みフラグ（1回限り） */
@@ -350,7 +352,7 @@ export interface Enemy {
  * processTurn から GameCanvas へ伝達するために使用。
  */
 export interface TurnEffect {
-  type: 'explosion' | 'trajectory' | 'area_buff' | 'electric';
+  type: 'explosion' | 'trajectory' | 'area_buff' | 'electric' | 'reflect';
   /** 爆発・バフの中心座標 */
   center?: { x: number; y: number };
   /** 爆発半径 */

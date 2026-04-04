@@ -136,7 +136,22 @@ const WEAPON_DEFS_ALL = weaponsRaw as unknown as Array<{
   def?: number;
   blockChance?: number;
   maxHpBonus?: number;
+  special?: string | null;
 }>;
+
+/** 反射シールドの special 文字列からリフレクト設定を取得する */
+function getReflectConfig(special: string | null | undefined): { chance: number; mult: number } | null {
+  if (!special) return null;
+  const configs: Record<string, { chance: number; mult: number }> = {
+    reflect_55pct:      { chance: 0.55, mult: 1.0 },
+    reflect_75pct:      { chance: 0.75, mult: 1.0 },
+    reflect_100pct:     { chance: 1.00, mult: 1.0 },
+    reflect_x2_50pct:   { chance: 0.50, mult: 2.0 },
+    reflect_x2_5_75pct: { chance: 0.75, mult: 2.5 },
+    reflect_x3_100pct:  { chance: 1.00, mult: 3.0 },
+  };
+  return configs[special] ?? null;
+}
 
 /** items.json の全定義（アイテム名取得に使用） */
 const ITEM_DEFS_ALL = itemsRaw as unknown as Array<{ id: string; name: string }>;
@@ -1452,6 +1467,23 @@ function processEnemyActions(
               animState: 'attack' as const,
               facing: getDirection(currentEnemyState.pos, newPlayer.pos)
             };
+            // ─── 反射シールドの反撃処理 ───────────────────────────────────
+            if (finalDamage > 0) {
+              const shieldSpecial = WEAPON_DEFS_ALL.find(d => d.id === newPlayer.equippedShield?.shieldId)?.special;
+              const reflectCfg = getReflectConfig(shieldSpecial);
+              if (reflectCfg && Math.random() < reflectCfg.chance) {
+                const reflectDmg = Math.max(1, Math.round(dmg * reflectCfg.mult));
+                currentEnemyState = { ...currentEnemyState, hp: currentEnemyState.hp - reflectDmg };
+                enemyEventMessages.push(`⚡反射！ ${currentEnemyState.name ?? currentEnemyState.enemyType}に${reflectDmg}ダメージ返却！`);
+                state = {
+                  ...state,
+                  turnEffects: [
+                    ...(state.turnEffects ?? []),
+                    { type: 'reflect' as const, from: newPlayer.pos, to: currentEnemyState.pos, color: '#00eeff' },
+                  ],
+                };
+              }
+            }
           } else {
             // 敵が他の敵を攻撃する処理
             const targetEnemyId = parseInt(action.targetId, 10);
@@ -1647,6 +1679,23 @@ function processEnemyActions(
               ...(cannonFinal > 0 && { hpEverDroppedBelowMax: true }),
             };
             enemyEventMessages.push(`アイアンフォートレスの砲撃！ ${cannonFinal}ダメージ！`);
+            // ─── 反射シールドの反撃処理 ───────────────────────────────────
+            if (cannonFinal > 0) {
+              const shieldSpecialC = WEAPON_DEFS_ALL.find(d => d.id === newPlayer.equippedShield?.shieldId)?.special;
+              const reflectCfgC = getReflectConfig(shieldSpecialC);
+              if (reflectCfgC && Math.random() < reflectCfgC.chance) {
+                const reflectDmg = Math.max(1, Math.round(cannonDmg * reflectCfgC.mult));
+                currentEnemyState = { ...currentEnemyState, hp: currentEnemyState.hp - reflectDmg };
+                enemyEventMessages.push(`⚡反射！ ${currentEnemyState.name ?? currentEnemyState.enemyType}に${reflectDmg}ダメージ返却！`);
+                state = {
+                  ...state,
+                  turnEffects: [
+                    ...(state.turnEffects ?? []),
+                    { type: 'reflect' as const, from: newPlayer.pos, to: currentEnemyState.pos, color: '#00eeff' },
+                  ],
+                };
+              }
+            }
           } else {
             enemyEventMessages.push('アイアンフォートレスが砲撃したが外れた！');
           }
@@ -1692,6 +1741,23 @@ function processEnemyActions(
               ...(slashFinal > 0 && { hpEverDroppedBelowMax: true }),
             };
             enemyEventMessages.push(`サムライマスターの斬撃！ ${slashFinal}ダメージ！`);
+            // ─── 反射シールドの反撃処理 ───────────────────────────────────
+            if (slashFinal > 0) {
+              const shieldSpecialS = WEAPON_DEFS_ALL.find(d => d.id === newPlayer.equippedShield?.shieldId)?.special;
+              const reflectCfgS = getReflectConfig(shieldSpecialS);
+              if (reflectCfgS && Math.random() < reflectCfgS.chance) {
+                const reflectDmg = Math.max(1, Math.round(slashDmg * reflectCfgS.mult));
+                currentEnemyState = { ...currentEnemyState, hp: currentEnemyState.hp - reflectDmg };
+                enemyEventMessages.push(`⚡反射！ ${currentEnemyState.name ?? currentEnemyState.enemyType}に${reflectDmg}ダメージ返却！`);
+                state = {
+                  ...state,
+                  turnEffects: [
+                    ...(state.turnEffects ?? []),
+                    { type: 'reflect' as const, from: newPlayer.pos, to: currentEnemyState.pos, color: '#00eeff' },
+                  ],
+                };
+              }
+            }
           }
           currentEnemyState = {
             ...currentEnemyState,
@@ -1738,6 +1804,23 @@ function processEnemyActions(
               ...(iaidoFinal > 0 && { hpEverDroppedBelowMax: true }),
             };
             enemyEventMessages.push(`サムライマスターの居合い！ 貫通${iaidoFinal}ダメージ！`);
+            // ─── 反射シールドの反撃処理 ───────────────────────────────────
+            if (iaidoFinal > 0) {
+              const shieldSpecialI = WEAPON_DEFS_ALL.find(d => d.id === newPlayer.equippedShield?.shieldId)?.special;
+              const reflectCfgI = getReflectConfig(shieldSpecialI);
+              if (reflectCfgI && Math.random() < reflectCfgI.chance) {
+                const reflectDmg = Math.max(1, Math.round(iaidoFinalDmg * reflectCfgI.mult));
+                currentEnemyState = { ...currentEnemyState, hp: currentEnemyState.hp - reflectDmg };
+                enemyEventMessages.push(`⚡反射！ ${currentEnemyState.name ?? currentEnemyState.enemyType}に${reflectDmg}ダメージ返却！`);
+                state = {
+                  ...state,
+                  turnEffects: [
+                    ...(state.turnEffects ?? []),
+                    { type: 'reflect' as const, from: newPlayer.pos, to: currentEnemyState.pos, color: '#00eeff' },
+                  ],
+                };
+              }
+            }
           }
           currentEnemyState = { ...currentEnemyState, animState: 'attack' as const };
           break;
@@ -1819,6 +1902,23 @@ function processEnemyActions(
               ...(lobFinal > 0 && { hpEverDroppedBelowMax: true }),
             };
             enemyEventMessages.push(`${currentEnemyState.name ?? currentEnemyState.enemyType}がグレネードを投擲！ ${lobFinal}ダメージ！`);
+            // ─── 反射シールドの反撃処理 ───────────────────────────────────
+            if (lobFinal > 0) {
+              const shieldSpecialL = WEAPON_DEFS_ALL.find(d => d.id === newPlayer.equippedShield?.shieldId)?.special;
+              const reflectCfgL = getReflectConfig(shieldSpecialL);
+              if (reflectCfgL && Math.random() < reflectCfgL.chance) {
+                const reflectDmg = Math.max(1, Math.round(lobDmg * reflectCfgL.mult));
+                currentEnemyState = { ...currentEnemyState, hp: currentEnemyState.hp - reflectDmg };
+                enemyEventMessages.push(`⚡反射！ ${currentEnemyState.name ?? currentEnemyState.enemyType}に${reflectDmg}ダメージ返却！`);
+                state = {
+                  ...state,
+                  turnEffects: [
+                    ...(state.turnEffects ?? []),
+                    { type: 'reflect' as const, from: newPlayer.pos, to: currentEnemyState.pos, color: '#00eeff' },
+                  ],
+                };
+              }
+            }
           } else {
             enemyEventMessages.push(`${currentEnemyState.name ?? currentEnemyState.enemyType}がグレネードを投擲したが外れた！`);
           }
@@ -1858,6 +1958,23 @@ function processEnemyActions(
               { type: 'trajectory' as const, from: rangedAction.from, to: rangedAction.to, color: '#ff6600' },
             ],
           };
+          // ─── 反射シールドの反撃処理 ───────────────────────────────────
+          if (rangedFinal > 0) {
+            const shieldSpecialR = WEAPON_DEFS_ALL.find(d => d.id === newPlayer.equippedShield?.shieldId)?.special;
+            const reflectCfgR = getReflectConfig(shieldSpecialR);
+            if (reflectCfgR && Math.random() < reflectCfgR.chance) {
+              const reflectDmg = Math.max(1, Math.round(rangedDmg * reflectCfgR.mult));
+              currentEnemyState = { ...currentEnemyState, hp: currentEnemyState.hp - reflectDmg };
+              enemyEventMessages.push(`⚡反射！ ${currentEnemyState.name ?? currentEnemyState.enemyType}に${reflectDmg}ダメージ返却！`);
+              state = {
+                ...state,
+                turnEffects: [
+                  ...(state.turnEffects ?? []),
+                  { type: 'reflect' as const, from: newPlayer.pos, to: currentEnemyState.pos, color: '#00eeff' },
+                ],
+              };
+            }
+          }
           currentEnemyState = { ...currentEnemyState, animState: 'attack' as const };
           break;
         }
@@ -2676,6 +2793,7 @@ export function processTurn(state: GameState, action: PlayerAction): GameState {
               maxDurability: armorDef.durability ?? 40,
               def: armorDef.def ?? 5,
               maxHpBonus: armorDef.maxHpBonus ?? 0,
+              special: armorDef.special ?? null,
               name: armorDef.name,
             };
             const prevPlayer = stateWithPickup.player;
@@ -3083,14 +3201,24 @@ export function processTurn(state: GameState, action: PlayerAction): GameState {
       ? [...(stateWithPickup.achievements ?? []), ...newlyUnlocked]
       : (stateWithPickup.achievements ?? []);
 
+  // ─── リジュネアーマ: 毎ターンHP自動回復 ─────────────────────────────────
+  const regenSpecial = finalPlayer.equippedArmor?.special;
+  const regenAmount = regenSpecial === 'regen_2' ? 2 : regenSpecial === 'regen_1' ? 1 : 0;
+  let finalPlayerWithRegen = finalPlayer;
+  if (regenAmount > 0 && finalPlayer.hp > 0 && finalPlayer.hp < finalPlayer.maxHp) {
+    const regenedHp = Math.min(finalPlayer.maxHp, finalPlayer.hp + regenAmount);
+    finalPlayerWithRegen = { ...finalPlayer, hp: regenedHp };
+  }
+  const finalPlayerActual = regenAmount > 0 ? finalPlayerWithRegen : finalPlayer;
+
   // ゲームオーバー（マシンHP 0）判定: GameCanvas 側で gameover を検知して applyStartReturn を実行させる
-  if (finalPlayer.hp <= 0) {
+  if (finalPlayerActual.hp <= 0) {
     return {
       ...stateWithPickup,
       pilot: updatedPilot,
       inventory: updatedInventory,
       machine: { ...machineAfterLevelUp, hp: 0 },
-      player: finalPlayer,
+      player: finalPlayerActual,
       enemies: survivingEnemies,
       battleLog: updatedBattleLog,
       bossesDefeated: updatedBossesDefeated,
@@ -3100,21 +3228,21 @@ export function processTurn(state: GameState, action: PlayerAction): GameState {
   }
 
   // プレイヤー移動後の視界を更新
-  const updatedMap = updateVisibility(stateWithPickup.map!, finalPlayer.pos, VIEW_RADIUS);
+  const updatedMap = updateVisibility(stateWithPickup.map!, finalPlayerActual.pos, VIEW_RADIUS);
 
   // exploration の同期更新（playerPos・turn）
   const prevExploration = stateWithPickup.exploration!;
   const newExploration = {
     ...prevExploration,
     currentFloor: updatedMap,
-    playerPos: finalPlayer.pos,
+    playerPos: finalPlayerActual.pos,
     turn: prevExploration.turn + 1,
   };
 
   // machine.hp を player.hp と同期する（レベルアップ済みのマシン状態を基準にする）
   const newMachine = {
     ...machineAfterLevelUp,
-    hp: finalPlayer.hp,
+    hp: finalPlayerActual.hp,
   };
 
   // ピックアップのログをバトルログに追記
@@ -3150,7 +3278,7 @@ export function processTurn(state: GameState, action: PlayerAction): GameState {
     inventory: updatedInventory,
     exploration: newExploration,
     map: updatedMap,
-    player: finalPlayer,
+    player: finalPlayerActual,
     enemies: survivingEnemies,
     battleLog: finalBattleLog,
     bossesDefeated: updatedBossesDefeated,

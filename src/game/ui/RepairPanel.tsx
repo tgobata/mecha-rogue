@@ -152,7 +152,7 @@ export default function RepairPanel({ gameState, onUpdateState, onClose }: Repai
           <span style={{ color: '#ffcc44', fontSize: 12 }}>所持金: <strong>{gold.toLocaleString()} G</strong></span>
           <button
             onClick={onClose}
-            style={{ background: 'none', border: '1px solid #22aacc', borderRadius: 4, color: '#aaaacc', padding: '2px 10px', cursor: 'pointer', fontSize: 12 }}
+            style={{ background: 'rgba(30,50,70,0.8)', border: '1px solid #22aacc', borderRadius: 6, color: '#aaaacc', padding: '8px 20px', cursor: 'pointer', fontSize: 14, fontWeight: 'bold' }}
           >
             閉じる
           </button>
@@ -160,16 +160,16 @@ export default function RepairPanel({ gameState, onUpdateState, onClose }: Repai
       </div>
 
       {/* 装備カテゴリ選択 */}
-      <div style={{ display: 'flex', gap: 3, marginBottom: 6 }}>
+      <div style={{ display: 'flex', gap: 4, marginBottom: 8 }}>
         {(['weapon', 'shield', 'armor'] as EquipCategory[]).map((c) => (
           <button
             key={c}
             onClick={() => changeCategory(c)}
             style={{
-              flex: 1, padding: '4px', fontSize: 11, fontFamily: 'monospace',
+              flex: 1, padding: '8px 4px', fontSize: 13, fontFamily: 'monospace',
               background: category === c ? 'rgba(20, 80, 110, 0.9)' : 'rgba(10, 25, 35, 0.5)',
               border: `1px solid ${category === c ? '#33bbdd' : '#1a3344'}`,
-              borderRadius: 4, cursor: 'pointer',
+              borderRadius: 6, cursor: 'pointer',
               color: category === c ? '#99ddee' : '#334455',
               fontWeight: category === c ? 'bold' : 'normal',
             }}
@@ -180,16 +180,16 @@ export default function RepairPanel({ gameState, onUpdateState, onClose }: Repai
       </div>
 
       {/* タブ */}
-      <div style={{ display: 'flex', gap: 4, marginBottom: 8 }}>
+      <div style={{ display: 'flex', gap: 4, marginBottom: 10 }}>
         {(['repair', 'upgrade'] as PanelTab[]).map((t) => (
           <button
             key={t}
             onClick={() => { setTab(t); setLastMessage(''); }}
             style={{
-              flex: 1, padding: '5px', fontSize: 12, fontFamily: 'monospace',
+              flex: 1, padding: '10px', fontSize: 15, fontFamily: 'monospace',
               background: tab === t ? 'rgba(20, 100, 130, 0.8)' : 'rgba(10, 30, 40, 0.5)',
               border: `1px solid ${tab === t ? '#44bbdd' : '#223344'}`,
-              borderRadius: 4, cursor: 'pointer',
+              borderRadius: 6, cursor: 'pointer',
               color: tab === t ? '#aadeee' : '#446677',
               fontWeight: tab === t ? 'bold' : 'normal',
             }}
@@ -291,7 +291,7 @@ export default function RepairPanel({ gameState, onUpdateState, onClose }: Repai
         </div>
 
         {/* 右: 操作メニュー */}
-        <div style={{ width: 165, display: 'flex', flexDirection: 'column', flexShrink: 0 }}>
+        <div style={{ width: 200, display: 'flex', flexDirection: 'column', flexShrink: 0 }}>
           <div style={{ color: '#88ddee', fontSize: 11, marginBottom: 4, fontWeight: 'bold' }}>
             {tab === 'repair' ? '修理メニュー' : '強化メニュー'}
           </div>
@@ -311,20 +311,20 @@ export default function RepairPanel({ gameState, onUpdateState, onClose }: Repai
                     style={{
                       background: disabled ? 'rgba(15, 25, 35, 0.5)' : 'rgba(20, 80, 100, 0.7)',
                       border: `1px solid ${disabled ? '#1a2a3a' : '#44aacc'}`,
-                      borderRadius: 4, padding: '7px 6px',
+                      borderRadius: 6, padding: '12px 10px',
                       cursor: disabled ? 'not-allowed' : 'pointer',
                       color: disabled ? '#334455' : '#aadeee',
-                      fontSize: 12, textAlign: 'left',
+                      fontSize: 14, textAlign: 'left',
                     }}
                   >
                     <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                       <span style={{ fontWeight: 'bold' }}>{info.label}</span>
-                      {label && <span style={{ fontSize: 10, color: '#ff8866' }}>{label}</span>}
+                      {label && <span style={{ fontSize: 11, color: '#ff8866' }}>{label}</span>}
                     </div>
-                    <div style={{ fontSize: 10, color: disabled ? '#223344' : '#88bbcc', marginTop: 1 }}>
+                    <div style={{ fontSize: 11, color: disabled ? '#223344' : '#88bbcc', marginTop: 2 }}>
                       +{info.healAmount} 耐久
                     </div>
-                    <div style={{ fontSize: 11, color: disabled ? '#223344' : '#ffcc44', marginTop: 2 }}>
+                    <div style={{ fontSize: 13, color: disabled ? '#223344' : '#ffcc44', marginTop: 3, fontWeight: 'bold' }}>
                       {info.cost.toLocaleString()} G
                     </div>
                   </button>
@@ -344,20 +344,20 @@ export default function RepairPanel({ gameState, onUpdateState, onClose }: Repai
                     style={{
                       background: disabled ? 'rgba(15, 25, 35, 0.5)' : 'rgba(20, 60, 20, 0.7)',
                       border: `1px solid ${disabled ? '#1a2a3a' : '#44aa66'}`,
-                      borderRadius: 4, padding: '7px 6px',
+                      borderRadius: 6, padding: '12px 10px',
                       cursor: disabled ? 'not-allowed' : 'pointer',
                       color: disabled ? '#334455' : '#aaeebb',
-                      fontSize: 12, textAlign: 'left',
+                      fontSize: 14, textAlign: 'left',
                     }}
                   >
                     <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                       <span style={{ fontWeight: 'bold' }}>{info.label}</span>
-                      {label && <span style={{ fontSize: 10, color: '#ff8866' }}>{label}</span>}
+                      {label && <span style={{ fontSize: 11, color: '#ff8866' }}>{label}</span>}
                     </div>
-                    <div style={{ fontSize: 10, color: disabled ? '#223344' : '#88ccaa', marginTop: 1 }}>
+                    <div style={{ fontSize: 11, color: disabled ? '#223344' : '#88ccaa', marginTop: 2 }}>
                       {info.description}
                     </div>
-                    <div style={{ fontSize: 11, color: disabled ? '#223344' : '#ffcc44', marginTop: 2 }}>
+                    <div style={{ fontSize: 13, color: disabled ? '#223344' : '#ffcc44', marginTop: 3, fontWeight: 'bold' }}>
                       {info.cost.toLocaleString()} G
                     </div>
                   </button>
