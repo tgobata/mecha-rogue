@@ -135,14 +135,27 @@ export default function RepairPanel({ gameState, onUpdateState, onClose }: Repai
       style={{
         position: 'absolute',
         inset: 0,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        zIndex: 30,
+        backgroundColor: 'rgba(0, 0, 0, 0.6)',
+        pointerEvents: 'auto',
+      }}
+    >
+    <div
+      style={{
+        width: 'min(420px, 92vw)',
+        maxHeight: 'min(680px, 88vh)',
+        height: 'min(680px, 88vh)',
         backgroundColor: 'rgba(3, 15, 20, 0.97)',
         border: '1px solid #22aacc',
         borderRadius: 8,
         display: 'flex',
         flexDirection: 'column',
         padding: '12px 16px',
-        zIndex: 30,
         fontFamily: 'monospace',
+        overflowY: 'auto',
       }}
     >
       {/* ヘッダー */}
@@ -394,6 +407,7 @@ export default function RepairPanel({ gameState, onUpdateState, onClose }: Repai
           {lastMessage}
         </div>
       )}
+    </div>
     </div>
   );
 }

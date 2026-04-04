@@ -441,9 +441,15 @@ export function useInventoryItem(
     }
 
     // ── フロア探索 ──
-    case 'reveal_floor':
-      // マップ全開示は turn-system 側で visibility 処理が必要なため、ここでは消費のみ
+    case 'reveal_floor': {
+      if (nextState.map) {
+        const revealedCells = nextState.map.cells.map((row) =>
+          row.map((cell) => ({ ...cell, isVisible: true, isExplored: true })),
+        );
+        nextState = { ...nextState, map: { ...nextState.map, cells: revealedCells } };
+      }
       return { nextState, log: `${itemName} を使用した（フロアマップを解析）` };
+    }
 
     // ── 戦闘系（効果は簡易実装：消費して使用ログのみ） ──
     case 'enemy_lose_tracking': {

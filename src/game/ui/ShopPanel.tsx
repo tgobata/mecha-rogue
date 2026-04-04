@@ -26,7 +26,7 @@ const ALL_DATA = [
 // 定数
 // ---------------------------------------------------------------------------
 
-const PANEL_WIDTH = 'min(520px, 95vw)';
+const PANEL_WIDTH = 'min(400px, 92vw)';
 const PANEL_MAX_HEIGHT = 'min(680px, 88vh)';
 const PANEL_Z_INDEX = 25;
 const PANEL_BG = 'rgba(20, 15, 30, 0.98)';
