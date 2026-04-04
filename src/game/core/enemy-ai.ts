@@ -44,7 +44,9 @@ export type EnemyAction =
   | { type: 'call_allies'; pos: Position }
   | { type: 'pack_howl'; pos: Position }
   | { type: 'lay_mine'; pos: Position }
-  | { type: 'ranged_attack'; targetId: 'player'; from: Position; to: Position; damage: number };
+  | { type: 'ranged_attack'; targetId: 'player'; from: Position; to: Position; damage: number }
+  | { type: 'spawn_swarm_unit'; pos: Position }
+  | { type: 'teleport'; to: Position };
 
 // ---------------------------------------------------------------------------
 // 定数

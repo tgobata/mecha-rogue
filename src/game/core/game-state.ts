@@ -897,7 +897,7 @@ const INITIAL_LUCK = 5;
 const INITIAL_SKILL_POINTS = 0;
 
 /** マシンHP初期値（GDD 3.3） */
-const INITIAL_MACHINE_HP = 100;
+const INITIAL_MACHINE_HP = 110;
 /** 装甲値初期値（GDD 3.3） */
 const INITIAL_ARMOR = 5;
 /** 移動速度初期値（GDD 3.3） */

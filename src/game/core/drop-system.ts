@@ -73,6 +73,7 @@ interface WeaponDef {
   id: string;
   appearsFrom: number;
   atk: number;
+  weight: number;
 }
 const WEAPON_DEFS_FOR_DROP = weaponsRaw as unknown as WeaponDef[];
 
@@ -232,13 +233,12 @@ export function rollFloorItem(floorNumber: number, rng: () => number): string | 
  * @returns 武器ID、または候補がなければ null
  */
 export function rollFloorWeapon(floorNumber: number, rng: () => number): string | null {
-  // 初期装備（machine_punch）を除き、appearsFrom <= floorNumber の武器を候補にする
+  // 初期装備（machine_punch、weight=0）を除き、appearsFrom <= floorNumber の武器を候補にする
+  // weapons.json の weight フィールドで重み付き抽選（防具・盾は weight が高く設定されている）
   const eligible = WEAPON_DEFS_FOR_DROP.filter(
-    (w) => w.appearsFrom > 0 && w.appearsFrom <= floorNumber,
+    (w) => w.appearsFrom > 0 && w.appearsFrom <= floorNumber && (w.weight ?? 0) > 0,
   );
   if (eligible.length === 0) return null;
-  // atk を重みとして使う（atk が高いほど出やすい = 実際には低ATKが多い深層で高ATKも出る均等感）
-  // 均等選出に近づけるため重みは一律1
-  const idx = Math.floor(rng() * eligible.length);
-  return eligible[idx]?.id ?? null;
+  const picked = weightedPick(eligible, rng);
+  return picked?.id ?? null;
 }

@@ -220,7 +220,7 @@ export const MIN_DAMAGE = 1;
 /**
  * プレイヤーの初期攻撃力。マシンパンチ相当（GDD 4.1）。
  */
-export const INITIAL_PLAYER_ATK = 8;
+export const INITIAL_PLAYER_ATK = 9;
 
 /**
  * プレイヤーの初期防御力。マシン初期装甲値と同値（GDD 3.3）。

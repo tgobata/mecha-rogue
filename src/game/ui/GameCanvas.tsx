@@ -1050,7 +1050,7 @@ export default function GameCanvas() {
 
     const baseState = stateRef.current;
     const floor = generateFloor(floorNumber);
-    const enemies = spawnEnemiesFromMap(floor, floorNumber);
+    const enemies = spawnEnemiesFromMap(floor, floorNumber, floor.startPos);
     const visibleFloor = updateVisibility(floor, floor.startPos, VIEW_RADIUS);
 
     const initialPlayer: Player = {

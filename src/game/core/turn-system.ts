@@ -396,7 +396,7 @@ export function transitionToNextFloor(
       facing: INITIAL_FACING,
       animState: 'idle' as const,
     };
-    const newEnemies = spawnEnemiesFromMap(newMap, nextFloorNumber);
+    const newEnemies = spawnEnemiesFromMap(newMap, nextFloorNumber, newMap.startPos);
     const newTraps = spawnTrapsFromMap(newMap);
     const newHints = spawnHintsFromMap(newMap, nextFloorNumber);
     let isBlackMarket = false;
@@ -526,7 +526,7 @@ export function transitionToNextFloor(
   };
 
   // 新フロアの敵を生成（マップ上の TILE_ENEMY タイルから）
-  const newEnemies = spawnEnemiesFromMap(newMap, nextFloorNumber);
+  const newEnemies = spawnEnemiesFromMap(newMap, nextFloorNumber, newMap.startPos);
 
   // 新フロアのトラップ・ヒントを生成
   const newTraps = spawnTrapsFromMap(newMap);
@@ -582,7 +582,7 @@ export function transitionToPrevFloor(
     facing: INITIAL_FACING,
     animState: 'idle' as const,
   };
-  const newEnemies = spawnEnemiesFromMap(newMap, prevFloorNumber);
+  const newEnemies = spawnEnemiesFromMap(newMap, prevFloorNumber, newMap.startPos);
   const newTraps = spawnTrapsFromMap(newMap);
   const newHints = spawnHintsFromMap(newMap, prevFloorNumber);
   let isBlackMarket = false;
@@ -715,6 +715,7 @@ function spawnHintsFromMap(floor: import('./types').Floor, floorNumber: number):
 export function spawnEnemiesFromMap(
   floor: import('./types').Floor,
   floorNumber: number,
+  playerStartPos?: import('./types').Position,
 ): Enemy[] {
   const enemies: Enemy[] = [];
   let idCounter = 0;
@@ -790,8 +791,9 @@ export function spawnEnemiesFromMap(
           special: (def as any).special ?? null,
         });
       } else if (floor.cells[y][x].tile === 'B' && bossDef) {
-        if (bossDef.id === 'bug_swarm') {
-          // バグスウォーム: 8体の小虫として分散して出現
+        if (bossDef.id === 'bug_swarm' || bossDef.id.startsWith('bug_swarm_lv')) {
+          // バグスウォーム（全Lv）: 8体の小虫としてボスタイル周辺に出現
+          // プレイヤーを発見した瞬間に包囲テレポートするため、スポーン位置はボスタイル付近
           const unitHp = (bossDef as any).unitHp ?? 10;
           const unitAtk = (bossDef as any).unitAtk ?? 1;
           const unitExp = Math.floor(bossDef.expReward / 8);
@@ -1530,6 +1532,15 @@ function processEnemyActions(
           break;
         }
 
+        case 'teleport': {
+          // バグスウォームの発見時即包囲テレポート: 壁・階段以外なら瞬時に移動
+          const tpTile = state.map ? getTileAt(state.map, action.to) : null;
+          if (tpTile && isWalkable(tpTile) && tpTile !== TILE_STAIRS_DOWN) {
+            currentEnemyState = { ...currentEnemyState, pos: action.to };
+          }
+          break;
+        }
+
         case 'heal': {
           // 対象の敵を回復（processedEnemies の中から探す）
           const targetIdx = processedEnemies.findIndex((e) => String(e.id) === action.targetId);
@@ -1895,6 +1906,36 @@ function processEnemyActions(
             }
           }
           currentEnemyState = { ...currentEnemyState, animState: 'attack' as const };
+          break;
+        }
+
+        case 'spawn_swarm_unit': {
+          // バグスウォーム: 仲間を復活させる
+          const swarmAction = action as { type: 'spawn_swarm_unit'; pos: import('./types').Position };
+          const spawnPos = swarmAction.pos;
+          const aliveSwarmCount = [...processedEnemies, ...currentEnemies].filter(
+            (e) => e.enemyType === currentEnemyState.enemyType
+          ).length;
+          const isOccupied = [...processedEnemies, ...currentEnemies].some(
+            (e) => e.pos.x === spawnPos.x && e.pos.y === spawnPos.y,
+          );
+          const isPlayerPos = newPlayer.pos.x === spawnPos.x && newPlayer.pos.y === spawnPos.y;
+          if (!isOccupied && !isPlayerPos && aliveSwarmCount < 8) {
+            const newUnit: Enemy = {
+              ...currentEnemyState,
+              id: Date.now() + Math.floor(Math.random() * 10000),
+              pos: spawnPos,
+              hp: currentEnemyState.maxHp,
+              animState: 'idle' as const,
+              bossState: {
+                ...currentEnemyState.bossState,
+                swarmUnitIndex: aliveSwarmCount,
+                reviveCooldown: 5,
+              },
+            };
+            processedEnemies.push(newUnit);
+            enemyEventMessages.push(`${currentEnemyState.name ?? currentEnemyState.enemyType}の仲間が復活した！`);
+          }
           break;
         }
 

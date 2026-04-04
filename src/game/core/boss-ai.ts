@@ -37,9 +37,74 @@ export function decideBossAction(
 
   switch (boss.bossState?.id) {
     case 'bug_swarm':
-      // バグスウォーム (2F): 8体の小虫として生成済み（swarmUnitIndex を持つ）。通常の追跡。
-      actions.push(decideChaseWithAttack(boss, player.pos, state));
+    case 'bug_swarm_lv2':
+    case 'bug_swarm_lv3':
+    case 'bug_swarm_lv4':
+    case 'bug_swarm_lv5': {
+      // バグスウォーム各Lv: プレイヤーを発見した瞬間に8方向へ即テレポートして取り囲む
+      const surroundOffsets = [
+        { dx: -1, dy: 0 }, { dx: 1, dy: 0 },
+        { dx: 0, dy: -1 }, { dx: 0, dy: 1 },
+        { dx: -1, dy: -1 }, { dx: 1, dy: -1 },
+        { dx: -1, dy: 1 }, { dx: 1, dy: 1 },
+      ];
+      const unitIndex = boss.bossState?.swarmUnitIndex ?? 0;
+      const offset = surroundOffsets[unitIndex % 8];
+      const targetPos = { x: player.pos.x + offset.dx, y: player.pos.y + offset.dy };
+
+      if (!boss.bossState.hasEngaged) {
+        // ── 初発見ターン: 担当の包囲ポジションへ即テレポート ──
+        boss.bossState.hasEngaged = true;
+        const map = state.map;
+        if (
+          map &&
+          targetPos.x >= 0 && targetPos.x < map.width &&
+          targetPos.y >= 0 && targetPos.y < map.height &&
+          isWalkable(getTileAt(map, targetPos)) &&
+          !(player.pos.x === targetPos.x && player.pos.y === targetPos.y) &&
+          !state.enemies.some((e) => e.id !== boss.id && e.pos.x === targetPos.x && e.pos.y === targetPos.y)
+        ) {
+          actions.push({ type: 'teleport', to: targetPos });
+        } else {
+          // 担当位置が塞がっていたら隣接攻撃 or 通常接近
+          actions.push(decideChaseWithAttack(boss, player.pos, state));
+        }
+      } else if (bossEdgeDist(boss, player.pos) === 1) {
+        // ── 包囲完了後: 隣接していれば攻撃 ──
+        actions.push({ type: 'attack', targetId: 'player' });
+      } else {
+        // ── それ以外: 通常追跡 ──
+        actions.push(decideChaseWithAttack(boss, player.pos, state));
+      }
+
+      // 復活ロジック: 生存数が8体未満なら仲間を復活させる（5ターンに1回）
+      if (boss.bossState.reviveCooldown === undefined) boss.bossState.reviveCooldown = 5;
+      boss.bossState.reviveCooldown--;
+      const aliveCount = state.enemies.filter(
+        (e) => e.enemyType === boss.enemyType && e.hp > 0
+      ).length;
+      if (boss.bossState.reviveCooldown <= 0 && aliveCount < 8 && state.map) {
+        boss.bossState.reviveCooldown = 5;
+        const candidates: import('./types').Position[] = [];
+        for (let dy = -2; dy <= 2; dy++) {
+          for (let dx = -2; dx <= 2; dx++) {
+            if (dx === 0 && dy === 0) continue;
+            const nx = boss.pos.x + dx;
+            const ny = boss.pos.y + dy;
+            if (nx < 0 || ny < 0 || ny >= state.map.height || nx >= state.map.width) continue;
+            if (!isWalkable(getTileAt(state.map, { x: nx, y: ny }))) continue;
+            if (state.enemies.some((e) => e.pos.x === nx && e.pos.y === ny)) continue;
+            if (player.pos.x === nx && player.pos.y === ny) continue;
+            candidates.push({ x: nx, y: ny });
+          }
+        }
+        if (candidates.length > 0) {
+          const spawnPos = candidates[Math.floor(rng() * candidates.length)];
+          actions.push({ type: 'spawn_swarm_unit', pos: spawnPos });
+        }
+      }
       break;
+    }
 
     case 'mach_runner': {
       // スピード狂 (4F): 1ターンにつき3回行動。前回の移動位置を次の計算に使う。
