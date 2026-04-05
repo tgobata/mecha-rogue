@@ -1575,6 +1575,24 @@ export default function GameCanvas() {
               }
               break;
             }
+            case 'wall_break': {
+              // 壁破壊エフェクト: 灰色フラッシュ + サウンド
+              const positions = effect.positions ?? (effect.center ? [effect.center] : []);
+              for (const pos of positions) {
+                addFlashDuration(pos.x, pos.y, '#ccaa6688', 300);
+                addFlashDuration(pos.x, pos.y, '#88664444', 150);
+              }
+              if (effect.center) {
+                addFlashDuration(effect.center.x, effect.center.y, '#ddbb8866', 300);
+              }
+              playSE('wall_break');
+              break;
+            }
+            case 'wall_break_fail': {
+              // 壁破壊失敗エフェクト: SE のみ（視覚エフェクトは不要）
+              playSE('wall_break_fail');
+              break;
+            }
           }
         }
       }
@@ -2896,6 +2914,42 @@ export default function GameCanvas() {
                 <div style={{ fontSize: 12, color: '#ccff88', fontWeight: 'bold' }}>{enemyKillNotif}</div>
               </div>
             )}
+
+            {/* 修理屋パネルオーバーレイ（キャンバス枠内で表示 → 仮想コントローラーに被らない） */}
+            {gameState.phase === "repair" && (
+              <RepairPanel
+                gameState={gameState}
+                onUpdateState={(next) => { setGameState(next); stateRef.current = next; }}
+                onClose={handleRepairClose}
+              />
+            )}
+
+            {/* 休憩所倉庫パネルオーバーレイ（キャンバス枠内で表示 → 仮想コントローラーに被らない） */}
+            {gameState.phase === "storage" && storageConfirmed && (
+              <RestStoragePanel
+                gameState={gameState}
+                onUpdateState={(next) => { setGameState(next); stateRef.current = next; }}
+                onClose={() => {
+                  const s = stateRef.current;
+                  if (s.map && s.player) {
+                    const { x, y } = s.player.pos;
+                    const newCells = s.map.cells.map((row, ry) =>
+                      ry === y
+                        ? row.map((cell, cx) => cx === x ? { ...cell, tile: '.' as const } : cell)
+                        : row
+                    );
+                    const newMap = { ...s.map, cells: newCells };
+                    const newState = { ...s, phase: "exploring" as const, map: newMap };
+                    setGameState(newState);
+                    stateRef.current = newState;
+                  } else {
+                    setGameState((s) => ({ ...s, phase: "exploring" as const }));
+                    stateRef.current = { ...stateRef.current, phase: "exploring" };
+                  }
+                  setStorageConfirmed(false);
+                }}
+              />
+            )}
           </div>
 
           {/* ── バトルログ: キャンバス直下 ── */}
@@ -3276,43 +3330,6 @@ export default function GameCanvas() {
           onUpdateState={setGameState}
           onSaveAndExit={handleSaveAndExit}
           onReturnToTitle={handleReturnToTitleWithoutSave}
-        />
-      )}
-
-      {/* 修理屋パネルオーバーレイ（フル画面で表示） */}
-      {gameState.phase === "repair" && (
-        <RepairPanel
-          gameState={gameState}
-          onUpdateState={(next) => { setGameState(next); stateRef.current = next; }}
-          onClose={handleRepairClose}
-        />
-      )}
-
-      {/* 休憩所倉庫パネルオーバーレイ（フル画面で表示） */}
-      {gameState.phase === "storage" && storageConfirmed && (
-        <RestStoragePanel
-          gameState={gameState}
-          onUpdateState={(next) => { setGameState(next); stateRef.current = next; }}
-          onClose={() => {
-            // タイルを TILE_FLOOR に変更して消滅させる
-            const s = stateRef.current;
-            if (s.map && s.player) {
-              const { x, y } = s.player.pos;
-              const newCells = s.map.cells.map((row, ry) =>
-                ry === y
-                  ? row.map((cell, cx) => cx === x ? { ...cell, tile: '.' as const } : cell)
-                  : row
-              );
-              const newMap = { ...s.map, cells: newCells };
-              const newState = { ...s, phase: "exploring" as const, map: newMap };
-              setGameState(newState);
-              stateRef.current = newState;
-            } else {
-              setGameState((s) => ({ ...s, phase: "exploring" as const }));
-              stateRef.current = { ...stateRef.current, phase: "exploring" };
-            }
-            setStorageConfirmed(false);
-          }}
         />
       )}
 

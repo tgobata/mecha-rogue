@@ -7,7 +7,7 @@
  * 在庫の表示と購入処理、持ち物の売却処理を行う。
  */
 
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import type { ShopItem } from '../core/shop-system';
 import type { WeaponInstance, InventoryItem } from '../core/game-state';
 import { getSortedItems } from '../core/inventory-utils';
@@ -27,7 +27,7 @@ const ALL_DATA = [
 // ---------------------------------------------------------------------------
 
 const PANEL_WIDTH = 'min(400px, 92vw)';
-const PANEL_MAX_HEIGHT = 'min(680px, 88vh)';
+const PANEL_MAX_HEIGHT = 'min(680px, 100%)';
 const PANEL_Z_INDEX = 25;
 const PANEL_BG = 'rgba(20, 15, 30, 0.98)';
 const PANEL_BORDER = '2px solid #aa8844';
@@ -81,9 +81,18 @@ export default function ShopPanel({
   lastMessage,
 }: ShopPanelProps) {
   const [mode, setMode] = useState<'buy' | 'sell'>('buy');
-  const [selectedIndex, setSelectedIndex] = useState(0);
+  const [selectedIndex, setSelectedIndex] = useState(-1);
+  /** 売却モードで展開中のアイテムキー */
+  const [sellExpandedKey, setSellExpandedKey] = useState<string | null>(null);
 
+  const listRef = useRef<HTMLDivElement>(null);
   const prices = SHOP_PRICES as any;
+
+  useEffect(() => {
+    if (selectedIndex < 0 || !listRef.current) return;
+    const el = listRef.current.querySelector<HTMLElement>(`[data-buy-index="${selectedIndex}"]`);
+    if (el) el.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+  }, [selectedIndex]);
 
   return (
     <div
@@ -194,7 +203,7 @@ export default function ShopPanel({
         </div>
 
         {/* ── 内容リスト ── */}
-        <div style={{ padding: '8px', flex: 1, overflowY: 'auto' }}>
+        <div ref={listRef} style={{ padding: '8px', flex: 1, overflowY: 'auto' }}>
           {mode === 'buy' ? (
             shopInventory.length === 0 ? (
               <div style={{ padding: '16px', textAlign: 'center', color: '#888' }}>品揃えなし</div>
@@ -205,44 +214,55 @@ export default function ShopPanel({
                 const soldOut = stock <= 0;
                 const canAfford = !soldOut && gold >= item.buy;
                 const canBuy = canAfford;
+                const itemDef = ALL_DATA.find(d => d.id === item.id);
                 return (
                   <div
                     key={`buy-${idx}`}
+                    data-buy-index={idx}
+                    onClick={() => setSelectedIndex(prev => prev === idx ? -1 : idx)}
                     style={{
-                      display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                      display: 'flex', flexDirection: 'column',
                       padding: '8px 12px', marginBottom: 4, borderRadius: 4,
                       backgroundColor: soldOut
                         ? 'rgba(30, 30, 30, 0.5)'
                         : isSelected ? 'rgba(100, 80, 50, 0.8)' : 'rgba(0, 0, 0, 0.3)',
                       border: isSelected && !soldOut ? '1px solid #dcb56e' : '1px solid transparent',
-                      cursor: 'default',
+                      cursor: 'pointer',
                       opacity: soldOut ? 0.6 : 1,
                     }}
                   >
-                    <div style={{ display: 'flex', flexDirection: 'column' }}>
-                      <span style={{ fontSize: 13, fontWeight: 'bold', color: soldOut ? '#666' : undefined }}>
-                        {getDisplayName(item.id)}
-                      </span>
-                      <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
-                        <span style={{ fontSize: 10, color: '#aaa' }}>{item.type === 'weapon' ? '武器' : 'パーツ'}</span>
-                        {item.type === 'item' && (
-                          <span style={{ fontSize: 10, color: soldOut ? '#ff6644' : '#88ccaa' }}>
-                            {soldOut ? '売切' : `残り ${stock}`}
-                          </span>
-                        )}
-                        {item.type === 'weapon' && soldOut && (
-                          <span style={{ fontSize: 10, color: '#ff6644' }}>売切</span>
-                        )}
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                      <div style={{ display: 'flex', flexDirection: 'column' }}>
+                        <span style={{ fontSize: 13, fontWeight: 'bold', color: soldOut ? '#666' : undefined }}>
+                          {getDisplayName(item.id)}
+                        </span>
+                        <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+                          <span style={{ fontSize: 10, color: '#aaa' }}>{item.type === 'weapon' ? '武器' : 'パーツ'}</span>
+                          {item.type === 'item' && (
+                            <span style={{ fontSize: 10, color: soldOut ? '#ff6644' : '#88ccaa' }}>
+                              {soldOut ? '売切' : `残り ${stock}`}
+                            </span>
+                          )}
+                          {item.type === 'weapon' && soldOut && (
+                            <span style={{ fontSize: 10, color: '#ff6644' }}>売切</span>
+                          )}
+                        </div>
+                      </div>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                        <span style={{ fontSize: 13, color: soldOut ? '#555' : canAfford ? '#ffff88' : '#ff4444' }}>{item.buy} G</span>
+                        <button
+                          onClick={(e) => { e.stopPropagation(); if (canBuy) onBuy(item); }}
+                          disabled={!canBuy}
+                          style={{ padding: '8px 14px', backgroundColor: canBuy ? '#44aa44' : '#333', borderRadius: 6, color: canBuy ? '#fff' : '#666', cursor: canBuy ? 'pointer' : 'not-allowed', fontSize: 14, fontWeight: 'bold', minWidth: 60 }}
+                        >{soldOut ? '売切' : '購入'}</button>
                       </div>
                     </div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                      <span style={{ fontSize: 13, color: soldOut ? '#555' : canAfford ? '#ffff88' : '#ff4444' }}>{item.buy} G</span>
-                      <button
-                        onClick={(e) => { e.stopPropagation(); if (canBuy) onBuy(item); }}
-                        disabled={!canBuy}
-                        style={{ padding: '8px 14px', backgroundColor: canBuy ? '#44aa44' : '#333', borderRadius: 6, color: canBuy ? '#fff' : '#666', cursor: canBuy ? 'pointer' : 'not-allowed', fontSize: 14, fontWeight: 'bold', minWidth: 60 }}
-                      >{soldOut ? '売切' : '購入'}</button>
-                    </div>
+                    {/* 説明文 (タップ選択時に表示) */}
+                    {isSelected && itemDef?.description && (
+                      <div style={{ fontSize: 11, color: '#ccbbaa', lineHeight: 1.5, marginTop: 4, paddingTop: 4, borderTop: '1px solid rgba(180,140,60,0.3)', whiteSpace: 'normal', wordBreak: 'break-word' }}>
+                        {itemDef.description}
+                      </div>
+                    )}
                   </div>
                 )
               })
@@ -256,16 +276,30 @@ export default function ShopPanel({
                   <div style={{ fontSize: 11, color: '#aa8844', marginBottom: 4, fontWeight: 'bold' }}>武器</div>
                   {playerWeapons.map((w, idx) => {
                     const sellPrice = prices.weapons[w.id]?.sell ?? 0;
+                    const weaponDef = ALL_DATA.find(d => d.id === w.id);
+                    const sellKey = `weapon-${idx}`;
+                    const isExpanded = sellExpandedKey === sellKey;
                     return (
-                      <div key={`sell-w-${idx}`} style={{ display: 'flex', justifyContent: 'space-between', padding: '4px 8px', backgroundColor: 'rgba(0,0,0,0.2)', marginBottom: 2, borderRadius: 4 }}>
-                        <span style={{ fontSize: 12 }}>{w.name}</span>
-                        <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-                          <span style={{ fontSize: 12, color: '#ffdd22' }}>{sellPrice} G</span>
-                          <button
-                            onClick={() => onSell(w.id, 'weapon', idx)}
-                            style={{ padding: '8px 14px', backgroundColor: '#883333', borderRadius: 6, color: '#fff', fontSize: 14, fontWeight: 'bold', cursor: 'pointer', minWidth: 60 }}
-                          >売る</button>
+                      <div
+                        key={`sell-w-${idx}`}
+                        onClick={() => setSellExpandedKey(prev => prev === sellKey ? null : sellKey)}
+                        style={{ display: 'flex', flexDirection: 'column', padding: '6px 8px', backgroundColor: isExpanded ? 'rgba(60,40,20,0.5)' : 'rgba(0,0,0,0.2)', marginBottom: 2, borderRadius: 4, cursor: 'pointer', border: isExpanded ? '1px solid #aa8844' : '1px solid transparent' }}
+                      >
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                          <span style={{ fontSize: 12 }}>{w.name}</span>
+                          <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                            <span style={{ fontSize: 12, color: '#ffdd22' }}>{sellPrice} G</span>
+                            <button
+                              onClick={(e) => { e.stopPropagation(); onSell(w.id, 'weapon', idx); }}
+                              style={{ padding: '8px 14px', backgroundColor: '#883333', borderRadius: 6, color: '#fff', fontSize: 14, fontWeight: 'bold', cursor: 'pointer', minWidth: 60 }}
+                            >売る</button>
+                          </div>
                         </div>
+                        {isExpanded && weaponDef?.description && (
+                          <div style={{ fontSize: 11, color: '#ccbbaa', lineHeight: 1.5, marginTop: 4, paddingTop: 4, borderTop: '1px solid rgba(180,140,60,0.3)', whiteSpace: 'normal', wordBreak: 'break-word' }}>
+                            {weaponDef.description}
+                          </div>
+                        )}
                       </div>
                     )
                   })}
@@ -278,16 +312,30 @@ export default function ShopPanel({
                   {getSortedItems(playerItems, sortKey).map((entry) => {
                     const { item: it, originalIndex } = entry;
                     const sellPrice = prices.items[it.itemId]?.sell ?? 0;
+                    const itemDef = ALL_DATA.find(d => d.id === it.itemId);
+                    const sellKey = `item-${originalIndex}`;
+                    const isExpanded = sellExpandedKey === sellKey;
                     return (
-                      <div key={`sell-i-${originalIndex}`} style={{ display: 'flex', justifyContent: 'space-between', padding: '4px 8px', backgroundColor: 'rgba(0,0,0,0.2)', marginBottom: 2, borderRadius: 4 }}>
-                        <span style={{ fontSize: 12 }}>{getDisplayName(it.itemId)}{it.quantity > 1 ? ` x${it.quantity}` : ''}</span>
-                        <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-                          <span style={{ fontSize: 12, color: '#ffdd22' }}>{sellPrice} G</span>
-                          <button
-                            onClick={() => onSell(it.itemId, 'item', originalIndex)}
-                            style={{ padding: '8px 14px', backgroundColor: '#883333', borderRadius: 6, color: '#fff', fontSize: 14, fontWeight: 'bold', cursor: 'pointer', minWidth: 60 }}
-                          >売る</button>
+                      <div
+                        key={`sell-i-${originalIndex}`}
+                        onClick={() => setSellExpandedKey(prev => prev === sellKey ? null : sellKey)}
+                        style={{ display: 'flex', flexDirection: 'column', padding: '6px 8px', backgroundColor: isExpanded ? 'rgba(20,50,30,0.5)' : 'rgba(0,0,0,0.2)', marginBottom: 2, borderRadius: 4, cursor: 'pointer', border: isExpanded ? '1px solid #44aa88' : '1px solid transparent' }}
+                      >
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                          <span style={{ fontSize: 12 }}>{getDisplayName(it.itemId)}{it.quantity > 1 ? ` x${it.quantity}` : ''}</span>
+                          <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                            <span style={{ fontSize: 12, color: '#ffdd22' }}>{sellPrice} G</span>
+                            <button
+                              onClick={(e) => { e.stopPropagation(); onSell(it.itemId, 'item', originalIndex); }}
+                              style={{ padding: '8px 14px', backgroundColor: '#883333', borderRadius: 6, color: '#fff', fontSize: 14, fontWeight: 'bold', cursor: 'pointer', minWidth: 60 }}
+                            >売る</button>
+                          </div>
                         </div>
+                        {isExpanded && itemDef?.description && (
+                          <div style={{ fontSize: 11, color: '#ccbbaa', lineHeight: 1.5, marginTop: 4, paddingTop: 4, borderTop: '1px solid rgba(60,180,120,0.3)', whiteSpace: 'normal', wordBreak: 'break-word' }}>
+                            {itemDef.description}
+                          </div>
+                        )}
                       </div>
                     )
                   })}

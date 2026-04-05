@@ -7,7 +7,7 @@
  * キーボード（↑↓/Z/Enter/I/Escape）またはボタンクリックで操作する。
  */
 
-import { useEffect, useRef, useMemo } from 'react';
+import { useEffect, useRef, useMemo, useState } from 'react';
 import type { Inventory } from '../core/game-state';
 import itemsRaw from '../assets/data/items.json';
 import toolsRaw from '../assets/data/tools-equipment.json';
@@ -86,7 +86,9 @@ export default function InventoryPanel({
 
   const scrollRef = useRef<HTMLDivElement>(null);
   const sortKey = inventory.sortKey;
- 
+  /** タップで展開したアイテムのインデックス（スマホ操作用） */
+  const [tapExpandedIdx, setTapExpandedIdx] = useState<number | null>(null);
+
   const sortedItems = useMemo(() => {
     return getSortedItems(items, sortKey);
   }, [items, sortKey]);
@@ -96,6 +98,12 @@ export default function InventoryPanel({
     const el = scrollRef.current.querySelector<HTMLElement>(`[data-index="${selectedIndex}"]`);
     if (el) el.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
   }, [selectedIndex]);
+
+  useEffect(() => {
+    if (tapExpandedIdx === null || !scrollRef.current) return;
+    const el = scrollRef.current.querySelector<HTMLElement>(`[data-index="${tapExpandedIdx}"]`);
+    if (el) el.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+  }, [tapExpandedIdx]);
 
   return (
     <div
@@ -198,19 +206,21 @@ export default function InventoryPanel({
             sortedItems.map(({ item, originalIndex }, i) => {
               const isSelected = i === selectedIndex;
 
+              const isExpanded = isSelected || tapExpandedIdx === i;
               return (
                 <div
                   key={originalIndex}
                   data-index={i}
+                  onPointerDown={() => setTapExpandedIdx(prev => prev === i ? null : i)}
                   style={{
                     display: 'flex',
                     flexDirection: 'column',
                     padding: '6px 4px 6px 0',
                     gap: 8,
-                    backgroundColor: isSelected ? SELECTED_ROW_BG : 'transparent',
+                    backgroundColor: isExpanded ? SELECTED_ROW_BG : 'transparent',
                     borderBottom: '1px solid rgba(68, 85, 102, 0.3)',
-                    borderLeft: isSelected ? '3px solid #55aaff' : '3px solid transparent',
-                    cursor: 'default',
+                    borderLeft: isExpanded ? '3px solid #55aaff' : '3px solid transparent',
+                    cursor: 'pointer',
                   }}
                 >
                   <div style={{ display: 'flex', alignItems: 'center', gap: 4, paddingLeft: 8 }}>
@@ -341,8 +351,8 @@ export default function InventoryPanel({
                   </button>
                   </div>
 
-                  {/* 説明文 (選択中のみ表示、スマホで折り返すように) */}
-                  {isSelected && (
+                  {/* 説明文 (選択中またはタップ展開時に表示、スマホで折り返すように) */}
+                  {isExpanded && (
                     <div
                       style={{
                         fontSize: 11,

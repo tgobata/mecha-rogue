@@ -7,6 +7,7 @@
  * キーボード（↑↓/Z/Enter/E/Escape）またはボタンクリックで操作する。
  */
 
+import { useState, useRef, useEffect } from 'react';
 import type { WeaponInstance, EquippedShield, EquippedArmor } from '../core/game-state';
 import weaponsRaw from '../assets/data/weapons.json';
 
@@ -159,6 +160,38 @@ export default function WeaponPanel({
   onPlaceArmor,
   onThrowArmor,
 }: WeaponPanelProps) {
+  const scrollRef = useRef<HTMLDivElement>(null);
+  /** タップで展開した武器インデックス */
+  const [tapWeaponIdx, setTapWeaponIdx] = useState<number | null>(null);
+  /** タップで展開した盾インデックス */
+  const [tapShieldIdx, setTapShieldIdx] = useState<number | null>(null);
+  /** タップで展開したアーマーインデックス */
+  const [tapArmorIdx, setTapArmorIdx] = useState<number | null>(null);
+
+  useEffect(() => {
+    if (tapWeaponIdx === null || !scrollRef.current) return;
+    const el = scrollRef.current.querySelector<HTMLElement>(`[data-weapon-index="${tapWeaponIdx}"]`);
+    if (el) el.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+  }, [tapWeaponIdx]);
+
+  useEffect(() => {
+    if (selectedIndex == null || !scrollRef.current) return;
+    const el = scrollRef.current.querySelector<HTMLElement>(`[data-weapon-index="${selectedIndex}"]`);
+    if (el) el.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+  }, [selectedIndex]);
+
+  useEffect(() => {
+    if (tapShieldIdx === null || !scrollRef.current) return;
+    const el = scrollRef.current.querySelector<HTMLElement>(`[data-shield-index="${tapShieldIdx}"]`);
+    if (el) el.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+  }, [tapShieldIdx]);
+
+  useEffect(() => {
+    if (tapArmorIdx === null || !scrollRef.current) return;
+    const el = scrollRef.current.querySelector<HTMLElement>(`[data-armor-index="${tapArmorIdx}"]`);
+    if (el) el.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+  }, [tapArmorIdx]);
+
   return (
     <div
       onPointerDown={(e) => { if (e.target === e.currentTarget) onClose(); }}
@@ -208,6 +241,7 @@ export default function WeaponPanel({
 
         {/* ── 武器リスト ── */}
         <div
+          ref={scrollRef}
           style={{
             overflowY: 'auto',
             flexGrow: 1,
@@ -253,18 +287,21 @@ export default function WeaponPanel({
               const weaponLevel: number = (weapon as any).weaponLevel ?? 1;
               const patternLabel = ATTACK_PATTERN_LABEL[attackPattern];
 
+              const isExpanded = isSelected || tapWeaponIdx === i;
               return (
                 <div
                   key={i}
+                  data-weapon-index={i}
+                  onPointerDown={() => setTapWeaponIdx(prev => prev === i ? null : i)}
                   style={{
                     display: 'flex',
                     flexDirection: 'column',
                     padding: '6px 4px 6px 0',
                     gap: 4,
-                    backgroundColor: isSelected ? SELECTED_ROW_BG : 'transparent',
+                    backgroundColor: isExpanded ? SELECTED_ROW_BG : 'transparent',
                     borderBottom: '1px solid rgba(68, 85, 102, 0.3)',
-                    borderLeft: isSelected ? '3px solid #55aaff' : '3px solid transparent',
-                    cursor: 'default',
+                    borderLeft: isExpanded ? '3px solid #55aaff' : '3px solid transparent',
+                    cursor: 'pointer',
                   }}
                 >
                   {/* 上行: 武器ID + ★ + レアリティ + [装備/捨てる]ボタン */}
@@ -428,8 +465,8 @@ export default function WeaponPanel({
                     </span>
                   </div>
 
-                  {/* 説明文 (選択中のみ表示、スマホで折り返すように) */}
-                  {isSelected && weaponDef?.description && (
+                  {/* 説明文 (選択中またはタップ展開時に表示) */}
+                  {isExpanded && weaponDef?.description && (
                     <div
                       style={{
                         fontSize: 11,
@@ -479,19 +516,25 @@ export default function WeaponPanel({
             ) : (
               shieldSlots.map((shield, i) => {
                 const isActive = activeShield?.shieldId === shield.shieldId;
+                const isShieldExpanded = tapShieldIdx === i;
                 const durRatio = shield.maxDurability > 0 ? Math.min(1, shield.durability / shield.maxDurability) : 1;
                 const durWidth = Math.round(DURABILITY_BAR_MAX_WIDTH * durRatio);
                 const durColor = durRatio > 0.5 ? '#44cc66' : durRatio > 0.25 ? '#ccaa22' : '#cc4422';
+                const shieldDef = WEAPON_DEFS.find(d => d.id === shield.shieldId);
                 return (
                   <div
                     key={i}
+                    data-shield-index={i}
+                    onPointerDown={() => setTapShieldIdx(prev => prev === i ? null : i)}
                     style={{
                       display: 'flex',
                       flexDirection: 'column',
                       padding: '6px 12px',
                       gap: 4,
-                      backgroundColor: isActive ? 'rgba(34, 85, 136, 0.5)' : 'transparent',
+                      backgroundColor: isShieldExpanded ? 'rgba(34, 85, 136, 0.5)' : isActive ? 'rgba(34, 85, 136, 0.3)' : 'transparent',
                       borderBottom: '1px solid rgba(68, 85, 102, 0.3)',
+                      borderLeft: isShieldExpanded ? '3px solid #55aaff' : '3px solid transparent',
+                      cursor: 'pointer',
                     }}
                   >
                     <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
@@ -553,6 +596,12 @@ export default function WeaponPanel({
                       </div>
                       <span style={{ fontSize: 10, color: '#778899' }}>{shield.durability}</span>
                     </div>
+                    {/* 盾説明文 (タップ展開時) */}
+                    {isShieldExpanded && shieldDef?.description && (
+                      <div style={{ fontSize: 11, color: '#99aabb', lineHeight: 1.4, whiteSpace: 'normal', wordBreak: 'break-word', paddingLeft: 8 }}>
+                        {shieldDef.description}
+                      </div>
+                    )}
                   </div>
                 );
               })
@@ -590,19 +639,25 @@ export default function WeaponPanel({
             ) : (
               armorSlots.map((armor, i) => {
                 const isActive = activeArmor?.armorId === armor.armorId;
+                const isArmorExpanded = tapArmorIdx === i;
                 const durRatio = armor.maxDurability > 0 ? Math.min(1, armor.durability / armor.maxDurability) : 1;
                 const durWidth = Math.round(DURABILITY_BAR_MAX_WIDTH * durRatio);
                 const durColor = durRatio > 0.5 ? '#44cc66' : durRatio > 0.25 ? '#ccaa22' : '#cc4422';
+                const armorDef = WEAPON_DEFS.find(d => d.id === armor.armorId);
                 return (
                   <div
                     key={i}
+                    data-armor-index={i}
+                    onPointerDown={() => setTapArmorIdx(prev => prev === i ? null : i)}
                     style={{
                       display: 'flex',
                       flexDirection: 'column',
                       padding: '6px 12px',
                       gap: 4,
-                      backgroundColor: isActive ? 'rgba(85, 34, 136, 0.5)' : 'transparent',
+                      backgroundColor: isArmorExpanded ? 'rgba(85, 34, 136, 0.5)' : isActive ? 'rgba(85, 34, 136, 0.3)' : 'transparent',
                       borderBottom: '1px solid rgba(68, 85, 102, 0.3)',
+                      borderLeft: isArmorExpanded ? '3px solid #cc88ff' : '3px solid transparent',
+                      cursor: 'pointer',
                     }}
                   >
                     <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
@@ -664,6 +719,12 @@ export default function WeaponPanel({
                       </div>
                       <span style={{ fontSize: 10, color: '#778899' }}>{armor.durability}</span>
                     </div>
+                    {/* アーマー説明文 (タップ展開時) */}
+                    {isArmorExpanded && armorDef?.description && (
+                      <div style={{ fontSize: 11, color: '#99aabb', lineHeight: 1.4, whiteSpace: 'normal', wordBreak: 'break-word', paddingLeft: 8 }}>
+                        {armorDef.description}
+                      </div>
+                    )}
                   </div>
                 );
               })

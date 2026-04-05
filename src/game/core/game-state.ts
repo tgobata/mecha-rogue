@@ -352,8 +352,8 @@ export interface Enemy {
  * processTurn から GameCanvas へ伝達するために使用。
  */
 export interface TurnEffect {
-  type: 'explosion' | 'trajectory' | 'area_buff' | 'electric' | 'reflect';
-  /** 爆発・バフの中心座標 */
+  type: 'explosion' | 'trajectory' | 'area_buff' | 'electric' | 'reflect' | 'wall_break' | 'wall_break_fail';
+  /** 爆発・バフの中心座標 / 壁破壊位置 */
   center?: { x: number; y: number };
   /** 爆発半径 */
   radius?: number;
@@ -363,6 +363,8 @@ export interface TurnEffect {
   to?: { x: number; y: number };
   /** エフェクト色（省略時はデフォルト色を使用） */
   color?: string;
+  /** 壁破壊: 破壊された壁の座標リスト（爆発時など複数の場合） */
+  positions?: { x: number; y: number }[];
 }
 
 /**

@@ -34,7 +34,9 @@ export type SoundEffectName =
   | 'ui_cancel'
   | 'boss_appear'
   | 'level_up'
-  | 'equipment_break_long';
+  | 'equipment_break_long'
+  | 'wall_break'
+  | 'wall_break_fail';
 
 /** 再生可能なBGM名の列挙型 */
 export type BGMName =
@@ -693,6 +695,37 @@ const SE_PLAYERS: Record<SoundEffectName, () => void> = {
     }
     synth.stop(t + 1.5);
     setTimeout(() => synth.dispose(), 2000);
+  },
+
+  /** 壁破壊成功: ゴリゴリとした石砕けの音 */
+  wall_break: () => {
+    const t = now();
+    // ブラウンノイズで岩が崩れる感触
+    const noise = new Tone.NoiseSynth({
+      noise: { type: 'brown' },
+      envelope: { attack: 0.01, decay: 0.18, sustain: 0, release: 0 },
+    }).connect(seVol);
+    noise.triggerAttackRelease('8n', t);
+    // 低音の衝撃をサイン波2発で表現
+    const syn = new Tone.Synth({
+      oscillator: { type: 'sine' },
+      envelope: { attack: 0.01, decay: 0.15, sustain: 0, release: 0 },
+    }).connect(seVol);
+    syn.triggerAttackRelease('C2', '8n', t + 0.02);
+    syn.triggerAttackRelease('G1', '16n', t + 0.08);
+    setTimeout(() => { try { noise.dispose(); syn.dispose(); } catch { /* disposed */ } }, 1000);
+  },
+
+  /** 壁破壊失敗: 「ガン！」と跳ね返る音 */
+  wall_break_fail: () => {
+    const t = now();
+    const syn = new Tone.Synth({
+      oscillator: { type: 'square' },
+      envelope: { attack: 0.005, decay: 0.12, sustain: 0, release: 0 },
+    }).connect(seVol);
+    syn.triggerAttackRelease('E3', '32n', t);
+    syn.triggerAttackRelease('A3', '32n', t + 0.05);
+    setTimeout(() => { try { syn.dispose(); } catch { /* disposed */ } }, 500);
   },
 };
 

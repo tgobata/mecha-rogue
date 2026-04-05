@@ -36,6 +36,8 @@ export default function RestStoragePanel({ gameState, onUpdateState, onClose }: 
   const [sortKey, setSortKey] = useState<'default' | 'name' | 'type'>('default');
   /** 閉じる前の確認ダイアログ表示フラグ */
   const [showCloseConfirm, setShowCloseConfirm] = useState(false);
+  /** タップで展開したアイテムキー */
+  const [expandedKey, setExpandedKey] = useState<string | null>(null);
 
   const getItemName = (itemId: string) => ALL_ITEMS.find((d) => d.id === itemId)?.name ?? itemId;
   const getWeaponName = (weaponId: string) => ALL_WEAPONS.find((d) => d.id === weaponId)?.name ?? weaponId;
@@ -314,21 +316,54 @@ export default function RestStoragePanel({ gameState, onUpdateState, onClose }: 
         {tab === 'inventory' && (
           <>
             <div style={{ color: '#ddbb88', fontSize: 12, marginBottom: 4 }}>【 武器 】</div>
-            {sortedInventoryWeapons.map(({ w, i }) => (
-              <div key={`inv-w-${i}`} style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4, fontSize: 12, color: '#ccddee' }}>
-                <span>{getWeaponName(w.weaponId)}</span>
-                <button onClick={() => handleDepositItemClick('weapon', i, w.weaponId)} style={{ background: '#4a3a2a', color: '#fff', border: 'none', borderRadius: 4, padding: '2px 8px', cursor: 'pointer' }}>預ける</button>
-              </div>
-            ))}
+            {sortedInventoryWeapons.map(({ w, i }) => {
+              const key = `inv-w-${i}`;
+              const isExpanded = expandedKey === key;
+              const weaponDef = ALL_WEAPONS.find(d => d.id === w.weaponId);
+              return (
+                <div
+                  key={key}
+                  onClick={() => setExpandedKey(prev => prev === key ? null : key)}
+                  style={{ display: 'flex', flexDirection: 'column', marginBottom: 4, fontSize: 12, color: '#ccddee', cursor: 'pointer', padding: '4px 6px', borderRadius: 4, backgroundColor: isExpanded ? 'rgba(80,50,20,0.4)' : 'transparent', border: isExpanded ? '1px solid #6a4a2a' : '1px solid transparent' }}
+                >
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <span>{getWeaponName(w.weaponId)}</span>
+                    <button onClick={(e) => { e.stopPropagation(); handleDepositItemClick('weapon', i, w.weaponId); }} style={{ background: '#4a3a2a', color: '#fff', border: 'none', borderRadius: 4, padding: '2px 8px', cursor: 'pointer' }}>預ける</button>
+                  </div>
+                  {isExpanded && weaponDef?.description && (
+                    <div style={{ fontSize: 10, color: '#ccbbaa', lineHeight: 1.4, marginTop: 3, paddingTop: 3, borderTop: '1px solid rgba(106,74,42,0.4)', whiteSpace: 'normal', wordBreak: 'break-word' }}>
+                      {weaponDef.description}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
             {gameState.inventory.equippedWeapons.length === 0 && <div style={{ fontSize: 11, color: '#665544', marginBottom: 8 }}>なし</div>}
 
             <div style={{ color: '#ddbb88', fontSize: 12, marginBottom: 4, marginTop: 8 }}>【 アイテム 】</div>
-            {sortedInventoryItems.map(({ it, i }) => (
-              <div key={`inv-i-${i}`} style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4, fontSize: 12, color: '#ccddee' }}>
-                <span>{(it as any).unidentified ? '？？？' : getItemName(it.itemId)} ×{it.quantity}</span>
-                <button onClick={() => handleDepositItemClick('item', i, it.itemId)} style={{ background: '#4a3a2a', color: '#fff', border: 'none', borderRadius: 4, padding: '2px 8px', cursor: 'pointer' }}>預ける</button>
-              </div>
-            ))}
+            {sortedInventoryItems.map(({ it, i }) => {
+              const key = `inv-i-${i}`;
+              const isExpanded = expandedKey === key;
+              const unidentified = (it as any).unidentified;
+              const itemDef = !unidentified ? ALL_ITEMS.find(d => d.id === it.itemId) : null;
+              return (
+                <div
+                  key={key}
+                  onClick={() => setExpandedKey(prev => prev === key ? null : key)}
+                  style={{ display: 'flex', flexDirection: 'column', marginBottom: 4, fontSize: 12, color: '#ccddee', cursor: 'pointer', padding: '4px 6px', borderRadius: 4, backgroundColor: isExpanded ? 'rgba(80,50,20,0.4)' : 'transparent', border: isExpanded ? '1px solid #6a4a2a' : '1px solid transparent' }}
+                >
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <span>{unidentified ? '？？？' : getItemName(it.itemId)} ×{it.quantity}</span>
+                    <button onClick={(e) => { e.stopPropagation(); handleDepositItemClick('item', i, it.itemId); }} style={{ background: '#4a3a2a', color: '#fff', border: 'none', borderRadius: 4, padding: '2px 8px', cursor: 'pointer' }}>預ける</button>
+                  </div>
+                  {isExpanded && (
+                    <div style={{ fontSize: 10, color: '#ccbbaa', lineHeight: 1.4, marginTop: 3, paddingTop: 3, borderTop: '1px solid rgba(106,74,42,0.4)', whiteSpace: 'normal', wordBreak: 'break-word' }}>
+                      {unidentified ? '未鑑定のアイテム。識別スコープで正体を明かせる。' : (itemDef?.description ?? '説明がありません。')}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
             {gameState.inventory.items.length === 0 && <div style={{ fontSize: 11, color: '#665544' }}>なし</div>}
           </>
         )}
@@ -339,10 +374,26 @@ export default function RestStoragePanel({ gameState, onUpdateState, onClose }: 
             ) : (
               sortedStorage.map(({ item, originalIndex }) => {
                 const displayName = item.type === 'weapon' ? getWeaponName(item.id) : getItemName(item.id);
+                const key = `store-${originalIndex}`;
+                const isExpanded = expandedKey === key;
+                const def = item.type === 'weapon'
+                  ? ALL_WEAPONS.find(d => d.id === item.id)
+                  : ALL_ITEMS.find(d => d.id === item.id);
                 return (
-                  <div key={`store-${originalIndex}`} style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4, fontSize: 12, color: '#ccddee' }}>
-                    <span>{displayName} <span style={{ color: '#887766', fontSize: 10 }}>({item.type === 'weapon' ? '武器' : 'アイテム'})</span></span>
-                    <button onClick={() => handleWithdrawItemClick(originalIndex)} style={{ background: '#4a3a2a', color: '#fff', border: 'none', borderRadius: 4, padding: '2px 8px', cursor: 'pointer' }}>引き出す</button>
+                  <div
+                    key={key}
+                    onClick={() => setExpandedKey(prev => prev === key ? null : key)}
+                    style={{ display: 'flex', flexDirection: 'column', marginBottom: 4, fontSize: 12, color: '#ccddee', cursor: 'pointer', padding: '4px 6px', borderRadius: 4, backgroundColor: isExpanded ? 'rgba(80,50,20,0.4)' : 'transparent', border: isExpanded ? '1px solid #6a4a2a' : '1px solid transparent' }}
+                  >
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <span>{displayName} <span style={{ color: '#887766', fontSize: 10 }}>({item.type === 'weapon' ? '武器' : 'アイテム'})</span></span>
+                      <button onClick={(e) => { e.stopPropagation(); handleWithdrawItemClick(originalIndex); }} style={{ background: '#4a3a2a', color: '#fff', border: 'none', borderRadius: 4, padding: '2px 8px', cursor: 'pointer' }}>引き出す</button>
+                    </div>
+                    {isExpanded && def?.description && (
+                      <div style={{ fontSize: 10, color: '#ccbbaa', lineHeight: 1.4, marginTop: 3, paddingTop: 3, borderTop: '1px solid rgba(106,74,42,0.4)', whiteSpace: 'normal', wordBreak: 'break-word' }}>
+                        {def.description}
+                      </div>
+                    )}
                   </div>
                 );
               })

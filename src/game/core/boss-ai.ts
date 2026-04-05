@@ -11,7 +11,7 @@ import { manhattanDistance, getTileAt, isWalkable, getNeighbors4, getDirection }
 import { nextStep } from './pathfinding';
 import type { EnemyAction } from './enemy-ai';
 import { decideEnemyAction } from './enemy-ai';
-import { TILE_CRACKED_WALL, TILE_FLOOR } from './constants';
+import { TILE_CRACKED_WALL, TILE_FLOOR, TILE_WALL } from './constants';
 
 // ---------------------------------------------------------------------------
 // ボスの固有行動処理（id / special ベース）
@@ -122,6 +122,7 @@ export function decideBossAction(
       break;
     }
 
+    case 'junk_king_lv2':
     case 'junk_king': {
       // ジャンクキング (5F): 周囲のひび割れ壁を吸収→HP+10/ATK+3。3ターンごとに弾丸発射。
       // 初期化
@@ -137,8 +138,9 @@ export function decideBossAction(
         outer: for (let dx = -checkRange; dx <= checkRange; dx++) {
           for (let dy = -checkRange; dy <= checkRange; dy++) {
             const wp = { x: boss.pos.x + dx, y: boss.pos.y + dy };
-            if (wp.x >= 0 && wp.y >= 0 && wp.y < state.map.height && wp.x < state.map.width) {
-              if (getTileAt(state.map, wp) === TILE_CRACKED_WALL) {
+            if (wp.x > 0 && wp.y > 0 && wp.y < state.map.height - 1 && wp.x < state.map.width - 1) {
+              const wpTile = getTileAt(state.map, wp);
+              if (wpTile === TILE_CRACKED_WALL || wpTile === TILE_WALL) {
                 foundWall = wp;
                 break outer;
               }

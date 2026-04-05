@@ -45,6 +45,8 @@ import {
   TILE_OIL,
   TILE_FIRE,
   TILE_WATER,
+  TILE_WALL,
+  TILE_CRACKED_WALL,
   FIRE_TILE_DURATION,
   FIRE_DAMAGE_PLAYER_RATE,
   FIRE_DAMAGE_ENEMY_RATE,
@@ -895,6 +897,61 @@ export function spawnEnemiesFromMap(
             bossSize: (bossDef as any).size ?? 2,
             bossState: bossInitState, // ボス専用パラメータを保持
           });
+
+          // big_oil_drum: 配下（着火ロボ・ファイヤーピーポー）を周囲に生成
+          if (bossDef.special === 'big_oil_drum') {
+            const minionTypes = (bossDef as any).minionTypes as string[] | undefined;
+            if (minionTypes && minionTypes.length > 0) {
+              const bossSize = (bossDef as any).size ?? 2;
+              // ボス周辺の空きマスを収集（ボス中心から距離2〜4）
+              const minionOffsets: Position[] = [];
+              for (let dy = -4; dy <= 4 + bossSize; dy++) {
+                for (let dx = -4; dx <= 4 + bossSize; dx++) {
+                  if (Math.abs(dx) <= bossSize && Math.abs(dy) <= bossSize) continue; // ボスの直下は除外
+                  const mx = x + dx;
+                  const my = y + dy;
+                  if (mx < 1 || my < 1 || mx >= floor.width - 1 || my >= floor.height - 1) continue;
+                  if (!isWalkable(floor.cells[my]?.[mx]?.tile ?? TILE_WALL)) continue;
+                  minionOffsets.push({ x: mx, y: my });
+                }
+              }
+              // ランダムに最大8体配置
+              const shuffled = minionOffsets.sort(() => Math.random() - 0.5);
+              const minionCount = Math.min(8, shuffled.length);
+              for (let mi = 0; mi < minionCount; mi++) {
+                const mPos = shuffled[mi];
+                const minionId = minionTypes[mi % minionTypes.length];
+                const minionDef = ENEMY_DEFS.find(d => d.id === minionId);
+                if (!minionDef) continue;
+                enemies.push({
+                  id: idCounter++,
+                  enemyType: minionDef.id,
+                  name: minionDef.name,
+                  pos: mPos,
+                  hp: Math.round(minionDef.hp * hpScale),
+                  maxHp: Math.round(minionDef.hp * hpScale),
+                  atk: Math.round(minionDef.atk * atkScale),
+                  def: minionDef.def,
+                  expReward: Math.round(minionDef.expReward * hpScale),
+                  aiType: (minionDef.aiType ?? (minionDef as any).movementPattern ?? 'straight') as EnemyAiType,
+                  facing: 'down',
+                  attackRange: (minionDef as any).attackRange ?? 1,
+                  baseEnemyId: minionDef.baseEnemyId,
+                  level: minionDef.level ?? 1,
+                  factionType: minionDef.factionType,
+                  canAttackAllies: minionDef.canAttackAllies ?? false,
+                  levelColor: minionDef.levelColor,
+                  attackMissColor: minionDef.attackMissColor,
+                  equippedWeaponId: (minionDef as any).equippedWeapon ?? null,
+                  equippedArmorId: (minionDef as any).equippedArmor ?? null,
+                  equippedShieldId: (minionDef as any).equippedShield ?? null,
+                  equipDropChance: minionDef.equipDropChance ?? 0,
+                  lastAttackedEnemyId: null,
+                  special: (minionDef as any).special ?? null,
+                });
+              }
+            }
+          }
         }
       }
     }
@@ -951,7 +1008,7 @@ type PickupInfo =
 function processPlayerAction(
   state: GameState,
   action: PlayerAction,
-): { player: Player; enemies: Enemy[]; shouldTransitionFloor: boolean; pickup: PickupInfo | null; logMessages: string[]; triggeredTrapId?: number; revealedTrapIds: number[]; attackedTrapIds: number[] } {
+): { player: Player; enemies: Enemy[]; shouldTransitionFloor: boolean; pickup: PickupInfo | null; logMessages: string[]; triggeredTrapId?: number; revealedTrapIds: number[]; attackedTrapIds: number[]; wallBreakPositions: Position[]; wallBreakFail: boolean } {
   const player = state.player!;
   let newPlayer = { ...player };
   let newEnemies = [...state.enemies];
@@ -961,6 +1018,8 @@ function processPlayerAction(
   let triggeredTrapId: number | undefined = undefined;
   const revealedTrapIds: number[] = [];
   const attackedTrapIds: number[] = [];
+  const wallBreakPositions: Position[] = [];
+  let wallBreakFail = false;
 
   const delta = actionToDelta(action);
 
@@ -1179,6 +1238,32 @@ function processPlayerAction(
           pickup = { type: 'storage', pos: slidePos };
         }
       }
+      // wall_break 武器で壁を破壊
+      if (!isWalkable(targetTile) && (targetTile === TILE_WALL || targetTile === TILE_CRACKED_WALL)) {
+        const weapon = newPlayer.equippedWeapon ?? null;
+        if (weapon?.special === 'wall_break') {
+          const isBorder =
+            targetPos.x === 0 || targetPos.y === 0 ||
+            targetPos.x === mapData.width - 1 || targetPos.y === mapData.height - 1;
+          if (isBorder) {
+            logMessages.push('この壁は破壊できない！（マップの外縁は崩せない）');
+            wallBreakFail = true;
+          } else {
+            mapData.cells[targetPos.y][targetPos.x].tile = TILE_FLOOR;
+            logMessages.push(`武器「${weapon.name}」で壁を破壊した！`);
+            wallBreakPositions.push(targetPos);
+            const updatedWeapon = consumeDurability(weapon);
+            if (isBroken(updatedWeapon)) {
+              logMessages.push(`武器「${weapon.name}」が壊れた！`);
+            }
+            newPlayer = {
+              ...newPlayer,
+              equippedWeapon: isBroken(updatedWeapon) ? null : updatedWeapon,
+              animState: 'attack' as const,
+            };
+          }
+        }
+      }
       // 壁などの場合は移動しない（方向だけ更新済み）
     }
   } else if (action === 'attack') {
@@ -1271,6 +1356,28 @@ function processPlayerAction(
       }
     }
 
+    // wall_break 武器の壁攻撃チェック
+    if (weapon?.special === 'wall_break') {
+      for (const targetPos of targetPositions) {
+        if (enemyAt(newEnemies, targetPos) !== undefined) continue; // 敵がいればスキップ
+        const wallTile = state.map ? getTileAt(state.map, targetPos) : null;
+        if (wallTile === TILE_WALL || wallTile === TILE_CRACKED_WALL) {
+          const isBorder =
+            targetPos.x === 0 || targetPos.y === 0 ||
+            targetPos.x === (state.map?.width ?? 0) - 1 ||
+            targetPos.y === (state.map?.height ?? 0) - 1;
+          if (isBorder) {
+            logMessages.push('この壁は破壊できない！（マップの外縁は崩せない）');
+            wallBreakFail = true;
+          } else if (state.map) {
+            state.map.cells[targetPos.y][targetPos.x].tile = TILE_FLOOR;
+            logMessages.push(`武器「${weapon.name}」で壁を破壊した！`);
+            wallBreakPositions.push(targetPos);
+          }
+        }
+      }
+    }
+
     // 武器耐久度消費
     if (weapon) {
       const updatedWeapon = consumeDurability(weapon);
@@ -1289,7 +1396,7 @@ function processPlayerAction(
   }
   // wait: 何もしない
 
-  return { player: newPlayer, enemies: newEnemies, shouldTransitionFloor, pickup, logMessages, triggeredTrapId, revealedTrapIds, attackedTrapIds };
+  return { player: newPlayer, enemies: newEnemies, shouldTransitionFloor, pickup, logMessages, triggeredTrapId, revealedTrapIds, attackedTrapIds, wallBreakPositions, wallBreakFail };
 }
 
 // ---------------------------------------------------------------------------
@@ -2626,6 +2733,8 @@ export function processTurn(state: GameState, action: PlayerAction): GameState {
     triggeredTrapId,
     revealedTrapIds,
     attackedTrapIds,
+    wallBreakPositions,
+    wallBreakFail,
   } = processPlayerAction(stateForAction, action);
 
   let stateWithPickup = stateForAction;
@@ -2711,6 +2820,18 @@ export function processTurn(state: GameState, action: PlayerAction): GameState {
     triggeredMonsterHouses,
     traps: trapsAfterAction,
   };
+
+  // ─── 壁破壊エフェクト追加 ────────────────────────────────────────────────
+  if (wallBreakPositions.length > 0 || wallBreakFail) {
+    let newEffects = [...(stateWithPickup.turnEffects ?? [])];
+    for (const wallPos of wallBreakPositions) {
+      newEffects = [...newEffects, { type: 'wall_break' as const, center: wallPos }];
+    }
+    if (wallBreakFail) {
+      newEffects = [...newEffects, { type: 'wall_break_fail' as const }];
+    }
+    stateWithPickup = { ...stateWithPickup, turnEffects: newEffects };
+  }
 
   // ─── アイテム/ゴールドピックアップ処理 ─────────────────────────────────
   // ピックアップがあればマップのタイルを TILE_FLOOR に更新し、インベントリに反映する
@@ -3032,6 +3153,29 @@ export function processTurn(state: GameState, action: PlayerAction): GameState {
               : bombsState.exploration,
           };
           newBattleLog.push(`爆発でオイルが引火し炎上した！`);
+        }
+      }
+
+      // 爆発範囲内の壁を破壊（外縁は除外）
+      if (bombsState.map) {
+        const brokenWalls: Position[] = [];
+        for (const bt of blastTiles) {
+          if (bt.x <= 0 || bt.y <= 0 || bt.x >= bombsState.map.width - 1 || bt.y >= bombsState.map.height - 1) continue;
+          const btCell = bombsState.map.cells[bt.y]?.[bt.x];
+          if (btCell && (btCell.tile === TILE_WALL || btCell.tile === TILE_CRACKED_WALL)) {
+            btCell.tile = TILE_FLOOR;
+            brokenWalls.push(bt);
+          }
+        }
+        if (brokenWalls.length > 0) {
+          newBattleLog.push(`爆発で${brokenWalls.length}マスの壁が崩れた！`);
+          bombsState = {
+            ...bombsState,
+            turnEffects: [
+              ...(bombsState.turnEffects ?? []),
+              { type: 'wall_break' as const, positions: brokenWalls },
+            ],
+          };
         }
       }
 

@@ -741,6 +741,42 @@ function placeEntities(
     }
   }
 
+  // ジャンクキング系のボス部屋にデブリ壁（TILE_CRACKED_WALL）を散らばらせる
+  const bossFloorDef = (bossDefsRaw as any[]).find(b => b.floor === floorNumber);
+  if (bossFloorDef && (bossFloorDef.id === 'junk_king' || bossFloorDef.id === 'junk_king_lv2')) {
+    const debrisCount = 12; // 配置するデブリ数
+    let placed = 0;
+    for (const room of floor.rooms) {
+      if (room.type !== RoomType.BOSS) continue;
+      const innerX1 = room.bounds.x + 1;
+      const innerY1 = room.bounds.y + 1;
+      const innerX2 = room.bounds.x + room.bounds.width - 2;
+      const innerY2 = room.bounds.y + room.bounds.height - 2;
+      // 部屋内のFLOORタイルをランダムにデブリに変換
+      const candidates: Position[] = [];
+      for (let dy = innerY1; dy <= innerY2; dy++) {
+        for (let dx = innerX1; dx <= innerX2; dx++) {
+          if (floor.cells[dy]?.[dx]?.tile !== TILE_FLOOR) continue;
+          // ボス配置中心から2マス以内は除外
+          const centerPos = roomCenter(room.bounds);
+          if (Math.abs(dx - centerPos.x) <= 2 && Math.abs(dy - centerPos.y) <= 2) continue;
+          candidates.push({ x: dx, y: dy });
+        }
+      }
+      // シャッフルして最大 debrisCount 個置く
+      for (let i = candidates.length - 1; i > 0; i--) {
+        const j = Math.floor(rng() * (i + 1));
+        [candidates[i], candidates[j]] = [candidates[j], candidates[i]];
+      }
+      for (const cand of candidates.slice(0, debrisCount)) {
+        floor.cells[cand.y][cand.x].tile = TILE_CRACKED_WALL;
+        placed++;
+        if (placed >= debrisCount) break;
+      }
+      break;
+    }
+  }
+
   // モンスターハウスの部屋内全マスに敵を高密度配置
   for (const room of floor.rooms) {
     if (room.type !== RoomType.MONSTER_HOUSE) continue;

@@ -6446,6 +6446,158 @@ const bossDrawers: Record<string, BossDrawFn> = {
     fillRect(buf, S, 12, 12, 40, 40, hexToRGBA('#111122'));
     setPixel(buf, S, 24, 24, c2);
     setPixel(buf, S, 40, 24, c2);
+  },
+  junk_king_lv2: (buf, S, c1, c2) => {
+    // ジャンクキングLv.2 - 重装甲人型ロボット 色違い (64x64)
+    const BLACK = { r: 0, g: 0, b: 0, a: 255 };
+    const RED     = hexToRGBA('#ff2200');
+    const RED_HL  = hexToRGBA('#ff8888', 180);
+
+    // === 背中のジャンク (肩の上) ===
+    vLine(buf, S, 21, 4, 10, c1);
+    vLine(buf, S, 42, 4, 10, c1);
+    vLine(buf, S, 38, 6,  8, c1);
+    hLine(buf, S, 36, 6,  4, c1);
+    // 歯車
+    hLine(buf, S, 28, 2,  8, c1);
+    vLine(buf, S, 28, 2,  8, c1);
+    vLine(buf, S, 35, 2,  8, c1);
+    hLine(buf, S, 28, 9,  8, c1);
+    setPixel(buf, S, 30, 4, c2); setPixel(buf, S, 33, 4, c2);
+    setPixel(buf, S, 30, 7, c2); setPixel(buf, S, 33, 7, c2);
+
+    // === 頭部 (y:10-23) ===
+    fillRect(buf, S, 22, 11, 20, 13, BLACK);
+    hLine(buf, S, 24, 10, 16, c1);
+    hLine(buf, S, 22, 23, 20, c1);
+    vLine(buf, S, 22, 11, 13, c1);
+    vLine(buf, S, 41, 11, 13, c1);
+    setPixel(buf, S, 23, 11, c1); setPixel(buf, S, 40, 11, c1);
+    // バイザー枠
+    fillRect(buf, S, 24, 13, 16, 7, BLACK);
+    hLine(buf, S, 24, 13, 16, c1);
+    hLine(buf, S, 24, 19, 16, c1);
+    vLine(buf, S, 23, 14,  6, c1);
+    vLine(buf, S, 40, 14,  6, c1);
+    // 赤い目 x2
+    fillRect(buf, S, 25, 14, 5, 4, RED);
+    fillRect(buf, S, 34, 14, 5, 4, RED);
+    setPixel(buf, S, 26, 15, RED_HL);
+    setPixel(buf, S, 35, 15, RED_HL);
+    // 口グリル
+    hLine(buf, S, 27, 21, 10, c2);
+    setPixel(buf, S, 29, 22, c2); setPixel(buf, S, 32, 22, c2); setPixel(buf, S, 35, 22, c2);
+
+    // === 左肩パッド (y:22-31) ===
+    fillRect(buf, S, 10, 22, 14, 10, BLACK);
+    hLine(buf, S, 10, 22, 14, c1);
+    hLine(buf, S, 10, 31, 14, c1);
+    vLine(buf, S, 10, 23,  9, c1);
+    vLine(buf, S, 23, 23,  9, c1);
+    hLine(buf, S, 12, 26, 10, c2);
+
+    // === 右肩パッド (y:22-31) ===
+    fillRect(buf, S, 40, 22, 14, 10, BLACK);
+    hLine(buf, S, 40, 22, 14, c1);
+    hLine(buf, S, 40, 31, 14, c1);
+    vLine(buf, S, 40, 23,  9, c1);
+    vLine(buf, S, 53, 23,  9, c1);
+    hLine(buf, S, 42, 26, 10, c2);
+
+    // === 胸部 (y:22-41) ===
+    fillRect(buf, S, 22, 22, 20, 20, BLACK);
+    hLine(buf, S, 22, 22, 20, c1);
+    hLine(buf, S, 22, 41, 20, c1);
+    vLine(buf, S, 22, 23, 19, c1);
+    vLine(buf, S, 41, 23, 19, c1);
+    hLine(buf, S, 24, 28, 16, c2);
+    hLine(buf, S, 24, 36, 16, c1);
+    // 中央コア
+    fillRect(buf, S, 28, 30, 8, 6, BLACK);
+    hLine(buf, S, 28, 30,  8, c2);
+    hLine(buf, S, 28, 35,  8, c2);
+    vLine(buf, S, 28, 31,  4, c2);
+    vLine(buf, S, 35, 31,  4, c2);
+    setPixel(buf, S, 31, 32, c2); setPixel(buf, S, 32, 32, c2);
+    setPixel(buf, S, 31, 33, c2); setPixel(buf, S, 32, 33, c2);
+
+    // === ベルト (y:42-48) ===
+    fillRect(buf, S, 20, 42, 24,  6, BLACK);
+    hLine(buf, S, 20, 42, 24, c1);
+    hLine(buf, S, 20, 47, 24, c1);
+    vLine(buf, S, 20, 43,  5, c1);
+    vLine(buf, S, 43, 43,  5, c1);
+    fillRect(buf, S, 29, 43,  6, 4, BLACK);
+    hLine(buf, S, 29, 43,  6, c2);
+    hLine(buf, S, 29, 46,  6, c2);
+    vLine(buf, S, 29, 44,  2, c2);
+    vLine(buf, S, 34, 44,  2, c2);
+
+    // === 左腕 (アンバー前腕・クロー付き) ===
+    // 上腕
+    vLine(buf, S, 20, 30, 6, c1);
+    vLine(buf, S, 22, 31, 5, c1);
+    fillRect(buf, S, 13, 32, 9, 6, BLACK);
+    hLine(buf, S, 13, 32, 9, c1);
+    hLine(buf, S, 13, 37, 9, c1);
+    vLine(buf, S, 13, 33, 5, c1);
+    // 前腕 (アンバー発光)
+    fillRect(buf, S, 4, 34, 10, 6, BLACK);
+    hLine(buf, S, 4, 34, 10, c2);
+    hLine(buf, S, 4, 39, 10, c2);
+    vLine(buf, S,  4, 35,  5, c2);
+    vLine(buf, S, 13, 35,  5, c2);
+    // クロー指
+    setPixel(buf, S, 2, 33, c2);
+    setPixel(buf, S, 1, 32, c2); setPixel(buf, S, 1, 36, c2); setPixel(buf, S, 1, 39, c2);
+    setPixel(buf, S, 2, 31, c2); setPixel(buf, S, 2, 38, c2);
+    setPixel(buf, S, 3, 30, c2); setPixel(buf, S, 3, 39, c2);
+    setPixel(buf, S, 4, 29, c2); setPixel(buf, S, 5, 29, c2);
+
+    // === 右腕 + スタッフ ===
+    // 上腕
+    vLine(buf, S, 43, 30, 6, c1);
+    vLine(buf, S, 41, 31, 5, c1);
+    fillRect(buf, S, 42, 34,  8, 6, BLACK);
+    hLine(buf, S, 42, 34,  8, c1);
+    hLine(buf, S, 42, 39,  8, c1);
+    vLine(buf, S, 49, 33,  7, c1);
+    // 右手 (グリップ)
+    fillRect(buf, S, 50, 38,  6, 6, BLACK);
+    hLine(buf, S, 50, 38,  6, c1);
+    hLine(buf, S, 50, 43,  6, c1);
+    vLine(buf, S, 50, 39,  5, c1);
+    vLine(buf, S, 55, 39,  5, c1);
+    // スタッフ本体
+    vLine(buf, S, 57, 4, 56, c1);
+    vLine(buf, S, 58, 4, 56, c1);
+    // スタッフ頭部
+    fillRect(buf, S, 54, 4,  8, 8, BLACK);
+    hLine(buf, S, 55, 4,  6, c1);
+    hLine(buf, S, 55, 11,  6, c1);
+    vLine(buf, S, 54, 5,  7, c1);
+    vLine(buf, S, 61, 5,  7, c1);
+    fillRect(buf, S, 56, 6,  4, 4, c2);
+    // スタッフとグリップの接続
+    hLine(buf, S, 55, 40,  3, c1);
+
+    // === 左脚 (y:48-62) ===
+    fillRect(buf, S, 22, 48, 10, 14, BLACK);
+    hLine(buf, S, 22, 48, 10, c1);
+    vLine(buf, S, 22, 49, 13, c1);
+    vLine(buf, S, 31, 49, 13, c1);
+    hLine(buf, S, 22, 54, 10, c2);  // 膝
+    hLine(buf, S, 20, 61, 14, c1);  // ブーツ底
+    setPixel(buf, S, 20, 60, c1); setPixel(buf, S, 33, 60, c1);
+
+    // === 右脚 (y:48-62) ===
+    fillRect(buf, S, 32, 48, 10, 14, BLACK);
+    hLine(buf, S, 32, 48, 10, c1);
+    vLine(buf, S, 32, 49, 13, c1);
+    vLine(buf, S, 41, 49, 13, c1);
+    hLine(buf, S, 32, 54, 10, c2);  // 膝
+    hLine(buf, S, 30, 61, 14, c1);  // ブーツ底
+    setPixel(buf, S, 30, 60, c1); setPixel(buf, S, 43, 60, c1);
   }
 };
 
@@ -6465,6 +6617,7 @@ const bossColors: Record<string, [RGBA, RGBA]> = {
   final_boss: [hexToRGBA('#220000'), hexToRGBA('#cc00ff')],
   death_machine: [hexToRGBA('#555555'), hexToRGBA('#ff0000')],
   last_boss_shadow: [hexToRGBA('#000000'), hexToRGBA('#4444ff')],
+  junk_king_lv2: [hexToRGBA('#009999'), hexToRGBA('#ff9900')],
 };
 
 async function generateBossSprites(meta: SpriteMeta): Promise<void> {

@@ -12,6 +12,9 @@
 import { useState } from 'react';
 import type { GameState, WeaponInstance, EquippedShield, EquippedArmor } from '../core/game-state';
 import { playSE } from '../systems/audio';
+import weaponsRaw from '../assets/data/weapons.json';
+
+const WEAPON_DEFS = weaponsRaw as any[];
 import {
   getRepairOptions,
   getUpgradeOptions,
@@ -146,8 +149,8 @@ export default function RepairPanel({ gameState, onUpdateState, onClose }: Repai
     <div
       style={{
         width: 'min(420px, 92vw)',
-        maxHeight: 'min(680px, 88vh)',
-        height: 'min(680px, 88vh)',
+        maxHeight: 'min(680px, 100%)',
+        height: 'min(680px, 100%)',
         backgroundColor: 'rgba(3, 15, 20, 0.97)',
         border: '1px solid #22aacc',
         borderRadius: 8,
@@ -234,6 +237,7 @@ export default function RepairPanel({ gameState, onUpdateState, onClose }: Repai
             {category === 'weapon' && weapons.map((w, i) => {
               const hasDur = w.durability !== null && w.maxDurability !== null;
               const isSelected = selectedIndex === i;
+              const weaponDef = WEAPON_DEFS.find(d => d.id === w.id);
               return (
                 <button key={i} onClick={() => { setSelectedIndex(i); setLastMessage(''); }}
                   style={{
@@ -251,12 +255,18 @@ export default function RepairPanel({ gameState, onUpdateState, onClose }: Repai
                     {w.upgradedAtShop && <span style={{ fontSize: 9, color: '#aacc44', background: 'rgba(40,80,0,0.4)', borderRadius: 2, padding: '0 3px' }}>強化済</span>}
                   </div>
                   {hasDur && durBar(w.durability!, w.maxDurability!)}
+                  {isSelected && weaponDef?.description && (
+                    <div style={{ fontSize: 10, color: '#99aabb', lineHeight: 1.4, marginTop: 4, paddingTop: 3, borderTop: '1px solid rgba(85,180,200,0.2)', whiteSpace: 'normal', wordBreak: 'break-word' }}>
+                      {weaponDef.description}
+                    </div>
+                  )}
                 </button>
               );
             })}
 
             {category === 'shield' && shields.map((s, i) => {
               const isSelected = selectedIndex === i;
+              const shieldDef = WEAPON_DEFS.find(d => d.id === s.shieldId);
               return (
                 <button key={i} onClick={() => { setSelectedIndex(i); setLastMessage(''); }}
                   style={{
@@ -274,12 +284,18 @@ export default function RepairPanel({ gameState, onUpdateState, onClose }: Repai
                     {s.upgradedAtShop && <span style={{ fontSize: 9, color: '#aacc44', background: 'rgba(40,80,0,0.4)', borderRadius: 2, padding: '0 3px' }}>強化済</span>}
                   </div>
                   {durBar(s.durability, s.maxDurability)}
+                  {isSelected && shieldDef?.description && (
+                    <div style={{ fontSize: 10, color: '#99aabb', lineHeight: 1.4, marginTop: 4, paddingTop: 3, borderTop: '1px solid rgba(85,180,200,0.2)', whiteSpace: 'normal', wordBreak: 'break-word' }}>
+                      {shieldDef.description}
+                    </div>
+                  )}
                 </button>
               );
             })}
 
             {category === 'armor' && armors.map((a, i) => {
               const isSelected = selectedIndex === i;
+              const armorDef = WEAPON_DEFS.find(d => d.id === a.armorId);
               return (
                 <button key={i} onClick={() => { setSelectedIndex(i); setLastMessage(''); }}
                   style={{
@@ -297,6 +313,11 @@ export default function RepairPanel({ gameState, onUpdateState, onClose }: Repai
                     {a.upgradedAtShop && <span style={{ fontSize: 9, color: '#aacc44', background: 'rgba(40,80,0,0.4)', borderRadius: 2, padding: '0 3px' }}>強化済</span>}
                   </div>
                   {durBar(a.durability, a.maxDurability)}
+                  {isSelected && armorDef?.description && (
+                    <div style={{ fontSize: 10, color: '#99aabb', lineHeight: 1.4, marginTop: 4, paddingTop: 3, borderTop: '1px solid rgba(85,180,200,0.2)', whiteSpace: 'normal', wordBreak: 'break-word' }}>
+                      {armorDef.description}
+                    </div>
+                  )}
                 </button>
               );
             })}
