@@ -2737,7 +2737,20 @@ export function processTurn(state: GameState, action: PlayerAction): GameState {
     wallBreakFail,
   } = processPlayerAction(stateForAction, action);
 
-  let stateWithPickup = stateForAction;
+  // 壁破壊 TurnEffect を追加
+  let extraTurnEffects: import('./game-state').TurnEffect[] = [];
+  if (wallBreakPositions.length > 0) {
+    for (const wallPos of wallBreakPositions) {
+      extraTurnEffects = [...extraTurnEffects, { type: 'wall_break' as const, center: wallPos }];
+    }
+  }
+  if (wallBreakFail) {
+    extraTurnEffects = [...extraTurnEffects, { type: 'wall_break_fail' as const }];
+  }
+
+  let stateWithPickup = extraTurnEffects.length > 0
+    ? { ...stateForAction, turnEffects: [...(stateForAction.turnEffects ?? []), ...extraTurnEffects] }
+    : stateForAction;
   // プレイヤー行動で発生したメッセージを記録
   const newBattleLog = state.battleLog ? [...state.battleLog, ...logMessages] : [...logMessages];
 

@@ -3253,7 +3253,11 @@ export default function GameCanvas() {
       `}</style>
 
       {/* ── 仮想コントローラー（スマホ） ── */}
-      <div className="vc-wrapper hidden pointer-events-auto justify-center py-2 w-full px-2">
+      {/* ショップ・修理屋・倉庫フェーズ時は非表示にしてパネルを広く使う */}
+      <div
+        className="vc-wrapper hidden pointer-events-auto justify-center py-2 w-full px-2"
+        style={(['shop', 'repair', 'storage'] as string[]).includes(gameState.phase) ? { display: 'none' } : {}}
+      >
         <VirtualController
           onAction={(action) => {
             if (gameState.phase === "exploring") {

@@ -136,7 +136,7 @@ export default function RepairPanel({ gameState, onUpdateState, onClose }: Repai
   return (
     <div
       style={{
-        position: 'absolute',
+        position: 'fixed',
         inset: 0,
         display: 'flex',
         alignItems: 'center',
@@ -149,8 +149,8 @@ export default function RepairPanel({ gameState, onUpdateState, onClose }: Repai
     <div
       style={{
         width: 'min(420px, 92vw)',
-        maxHeight: 'min(680px, 100%)',
-        height: 'min(680px, 100%)',
+        maxHeight: 'min(780px, 88vh)',
+        height: 'min(780px, 88vh)',
         backgroundColor: 'rgba(3, 15, 20, 0.97)',
         border: '1px solid #22aacc',
         borderRadius: 8,

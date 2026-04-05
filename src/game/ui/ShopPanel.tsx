@@ -27,7 +27,7 @@ const ALL_DATA = [
 // ---------------------------------------------------------------------------
 
 const PANEL_WIDTH = 'min(400px, 92vw)';
-const PANEL_MAX_HEIGHT = 'min(680px, 100%)';
+const PANEL_MAX_HEIGHT = 'min(780px, 88vh)';
 const PANEL_Z_INDEX = 25;
 const PANEL_BG = 'rgba(20, 15, 30, 0.98)';
 const PANEL_BORDER = '2px solid #aa8844';
@@ -97,7 +97,7 @@ export default function ShopPanel({
   return (
     <div
       style={{
-        position: 'absolute',
+        position: 'fixed',
         inset: 0,
         display: 'flex',
         alignItems: 'center',
