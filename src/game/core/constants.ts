@@ -345,7 +345,7 @@ export const SKILL_TOUGH_MIN_DAMAGE = 1;
 /** スキル: passive_scavenger のドロップ率ボーナス（0〜1） */
 export const SKILL_SCAVENGER_DROP_BONUS = 0.20;
 /** スキル: overcharge の攻撃範囲（前方タイル数） */
-export const SKILL_OVERCHARGE_RANGE = 3;
+export const SKILL_OVERCHARGE_RANGE = 4;
 /** スキル: power_strike の攻撃倍率 */
 export const SKILL_POWER_STRIKE_MULTIPLIER = 2;
 

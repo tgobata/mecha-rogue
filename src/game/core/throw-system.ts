@@ -74,9 +74,9 @@ const DIR_DELTA: Record<Direction, { dx: number; dy: number }> = {
   right: { dx:  1, dy: 0 },
 };
 
-/** 射程: 6〜10マスをランダムに決定 */
+/** 射程: 6〜12マスをランダムに決定 */
 const THROW_RANGE_MIN = 6;
-const THROW_RANGE_MAX = 10;
+const THROW_RANGE_MAX = 12;
 const HIT_CHANCE_MIN = 0.80;
 const HIT_CHANCE_MAX = 0.90;
 
