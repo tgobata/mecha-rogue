@@ -44,6 +44,16 @@
       "file": "public/sprites/tiles/shop.png",
       "width": 32,
       "height": 32
+    },
+    "oil": {
+      "file": "public/sprites/tile_oil.png",
+      "width": 32,
+      "height": 32
+    },
+    "fire": {
+      "file": "public/sprites/tile_fire.png",
+      "width": 32,
+      "height": 32
     }
   },
   "player": {
