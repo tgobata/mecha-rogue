@@ -1936,6 +1936,30 @@ export default function GameCanvas() {
     });
   }, []);
 
+  // ── 武器外す処理 ──────────────────────────────────────────────
+  const handleUnequipWeapon = useCallback(() => {
+    const state = stateRef.current;
+    if (state.phase !== "exploring") return;
+    if (!state.player?.equippedWeapon) return;
+
+    const weaponName = state.player.equippedWeapon.name;
+    const next: GameState = {
+      ...state,
+      player: {
+        ...state.player,
+        equippedWeapon: null,
+      },
+    };
+
+    setGameState(next);
+    stateRef.current = next;
+
+    setBattleLog((prev) => [
+      ...prev,
+      `📤 ${weaponName} を外した`,
+    ].slice(-BATTLE_LOG_MAX));
+  }, []);
+
   // ── 武器装備処理 ──────────────────────────────────────────────
   const handleEquipWeapon = useCallback((index: number) => {
     const state = stateRef.current;
@@ -2549,6 +2573,7 @@ export default function GameCanvas() {
                   selectedIndex={menuPanel.index}
                   onClose={() => setMenuPanel(null)}
                   onEquipWeapon={handleEquipWeapon}
+                  onUnequipWeapon={handleUnequipWeapon}
                   onDropWeapon={(index) => {
                     const weapon = gameState.player?.weaponSlots?.[index];
                     if (!weapon) return;

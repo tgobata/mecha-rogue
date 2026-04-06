@@ -1146,7 +1146,38 @@ function detonateBombAtPos(state: GameState, def: any, pos: Position, logs: stri
 
   const newTraps = applyBlastToTraps(state.traps, blastTiles, logs);
   logs.push(`爆弾が着地点で爆発！（ダメージ${damage}）`);
-  return { ...state, enemies: newEnemies, player: newPlayer ?? state.player, traps: newTraps };
+
+  // 爆発範囲内の壁を破壊（外縁は除外）
+  let newMap = state.map;
+  if (newMap) {
+    const brokenWalls: Position[] = [];
+    for (const bt of blastTiles) {
+      if (bt.x <= 0 || bt.y <= 0 || bt.x >= newMap.width - 1 || bt.y >= newMap.height - 1) continue;
+      const btCell = newMap.cells[bt.y]?.[bt.x];
+      if (btCell && (btCell.tile === TILE_WALL || btCell.tile === TILE_CRACKED_WALL)) {
+        brokenWalls.push(bt);
+      }
+    }
+    if (brokenWalls.length > 0) {
+      const brokenSet = new Set(brokenWalls.map(bt => `${bt.x},${bt.y}`));
+      const newCells = newMap.cells.map((row, y) =>
+        row.map((cell, x) => brokenSet.has(`${x},${y}`) ? { ...cell, tile: TILE_FLOOR } : cell),
+      );
+      newMap = { ...newMap, cells: newCells };
+      logs.push(`爆発で${brokenWalls.length}マスの壁が崩れた！`);
+    }
+  }
+
+  return {
+    ...state,
+    enemies: newEnemies,
+    player: newPlayer ?? state.player,
+    traps: newTraps,
+    map: newMap,
+    exploration: newMap !== state.map && state.exploration
+      ? { ...state.exploration, currentFloor: newMap! }
+      : state.exploration,
+  };
 }
 
 /** アイスボムを着地点で即時起爆する（ダメージ＋凍結） */

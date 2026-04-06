@@ -63,6 +63,8 @@ interface WeaponPanelProps {
   onClose: () => void;
   /** 武器装備コールバック */
   onEquipWeapon: (index: number) => void;
+  /** 武器外すコールバック */
+  onUnequipWeapon?: () => void;
   /** 武器消去コールバック */
   onDropWeapon: (index: number) => void;
   /** 武器を置くコールバック */
@@ -140,6 +142,7 @@ export default function WeaponPanel({
   selectedIndex,
   onClose,
   onEquipWeapon,
+  onUnequipWeapon,
   onDropWeapon,
   onPlaceWeapon,
   onThrowWeapon,
@@ -359,23 +362,37 @@ export default function WeaponPanel({
 
                     {/* ボタン群 */}
                     <div style={{ display: 'flex', gap: 3 }}>
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          onEquipWeapon(i);
-                        }}
-                        style={{
-                          padding: '5px 10px',
-                          fontSize: 13,
-                          backgroundColor: isActive ? '#333322' : '#224433',
-                          border: `1px solid ${isActive ? '#665533' : '#446644'}`,
-                          borderRadius: 4,
-                          color: isActive ? '#aa9955' : '#aaccaa',
-                          cursor: 'pointer',
-                        }}
-                      >
-                        {isActive ? '装備中' : '装備'}
-                      </button>
+                      {isActive ? (
+                        <button
+                          onClick={(e) => { e.stopPropagation(); onUnequipWeapon?.(); }}
+                          style={{
+                            padding: '5px 10px',
+                            fontSize: 13,
+                            backgroundColor: '#333322',
+                            border: '1px solid #665533',
+                            borderRadius: 4,
+                            color: '#aa9955',
+                            cursor: 'pointer',
+                          }}
+                        >
+                          外す
+                        </button>
+                      ) : (
+                        <button
+                          onClick={(e) => { e.stopPropagation(); onEquipWeapon(i); }}
+                          style={{
+                            padding: '5px 10px',
+                            fontSize: 13,
+                            backgroundColor: '#224433',
+                            border: '1px solid #446644',
+                            borderRadius: 4,
+                            color: '#aaccaa',
+                            cursor: 'pointer',
+                          }}
+                        >
+                          装備
+                        </button>
+                      )}
                       {onPlaceWeapon && (
                         <button
                           onClick={(e) => { e.stopPropagation(); onPlaceWeapon(i); }}
