@@ -744,7 +744,7 @@ function placeEntities(
   // ジャンクキング系のボス部屋にデブリ壁（TILE_CRACKED_WALL）を散らばらせる
   const bossFloorDef = (bossDefsRaw as any[]).find(b => b.floor === floorNumber);
   if (bossFloorDef && (bossFloorDef.id === 'junk_king' || bossFloorDef.id === 'junk_king_lv2')) {
-    const debrisCount = 12; // 配置するデブリ数
+    const debrisCount = 19; // 配置するデブリ数
     let placed = 0;
     for (const room of floor.rooms) {
       if (room.type !== RoomType.BOSS) continue;

@@ -915,12 +915,20 @@ export function spawnEnemiesFromMap(
                   minionOffsets.push({ x: mx, y: my });
                 }
               }
-              // ランダムに最大8体配置
+              // 配置タイプリスト: 着火ロボ・ファイヤーピーポー×13 + オイルドラム系×3（合計16体）
+              // minionTypes = [oil_drum, igniter, fire_people]
+              const minionTypeList: string[] = [];
+              for (let i = 0; i < 13; i++) {
+                minionTypeList.push(minionTypes[1 + (i % 2)] ?? minionTypes[0]);
+              }
+              for (let i = 0; i < 3; i++) {
+                minionTypeList.push(minionTypes[0]);
+              }
               const shuffled = minionOffsets.sort(() => Math.random() - 0.5);
-              const minionCount = Math.min(8, shuffled.length);
+              const minionCount = Math.min(minionTypeList.length, shuffled.length);
               for (let mi = 0; mi < minionCount; mi++) {
                 const mPos = shuffled[mi];
-                const minionId = minionTypes[mi % minionTypes.length];
+                const minionId = minionTypeList[mi];
                 const minionDef = ENEMY_DEFS.find(d => d.id === minionId);
                 if (!minionDef) continue;
                 enemies.push({
