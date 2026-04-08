@@ -366,13 +366,50 @@ export function buyItem(
 export function sellItem(
   state: GameState,
   itemId: string,
-  itemType: 'weapon' | 'item',
+  itemType: 'weapon' | 'item' | 'shield' | 'armor',
   index: number,
 ): GameState {
-  const priceTable =
-    itemType === 'weapon' ? SHOP_PRICES.weapons : SHOP_PRICES.items;
-  const priceEntry = priceTable[itemId];
+  const priceTable = SHOP_PRICES.weapons as Record<string, { buy: number; sell: number }>;
+  const priceEntry = itemType === 'item'
+    ? (SHOP_PRICES.items as Record<string, { buy: number; sell: number }>)[itemId]
+    : priceTable[itemId];
   const sellPrice = priceEntry?.sell ?? 0;
+
+  if (itemType === 'shield') {
+    const slots = state.player?.shieldSlots ?? [];
+    if (index < 0 || index >= slots.length) return state;
+    const sold = slots[index];
+    const newSlots = slots.filter((_, i) => i !== index);
+    const isEquipped = state.player?.equippedShield &&
+      (sold.instanceId
+        ? state.player.equippedShield.instanceId === sold.instanceId
+        : state.player.equippedShield.shieldId === sold.shieldId);
+    return {
+      ...state,
+      inventory: { ...state.inventory, gold: state.inventory.gold + sellPrice },
+      player: state.player
+        ? { ...state.player, shieldSlots: newSlots, equippedShield: isEquipped ? null : state.player.equippedShield }
+        : state.player,
+    };
+  }
+
+  if (itemType === 'armor') {
+    const slots = state.player?.armorSlots ?? [];
+    if (index < 0 || index >= slots.length) return state;
+    const sold = slots[index];
+    const newSlots = slots.filter((_, i) => i !== index);
+    const isEquipped = state.player?.equippedArmor &&
+      (sold.instanceId
+        ? state.player.equippedArmor.instanceId === sold.instanceId
+        : state.player.equippedArmor.armorId === sold.armorId);
+    return {
+      ...state,
+      inventory: { ...state.inventory, gold: state.inventory.gold + sellPrice },
+      player: state.player
+        ? { ...state.player, armorSlots: newSlots, equippedArmor: isEquipped ? null : state.player.equippedArmor }
+        : state.player,
+    };
+  }
 
   if (itemType === 'weapon') {
     const slots = state.player?.weaponSlots ?? [];

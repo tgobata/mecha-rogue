@@ -9,7 +9,7 @@
 
 import { useState, useRef, useEffect } from 'react';
 import type { ShopItem } from '../core/shop-system';
-import type { WeaponInstance, InventoryItem } from '../core/game-state';
+import type { WeaponInstance, InventoryItem, EquippedShield, EquippedArmor } from '../core/game-state';
 import { getSortedItems } from '../core/inventory-utils';
 import itemsRaw from '../assets/data/items.json';
 import toolsRaw from '../assets/data/tools-equipment.json';
@@ -47,10 +47,14 @@ interface ShopPanelProps {
   playerItems: InventoryItem[];
   /** プレイヤーの所持武器 */
   playerWeapons: WeaponInstance[];
+  /** プレイヤーの所持盾 */
+  playerShields?: EquippedShield[];
+  /** プレイヤーの所持防具 */
+  playerArmors?: EquippedArmor[];
   /** 購入ボタン押下時のコールバック */
   onBuy: (item: ShopItem) => void;
   /** 売却ボタン押下時のコールバック */
-  onSell: (itemId: string, itemType: 'weapon' | 'item', index: number) => void;
+  onSell: (itemId: string, itemType: 'weapon' | 'item' | 'shield' | 'armor', index: number) => void;
   /** 閉じるボタン押下時のコールバック */
   onClose: () => void;
   /** 直前の売買メッセージ（battleLog の末尾エントリ） */
@@ -75,6 +79,8 @@ export default function ShopPanel({
   sortKey,
   playerItems,
   playerWeapons,
+  playerShields = [],
+  playerArmors = [],
   onBuy,
   onSell,
   onClose,
@@ -341,7 +347,77 @@ export default function ShopPanel({
                   })}
                 </div>
               )}
-              {playerItems.length === 0 && playerWeapons.length === 0 && (
+              {/* 盾リスト */}
+              {playerShields.length > 0 && (
+                <div>
+                  <div style={{ fontSize: 11, color: '#88bbdd', marginBottom: 4, fontWeight: 'bold' }}>盾</div>
+                  {playerShields.map((sh, idx) => {
+                    const sellPrice = prices.weapons[sh.shieldId]?.sell ?? 0;
+                    const shieldDef = ALL_DATA.find(d => d.id === sh.shieldId);
+                    const sellKey = `shield-${idx}`;
+                    const isExpanded = sellExpandedKey === sellKey;
+                    return (
+                      <div
+                        key={`sell-sh-${idx}`}
+                        onClick={() => setSellExpandedKey(prev => prev === sellKey ? null : sellKey)}
+                        style={{ display: 'flex', flexDirection: 'column', padding: '6px 8px', backgroundColor: isExpanded ? 'rgba(20,40,60,0.5)' : 'rgba(0,0,0,0.2)', marginBottom: 2, borderRadius: 4, cursor: 'pointer', border: isExpanded ? '1px solid #88bbdd' : '1px solid transparent' }}
+                      >
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                          <span style={{ fontSize: 12 }}>{sh.name}</span>
+                          <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                            <span style={{ fontSize: 12, color: '#ffdd22' }}>{sellPrice} G</span>
+                            <button
+                              onClick={(e) => { e.stopPropagation(); onSell(sh.shieldId, 'shield', idx); }}
+                              style={{ padding: '8px 14px', backgroundColor: '#883333', borderRadius: 6, color: '#fff', fontSize: 14, fontWeight: 'bold', cursor: 'pointer', minWidth: 60 }}
+                            >売る</button>
+                          </div>
+                        </div>
+                        {isExpanded && shieldDef?.description && (
+                          <div style={{ fontSize: 11, color: '#ccbbaa', lineHeight: 1.5, marginTop: 4, paddingTop: 4, borderTop: '1px solid rgba(60,120,180,0.3)', whiteSpace: 'normal', wordBreak: 'break-word' }}>
+                            {shieldDef.description}
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+              {/* 防具リスト */}
+              {playerArmors.length > 0 && (
+                <div>
+                  <div style={{ fontSize: 11, color: '#cc88ff', marginBottom: 4, fontWeight: 'bold' }}>防具</div>
+                  {playerArmors.map((ar, idx) => {
+                    const sellPrice = prices.weapons[ar.armorId]?.sell ?? 0;
+                    const armorDef = ALL_DATA.find(d => d.id === ar.armorId);
+                    const sellKey = `armor-${idx}`;
+                    const isExpanded = sellExpandedKey === sellKey;
+                    return (
+                      <div
+                        key={`sell-ar-${idx}`}
+                        onClick={() => setSellExpandedKey(prev => prev === sellKey ? null : sellKey)}
+                        style={{ display: 'flex', flexDirection: 'column', padding: '6px 8px', backgroundColor: isExpanded ? 'rgba(50,20,60,0.5)' : 'rgba(0,0,0,0.2)', marginBottom: 2, borderRadius: 4, cursor: 'pointer', border: isExpanded ? '1px solid #cc88ff' : '1px solid transparent' }}
+                      >
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                          <span style={{ fontSize: 12 }}>{ar.name}</span>
+                          <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                            <span style={{ fontSize: 12, color: '#ffdd22' }}>{sellPrice} G</span>
+                            <button
+                              onClick={(e) => { e.stopPropagation(); onSell(ar.armorId, 'armor', idx); }}
+                              style={{ padding: '8px 14px', backgroundColor: '#883333', borderRadius: 6, color: '#fff', fontSize: 14, fontWeight: 'bold', cursor: 'pointer', minWidth: 60 }}
+                            >売る</button>
+                          </div>
+                        </div>
+                        {isExpanded && armorDef?.description && (
+                          <div style={{ fontSize: 11, color: '#ccbbaa', lineHeight: 1.5, marginTop: 4, paddingTop: 4, borderTop: '1px solid rgba(120,60,180,0.3)', whiteSpace: 'normal', wordBreak: 'break-word' }}>
+                            {armorDef.description}
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+              {playerItems.length === 0 && playerWeapons.length === 0 && playerShields.length === 0 && playerArmors.length === 0 && (
                 <div style={{ padding: '16px', textAlign: 'center', color: '#888' }}>売れるものがありません</div>
               )}
             </div>

@@ -1646,17 +1646,21 @@ export default function GameCanvas() {
   }, []);
 
   // ── ショップ売却処理 ──────────────────────────────────────────
-  const handleSellItem = useCallback((itemId: string, itemType: 'weapon' | 'item', index: number) => {
+  const handleSellItem = useCallback((itemId: string, itemType: 'weapon' | 'item' | 'shield' | 'armor', index: number) => {
     const state = stateRef.current;
     if (state.phase !== "shop") return;
 
     const next = sellItem(state, itemId, itemType, index);
 
-    if (next.inventory.gold > state.inventory.gold) {
+    if (next.inventory.gold > state.inventory.gold || next !== state) {
       playSE("ui_select");
       setGameState(next);
       stateRef.current = next;
-      const sellName = itemType === 'weapon' ? (state.player?.weaponSlots?.[index]?.name ?? getWeaponName(itemId)) : getItemName(itemId);
+      let sellName: string;
+      if (itemType === 'weapon') sellName = state.player?.weaponSlots?.[index]?.name ?? getWeaponName(itemId);
+      else if (itemType === 'shield') sellName = state.player?.shieldSlots?.[index]?.name ?? itemId;
+      else if (itemType === 'armor') sellName = state.player?.armorSlots?.[index]?.name ?? itemId;
+      else sellName = getItemName(itemId);
       const sellPrice = next.inventory.gold - state.inventory.gold;
       setBattleLog((prev) =>
         [...prev, `💹 ${sellName} を ${sellPrice}G で売却した`].slice(-BATTLE_LOG_MAX),
@@ -2640,6 +2644,8 @@ export default function GameCanvas() {
                 sortKey={gameState.inventory.sortKey}
                 playerItems={gameState.inventory.items}
                 playerWeapons={gameState.player?.weaponSlots ?? []}
+                playerShields={gameState.player?.shieldSlots ?? []}
+                playerArmors={gameState.player?.armorSlots ?? []}
                 onBuy={handleBuyItem}
                 onSell={handleSellItem}
                 onClose={handleShopClose}

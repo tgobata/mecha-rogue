@@ -364,6 +364,7 @@ export default function WeaponPanel({
                     <div style={{ display: 'flex', gap: 3 }}>
                       {isActive ? (
                         <button
+                          onPointerDown={(e) => e.stopPropagation()}
                           onClick={(e) => { e.stopPropagation(); onUnequipWeapon?.(); }}
                           style={{
                             padding: '5px 10px',
@@ -379,6 +380,7 @@ export default function WeaponPanel({
                         </button>
                       ) : (
                         <button
+                          onPointerDown={(e) => e.stopPropagation()}
                           onClick={(e) => { e.stopPropagation(); onEquipWeapon(i); }}
                           style={{
                             padding: '5px 10px',
@@ -395,6 +397,7 @@ export default function WeaponPanel({
                       )}
                       {onPlaceWeapon && (
                         <button
+                          onPointerDown={(e) => e.stopPropagation()}
                           onClick={(e) => { e.stopPropagation(); onPlaceWeapon(i); }}
                           style={{ padding: '5px 10px', fontSize: 13, backgroundColor: '#224433', border: '1px solid #446655', borderRadius: 4, color: '#aaddbb', cursor: 'pointer' }}
                         >
@@ -403,6 +406,7 @@ export default function WeaponPanel({
                       )}
                       {onThrowWeapon && (
                         <button
+                          onPointerDown={(e) => e.stopPropagation()}
                           onClick={(e) => { e.stopPropagation(); onThrowWeapon(i); }}
                           style={{ padding: '5px 10px', fontSize: 13, backgroundColor: '#443322', border: '1px solid #665544', borderRadius: 4, color: '#ffcc88', cursor: 'pointer' }}
                         >
@@ -410,6 +414,7 @@ export default function WeaponPanel({
                         </button>
                       )}
                       <button
+                        onPointerDown={(e) => e.stopPropagation()}
                         onClick={(e) => {
                           e.stopPropagation();
                           onDropWeapon(i);
@@ -561,14 +566,16 @@ export default function WeaponPanel({
                       <div style={{ display: 'flex', gap: 3 }}>
                         {isActive ? (
                           <button
-                            onClick={() => onUnequipShield?.()}
+                            onPointerDown={(e) => e.stopPropagation()}
+                            onClick={(e) => { e.stopPropagation(); onUnequipShield?.(); }}
                             style={{ padding: '5px 10px', fontSize: 13, backgroundColor: '#333322', border: '1px solid #665533', borderRadius: 4, color: '#aa9955', cursor: 'pointer' }}
                           >
                             外す
                           </button>
                         ) : (
                           <button
-                            onClick={() => onEquipShield?.(i)}
+                            onPointerDown={(e) => e.stopPropagation()}
+                            onClick={(e) => { e.stopPropagation(); onEquipShield?.(i); }}
                             style={{ padding: '5px 10px', fontSize: 13, backgroundColor: '#224433', border: '1px solid #446644', borderRadius: 4, color: '#aaccaa', cursor: 'pointer' }}
                           >
                             装備
@@ -576,7 +583,8 @@ export default function WeaponPanel({
                         )}
                         {onPlaceShield && (
                           <button
-                            onClick={() => onPlaceShield(i)}
+                            onPointerDown={(e) => e.stopPropagation()}
+                            onClick={(e) => { e.stopPropagation(); onPlaceShield(i); }}
                             style={{ padding: '5px 10px', fontSize: 13, backgroundColor: '#224433', border: '1px solid #446655', borderRadius: 4, color: '#aaddbb', cursor: 'pointer' }}
                           >
                             置
@@ -584,14 +592,16 @@ export default function WeaponPanel({
                         )}
                         {onThrowShield && (
                           <button
-                            onClick={() => onThrowShield(i)}
+                            onPointerDown={(e) => e.stopPropagation()}
+                            onClick={(e) => { e.stopPropagation(); onThrowShield(i); }}
                             style={{ padding: '5px 10px', fontSize: 13, backgroundColor: '#443322', border: '1px solid #665544', borderRadius: 4, color: '#ffcc88', cursor: 'pointer' }}
                           >
                             投
                           </button>
                         )}
                         <button
-                          onClick={() => { onDropShield?.(i); }}
+                          onPointerDown={(e) => e.stopPropagation()}
+                          onClick={(e) => { e.stopPropagation(); onDropShield?.(i); }}
                           style={{ padding: '5px 10px', fontSize: 13, backgroundColor: '#442222', border: '1px solid #664444', borderRadius: 4, color: '#ccaaaa', cursor: 'pointer' }}
                         >
                           消
@@ -684,14 +694,16 @@ export default function WeaponPanel({
                       <div style={{ display: 'flex', gap: 3 }}>
                         {isActive ? (
                           <button
-                            onClick={() => onUnequipArmor?.()}
+                            onPointerDown={(e) => e.stopPropagation()}
+                            onClick={(e) => { e.stopPropagation(); onUnequipArmor?.(); }}
                             style={{ padding: '5px 10px', fontSize: 13, backgroundColor: '#333322', border: '1px solid #665533', borderRadius: 4, color: '#aa9955', cursor: 'pointer' }}
                           >
                             外す
                           </button>
                         ) : (
                           <button
-                            onClick={() => onEquipArmor?.(i)}
+                            onPointerDown={(e) => e.stopPropagation()}
+                            onClick={(e) => { e.stopPropagation(); onEquipArmor?.(i); }}
                             style={{ padding: '5px 10px', fontSize: 13, backgroundColor: '#442244', border: '1px solid #664466', borderRadius: 4, color: '#ccaaee', cursor: 'pointer' }}
                           >
                             装備
@@ -699,7 +711,8 @@ export default function WeaponPanel({
                         )}
                         {onPlaceArmor && (
                           <button
-                            onClick={() => onPlaceArmor(i)}
+                            onPointerDown={(e) => e.stopPropagation()}
+                            onClick={(e) => { e.stopPropagation(); onPlaceArmor(i); }}
                             style={{ padding: '5px 10px', fontSize: 13, backgroundColor: '#224433', border: '1px solid #446655', borderRadius: 4, color: '#aaddbb', cursor: 'pointer' }}
                           >
                             置
@@ -707,14 +720,16 @@ export default function WeaponPanel({
                         )}
                         {onThrowArmor && (
                           <button
-                            onClick={() => onThrowArmor(i)}
+                            onPointerDown={(e) => e.stopPropagation()}
+                            onClick={(e) => { e.stopPropagation(); onThrowArmor(i); }}
                             style={{ padding: '5px 10px', fontSize: 13, backgroundColor: '#443322', border: '1px solid #665544', borderRadius: 4, color: '#ffcc88', cursor: 'pointer' }}
                           >
                             投
                           </button>
                         )}
                         <button
-                          onClick={() => { onDropArmor?.(i); }}
+                          onPointerDown={(e) => e.stopPropagation()}
+                          onClick={(e) => { e.stopPropagation(); onDropArmor?.(i); }}
                           style={{ padding: '5px 10px', fontSize: 13, backgroundColor: '#442222', border: '1px solid #664444', borderRadius: 4, color: '#ccaaaa', cursor: 'pointer' }}
                         >
                           消
