@@ -187,9 +187,19 @@ function TabCombat() {
       <SectionTitle>特殊タイル</SectionTitle>
       <Row label=">（階段）" value="次の階層へ進む" />
       <Row label="P（ショップ）" value="アイテム・武器の売買" />
-      <Row label="R（休憩所）" value="HPを回復する" />
+      <Row label="R（休憩所）" value="HPを回復・倉庫アクセス" />
       <Row label="W（修理）" value="武器を修理する" />
       <Row label="H（ヒント）" value="ゲームのヒントを表示" />
+      <Row label="A（倉庫）" value="休憩所フロアの倉庫。アイテムを預けたり引き出したりできる" />
+      <Row label="T（罠）" value="踏むとダメージや状態異常などの罠が発動する" />
+      <Row label="C（ひび割れた壁）" value="爆発物で破壊できる壁" />
+      <Row label="w（水場）" value="移動できるが、炎状態を消す。感電しやすい" />
+      <Row label="l（溶岩）" value="乗るとダメージを受ける危険なマス" />
+      <Row label="i（氷床）" value="移動すると滑って止まりにくい" />
+      <Row label="o（オイル）" value="引火すると炎になる。炎属性攻撃と組み合わせると危険" />
+      <Row label="f（炎）" value="乗るとダメージ。数ターン後に消える" />
+      <Row label="X（ワープ）" value="乗るとフロア内のどこかへ転送される" />
+      <Row label="M（磁場）" value="乗ると金属製装備が引き寄せられたり弾かれたりする" />
     </div>
   );
 }
@@ -345,6 +355,27 @@ function TabItems() {
       <Row label="PC" value={<><KeyBadge>I</KeyBadge> でアイテム一覧 → 選択 → <KeyBadge>Enter</KeyBadge> または <KeyBadge>Z</KeyBadge></>} />
       <Row label="スマホ" value="「アイ」ボタン → アイテムをタップ → 「使用」" />
 
+      <SectionTitle>アイテムを投げる</SectionTitle>
+      <Row label="PC" value={<><KeyBadge>I</KeyBadge> でアイテム一覧 → 「投」ボタン → 方向を選択</>} />
+      <Row label="スマホ" value="「アイ」ボタン → アイテムをタップ → 「投」→ 方向を選択" />
+      <Note>
+        アイテムを投げると、向いている方向へ飛んでいきます。<br />
+        <span style={{ color: ACCENT_COLOR }}>射程6〜12マス</span>（ランダム）、
+        敵への命中率は<span style={{ color: ACCENT_COLOR }}>80〜90%</span>です。<br />
+        回復アイテムや爆弾など、投げた先でも効果が発動します。<br />
+        壁に当たると手前のマスに落ちます。
+      </Note>
+
+      <SectionTitle>装備（武器・盾・アーマー）を投げる</SectionTitle>
+      <Row label="PC" value={<><KeyBadge>E</KeyBadge> で装備一覧 → 「投」ボタン → 方向を選択</>} />
+      <Row label="スマホ" value="「装備」ボタン → 装備をタップ → 「投」→ 方向を選択" />
+      <Note>
+        武器を投げると敵にATKダメージを与えます。ただし、
+        <span style={{ color: '#ff9944' }}>耐久度が半分に低下</span>した状態で床に落ちます。<br />
+        盾はDEF値をもとにダメージを与えます。<br />
+        アーマーも同様に投げて攻撃できます。
+      </Note>
+
       <SectionTitle>装備の付け替え</SectionTitle>
       <Row label="PC" value={<><KeyBadge>E</KeyBadge> で装備一覧 → 選択</>} />
       <Row label="スマホ" value="「装備」ボタン → 武器をタップして装備" />
@@ -356,8 +387,11 @@ function TabItems() {
       <SectionTitle>アイテムの種類</SectionTitle>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
         {[
-          { name: '回復アイテム', desc: 'HPを回復する。ピンチのときに使おう。' },
+          { name: '回復アイテム', desc: 'HPを回復する。ピンチのときに使おう。投げると命中した敵を回復してしまうので注意。' },
           { name: 'エネルギー補給', desc: 'エネルギー武器に使うエネルギーを補充する。' },
+          { name: '爆弾', desc: '投げると着地点周囲に爆発ダメージ。壁（ひび割れた壁）も破壊できる。' },
+          { name: 'フラッシュ弾', desc: '着地点周囲の敵を一時的に行動不能にする。' },
+          { name: 'スモーク弾', desc: '着地点周囲に煙を発生させ、視界を遮る。' },
           { name: '識別スコープ', desc: '未識別のアイテムを鑑定する。未識別アイテムは使う前に鑑定しよう。' },
           { name: '強化パーツ', desc: '武器や機体を強化する。' },
         ].map((item, i) => (

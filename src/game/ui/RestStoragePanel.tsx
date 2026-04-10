@@ -145,13 +145,13 @@ export default function RestStoragePanel({ gameState, onUpdateState, onClose }: 
         borderRadius: 8,
         display: 'flex',
         flexDirection: 'column',
-        padding: '16px 20px',
+        padding: '10px 14px',
         zIndex: 30,
         fontFamily: 'monospace',
       }}
     >
       {/* ヘッダー */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
         <span style={{ color: '#ddbb88', fontWeight: 'bold', fontSize: 15 }}>拠点倉庫（休憩所）</span>
         <button
           onClick={() => setShowCloseConfirm(true)}
@@ -170,7 +170,7 @@ export default function RestStoragePanel({ gameState, onUpdateState, onClose }: 
       </div>
 
       {/* 区切り */}
-      <div style={{ height: 1, backgroundColor: '#6a4a2a', marginBottom: 12 }} />
+      <div style={{ height: 1, backgroundColor: '#6a4a2a', marginBottom: 8 }} />
 
       {/* ゴールド預け入れ/引き出し */}
       <div
@@ -178,18 +178,20 @@ export default function RestStoragePanel({ gameState, onUpdateState, onClose }: 
           backgroundColor: 'rgba(50, 30, 10, 0.6)',
           border: '1px solid #6a4a2a',
           borderRadius: 6,
-          padding: '10px 12px',
-          marginBottom: 12,
+          padding: '6px 10px',
+          marginBottom: 8,
         }}
       >
-        <div style={{ color: '#ddbb88', fontWeight: 'bold', fontSize: 13, marginBottom: 8 }}>ゴールド管理</div>
-        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, color: '#aaaacc', marginBottom: 10 }}>
-          <span>所持金: <strong style={{ color: '#ffcc44' }}>{carriedGold.toLocaleString()} G</strong></span>
-          <span>倉庫: <strong style={{ color: '#ffdd88' }}>{storedGold.toLocaleString()} G</strong></span>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
+          <span style={{ color: '#ddbb88', fontWeight: 'bold', fontSize: 12 }}>ゴールド</span>
+          <span style={{ fontSize: 11, color: '#aaaacc' }}>
+            所持: <strong style={{ color: '#ffcc44' }}>{carriedGold.toLocaleString()} G</strong>
+            　倉庫: <strong style={{ color: '#ffdd88' }}>{storedGold.toLocaleString()} G</strong>
+          </span>
         </div>
 
         {/* 預け入れ */}
-        <div style={{ display: 'flex', gap: 6, marginBottom: 6 }}>
+        <div style={{ display: 'flex', gap: 6, marginBottom: 4 }}>
           <input
             type="number"
             min={1}
@@ -203,8 +205,8 @@ export default function RestStoragePanel({ gameState, onUpdateState, onClose }: 
               border: '1px solid #6a4a2a',
               borderRadius: 4,
               color: '#ccddee',
-              padding: '4px 8px',
-              fontSize: 12,
+              padding: '3px 6px',
+              fontSize: 11,
               fontFamily: 'monospace',
             }}
           />
@@ -215,9 +217,9 @@ export default function RestStoragePanel({ gameState, onUpdateState, onClose }: 
               border: '1px solid #bb8844',
               borderRadius: 4,
               color: '#ddbb88',
-              padding: '4px 12px',
+              padding: '3px 10px',
               cursor: 'pointer',
-              fontSize: 12,
+              fontSize: 11,
               whiteSpace: 'nowrap',
             }}
           >
@@ -240,8 +242,8 @@ export default function RestStoragePanel({ gameState, onUpdateState, onClose }: 
               border: '1px solid #6a4a2a',
               borderRadius: 4,
               color: '#ccddee',
-              padding: '4px 8px',
-              fontSize: 12,
+              padding: '3px 6px',
+              fontSize: 11,
               fontFamily: 'monospace',
             }}
           />
@@ -252,9 +254,9 @@ export default function RestStoragePanel({ gameState, onUpdateState, onClose }: 
               border: '1px solid #44aa44',
               borderRadius: 4,
               color: '#88ee88',
-              padding: '4px 12px',
+              padding: '3px 10px',
               cursor: 'pointer',
-              fontSize: 12,
+              fontSize: 11,
               whiteSpace: 'nowrap',
             }}
           >
@@ -263,7 +265,7 @@ export default function RestStoragePanel({ gameState, onUpdateState, onClose }: 
         </div>
 
         {goldError && (
-          <div style={{ color: '#ff8888', fontSize: 11, marginTop: 6 }}>{goldError}</div>
+          <div style={{ color: '#ff8888', fontSize: 11, marginTop: 4 }}>{goldError}</div>
         )}
       </div>
 
@@ -272,10 +274,10 @@ export default function RestStoragePanel({ gameState, onUpdateState, onClose }: 
         <button
           onClick={() => setTab('inventory')}
           style={{
-            flex: 1, padding: '6px',
+            flex: 1, padding: '5px',
             background: tab === 'inventory' ? '#5a3a1a' : 'rgba(20, 20, 40, 0.8)',
             color: tab === 'inventory' ? '#fff' : '#aa8866',
-            border: '1px solid #6a4a2a', borderRadius: 4, cursor: 'pointer', fontSize: 12,
+            border: '1px solid #6a4a2a', borderRadius: 4, cursor: 'pointer', fontSize: 11,
           }}
         >
           所持品から預ける
@@ -283,10 +285,10 @@ export default function RestStoragePanel({ gameState, onUpdateState, onClose }: 
         <button
           onClick={() => setTab('storage')}
           style={{
-            flex: 1, padding: '6px',
+            flex: 1, padding: '5px',
             background: tab === 'storage' ? '#5a3a1a' : 'rgba(20, 20, 40, 0.8)',
             color: tab === 'storage' ? '#fff' : '#aa8866',
-            border: '1px solid #6a4a2a', borderRadius: 4, cursor: 'pointer', fontSize: 12,
+            border: '1px solid #6a4a2a', borderRadius: 4, cursor: 'pointer', fontSize: 11,
           }}
         >
           倉庫から引き出す
@@ -294,13 +296,13 @@ export default function RestStoragePanel({ gameState, onUpdateState, onClose }: 
       </div>
 
       {/* ソートボタン */}
-      <div style={{ display: 'flex', gap: 4, marginBottom: 8 }}>
+      <div style={{ display: 'flex', gap: 4, marginBottom: 6 }}>
         {(['default', 'name', 'type'] as const).map((key) => (
           <button
             key={key}
             onClick={() => setSortKey(key)}
             style={{
-              padding: '2px 8px', fontSize: 11,
+              padding: '2px 6px', fontSize: 10,
               background: sortKey === key ? '#4a2a0a' : 'rgba(10,20,40,0.6)',
               color: sortKey === key ? '#ddbb88' : '#776655',
               border: `1px solid ${sortKey === key ? '#6a4a2a' : '#443322'}`,
@@ -312,7 +314,7 @@ export default function RestStoragePanel({ gameState, onUpdateState, onClose }: 
         ))}
       </div>
 
-      <div style={{ flex: 1, overflowY: 'auto', border: '1px solid #6a4a2a', borderRadius: 4, padding: 8, background: 'rgba(0,0,0,0.3)' }}>
+      <div style={{ flex: 1, minHeight: 180, overflowY: 'auto', border: '1px solid #6a4a2a', borderRadius: 4, padding: 8, background: 'rgba(0,0,0,0.3)' }}>
         {tab === 'inventory' && (
           <>
             <div style={{ color: '#ddbb88', fontSize: 12, marginBottom: 4 }}>【 武器 】</div>
@@ -324,11 +326,11 @@ export default function RestStoragePanel({ gameState, onUpdateState, onClose }: 
                 <div
                   key={key}
                   onClick={() => setExpandedKey(prev => prev === key ? null : key)}
-                  style={{ display: 'flex', flexDirection: 'column', marginBottom: 4, fontSize: 12, color: '#ccddee', cursor: 'pointer', padding: '4px 6px', borderRadius: 4, backgroundColor: isExpanded ? 'rgba(80,50,20,0.4)' : 'transparent', border: isExpanded ? '1px solid #6a4a2a' : '1px solid transparent' }}
+                  style={{ display: 'flex', flexDirection: 'column', marginBottom: 4, fontSize: 12, color: '#ccddee', cursor: 'pointer', padding: '8px 6px', minHeight: 38, borderRadius: 4, backgroundColor: isExpanded ? 'rgba(80,50,20,0.4)' : 'rgba(255,255,255,0.03)', border: isExpanded ? '1px solid #6a4a2a' : '1px solid rgba(106,74,42,0.3)' }}
                 >
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <span>{getWeaponName(w.weaponId)}</span>
-                    <button onClick={(e) => { e.stopPropagation(); handleDepositItemClick('weapon', i, w.weaponId); }} style={{ background: '#4a3a2a', color: '#fff', border: 'none', borderRadius: 4, padding: '2px 8px', cursor: 'pointer' }}>預ける</button>
+                    <button onClick={(e) => { e.stopPropagation(); handleDepositItemClick('weapon', i, w.weaponId); }} style={{ background: '#4a3a2a', color: '#fff', border: 'none', borderRadius: 4, padding: '6px 10px', cursor: 'pointer', fontSize: 12, flexShrink: 0 }}>預ける</button>
                   </div>
                   {isExpanded && weaponDef?.description && (
                     <div style={{ fontSize: 10, color: '#ccbbaa', lineHeight: 1.4, marginTop: 3, paddingTop: 3, borderTop: '1px solid rgba(106,74,42,0.4)', whiteSpace: 'normal', wordBreak: 'break-word' }}>
@@ -350,11 +352,11 @@ export default function RestStoragePanel({ gameState, onUpdateState, onClose }: 
                 <div
                   key={key}
                   onClick={() => setExpandedKey(prev => prev === key ? null : key)}
-                  style={{ display: 'flex', flexDirection: 'column', marginBottom: 4, fontSize: 12, color: '#ccddee', cursor: 'pointer', padding: '4px 6px', borderRadius: 4, backgroundColor: isExpanded ? 'rgba(80,50,20,0.4)' : 'transparent', border: isExpanded ? '1px solid #6a4a2a' : '1px solid transparent' }}
+                  style={{ display: 'flex', flexDirection: 'column', marginBottom: 4, fontSize: 12, color: '#ccddee', cursor: 'pointer', padding: '8px 6px', minHeight: 38, borderRadius: 4, backgroundColor: isExpanded ? 'rgba(80,50,20,0.4)' : 'rgba(255,255,255,0.03)', border: isExpanded ? '1px solid #6a4a2a' : '1px solid rgba(106,74,42,0.3)' }}
                 >
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <span>{unidentified ? '？？？' : getItemName(it.itemId)} ×{it.quantity}</span>
-                    <button onClick={(e) => { e.stopPropagation(); handleDepositItemClick('item', i, it.itemId); }} style={{ background: '#4a3a2a', color: '#fff', border: 'none', borderRadius: 4, padding: '2px 8px', cursor: 'pointer' }}>預ける</button>
+                    <button onClick={(e) => { e.stopPropagation(); handleDepositItemClick('item', i, it.itemId); }} style={{ background: '#4a3a2a', color: '#fff', border: 'none', borderRadius: 4, padding: '6px 10px', cursor: 'pointer', fontSize: 12, flexShrink: 0 }}>預ける</button>
                   </div>
                   {isExpanded && (
                     <div style={{ fontSize: 10, color: '#ccbbaa', lineHeight: 1.4, marginTop: 3, paddingTop: 3, borderTop: '1px solid rgba(106,74,42,0.4)', whiteSpace: 'normal', wordBreak: 'break-word' }}>
@@ -383,11 +385,11 @@ export default function RestStoragePanel({ gameState, onUpdateState, onClose }: 
                   <div
                     key={key}
                     onClick={() => setExpandedKey(prev => prev === key ? null : key)}
-                    style={{ display: 'flex', flexDirection: 'column', marginBottom: 4, fontSize: 12, color: '#ccddee', cursor: 'pointer', padding: '4px 6px', borderRadius: 4, backgroundColor: isExpanded ? 'rgba(80,50,20,0.4)' : 'transparent', border: isExpanded ? '1px solid #6a4a2a' : '1px solid transparent' }}
+                    style={{ display: 'flex', flexDirection: 'column', marginBottom: 4, fontSize: 12, color: '#ccddee', cursor: 'pointer', padding: '8px 6px', minHeight: 38, borderRadius: 4, backgroundColor: isExpanded ? 'rgba(80,50,20,0.4)' : 'rgba(255,255,255,0.03)', border: isExpanded ? '1px solid #6a4a2a' : '1px solid rgba(106,74,42,0.3)' }}
                   >
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                       <span>{displayName} <span style={{ color: '#887766', fontSize: 10 }}>({item.type === 'weapon' ? '武器' : 'アイテム'})</span></span>
-                      <button onClick={(e) => { e.stopPropagation(); handleWithdrawItemClick(originalIndex); }} style={{ background: '#4a3a2a', color: '#fff', border: 'none', borderRadius: 4, padding: '2px 8px', cursor: 'pointer' }}>引き出す</button>
+                      <button onClick={(e) => { e.stopPropagation(); handleWithdrawItemClick(originalIndex); }} style={{ background: '#4a3a2a', color: '#fff', border: 'none', borderRadius: 4, padding: '6px 10px', cursor: 'pointer', fontSize: 12, flexShrink: 0 }}>引き出す</button>
                     </div>
                     {isExpanded && def?.description && (
                       <div style={{ fontSize: 10, color: '#ccbbaa', lineHeight: 1.4, marginTop: 3, paddingTop: 3, borderTop: '1px solid rgba(106,74,42,0.4)', whiteSpace: 'normal', wordBreak: 'break-word' }}>
@@ -403,7 +405,7 @@ export default function RestStoragePanel({ gameState, onUpdateState, onClose }: 
       </div>
 
       {/* フッター */}
-      <div style={{ marginTop: 12, color: '#665544', fontSize: 11, textAlign: 'center' }}>
+      <div style={{ marginTop: 6, color: '#665544', fontSize: 10, textAlign: 'center' }}>
         倉庫の金とアイテムはゲームオーバー後も失われません
       </div>
 
