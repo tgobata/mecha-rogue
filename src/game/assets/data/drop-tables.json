@@ -466,7 +466,7 @@
       "drops": [
         {
           "item_id": "steel_plate",
-          "type": "item",
+          "type": "weapon",
           "weight": 65,
           "floor_min": 2
         },
@@ -547,7 +547,7 @@
       "drops": [
         {
           "item_id": "steel_plate",
-          "type": "item",
+          "type": "weapon",
           "weight": 70,
           "floor_min": 2
         },
@@ -3985,7 +3985,7 @@
         },
         {
           "item_id": "commander_coat",
-          "type": "item",
+          "type": "weapon",
           "weight": 20,
           "floor_min": 22
         },
@@ -4024,13 +4024,13 @@
         },
         {
           "item_id": "commander_coat",
-          "type": "item",
+          "type": "weapon",
           "weight": 20,
           "floor_min": 22
         },
         {
           "item_id": "tactical_shield",
-          "type": "item",
+          "type": "weapon",
           "weight": 15,
           "floor_min": 22
         },
@@ -4168,7 +4168,7 @@
         },
         {
           "item_id": "sniper_cloak",
-          "type": "item",
+          "type": "weapon",
           "weight": 22,
           "floor_min": 24
         },
@@ -4207,7 +4207,7 @@
         },
         {
           "item_id": "sniper_cloak",
-          "type": "item",
+          "type": "weapon",
           "weight": 20,
           "floor_min": 24
         },
@@ -4363,7 +4363,7 @@
         },
         {
           "item_id": "heavy_plating",
-          "type": "item",
+          "type": "weapon",
           "weight": 22,
           "floor_min": 26
         },
@@ -4402,13 +4402,13 @@
         },
         {
           "item_id": "heavy_plating",
-          "type": "item",
+          "type": "weapon",
           "weight": 20,
           "floor_min": 26
         },
         {
           "item_id": "deflector_array",
-          "type": "item",
+          "type": "weapon",
           "weight": 16,
           "floor_min": 26
         },
@@ -5365,7 +5365,7 @@
         },
         {
           "item_id": "shadow_mantle",
-          "type": "item",
+          "type": "weapon",
           "weight": 22,
           "floor_min": 36
         },
@@ -5404,13 +5404,13 @@
         },
         {
           "item_id": "shadow_mantle",
-          "type": "item",
+          "type": "weapon",
           "weight": 20,
           "floor_min": 36
         },
         {
           "item_id": "void_aegis",
-          "type": "item",
+          "type": "weapon",
           "weight": 18,
           "floor_min": 36
         },

@@ -12,7 +12,7 @@
 
 import shopPricesRaw from '../assets/data/shop-prices.json';
 import weaponsRaw from '../assets/data/weapons.json';
-import type { GameState, WeaponInstance, WeaponCategory, WeaponRarity, RangeType, EquippedWeapon } from './game-state';
+import type { GameState, WeaponInstance, WeaponCategory, WeaponRarity, RangeType, EquippedWeapon, EquippedArmor, EquippedShield } from './game-state';
 import {
   SHOP_WEAPON_MIN,
   SHOP_WEAPON_MAX,
@@ -55,6 +55,9 @@ interface WeaponDef {
   appearsFrom: number;
   energyCost: number;
   special: string | null;
+  def?: number;
+  maxHpBonus?: number;
+  blockChance?: number;
 }
 
 const WEAPON_DEFS: WeaponDef[] = weaponsRaw as unknown as WeaponDef[];
@@ -284,6 +287,74 @@ export function buyItem(
     const def = WEAPON_DEFS.find((w) => w.id === itemId);
     if (!def) return state;
 
+    const explorationWithStock = state.exploration
+      ? { ...state.exploration, shopInventory: newShopInventory, shopInventories: newShopInventories }
+      : state.exploration;
+
+    if (def.category === 'armor') {
+      // アーマー購入: armorSlots に追加
+      const currentArmors = state.player?.armorSlots ?? state.inventory.equippedArmors;
+      const maxSlots = state.machine.armorSlots ?? 1;
+      if (currentArmors.length >= maxSlots) return state;
+
+      const newArmor: EquippedArmor = {
+        instanceId: `ar_${Date.now()}_${Math.floor(Math.random() * 1e9)}`,
+        armorId: def.id,
+        durability: def.durability ?? 40,
+        maxDurability: def.durability ?? 40,
+        def: def.def ?? 5,
+        maxHpBonus: def.maxHpBonus ?? 0,
+        special: def.special ?? null,
+        name: def.name,
+      };
+      return {
+        ...state,
+        exploration: explorationWithStock,
+        inventory: {
+          ...state.inventory,
+          gold: newGold,
+          equippedArmors: [...(state.inventory.equippedArmors ?? []), newArmor],
+        },
+        player: state.player
+          ? {
+              ...state.player,
+              armorSlots: [...(state.player.armorSlots ?? []), newArmor],
+              maxHp: (state.player.maxHp ?? 0) + (def.maxHpBonus ?? 0),
+            }
+          : state.player,
+      };
+    }
+
+    if (def.category === 'shield') {
+      // 盾購入: shieldSlots に追加
+      const currentShields = state.player?.shieldSlots ?? state.inventory.equippedShields;
+      const maxSlots = state.machine.shieldSlots ?? 1;
+      if (currentShields.length >= maxSlots) return state;
+
+      const newShield: EquippedShield = {
+        instanceId: `sh_${Date.now()}_${Math.floor(Math.random() * 1e9)}`,
+        shieldId: def.id,
+        durability: def.durability ?? 30,
+        maxDurability: def.durability ?? 30,
+        def: def.def ?? 3,
+        blockChance: def.blockChance ?? 0,
+        name: def.name,
+      };
+      return {
+        ...state,
+        exploration: explorationWithStock,
+        inventory: {
+          ...state.inventory,
+          gold: newGold,
+          equippedShields: [...(state.inventory.equippedShields ?? []), newShield],
+        },
+        player: state.player
+          ? { ...state.player, shieldSlots: [...(state.player.shieldSlots ?? []), newShield] }
+          : state.player,
+      };
+    }
+
+    // 通常武器購入: weaponSlots に追加
     const instance = createWeaponInstance(def);
     const currentSlots = state.player?.weaponSlots ?? [];
     const maxSlots = state.machine.weaponSlots;
@@ -302,9 +373,6 @@ export function buyItem(
       weaponLevel: 1,
       rarity: 'C',
     };
-    const explorationWithStock = state.exploration
-      ? { ...state.exploration, shopInventory: newShopInventory, shopInventories: newShopInventories }
-      : state.exploration;
     return {
       ...state,
       exploration: explorationWithStock,

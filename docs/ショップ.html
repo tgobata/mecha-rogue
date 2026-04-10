@@ -746,6 +746,101 @@
     </div>
   </div>
 
+    <div class="info-box" style="margin-top:0">
+      <p><strong>🎲 修理ランダムイベント</strong></p>
+      <table style="margin-top:10px;width:100%;border-collapse:collapse;font-size:0.82rem">
+        <thead>
+          <tr>
+            <th style="text-align:left;padding:5px 8px;background:#0f3460;color:#7ecfff;border-bottom:1px solid #2a2a5e">確率</th>
+            <th style="text-align:left;padding:5px 8px;background:#0f3460;color:#7ecfff;border-bottom:1px solid #2a2a5e">結果</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr style="border-bottom:1px solid #1e1e3e">
+            <td style="padding:5px 8px;color:#ff8888">5%</td>
+            <td style="padding:5px 8px;color:#ff8888">⚠ 失敗 — 耐久値が修理予定量の半分だけ逆に減少（最低1）</td>
+          </tr>
+          <tr style="border-bottom:1px solid #1e1e3e">
+            <td style="padding:5px 8px;color:#aaddee">60%</td>
+            <td style="padding:5px 8px">✓ 成功 — 通常通りに修理</td>
+          </tr>
+          <tr style="border-bottom:1px solid #1e1e3e">
+            <td style="padding:5px 8px;color:#88eebb">25%</td>
+            <td style="padding:5px 8px;color:#88eebb">★ 好調 — 修理量 +10%ボーナス</td>
+          </tr>
+          <tr>
+            <td style="padding:5px 8px;color:#ffdd44">10%</td>
+            <td style="padding:5px 8px;color:#ffdd44">✦ 最高 — 修理量に加え ATK+1 または MaxDUR+5 のいずれかランダム上昇</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="info-box" style="margin-top:0">
+      <p><strong>⬆ 修理屋 — 強化メニュー</strong></p>
+      <p style="color:#aaa;font-size:0.82rem;margin-top:6px">
+        強化費用 = 耐久あり武器: <span style="color:#ffcc88">MaxDUR × 25G</span>　／　耐久なし武器: <span style="color:#ffcc88">ATK × 50G</span>
+      </p>
+      <table style="margin-top:10px;width:100%;border-collapse:collapse;font-size:0.82rem">
+        <thead>
+          <tr>
+            <th style="text-align:left;padding:5px 8px;background:#0f3460;color:#7ecfff;border-bottom:1px solid #2a2a5e">強化プラン</th>
+            <th style="text-align:left;padding:5px 8px;background:#0f3460;color:#7ecfff;border-bottom:1px solid #2a2a5e">効果</th>
+            <th style="text-align:left;padding:5px 8px;background:#0f3460;color:#7ecfff;border-bottom:1px solid #2a2a5e">費用例（MaxDUR=40）</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr style="border-bottom:1px solid #1e1e3e">
+            <td style="padding:5px 8px">攻撃強化</td>
+            <td style="padding:5px 8px;color:#88ccff">ATK +2</td>
+            <td style="padding:5px 8px;color:#ffcc88">40 × 25 = 1000G</td>
+          </tr>
+          <tr>
+            <td style="padding:5px 8px">耐久強化</td>
+            <td style="padding:5px 8px;color:#88ccff">MaxDUR +10（耐久なし武器は不可）</td>
+            <td style="padding:5px 8px;color:#ffcc88">40 × 25 = 1000G</td>
+          </tr>
+        </tbody>
+      </table>
+      <p style="color:#cc8888;font-size:0.78rem;margin-top:10px">⚠ 各装備につき強化は1回のみ（強化済みバッジが表示される）</p>
+    </div>
+
+    <div class="info-box" style="margin-top:0">
+      <p><strong>🛒 ショップ仕様</strong></p>
+      <table style="margin-top:10px;width:100%;border-collapse:collapse;font-size:0.82rem">
+        <thead>
+          <tr>
+            <th style="text-align:left;padding:5px 8px;background:#0f3460;color:#7ecfff;border-bottom:1px solid #2a2a5e">項目</th>
+            <th style="text-align:left;padding:5px 8px;background:#0f3460;color:#7ecfff;border-bottom:1px solid #2a2a5e">値</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr style="border-bottom:1px solid #1e1e3e">
+            <td style="padding:5px 8px">仕入れ数（武器）</td>
+            <td style="padding:5px 8px;color:#ffcc88">3〜5点、各在庫1個</td>
+          </tr>
+          <tr style="border-bottom:1px solid #1e1e3e">
+            <td style="padding:5px 8px">仕入れ数（アイテム）</td>
+            <td style="padding:5px 8px;color:#ffcc88">3〜4点、各在庫1〜3個</td>
+          </tr>
+          <tr style="border-bottom:1px solid #1e1e3e">
+            <td style="padding:5px 8px">在庫切れ</td>
+            <td style="padding:5px 8px;color:#aaa">購入不可（売切バッジ表示）。別ショップには独立した在庫あり</td>
+          </tr>
+          <tr style="border-bottom:1px solid #1e1e3e">
+            <td style="padding:5px 8px">ショップ出現確率（休憩所以外）</td>
+            <td style="padding:5px 8px;color:#ffcc88">10%（SHOP_SPAWN_RATE = 0.10）</td>
+          </tr>
+          <tr>
+            <td style="padding:5px 8px">修理屋出現確率（休憩所以外）</td>
+            <td style="padding:5px 8px;color:#ffcc88">2%（REPAIR_SPAWN_RATE = 0.02）</td>
+          </tr>
+        </tbody>
+      </table>
+      <p style="color:#aaa;font-size:0.78rem;margin-top:8px">退出するとショップ在庫は更新されます。売却価格は購入価格の約45〜50%。</p>
+    </div>
+  </div>
+
   <script>
 const SHOP_PRICES = {
   "version": "1.0",
@@ -881,6 +976,214 @@ const SHOP_PRICES = {
     "scrap_sword": {
       "buy": 120,
       "sell": 55
+    },
+    "scrap_sword_strong": {
+      "buy": 130,
+      "sell": 60
+    },
+    "machine_gun_2": {
+      "buy": 400,
+      "sell": 180
+    },
+    "long_spear_2": {
+      "buy": 480,
+      "sell": 215
+    },
+    "shotgun_2": {
+      "buy": 420,
+      "sell": 190
+    },
+    "pickaxe": {
+      "buy": 180,
+      "sell": 80
+    },
+    "drill_1": {
+      "buy": 320,
+      "sell": 140
+    },
+    "drill_2": {
+      "buy": 600,
+      "sell": 270
+    },
+    "marksman_rifle_1": {
+      "buy": 550,
+      "sell": 250
+    },
+    "marksman_rifle_2": {
+      "buy": 1000,
+      "sell": 450
+    },
+    "adamantine_sword": {
+      "buy": 380,
+      "sell": 170
+    },
+    "loot_blade": {
+      "buy": 550,
+      "sell": 250
+    },
+    "gold_striker": {
+      "buy": 480,
+      "sell": 215
+    },
+    "cyclone_blaster": {
+      "buy": 900,
+      "sell": 400
+    },
+    "shotgun_2_strong": {
+      "buy": 600,
+      "sell": 270
+    },
+    "shotgun_max": {
+      "buy": 1200,
+      "sell": 540
+    },
+    "light_shield": {
+      "buy": 150,
+      "sell": 65
+    },
+    "iron_shield": {
+      "buy": 280,
+      "sell": 125
+    },
+    "reactive_shield": {
+      "buy": 400,
+      "sell": 180
+    },
+    "barrier_plate": {
+      "buy": 600,
+      "sell": 270
+    },
+    "plasma_barrier": {
+      "buy": 900,
+      "sell": 400
+    },
+    "aegis_shield": {
+      "buy": 1500,
+      "sell": 675
+    },
+    "reflect_shield": {
+      "buy": 500,
+      "sell": 225
+    },
+    "reflect_shield_2": {
+      "buy": 1000,
+      "sell": 450
+    },
+    "reflect_shield_max": {
+      "buy": 2500,
+      "sell": 1125
+    },
+    "double_reflect_shield": {
+      "buy": 700,
+      "sell": 315
+    },
+    "double_reflect_shield_2": {
+      "buy": 1400,
+      "sell": 630
+    },
+    "double_reflect_shield_max": {
+      "buy": 3500,
+      "sell": 1575
+    },
+    "boss_shield": {
+      "buy": 2000,
+      "sell": 900
+    },
+    "eternal_shield": {
+      "buy": 600,
+      "sell": 270
+    },
+    "titanium_plate": {
+      "buy": 200,
+      "sell": 90
+    },
+    "composite_armor": {
+      "buy": 350,
+      "sell": 155
+    },
+    "reactive_armor": {
+      "buy": 550,
+      "sell": 250
+    },
+    "heavy_armor": {
+      "buy": 800,
+      "sell": 360
+    },
+    "ceramic_armor": {
+      "buy": 1200,
+      "sell": 540
+    },
+    "plasma_armor": {
+      "buy": 2000,
+      "sell": 900
+    },
+    "boss_armor": {
+      "buy": 2500,
+      "sell": 1125
+    },
+    "collector_armor": {
+      "buy": 800,
+      "sell": 360
+    },
+    "gold_armor": {
+      "buy": 700,
+      "sell": 315
+    },
+    "indestructible_armor": {
+      "buy": 600,
+      "sell": 270
+    },
+    "regen_armor": {
+      "buy": 450,
+      "sell": 200
+    },
+    "regen_armor_2": {
+      "buy": 900,
+      "sell": 400
+    },
+    "steel_plate": {
+      "buy": 150,
+      "sell": 67
+    },
+    "commander_coat": {
+      "buy": 1600,
+      "sell": 720
+    },
+    "sniper_cloak": {
+      "buy": 1100,
+      "sell": 495
+    },
+    "heavy_plating": {
+      "buy": 2500,
+      "sell": 1125
+    },
+    "shadow_mantle": {
+      "buy": 4000,
+      "sell": 1800
+    },
+    "tactical_shield": {
+      "buy": 1200,
+      "sell": 540
+    },
+    "deflector_array": {
+      "buy": 2000,
+      "sell": 900
+    },
+    "void_aegis": {
+      "buy": 3200,
+      "sell": 1440
+    },
+    "command_baton": {
+      "buy": 1400,
+      "sell": 630
+    },
+    "mag_rifle": {
+      "buy": 1800,
+      "sell": 810
+    },
+    "void_blade": {
+      "buy": 4500,
+      "sell": 2250
     }
   },
   "items": {
@@ -1195,6 +1498,54 @@ const SHOP_PRICES = {
     "grenade_4_h": {
       "buy": 500,
       "sell": 225
+    },
+    "ice_bomb_1_s": {
+      "buy": 80,
+      "sell": 36
+    },
+    "ice_bomb_1_m": {
+      "buy": 160,
+      "sell": 72
+    },
+    "ice_bomb_1_h": {
+      "buy": 260,
+      "sell": 117
+    },
+    "ice_bomb_2_s": {
+      "buy": 110,
+      "sell": 49
+    },
+    "ice_bomb_2_m": {
+      "buy": 220,
+      "sell": 99
+    },
+    "ice_bomb_2_h": {
+      "buy": 360,
+      "sell": 162
+    },
+    "ice_bomb_3_s": {
+      "buy": 140,
+      "sell": 63
+    },
+    "ice_bomb_3_m": {
+      "buy": 280,
+      "sell": 126
+    },
+    "ice_bomb_3_h": {
+      "buy": 480,
+      "sell": 216
+    },
+    "ice_bomb_4_s": {
+      "buy": 180,
+      "sell": 81
+    },
+    "ice_bomb_4_m": {
+      "buy": 340,
+      "sell": 153
+    },
+    "ice_bomb_4_h": {
+      "buy": 580,
+      "sell": 261
     }
   },
   "repair": {

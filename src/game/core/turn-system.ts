@@ -2472,6 +2472,8 @@ function processDefeatedEnemies(
   let goldGained = 0;
   const droppedItems: Array<{ itemId: string; quantity: number; unidentified: boolean }> = [];
   const droppedWeapons: EquippedWeapon[] = [];
+  const droppedArmors: EquippedArmor[] = [];
+  const droppedShields: EquippedShield[] = [];
   for (const deadEnemy of dead) {
     const drops: DropResult[] = rollDrops(deadEnemy.enemyType, state.floor, Math.random);
     for (const drop of drops) {
@@ -2481,14 +2483,39 @@ function processDefeatedEnemies(
         droppedItems.push({ itemId: drop.id, quantity: drop.amount ?? 1, unidentified: false });
       } else if (drop.type === 'weapon' && drop.id) {
         try {
-          const wi = createWeaponInstance(drop.id);
-          droppedWeapons.push({
-            instanceId: wi.instanceId,
-            weaponId: wi.id,
-            durability: wi.durability ?? 999,
-            weaponLevel: 1,
-            rarity: 'C',
-          });
+          const dropDef = WEAPON_DEFS_ALL.find(d => d.id === drop.id);
+          const dropCategory = dropDef?.category ?? 'melee';
+          if (dropCategory === 'armor' && dropDef) {
+            droppedArmors.push({
+              instanceId: `ar_${Date.now()}_${Math.floor(Math.random() * 1e9)}`,
+              armorId: dropDef.id,
+              durability: dropDef.durability ?? 40,
+              maxDurability: dropDef.durability ?? 40,
+              def: dropDef.def ?? 5,
+              maxHpBonus: dropDef.maxHpBonus ?? 0,
+              special: dropDef.special ?? null,
+              name: dropDef.name,
+            });
+          } else if (dropCategory === 'shield' && dropDef) {
+            droppedShields.push({
+              instanceId: `sh_${Date.now()}_${Math.floor(Math.random() * 1e9)}`,
+              shieldId: dropDef.id,
+              durability: dropDef.durability ?? 30,
+              maxDurability: dropDef.durability ?? 30,
+              def: dropDef.def ?? 3,
+              blockChance: dropDef.blockChance ?? 0,
+              name: dropDef.name,
+            });
+          } else {
+            const wi = createWeaponInstance(drop.id);
+            droppedWeapons.push({
+              instanceId: wi.instanceId,
+              weaponId: wi.id,
+              durability: wi.durability ?? 999,
+              weaponLevel: 1,
+              rarity: 'C',
+            });
+          }
         } catch { /* 存在しない武器IDは無視 */ }
       }
     }
@@ -2514,6 +2541,24 @@ function processDefeatedEnemies(
     const weaponsToAdd = droppedWeapons.slice(0, freeWeaponSlots);
     if (weaponsToAdd.length > 0) {
       inventory = { ...inventory, equippedWeapons: [...inventory.equippedWeapons, ...weaponsToAdd] };
+    }
+  }
+  if (droppedArmors.length > 0) {
+    // アーマースロット容量を超えないようにドロップ防具を制限する
+    const maxArmorSlots = stateAfterExp.machine.armorSlots ?? 1;
+    const freeArmorSlots = Math.max(0, maxArmorSlots - (inventory.equippedArmors?.length ?? 0));
+    const armorsToAdd = droppedArmors.slice(0, freeArmorSlots);
+    if (armorsToAdd.length > 0) {
+      inventory = { ...inventory, equippedArmors: [...(inventory.equippedArmors ?? []), ...armorsToAdd] };
+    }
+  }
+  if (droppedShields.length > 0) {
+    // 盾スロット容量を超えないようにドロップ盾を制限する
+    const maxShieldSlots = stateAfterExp.machine.shieldSlots ?? 1;
+    const freeShieldSlots = Math.max(0, maxShieldSlots - (inventory.equippedShields?.length ?? 0));
+    const shieldsToAdd = droppedShields.slice(0, freeShieldSlots);
+    if (shieldsToAdd.length > 0) {
+      inventory = { ...inventory, equippedShields: [...(inventory.equippedShields ?? []), ...shieldsToAdd] };
     }
   }
 

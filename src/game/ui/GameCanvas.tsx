@@ -1605,15 +1605,33 @@ export default function GameCanvas() {
     const state = stateRef.current;
     if (state.phase !== "shop") return;
 
-    // 購入上限チェック: 武器はマシンの weaponSlots 数、アイテムはポーチ容量上限
+    // 購入上限チェック: カテゴリ別スロット数・アイテムはポーチ容量上限
     if (item.type === "weapon") {
-      const currentWeaponCount = state.player?.weaponSlots?.length ?? state.inventory.equippedWeapons.length;
-      if (currentWeaponCount >= state.machine.weaponSlots) {
-        playSE("ui_cancel");
-        setBattleLog((prev) =>
-          [...prev, "武器スロットがいっぱいです"].slice(-BATTLE_LOG_MAX),
-        );
-        return;
+      const weaponDef = (weaponsRaw as Array<{ id: string; category: string }>).find(d => d.id === item.id);
+      const category = weaponDef?.category ?? 'melee';
+      if (category === 'armor') {
+        const currentCount = state.player?.armorSlots?.length ?? state.inventory.equippedArmors.length;
+        if (currentCount >= state.machine.armorSlots) {
+          playSE("ui_cancel");
+          setBattleLog((prev) => [...prev, "アーマー枠がいっぱいです"].slice(-BATTLE_LOG_MAX));
+          return;
+        }
+      } else if (category === 'shield') {
+        const currentCount = state.player?.shieldSlots?.length ?? state.inventory.equippedShields.length;
+        if (currentCount >= state.machine.shieldSlots) {
+          playSE("ui_cancel");
+          setBattleLog((prev) => [...prev, "盾枠がいっぱいです"].slice(-BATTLE_LOG_MAX));
+          return;
+        }
+      } else {
+        const currentWeaponCount = state.player?.weaponSlots?.length ?? state.inventory.equippedWeapons.length;
+        if (currentWeaponCount >= state.machine.weaponSlots) {
+          playSE("ui_cancel");
+          setBattleLog((prev) =>
+            [...prev, "武器スロットがいっぱいです"].slice(-BATTLE_LOG_MAX),
+          );
+          return;
+        }
       }
     } else {
       const maxItemCap = state.machine.itemPouch;

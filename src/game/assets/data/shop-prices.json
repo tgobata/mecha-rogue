@@ -74,7 +74,18 @@
     "gold_armor":         { "buy": 700,  "sell": 315  },
     "indestructible_armor": { "buy": 600, "sell": 270 },
     "regen_armor":        { "buy": 450,  "sell": 200  },
-    "regen_armor_2":      { "buy": 900,  "sell": 400  }
+    "regen_armor_2":      { "buy": 900,  "sell": 400  },
+    "steel_plate":        { "buy": 150,  "sell": 67   },
+    "commander_coat":     { "buy": 1600, "sell": 720  },
+    "sniper_cloak":       { "buy": 1100, "sell": 495  },
+    "heavy_plating":      { "buy": 2500, "sell": 1125 },
+    "shadow_mantle":      { "buy": 4000, "sell": 1800 },
+    "tactical_shield":    { "buy": 1200, "sell": 540  },
+    "deflector_array":    { "buy": 2000, "sell": 900  },
+    "void_aegis":         { "buy": 3200, "sell": 1440 },
+    "command_baton":      { "buy": 1400, "sell": 630  },
+    "mag_rifle":          { "buy": 1800, "sell": 810  },
+    "void_blade":         { "buy": 4500, "sell": 2250 }
   },
   "items": {
     "repair_kit_small":       { "buy": 50,   "sell": 20  },
@@ -154,7 +165,19 @@
     "grenade_3_h":            { "buy": 420,  "sell": 189 },
     "grenade_4_s":            { "buy": 150,  "sell": 67  },
     "grenade_4_m":            { "buy": 280,  "sell": 126 },
-    "grenade_4_h":            { "buy": 500,  "sell": 225 }
+    "grenade_4_h":            { "buy": 500,  "sell": 225 },
+    "ice_bomb_1_s":           { "buy": 80,   "sell": 36  },
+    "ice_bomb_1_m":           { "buy": 160,  "sell": 72  },
+    "ice_bomb_1_h":           { "buy": 260,  "sell": 117 },
+    "ice_bomb_2_s":           { "buy": 110,  "sell": 49  },
+    "ice_bomb_2_m":           { "buy": 220,  "sell": 99  },
+    "ice_bomb_2_h":           { "buy": 360,  "sell": 162 },
+    "ice_bomb_3_s":           { "buy": 140,  "sell": 63  },
+    "ice_bomb_3_m":           { "buy": 280,  "sell": 126 },
+    "ice_bomb_3_h":           { "buy": 480,  "sell": 216 },
+    "ice_bomb_4_s":           { "buy": 180,  "sell": 81  },
+    "ice_bomb_4_m":           { "buy": 340,  "sell": 153 },
+    "ice_bomb_4_h":           { "buy": 580,  "sell": 261 }
   },
   "repair": {
     "cost_per_durability": 15
