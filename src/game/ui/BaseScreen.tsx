@@ -441,9 +441,8 @@ export default function BaseScreen({ gameState, deathFloor, onEnterDungeon, onUp
   const gold = gameState.inventory.gold;
   const storedGold = gameState.storedGold;
   const pilotLevel = gameState.pilot.level;
-  const highestFloor = gameState.highestFloorReached ?? 0;
-  /** 現在の最高到達階から解放されている最大出発階 */
-  const maxStartFloor = getMaxStartFloor(highestFloor);
+  /** パイロットレベルから解放されている最大出発階 */
+  const maxStartFloor = getMaxStartFloor(pilotLevel);
 
   return (
     <div

@@ -243,7 +243,12 @@ export default function ShopPanel({
                           {getDisplayName(item.id)}
                         </span>
                         <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
-                          <span style={{ fontSize: 10, color: '#aaa' }}>{item.type === 'weapon' ? '武器' : 'パーツ'}</span>
+                          <span style={{ fontSize: 10, color: '#aaa' }}>
+                            {item.type === 'item' ? 'パーツ'
+                              : itemDef?.category === 'armor' ? '防具'
+                              : itemDef?.category === 'shield' ? '盾'
+                              : '武器'}
+                          </span>
                           {item.type === 'item' && (
                             <span style={{ fontSize: 10, color: soldOut ? '#ff6644' : '#88ccaa' }}>
                               {soldOut ? '売切' : `残り ${stock}`}

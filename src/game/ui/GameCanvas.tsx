@@ -334,6 +334,104 @@ function migrateGameState(saved: GameState): GameState {
     };
   }
 
+  // ── 旧セーブデータ修正: weaponSlots/equippedWeapons に紛れ込んだ防具・盾を正しいスロットへ移動 ──
+  // category === 'armor' のアイテムが武器スロットに入っている場合（旧バージョンのバグ）を修正する。
+  {
+    const WEAPON_CATS = (weaponsRaw as Array<{ id: string; category: string }>);
+    const getCategory = (id: string) => WEAPON_CATS.find(d => d.id === id)?.category ?? 'melee';
+
+    // inventory.equippedWeapons から防具・盾を抽出して移動
+    const currentEquippedWeapons = (migrated.inventory.equippedWeapons ?? []) as any[];
+    const fixedWeapons: any[] = [];
+    const migratedArmors: any[] = [];
+    const migratedShields: any[] = [];
+    for (const ew of currentEquippedWeapons) {
+      const cat = getCategory(ew.weaponId ?? ew.id ?? '');
+      if (cat === 'armor') {
+        // EquippedArmor 形式に変換
+        const def = WEAPON_CATS.find(d => d.id === (ew.weaponId ?? ew.id)) as any;
+        migratedArmors.push({
+          instanceId: ew.instanceId ?? _genId(),
+          armorId: ew.weaponId ?? ew.id,
+          durability: ew.durability ?? (def?.durability ?? 40),
+          maxDurability: ew.maxDurability ?? ew.durability ?? (def?.durability ?? 40),
+          def: def?.def ?? 5,
+          maxHpBonus: def?.maxHpBonus ?? 0,
+          special: def?.special ?? null,
+          name: def?.name ?? (ew.weaponId ?? ew.id),
+        });
+      } else if (cat === 'shield') {
+        const def = WEAPON_CATS.find(d => d.id === (ew.weaponId ?? ew.id)) as any;
+        migratedShields.push({
+          instanceId: ew.instanceId ?? _genId(),
+          shieldId: ew.weaponId ?? ew.id,
+          durability: ew.durability ?? (def?.durability ?? 30),
+          maxDurability: ew.maxDurability ?? ew.durability ?? (def?.durability ?? 30),
+          def: def?.def ?? 3,
+          blockChance: def?.blockChance ?? 0,
+          name: def?.name ?? (ew.weaponId ?? ew.id),
+        });
+      } else {
+        fixedWeapons.push(ew);
+      }
+    }
+
+    if (migratedArmors.length > 0 || migratedShields.length > 0) {
+      migrated.inventory = {
+        ...migrated.inventory,
+        equippedWeapons: fixedWeapons,
+        equippedArmors: [...(migrated.inventory.equippedArmors ?? []), ...migratedArmors],
+        equippedShields: [...(migrated.inventory.equippedShields ?? []), ...migratedShields],
+      };
+    }
+
+    // player.weaponSlots からも防具・盾を除去して正しいスロットへ移動
+    if (migrated.player?.weaponSlots) {
+      const currentWeaponSlots = (migrated.player.weaponSlots as any[]);
+      const fixedSlots: any[] = [];
+      const slotArmors: any[] = [];
+      const slotShields: any[] = [];
+      for (const ws of currentWeaponSlots) {
+        const cat = getCategory(ws.id ?? '');
+        if (cat === 'armor') {
+          const def = WEAPON_CATS.find(d => d.id === ws.id) as any;
+          slotArmors.push({
+            instanceId: ws.instanceId ?? _genId(),
+            armorId: ws.id,
+            durability: ws.durability ?? (def?.durability ?? 40),
+            maxDurability: ws.maxDurability ?? ws.durability ?? (def?.durability ?? 40),
+            def: def?.def ?? 5,
+            maxHpBonus: def?.maxHpBonus ?? 0,
+            special: def?.special ?? null,
+            name: def?.name ?? ws.id,
+          });
+        } else if (cat === 'shield') {
+          const def = WEAPON_CATS.find(d => d.id === ws.id) as any;
+          slotShields.push({
+            instanceId: ws.instanceId ?? _genId(),
+            shieldId: ws.id,
+            durability: ws.durability ?? (def?.durability ?? 30),
+            maxDurability: ws.maxDurability ?? ws.durability ?? (def?.durability ?? 30),
+            def: def?.def ?? 3,
+            blockChance: def?.blockChance ?? 0,
+            name: def?.name ?? ws.id,
+          });
+        } else {
+          fixedSlots.push(ws);
+        }
+      }
+
+      if (slotArmors.length > 0 || slotShields.length > 0) {
+        migrated.player = {
+          ...migrated.player,
+          weaponSlots: fixedSlots,
+          armorSlots: [...(migrated.player.armorSlots ?? []), ...slotArmors],
+          shieldSlots: [...(migrated.player.shieldSlots ?? []), ...slotShields],
+        };
+      }
+    }
+  }
+
   return migrated;
 }
 
