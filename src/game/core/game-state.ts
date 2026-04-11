@@ -877,6 +877,12 @@ export interface GameState {
    * ターン終了時にデクリメントし、0になったら通常マスへ戻す。
    */
   fireTileTimers?: Record<string, number>;
+  /**
+   * 過去の全ラン通じて到達した最高階層番号。
+   * ゲームオーバーや拠点帰還では失われず永続する。
+   * 拠点での出発階選択（2F以上）に使用する。
+   */
+  highestFloorReached: number;
 }
 
 // ---------------------------------------------------------------------------
@@ -999,6 +1005,7 @@ export function createInitialGameState(): GameState {
     achievements: [],
     bossesDefeated: [],
     fireTileTimers: {},
+    highestFloorReached: 0,
   };
 }
 

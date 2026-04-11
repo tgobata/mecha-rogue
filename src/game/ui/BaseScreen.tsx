@@ -33,8 +33,8 @@ interface BaseScreenProps {
    * null = 初めての来訪、またはゲームオーバー以外で戻ってきた場合。
    */
   deathFloor: number | null;
-  /** 迷宮入口ボタンが押されたときのコールバック */
-  onEnterDungeon: () => void;
+  /** 迷宮入口ボタンが押されたときのコールバック（開始階層番号を渡す） */
+  onEnterDungeon: (floorNumber: number) => void;
   /** ゲーム状態を更新するコールバック（倉庫操作用） */
   onUpdateState?: (state: GameState) => void;
   /** セーブして終了（タイトルへ戻る）コールバック */
@@ -395,6 +395,26 @@ function StorageOverlay({
 }
 
 // ---------------------------------------------------------------------------
+// 出発階ロック解除計算
+// ---------------------------------------------------------------------------
+
+/**
+ * 最高到達階（＝主人公レベル）から選択可能な最大出発階を返す。
+ *
+ * - レベル 1   : 1F のみ（選択不可）
+ * - レベル 2〜4: そのままレベル数の階まで
+ * - レベル 5〜9: 5F まで
+ * - レベル 10〜14: 10F まで
+ * - レベル 15〜19: 15F まで
+ * - 以降、5F 刻みで解放
+ */
+function getMaxStartFloor(level: number): number {
+  if (level <= 1) return 1;
+  if (level <= 4) return level;
+  return Math.floor(level / 5) * 5;
+}
+
+// ---------------------------------------------------------------------------
 // BaseScreen コンポーネント
 // ---------------------------------------------------------------------------
 
@@ -405,6 +425,8 @@ export default function BaseScreen({ gameState, deathFloor, onEnterDungeon, onUp
   const [showStorage, setShowStorage] = useState(false);
   /** タイトルに戻る確認ダイアログの表示フラグ */
   const [showReturnDialog, setShowReturnDialog] = useState(false);
+  /** 出発階選択オーバーレイの表示フラグ */
+  const [showFloorSelect, setShowFloorSelect] = useState(false);
 
   useEffect(() => {
     if (showStorage) {
@@ -419,6 +441,9 @@ export default function BaseScreen({ gameState, deathFloor, onEnterDungeon, onUp
   const gold = gameState.inventory.gold;
   const storedGold = gameState.storedGold;
   const pilotLevel = gameState.pilot.level;
+  const highestFloor = gameState.highestFloorReached ?? 0;
+  /** 現在の最高到達階から解放されている最大出発階 */
+  const maxStartFloor = getMaxStartFloor(highestFloor);
 
   return (
     <div
@@ -559,7 +584,14 @@ export default function BaseScreen({ gameState, deathFloor, onEnterDungeon, onUp
 
         {/* 迷宮入口パネル */}
         <div
-          onClick={onEnterDungeon}
+          onClick={() => {
+            playSE('ui_select');
+            if (maxStartFloor >= 2) {
+              setShowFloorSelect(true);
+            } else {
+              onEnterDungeon(1);
+            }
+          }}
           style={{
             flex: 1,
             height: '100%',
@@ -592,6 +624,11 @@ export default function BaseScreen({ gameState, deathFloor, onEnterDungeon, onUp
           <div style={{ color: '#664433', fontSize: 12, textAlign: 'center', lineHeight: 1.5 }}>
             深淵なる迷宮へ<br />冒険へ出発する
           </div>
+          {maxStartFloor >= 2 && (
+            <div style={{ color: '#cc8844', fontSize: 11, textAlign: 'center' }}>
+              B1F〜B{maxStartFloor}F から選択可
+            </div>
+          )}
           <div
             style={{
               marginTop: 8,
@@ -615,6 +652,105 @@ export default function BaseScreen({ gameState, deathFloor, onEnterDungeon, onUp
             onClose={() => setShowStorage(false)}
             onUpdateState={onUpdateState}
           />
+        )}
+
+        {/* 出発階選択オーバーレイ */}
+        {showFloorSelect && (
+          <div
+            style={{
+              position: 'absolute',
+              inset: 0,
+              backgroundColor: 'rgba(5, 5, 20, 0.97)',
+              border: '1px solid #445566',
+              borderRadius: 8,
+              display: 'flex',
+              flexDirection: 'column',
+              padding: '16px 20px',
+              zIndex: 30,
+              fontFamily: 'monospace',
+            }}
+          >
+            {/* ヘッダー */}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+              <span style={{ color: '#ffaa44', fontWeight: 'bold', fontSize: 15 }}>⚔ 出発階を選択</span>
+              <button
+                onClick={() => { playSE('ui_cancel'); setShowFloorSelect(false); }}
+                style={{
+                  background: 'none',
+                  border: '1px solid #445566',
+                  borderRadius: 4,
+                  color: '#aaaacc',
+                  padding: '2px 10px',
+                  cursor: 'pointer',
+                  fontSize: 12,
+                }}
+              >
+                閉じる
+              </button>
+            </div>
+
+            <div style={{ height: 1, backgroundColor: '#334455', marginBottom: 12 }} />
+
+            <div style={{ color: '#888899', fontSize: 12, marginBottom: 12 }}>
+              B1F〜B{maxStartFloor}F のいずれかから探索を開始できます。
+            </div>
+
+            {/* フロアボタングリッド */}
+            <div
+              style={{
+                flex: 1,
+                overflowY: 'auto',
+                display: 'grid',
+                gridTemplateColumns: 'repeat(5, 1fr)',
+                gap: 8,
+                alignContent: 'start',
+              }}
+            >
+              {Array.from({ length: maxStartFloor }, (_, i) => i + 1).map((f) => {
+                const isBossFloor = f % 5 === 0;
+                return (
+                  <button
+                    key={f}
+                    onClick={() => {
+                      playSE('ui_select');
+                      setShowFloorSelect(false);
+                      onEnterDungeon(f);
+                    }}
+                    style={{
+                      padding: '8px 4px',
+                      backgroundColor: isBossFloor ? 'rgba(80,20,10,0.7)' : 'rgba(20,40,70,0.6)',
+                      border: `1px solid ${isBossFloor ? '#cc4422' : '#2a5580'}`,
+                      borderRadius: 6,
+                      color: isBossFloor ? '#ff8844' : '#88ccff',
+                      fontSize: 13,
+                      fontFamily: 'monospace',
+                      cursor: 'pointer',
+                      fontWeight: isBossFloor ? 'bold' : 'normal',
+                      transition: 'background-color 0.1s, border-color 0.1s',
+                    }}
+                    onMouseEnter={(e) => {
+                      (e.currentTarget as HTMLButtonElement).style.backgroundColor =
+                        isBossFloor ? 'rgba(120,30,10,0.9)' : 'rgba(30,60,110,0.9)';
+                      (e.currentTarget as HTMLButtonElement).style.borderColor =
+                        isBossFloor ? '#ff6633' : '#4488cc';
+                    }}
+                    onMouseLeave={(e) => {
+                      (e.currentTarget as HTMLButtonElement).style.backgroundColor =
+                        isBossFloor ? 'rgba(80,20,10,0.7)' : 'rgba(20,40,70,0.6)';
+                      (e.currentTarget as HTMLButtonElement).style.borderColor =
+                        isBossFloor ? '#cc4422' : '#2a5580';
+                    }}
+                  >
+                    B{f}F{isBossFloor ? ' 👑' : ''}
+                  </button>
+                );
+              })}
+            </div>
+
+            <div style={{ marginTop: 12, color: '#445566', fontSize: 11, textAlign: 'center' }}>
+              ボス階（5の倍数）から始める場合、ボスはリセットされます
+            </div>
+          </div>
         )}
       </div>
 

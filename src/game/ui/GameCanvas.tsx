@@ -250,6 +250,7 @@ function migrateGameState(saved: GameState): GameState {
     battleLog: Array.isArray(saved.battleLog) ? saved.battleLog.slice(-50) : [],
     enemies: saved.enemies ?? [],
     isBlackMarket: saved.isBlackMarket ?? false,
+    highestFloorReached: saved.highestFloorReached ?? 0,
   };
 
   // フェーズ自動修復:
@@ -1043,8 +1044,7 @@ export default function GameCanvas() {
   }, []);
 
   // ── 拠点 → 迷宮入口（ダンジョン開始） ──────────────────────
-  const handleEnterDungeon = useCallback(() => {
-    const floorNumber = 1; // Start at floor 1
+  const handleEnterDungeon = useCallback((floorNumber: number = 1) => {
     // 入場時は常に通常 BGM（ボス BGM はボスを視認した際に切り替え）
     initAudio().then(() => playBGM(getExploreBGM(floorNumber)));
 
@@ -1083,6 +1083,7 @@ export default function GameCanvas() {
       map: visibleFloor,
       floor: floorNumber,
       achievements: baseState.achievements || [],
+      highestFloorReached: Math.max(baseState.highestFloorReached ?? 0, floorNumber),
       exploration: {
         currentFloor: visibleFloor,
         playerPos: floor.startPos,
@@ -1380,8 +1381,13 @@ export default function GameCanvas() {
         });
       }
 
-      setGameState(next);
-      stateRef.current = next;
+      // 新しい階層に進んだ場合、最高到達階を更新する
+      const finalNext = next.floor > (prev.highestFloorReached ?? 0)
+        ? { ...next, highestFloorReached: next.floor }
+        : next;
+
+      setGameState(finalNext);
+      stateRef.current = finalNext;
 
       // ── ボス初視認演出 + BGM 切り替え ────────────────────────────
       // ボスが初めてプレイヤーの視界に入ったタイミングで演出表示 & ボス BGM に切り替え

@@ -1,5 +1,5 @@
 # メカローグ
-<img src="./public/mecha-rogue_sample_tilte.png" alt="代替テキスト">
+<img src="./public/mecha-rogue_sample_tilte.png">
 ※ Claude Code により実装したゲームです。
 
 
