@@ -11,7 +11,7 @@
 
 import { useState, useEffect, useMemo } from 'react';
 import type { GameState, StorageItem } from '../core/game-state';
-import { playBGM, playSE } from '../systems/audio';
+import { playBGM, playSE, setMuted, getMuted } from '../systems/audio';
 import { depositItem, withdrawItem } from '../core/storage-system';
 import itemsRaw from '../assets/data/items.json';
 import toolsRaw from '../assets/data/tools-equipment.json';
@@ -427,6 +427,7 @@ export default function BaseScreen({ gameState, deathFloor, onEnterDungeon, onUp
   const [showReturnDialog, setShowReturnDialog] = useState(false);
   /** 出発階選択オーバーレイの表示フラグ */
   const [showFloorSelect, setShowFloorSelect] = useState(false);
+  const [isMuted, setIsMuted] = useState(() => getMuted());
 
   useEffect(() => {
     if (showStorage) {
@@ -486,12 +487,33 @@ export default function BaseScreen({ gameState, deathFloor, onEnterDungeon, onUp
         <div>
           <span style={{ color: '#ffee88', fontWeight: 'bold', fontSize: 16 }}>⚙ メカローグ本部</span>
         </div>
-        <div style={{ display: 'flex', gap: 16, color: '#aaaacc', fontSize: 12 }}>
+        <div style={{ display: 'flex', gap: 16, color: '#aaaacc', fontSize: 12, alignItems: 'center' }}>
           <span>Lv.<strong style={{ color: '#88ddff' }}>{pilotLevel}</strong></span>
           <span>所持金 <strong style={{ color: '#ffcc44' }}>{gold.toLocaleString()}</strong> G</span>
           {storedGold > 0 && (
             <span>倉庫金 <strong style={{ color: '#ffdd88' }}>{storedGold.toLocaleString()}</strong> G</span>
           )}
+          <button
+            onClick={() => {
+              const next = !getMuted();
+              setMuted(next);
+              setIsMuted(next);
+            }}
+            title={isMuted ? 'サウンドON' : 'サウンドOFF'}
+            style={{
+              background: 'none',
+              border: '1px solid #334455',
+              borderRadius: 4,
+              cursor: 'pointer',
+              fontSize: 14,
+              lineHeight: 1,
+              padding: '2px 6px',
+              opacity: isMuted ? 0.5 : 1,
+              color: isMuted ? '#888' : '#ffdd88',
+            }}
+          >
+            {isMuted ? '🔇' : '🔊'}
+          </button>
         </div>
       </div>
 

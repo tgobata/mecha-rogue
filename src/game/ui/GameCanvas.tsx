@@ -38,6 +38,7 @@ import {
   INITIAL_PLAYER_DEF,
   VIEW_RADIUS,
   TILE_FLOOR,
+  TILE_STAIRS_DOWN,
 } from "../core/constants";
 import itemsRaw from "../assets/data/items.json";
 import { generateFloor } from "../core/maze-generator";
@@ -54,7 +55,7 @@ import { getSortedItems } from "../core/inventory-utils";
 import { applyStartReturn } from "../core/start-return";
 import { updateVisibility } from "../core/visibility";
 import { getRoomAt } from "../core/floorUtils";
-import { RoomType } from "../core/types";
+import { RoomType, type Position } from "../core/types";
 import type { PlayerAction } from "../core/turn-system";
 import {
   renderGame,
@@ -70,6 +71,8 @@ import {
   playSE,
   playBGM,
   stopBGM,
+  setMuted,
+  getMuted,
   type BGMName,
 } from "../systems/audio";
 import { useTool, useInventoryItem, getItemName } from "../core/tool-system";
@@ -716,6 +719,12 @@ export default function GameCanvas() {
   const [enemyKillNotif, setEnemyKillNotif] = useState<string | null>(null);
   const enemyKillNotifTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+  /** ミュート状態 */
+  const [isMuted, setIsMuted] = useState(false);
+
+  /** 発見済みボスの座標（フロアが変わるとリセット） */
+  const [seenBossPositions, setSeenBossPositions] = useState<Position[]>([]);
+
   useEffect(() => {
     if (typeof window !== "undefined") {
       // 互換性維持のため残すが、後ほど TitleScreen が全スロットをチェックする
@@ -1132,6 +1141,13 @@ export default function GameCanvas() {
     }
   }, [activeSaveSlot]);
 
+  /** サウンドON/OFFトグル */
+  const handleToggleMute = useCallback(() => {
+    const next = !getMuted();
+    setMuted(next);
+    setIsMuted(next);
+  }, []);
+
   /** セーブせずにタイトルへ戻る（拠点画面専用） */
   const handleReturnToTitleWithoutSave = useCallback(() => {
     setDeathFloor(null);
@@ -1202,10 +1218,42 @@ export default function GameCanvas() {
   }, [activeSaveSlot]);
 
   // ── キー入力処理（PlayerAction） ────────────────────────────────
+  const stairsConfirmedRef = useRef(false);
+
   const handleAction = useCallback(
     (action: PlayerAction) => {
       const prev = stateRef.current;
       if (prev.phase !== "exploring") return;
+
+      // ── 階段確認ダイアログ ──────────────────────────────────────
+      // 移動先が階段タイルなら processTurn の前に確認を挟む
+      if (!stairsConfirmedRef.current) {
+        const MOVE_DIRS: Partial<Record<PlayerAction, { dx: number; dy: number }>> = {
+          move_up: { dx: 0, dy: -1 }, move_down: { dx: 0, dy: 1 },
+          move_left: { dx: -1, dy: 0 }, move_right: { dx: 1, dy: 0 },
+        };
+        const moveDir = MOVE_DIRS[action];
+        if (moveDir && prev.player && prev.map) {
+          const tx = prev.player.pos.x + moveDir.dx;
+          const ty = prev.player.pos.y + moveDir.dy;
+          const targetTile = prev.map.cells[ty]?.[tx]?.tile;
+          if (targetTile === TILE_STAIRS_DOWN) {
+            const isBossFloor = (bossesRaw as { floor: number }[]).some((b) => b.floor === prev.floor);
+            const bossAlive = isBossFloor && prev.enemies.some((e) => e.isBoss && e.hp > 0);
+            if (!bossAlive) {
+              setConfirmDialog({
+                message: `B${prev.floor + 1}F へ降りますか？`,
+                onConfirm: () => {
+                  stairsConfirmedRef.current = true;
+                  handleAction(action);
+                  stairsConfirmedRef.current = false;
+                },
+              });
+              return;
+            }
+          }
+        }
+      }
 
       const prevFloor = prev.floor;
       const prevHp = prev.player?.hp ?? 0;
@@ -1289,9 +1337,18 @@ export default function GameCanvas() {
         }
         // フロア移動時にモンスターハウス追跡をリセット
         monsterHouseStateRef.current = null;
+        // 発見済みボス座標をリセット（新フロア用）
+        setSeenBossPositions([]);
         // ボスフロアでも入場時は通常 BGM（ボス BGM はボスを視認した際に切り替え）
         if (!enteredRestFloor) {
           playBGM(getExploreBGM(next.floor));
+          // ── ボス出現フロアの事前警告 ──────────────────────────
+          const isNextBossFloor = (bossesRaw as { floor: number }[]).some((b) => b.floor === next.floor);
+          if (isNextBossFloor) {
+            setTimeout(() => {
+              setBattleLog((prev) => [...prev, '…異様な気配がする。'].slice(-BATTLE_LOG_MAX));
+            }, 600);
+          }
         }
 
         // オートセーブ（フロア移動時）
@@ -1500,6 +1557,21 @@ export default function GameCanvas() {
             next2.add(next.floor);
             return next2;
           });
+          // 発見済みボス座標を記録（ミニマップ常時表示用）
+          const visibleBosses = next.enemies.filter(
+            (e) => e.isBoss === true && next.map!.cells[e.pos.y]?.[e.pos.x]?.isVisible === true,
+          );
+          if (visibleBosses.length > 0) {
+            setSeenBossPositions(visibleBosses.map((e) => ({ x: e.pos.x, y: e.pos.y })));
+          }
+        } else if (next.enemies.some((e) => e.isBoss && e.hp > 0)) {
+          // ボスが移動するたびに座標を更新
+          const visibleBosses = next.enemies.filter(
+            (e) => e.isBoss === true && next.map!.cells[e.pos.y]?.[e.pos.x]?.isVisible === true,
+          );
+          if (visibleBosses.length > 0) {
+            setSeenBossPositions(visibleBosses.map((e) => ({ x: e.pos.x, y: e.pos.y })));
+          }
         }
         if (bossFirstSeen && !bossIntroShownRef.current.has(next.floor)) {
           bossIntroShownRef.current.add(next.floor);
@@ -2671,6 +2743,9 @@ export default function GameCanvas() {
                 gold={gameState.inventory.gold}
                 bossHPVisible={bossSeenFloors.has(gameState.floor)}
                 isRestFloor={gameState.isRestFloor ?? false}
+                isMuted={isMuted}
+                onToggleMute={handleToggleMute}
+                seenBossPositions={seenBossPositions}
               />
             )}
 

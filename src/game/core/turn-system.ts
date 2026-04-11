@@ -1207,6 +1207,11 @@ function processPlayerAction(
           if (bossAlive) {
             logMessages.push('ボスを倒さなければ下階へは行けない！');
           } else {
+            // 滑走で階段に到達した場合はメッセージを出す（直接踏んだ場合は確認ダイアログ済み）
+            const isSlid = slidePos.x !== targetPos.x || slidePos.y !== targetPos.y;
+            if (isSlid) {
+              logMessages.push(`滑走して階段に到達した！ B${state.floor + 1}F へ進む…`);
+            }
             shouldTransitionFloor = true;
           }
         }
@@ -3339,6 +3344,8 @@ export function processTurn(state: GameState, action: PlayerAction): GameState {
     return {
       ...stateWithPickup,
       ...transitionFields,
+      // 今ターンのログ（滑走メッセージ・罠メッセージ等）を次フロアにも持ち越す
+      battleLog: newBattleLog.length > 0 ? newBattleLog : transitionFields.battleLog,
       placedBombs: [],
       phase: 'exploring',
     };

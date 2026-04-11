@@ -13,12 +13,13 @@
  * - 探索済み未表示: #555566
  * - 未探索       : 描画しない（黒）
  * - 階段         : #ffdd00
- * - プレイヤー    : #44aaff、3×3px の点
+ * - プレイヤー    : #44aaff、3×3px の点（500ms 周期で点滅）
+ * - ボス（発見済）: #ff4400、5×5px の大マーカー（B の文字付き）
  * - 敵（視界内）  : #ff4444、2×2px の点
  * - 視野範囲      : rgba(255,255,255,0.15) の薄い白枠
  */
 
-import { useRef, useEffect } from 'react';
+import { useRef, useEffect, useState } from 'react';
 import type { Floor, Position } from '../core/types';
 import { TILE_WALL, TILE_STAIRS_DOWN, TILE_ITEM, TILE_GOLD, TILE_SHOP, TILE_WEAPON, TILE_STORAGE } from '../core/constants';
 import type { Enemy } from '../core/game-state';
@@ -31,6 +32,8 @@ import type { Enemy } from '../core/game-state';
 const MINIMAP_SIZE = 80;
 /** 1タイルあたりのピクセル数 */
 const TILE_PX = 2;
+/** プレイヤー点滅間隔 (ms) */
+const BLINK_INTERVAL_MS = 500;
 
 // ---------------------------------------------------------------------------
 // 型定義
@@ -45,6 +48,8 @@ interface MiniMapProps {
   enemies: Enemy[];
   /** 視界半径（VIEW_RADIUS） */
   viewRadius: number;
+  /** 発見済みボスの座標リスト（発見後は画面外でも表示） */
+  seenBossPositions?: Position[];
 }
 
 // ---------------------------------------------------------------------------
@@ -60,8 +65,16 @@ export default function MiniMap({
   playerPos,
   enemies,
   viewRadius,
+  seenBossPositions = [],
 }: MiniMapProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const [blinkOn, setBlinkOn] = useState(true);
+
+  // プレイヤー点滅タイマー
+  useEffect(() => {
+    const id = setInterval(() => setBlinkOn((v) => !v), BLINK_INTERVAL_MS);
+    return () => clearInterval(id);
+  }, []);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -97,19 +110,19 @@ export default function MiniMap({
 
         if (cell.isVisible || cell.isExplored) {
           const isDim = !cell.isVisible;
-          
+
           if (cell.tile === TILE_WALL) {
             ctx.fillStyle = isDim ? '#333344' : '#444455';
           } else if (cell.tile === TILE_STAIRS_DOWN) {
             ctx.fillStyle = isDim ? '#998800' : '#ffdd00';
           } else if (cell.tile === TILE_SHOP || cell.tile === TILE_STORAGE) {
-            ctx.fillStyle = isDim ? '#0044aa' : '#4488cc'; // Blue (shop/storage)
+            ctx.fillStyle = isDim ? '#0044aa' : '#4488cc';
           } else if (cell.tile === TILE_ITEM) {
-            ctx.fillStyle = isDim ? '#008800' : '#44ff44'; // Green
+            ctx.fillStyle = isDim ? '#008800' : '#44ff44';
           } else if (cell.tile === TILE_WEAPON) {
-            ctx.fillStyle = isDim ? '#0044aa' : '#4488ff'; // Blue
+            ctx.fillStyle = isDim ? '#0044aa' : '#4488ff';
           } else if (cell.tile === TILE_GOLD) {
-            ctx.fillStyle = isDim ? '#999900' : '#ffff00'; // Yellow
+            ctx.fillStyle = isDim ? '#999900' : '#ffff00';
           } else {
             ctx.fillStyle = isDim ? '#555566' : '#999999';
           }
@@ -131,17 +144,44 @@ export default function MiniMap({
     // 視界内の敵を赤点で描画（2×2px）
     ctx.fillStyle = '#ff4444';
     for (const enemy of enemies) {
+      if (enemy.isBoss) continue; // ボスは後で大マーカーで描画
       const ex = enemy.pos.x * TILE_PX;
       const ey = enemy.pos.y * TILE_PX;
       ctx.fillRect(ex, ey, TILE_PX, TILE_PX);
     }
 
-    // プレイヤーを青点で描画（3×3px、中央寄せ）
-    const ppx = playerPos.x * TILE_PX - 0.5;
-    const ppy = playerPos.y * TILE_PX - 0.5;
-    ctx.fillStyle = '#44aaff';
-    ctx.fillRect(ppx, ppy, 3, 3);
-  }, [floor, playerPos, enemies, viewRadius]);
+    // 発見済みボスを大マーカーで描画（5×5px + 枠）
+    for (const bp of seenBossPositions) {
+      const bx = bp.x * TILE_PX - 1;
+      const by = bp.y * TILE_PX - 1;
+      ctx.fillStyle = '#ff6600';
+      ctx.fillRect(bx, by, 5, 5);
+      ctx.strokeStyle = '#ffcc00';
+      ctx.lineWidth = 0.5;
+      ctx.strokeRect(bx, by, 5, 5);
+      // 中心に 1px の白点
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(bp.x * TILE_PX + 0.5, bp.y * TILE_PX + 0.5, 1, 1);
+    }
+
+    // プレイヤーを青点で描画（3×3px、点滅）
+    if (blinkOn) {
+      const ppx = playerPos.x * TILE_PX - 0.5;
+      const ppy = playerPos.y * TILE_PX - 0.5;
+      ctx.fillStyle = '#44aaff';
+      ctx.fillRect(ppx, ppy, 3, 3);
+      // 輝くリング
+      ctx.strokeStyle = 'rgba(100,200,255,0.6)';
+      ctx.lineWidth = 0.5;
+      ctx.strokeRect(ppx - 0.5, ppy - 0.5, 4, 4);
+    } else {
+      // 消灯時は暗い青
+      const ppx = playerPos.x * TILE_PX - 0.5;
+      const ppy = playerPos.y * TILE_PX - 0.5;
+      ctx.fillStyle = '#1155aa';
+      ctx.fillRect(ppx, ppy, 3, 3);
+    }
+  }, [floor, playerPos, enemies, viewRadius, seenBossPositions, blinkOn]);
 
   return (
     <canvas

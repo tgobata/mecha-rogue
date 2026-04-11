@@ -213,6 +213,118 @@ export function getItemName(itemId: string): string {
   return ITEM_DEFS.find((d) => d.id === itemId)?.name ?? itemId;
 }
 
+/**
+ * アイテムIDから効果の簡潔な数値付きサマリーを生成する。
+ * items.json / tools-equipment.json 両方に対応。
+ * 未鑑定・不明の場合は null を返す。
+ */
+export function getItemEffectSummary(itemId: string): string | null {
+  const def: any =
+    (ITEM_DEFS as any[]).find((d) => d.id === itemId) ??
+    (TOOL_DEFS as any[]).find((d) => d.id === itemId);
+  if (!def) return null;
+
+  const v: number = def.value ?? 0;
+  const eff: string = def.effect ?? '';
+
+  const bombRange = (r: number): string => {
+    if (r === 0) return '単体';
+    if (r === 1) return '十字5マス';
+    if (r === 2) return '3×3範囲';
+    return '5×5範囲';
+  };
+
+  switch (eff) {
+    // ── 回復 ───────────────────────────────────────────────────
+    case 'hp_restore':      return `HP +${v}`;
+    case 'hp_restore_full': return 'HP 全回復';
+    case 'energy_restore':  return `EN +${v}`;
+    case 'heal_over_time':  return `HP +${v}/ターン × ${def.healDuration ?? '?'}ターン（合計 ${v * (def.healDuration ?? 1)}）`;
+
+    // ── 武器・装備修理 ─────────────────────────────────────────
+    case 'weapon_durability_restore_full': return '装備武器 耐久全回復';
+    case 'shield_durability_restore_full': return '装備盾 耐久全回復';
+    case 'armor_durability_restore_full':  return '装備防具 耐久全回復';
+
+    // ── 強化素材 ───────────────────────────────────────────────
+    case 'weapon_upgrade_material': {
+      const needed = def.tier === 1 ? 3 : def.tier === 2 ? 3 : '5 / 10';
+      return `強化素材 Tier${def.tier ?? '?'}（必要数: ${needed}個）`;
+    }
+
+    // ── 探索 ───────────────────────────────────────────────────
+    case 'reveal_floor':    return 'フロア地形を全開示';
+    case 'reveal_enemies':  return '全敵の位置を開示';
+    case 'identify_item':   return '未鑑定アイテム 1個を鑑定';
+
+    // ── 移動・ワープ ───────────────────────────────────────────
+    case 'return_to_start': return 'スタート地点へ即帰還';
+    case 'set_warp_point':  return 'ワープ地点設置（1フロア限定）';
+    case 'warp_down':       return '1階層下へ転送';
+    case 'warp_up':         return '1階層上へ転送';
+    case 'warp_random':     return '現フロアのランダム位置へ転送';
+
+    // ── 戦闘補助 ──────────────────────────────────────────────
+    case 'speed_up':
+      return def.passive
+        ? `移動速度 +${v}（常時）`
+        : `速度 +${v} / ${def.duration ?? '?'}ターン`;
+    case 'damage_nullify':      return `ダメージを${v}回 無効化`;
+    case 'boss_damage_up':      return `ボスへのダメージ ×${v} / ${def.duration ?? '?'}ターン`;
+    case 'enemy_lose_tracking': return `敵の追跡を無効化 / ${v}ターン`;
+    case 'stun_area':           return `3×3範囲の敵を${v}ターン行動不能`;
+    case 'stun_radius_2':       return `周囲${def.radius ?? 2}マスの敵を${v}ターン行動不能`;
+    case 'decoy':               return `デコイ展開 ${def.duration ?? v}ターン（敵の注意を誘導）`;
+
+    // ── 爆弾・投擲 ────────────────────────────────────────────
+    case 'place_bomb':
+      return `${def.bombDelay ?? 2}ターン後爆発 / ${bombRange(def.bombRadius ?? 0)} / ダメージ ${v}`;
+    case 'throw_bomb':
+      return `投擲即爆発 / ${bombRange(def.bombRadius ?? 0)} / ダメージ ${v}`;
+    case 'ice_bomb':
+      return `投擲爆発 / ${bombRange(def.bombRadius ?? 0)} / ダメージ ${v} + ${def.frozenTurns ?? 1}ターン凍結`;
+    case 'flash_grenade':
+      return `周囲${def.flashRadius ?? 1}マスの敵を${def.stunTurns ?? 1}ターン行動不能`;
+
+    // ── 機体強化（永続消費） ───────────────────────────────────
+    case 'armor_up':           return `装甲 +${v}（永続）`;
+    case 'speed_up_permanent': return `移動速度 +${v}（永続）`;
+    case 'weapon_slot_up':     return '武器スロット +1（永続）';
+    case 'tool_slot_up':       return '道具スロット +1（永続）';
+    case 'pouch_capacity_up':  return `アイテムポーチ容量 +${v}（永続）`;
+    case 'energy_max_up':      return `最大EN +${v}（永続）`;
+    case 'max_hp_up':          return `最大HP +${v}（永続）`;
+    case 'warehouse_expansion':return '倉庫スロット拡張';
+
+    // ── 売却専用素材 ──────────────────────────────────────────
+    case 'sell_only':          return `売却専用 / 売値 ${def.sellPrice ?? v}G`;
+
+    // ── 未鑑定 ────────────────────────────────────────────────
+    case 'unknown': return null;
+
+    // ── 道具スロット装備（tools-equipment.json） ──────────────
+    case 'view_radius_up':            return `視界半径 +${v}（装備中常時）`;
+    case 'enemy_radar':               return '視界外の敵をミニマップに表示（装備中常時）';
+    case 'trap_visible':              return '隠し罠を可視化（装備中常時）';
+    case 'damage_reduce_percent':     return `全被ダメージ -${v}%（装備中常時）`;
+    case 'lava_immune':               return '溶岩ダメージを無効化（装備中常時）';
+    case 'ice_slide_immune':          return '氷面の滑りを無効化（装備中常時）';
+    case 'magnetic_tile_immune':      return '磁場タイルの効果を無効化（装備中常時）';
+    case 'critical_rate_up':          return `クリティカル率 +${v}%（装備中常時）`;
+    case 'double_action_on_atk':      return `攻撃後 ${Math.round(v * 100)}%の確率で追加行動（装備中常時）`;
+    case 'all_weapon_atk_up_percent': return `全武器の攻撃力 +${v}%（装備中常時）`;
+    case 'energy_regen_per_turn':     return `EN +${v}/ターン（装備中常時）`;
+    case 'auto_collect_radius':       return `${v}タイル以内のアイテムを自動収集（装備中常時）`;
+    case 'exp_gain_up_percent':       return `EXP獲得量 +${v}%（装備中常時）`;
+    case 'hp_regen_per_turn':         return `HP +${v}/ターン（装備中常時）`;
+    case 'damage_nullify_periodic':   return `${def.cooldownTurns ?? 3}ターンに1回 ダメージを1回無効（装備中常時）`;
+    case 'atk_x2_at_low_hp':         return `HP ${Math.round((def.hpThreshold ?? 0.2) * 100)}%以下で攻撃力 ×${v}（装備中常時）`;
+    case 'phase_through_wall':        return `${def.cooldownTurns ?? 3}ターンに1回 壁をすり抜けて移動（装備中常時）`;
+
+    default: return null;
+  }
+}
+
 // ---------------------------------------------------------------------------
 // インベントリアイテム使用（items.json 系 InventoryItem を消費して効果を適用）
 // ---------------------------------------------------------------------------

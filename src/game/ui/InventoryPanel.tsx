@@ -12,6 +12,7 @@ import type { Inventory } from '../core/game-state';
 import itemsRaw from '../assets/data/items.json';
 import toolsRaw from '../assets/data/tools-equipment.json';
 import { getSortedItems } from '../core/inventory-utils';
+import { getItemEffectSummary } from '../core/tool-system';
 
 const ALL_ITEMS = [...(itemsRaw as any[]), ...(toolsRaw as any[])];
 
@@ -356,17 +357,31 @@ export default function InventoryPanel({
                     <div
                       style={{
                         fontSize: 11,
-                        color: item.unidentified ? '#778899' : '#99aabb',
-                        lineHeight: 1.4,
+                        lineHeight: 1.5,
                         whiteSpace: 'normal',
                         wordBreak: 'break-word',
                         paddingLeft: 8,
+                        display: 'flex',
+                        flexDirection: 'column',
+                        gap: 2,
                       }}
                     >
-                      {item.unidentified
-                        ? '未鑑定のアイテム。識別スコープで正体を明かせる。'
-                        : (ALL_ITEMS.find(d => d.id === item.itemId)?.description ?? '説明がありません。')
-                      }
+                      {item.unidentified ? (
+                        <span style={{ color: '#778899' }}>未鑑定のアイテム。識別スコープで正体を明かせる。</span>
+                      ) : (() => {
+                        const summary = getItemEffectSummary(item.itemId);
+                        const desc = ALL_ITEMS.find(d => d.id === item.itemId)?.description ?? '';
+                        return (
+                          <>
+                            {summary && (
+                              <span style={{ color: '#66ffcc', fontWeight: 'bold' }}>▷ {summary}</span>
+                            )}
+                            {desc && (
+                              <span style={{ color: '#99aabb' }}>{desc}</span>
+                            )}
+                          </>
+                        );
+                      })()}
                     </div>
                   )}
                 </div>

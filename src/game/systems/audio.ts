@@ -136,6 +136,9 @@ let seVol: any = null;
 /** マスターボリューム（0.0〜1.0） */
 let masterVolume = 0.8;
 
+/** ミュート状態 */
+let muted = false;
+
 // ---------------------------------------------------------------------------
 // 公開API
 // ---------------------------------------------------------------------------
@@ -406,6 +409,21 @@ export function setVolume(vol: number): void {
   masterVolume = Math.max(0, Math.min(1, vol));
   if (!Tone) return;
   Tone.getDestination().volume.value = volumeToDb(masterVolume) - 6;
+}
+
+/**
+ * ミュート状態を設定する。
+ * @param value true で無音、false で復帰
+ */
+export function setMuted(value: boolean): void {
+  muted = value;
+  if (!Tone) return;
+  Tone.getDestination().volume.value = muted ? -Infinity : (volumeToDb(masterVolume) - 6);
+}
+
+/** ミュート状態を返す。 */
+export function getMuted(): boolean {
+  return muted;
 }
 
 /**

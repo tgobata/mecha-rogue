@@ -14,7 +14,7 @@
  */
 
 import type { Player, Enemy, Inventory } from '../core/game-state';
-import type { Floor } from '../core/types';
+import type { Floor, Position } from '../core/types';
 import { VIEW_RADIUS } from '../core/constants';
 import MiniMap from './MiniMap';
 import bossesRaw from '../assets/data/bosses.json';
@@ -46,6 +46,12 @@ interface HUDProps {
   bossHPVisible?: boolean;
   /** 現在フロアが休憩所かどうか */
   isRestFloor?: boolean;
+  /** ミュート状態 */
+  isMuted?: boolean;
+  /** サウンドON/OFFトグル */
+  onToggleMute?: () => void;
+  /** 発見済みボスの座標リスト */
+  seenBossPositions?: Position[];
 }
 
 function getHpBarColor(hp: number, maxHp: number): string {
@@ -56,7 +62,7 @@ function getHpBarColor(hp: number, maxHp: number): string {
 }
 
 
-export default function HUD({ player, floorNumber, floor, enemies, inventory, level, gold, bossHPVisible, isRestFloor }: HUDProps) {
+export default function HUD({ player, floorNumber, floor, enemies, inventory, level, gold, bossHPVisible, isRestFloor, isMuted, onToggleMute, seenBossPositions }: HUDProps) {
   const hpBarColor = getHpBarColor(player.hp, player.maxHp);
   const hpPercent  = `${Math.max(0, Math.floor((player.hp / player.maxHp) * 100))}%`;
   const boss = bossHPVisible ? enemies.find(
@@ -117,17 +123,44 @@ export default function HUD({ player, floorNumber, floor, enemies, inventory, le
         </div>
       )}
 
-      {/* ── 右上: 階数 + ミニマップ ── */}
+      {/* ── 右上: 階数 + ミニマップ + サウンドボタン ── */}
       <div className="absolute top-2 right-2 flex flex-col items-end gap-2 z-10">
         <div
           className="flex flex-col items-center gap-1"
           style={{ backgroundColor: 'rgba(0,0,0,0.75)', border: '1px solid #554400', borderRadius: 4, padding: '4px 6px' }}
         >
-          <span className="text-sm font-bold text-yellow-300" style={{ fontFamily: 'monospace' }}>
-            {isRestFloor ? '休憩所' : `B${floorNumber}F`}
-          </span>
+          <div className="flex items-center gap-2 w-full justify-between">
+            <span className="text-sm font-bold text-yellow-300" style={{ fontFamily: 'monospace' }}>
+              {isRestFloor ? '休憩所' : `B${floorNumber}F`}
+            </span>
+            {onToggleMute && (
+              <button
+                onClick={onToggleMute}
+                title={isMuted ? 'サウンドON' : 'サウンドOFF'}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  cursor: 'pointer',
+                  fontSize: 14,
+                  lineHeight: 1,
+                  padding: '0 2px',
+                  opacity: isMuted ? 0.5 : 1,
+                  pointerEvents: 'auto',
+                  color: isMuted ? '#888' : '#ffdd88',
+                }}
+              >
+                {isMuted ? '🔇' : '🔊'}
+              </button>
+            )}
+          </div>
           {floor !== null && (
-            <MiniMap floor={floor} playerPos={player.pos} enemies={enemies} viewRadius={VIEW_RADIUS} />
+            <MiniMap
+              floor={floor}
+              playerPos={player.pos}
+              enemies={enemies}
+              viewRadius={VIEW_RADIUS}
+              seenBossPositions={seenBossPositions}
+            />
           )}
         </div>
       </div>

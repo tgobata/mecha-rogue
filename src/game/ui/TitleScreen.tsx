@@ -5,6 +5,8 @@ import {
   initAudio,
   isAudioReady,
   unlockAudioContext,
+  setMuted,
+  getMuted,
 } from "../systems/audio";
 import { getAllSaves, deleteSave, SaveSummary } from "../core/save-system";
 import HelpManualOverlay from "./HelpManualOverlay";
@@ -29,6 +31,7 @@ const TitleScreen: React.FC<TitleScreenProps> = ({
   const [showManual, setShowManual] = useState(false);
   const [deleteConfirmSlot, setDeleteConfirmSlot] = useState<number | null>(null);
   const [showFullSavesNotice, setShowFullSavesNotice] = useState(false);
+  const [isMuted, setIsMuted] = useState(() => getMuted());
 
   // メニューモードが切り替わるか、コンポーネントがマウントされた時にセーブデータを取得する
   useEffect(() => {
@@ -357,9 +360,33 @@ const TitleScreen: React.FC<TitleScreenProps> = ({
 
       <div
         className="absolute bottom-3 left-1/2 text-[10px] text-gray-500 tracking-tighter z-10"
-        style={{ transform: "translateX(-50%)", whiteSpace: "nowrap" }}
+        style={{ transform: "translateX(-50%)", whiteSpace: "nowrap", display: "flex", alignItems: "center", gap: 10 }}
       >
-        © 2026 o77bata / VER 0.1.{process.env.NEXT_PUBLIC_BUILD_VERSION ?? '0000.00.00.00.00.00'}
+        <span>© 2026 o77bata / VER 0.2.{process.env.NEXT_PUBLIC_BUILD_VERSION ?? '0000.00.00.00.00.00'}</span>
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            const next = !getMuted();
+            setMuted(next);
+            setIsMuted(next);
+          }}
+          onTouchStart={(e) => { unlockAudioContext(); e.stopPropagation(); }}
+          title={isMuted ? "サウンドON" : "サウンドOFF"}
+          style={{
+            background: "none",
+            border: "1px solid #444466",
+            borderRadius: 4,
+            cursor: "pointer",
+            fontSize: 13,
+            lineHeight: 1,
+            padding: "1px 5px",
+            opacity: isMuted ? 0.5 : 0.85,
+            color: isMuted ? "#888" : "#ffdd88",
+            pointerEvents: "auto",
+          }}
+        >
+          {isMuted ? "🔇" : "🔊"}
+        </button>
       </div>
 
       {/* マニュアルオーバーレイ */}

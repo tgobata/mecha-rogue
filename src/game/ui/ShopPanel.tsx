@@ -11,6 +11,7 @@ import { useState, useRef, useEffect } from 'react';
 import type { ShopItem } from '../core/shop-system';
 import type { WeaponInstance, InventoryItem, EquippedShield, EquippedArmor } from '../core/game-state';
 import { getSortedItems } from '../core/inventory-utils';
+import { getItemEffectSummary } from '../core/tool-system';
 import itemsRaw from '../assets/data/items.json';
 import toolsRaw from '../assets/data/tools-equipment.json';
 import weaponsRaw from '../assets/data/weapons.json';
@@ -269,9 +270,17 @@ export default function ShopPanel({
                       </div>
                     </div>
                     {/* 説明文 (タップ選択時に表示) */}
-                    {isSelected && itemDef?.description && (
-                      <div style={{ fontSize: 11, color: '#ccbbaa', lineHeight: 1.5, marginTop: 4, paddingTop: 4, borderTop: '1px solid rgba(180,140,60,0.3)', whiteSpace: 'normal', wordBreak: 'break-word' }}>
-                        {itemDef.description}
+                    {isSelected && itemDef && (
+                      <div style={{ fontSize: 11, lineHeight: 1.5, marginTop: 4, paddingTop: 4, borderTop: '1px solid rgba(180,140,60,0.3)', display: 'flex', flexDirection: 'column', gap: 2 }}>
+                        {(() => {
+                          const summary = getItemEffectSummary(itemDef.id);
+                          return (
+                            <>
+                              {summary && <span style={{ color: '#66ffcc', fontWeight: 'bold' }}>▷ {summary}</span>}
+                              {itemDef.description && <span style={{ color: '#ccbbaa', whiteSpace: 'normal', wordBreak: 'break-word' }}>{itemDef.description}</span>}
+                            </>
+                          );
+                        })()}
                       </div>
                     )}
                   </div>
@@ -342,9 +351,17 @@ export default function ShopPanel({
                             >売る</button>
                           </div>
                         </div>
-                        {isExpanded && itemDef?.description && (
-                          <div style={{ fontSize: 11, color: '#ccbbaa', lineHeight: 1.5, marginTop: 4, paddingTop: 4, borderTop: '1px solid rgba(60,180,120,0.3)', whiteSpace: 'normal', wordBreak: 'break-word' }}>
-                            {itemDef.description}
+                        {isExpanded && itemDef && (
+                          <div style={{ fontSize: 11, lineHeight: 1.5, marginTop: 4, paddingTop: 4, borderTop: '1px solid rgba(60,180,120,0.3)', display: 'flex', flexDirection: 'column', gap: 2 }}>
+                            {(() => {
+                              const summary = getItemEffectSummary(itemDef.id);
+                              return (
+                                <>
+                                  {summary && <span style={{ color: '#66ffcc', fontWeight: 'bold' }}>▷ {summary}</span>}
+                                  {itemDef.description && <span style={{ color: '#ccbbaa', whiteSpace: 'normal', wordBreak: 'break-word' }}>{itemDef.description}</span>}
+                                </>
+                              );
+                            })()}
                           </div>
                         )}
                       </div>
