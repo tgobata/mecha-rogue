@@ -1132,6 +1132,7 @@ function detonateBombAtPos(state: GameState, def: any, pos: Position, logs: stri
   const newEnemies = state.enemies.map(e => {
     if (blastTiles.some(t => t.x === e.pos.x && t.y === e.pos.y)) {
       const dmg = Math.max(1, damage - (e.def ?? 0));
+      logs.push(`${e.name ?? e.enemyType}に爆発ダメージ${dmg}！`);
       return { ...e, hp: e.hp - dmg };
     }
     return e;
@@ -1206,6 +1207,7 @@ function detonateIceBombAtPos(state: GameState, def: any, pos: Position, logs: s
   const newEnemies = state.enemies.map(e => {
     if (!blastTiles.some(t => t.x === e.pos.x && t.y === e.pos.y)) return e;
     const dmg = Math.max(1, damage - (e.def ?? 0));
+    logs.push(`${e.name ?? e.enemyType}に氷結爆発ダメージ${dmg}＋${frozenTurns}ターン凍結！`);
     const existing = e.statusEffects ?? [];
     const prevFrozen = existing.find(s => s.type === 'frozen');
     const newFrozen: StatusEffect = prevFrozen && prevFrozen.remainingTurns >= frozenTurns
@@ -1219,7 +1221,7 @@ function detonateIceBombAtPos(state: GameState, def: any, pos: Position, logs: s
   if (newPlayer && blastTiles.some(t => t.x === newPlayer!.pos.x && t.y === newPlayer!.pos.y)) {
     const playerDmg = Math.max(1, Math.floor(damage * 0.5) - (newPlayer.def ?? 0));
     newPlayer = { ...newPlayer, hp: newPlayer.hp - playerDmg, hpEverDroppedBelowMax: true };
-    logs.push(`アイスボムの爆発がプレイヤーに${playerDmg}ダメージ！`);
+    logs.push(`アイスボムの爆発がプレイヤーに${playerDmg}ダメージ！（凍結無効）`);
   }
 
   const newTraps = applyBlastToTraps(state.traps, blastTiles, logs);

@@ -3193,6 +3193,7 @@ export function processTurn(state: GameState, action: PlayerAction): GameState {
       bombEnemies = bombEnemies.map((e) => {
         if (blastTiles.some((t) => t.x === e.pos.x && t.y === e.pos.y)) {
           const dmg = Math.max(1, bomb.damage - (e.def ?? 0));
+          newBattleLog.push(`${e.name ?? e.enemyType}に爆発ダメージ${dmg}！`);
           return { ...e, hp: e.hp - dmg };
         }
         return e;

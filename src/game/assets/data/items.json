@@ -575,300 +575,300 @@
     "name": "時限爆弾I弱",
     "category": "combat",
     "effect": "place_bomb",
-    "value": 20,
+    "value": 40,
     "bombDelay": 2,
     "bombRadius": 0,
     "appearsFrom": 1,
     "shopPrice": 50,
     "dropWeight": 10,
-    "description": "2ターン後に自マスで爆発。小ダメージ20。"
+    "description": "2ターン後に自マスで爆発。小ダメージ40。"
   },
   {
     "id": "bomb_1_m",
     "name": "時限爆弾I中",
     "category": "combat",
     "effect": "place_bomb",
-    "value": 50,
+    "value": 125,
     "bombDelay": 2,
     "bombRadius": 0,
     "appearsFrom": 5,
     "shopPrice": 100,
     "dropWeight": 7,
-    "description": "2ターン後に自マスで爆発。中ダメージ50。"
+    "description": "2ターン後に自マスで爆発。中ダメージ125。"
   },
   {
     "id": "bomb_1_h",
     "name": "時限爆弾I強",
     "category": "combat",
     "effect": "place_bomb",
-    "value": 100,
+    "value": 300,
     "bombDelay": 2,
     "bombRadius": 0,
     "appearsFrom": 10,
     "shopPrice": 180,
     "dropWeight": 4,
-    "description": "2ターン後に自マスで爆発。大ダメージ100。"
+    "description": "2ターン後に自マスで爆発。大ダメージ300。"
   },
   {
     "id": "bomb_2_s",
     "name": "時限爆弾II弱",
     "category": "combat",
     "effect": "place_bomb",
-    "value": 20,
+    "value": 40,
     "bombDelay": 3,
     "bombRadius": 1,
     "appearsFrom": 3,
     "shopPrice": 80,
     "dropWeight": 9,
-    "description": "3ターン後に自マス＋周囲4マスで爆発。小ダメージ20。"
+    "description": "3ターン後に自マス＋周囲4マスで爆発。小ダメージ40。"
   },
   {
     "id": "bomb_2_m",
     "name": "時限爆弾II中",
     "category": "combat",
     "effect": "place_bomb",
-    "value": 50,
+    "value": 125,
     "bombDelay": 3,
     "bombRadius": 1,
     "appearsFrom": 8,
     "shopPrice": 150,
     "dropWeight": 6,
-    "description": "3ターン後に自マス＋周囲4マスで爆発。中ダメージ50。"
+    "description": "3ターン後に自マス＋周囲4マスで爆発。中ダメージ125。"
   },
   {
     "id": "bomb_2_h",
     "name": "時限爆弾II強",
     "category": "combat",
     "effect": "place_bomb",
-    "value": 100,
+    "value": 300,
     "bombDelay": 3,
     "bombRadius": 1,
     "appearsFrom": 15,
     "shopPrice": 250,
     "dropWeight": 4,
-    "description": "3ターン後に自マス＋周囲4マスで爆発。大ダメージ100。"
+    "description": "3ターン後に自マス＋周囲4マスで爆発。大ダメージ300。"
   },
   {
     "id": "bomb_3_s",
     "name": "時限爆弾III弱",
     "category": "combat",
     "effect": "place_bomb",
-    "value": 20,
+    "value": 40,
     "bombDelay": 3,
     "bombRadius": 2,
     "appearsFrom": 5,
     "shopPrice": 100,
     "dropWeight": 8,
-    "description": "3ターン後に3×3範囲で爆発。小ダメージ20。"
+    "description": "3ターン後に3×3範囲で爆発。小ダメージ40。"
   },
   {
     "id": "bomb_3_m",
     "name": "時限爆弾III中",
     "category": "combat",
     "effect": "place_bomb",
-    "value": 50,
+    "value": 125,
     "bombDelay": 3,
     "bombRadius": 2,
     "appearsFrom": 10,
     "shopPrice": 200,
     "dropWeight": 5,
-    "description": "3ターン後に3×3範囲で爆発。中ダメージ50。"
+    "description": "3ターン後に3×3範囲で爆発。中ダメージ125。"
   },
   {
     "id": "bomb_3_h",
     "name": "時限爆弾III強",
     "category": "combat",
     "effect": "place_bomb",
-    "value": 100,
+    "value": 300,
     "bombDelay": 3,
     "bombRadius": 2,
     "appearsFrom": 18,
     "shopPrice": 350,
     "dropWeight": 3,
-    "description": "3ターン後に3×3範囲で爆発。大ダメージ100。"
+    "description": "3ターン後に3×3範囲で爆発。大ダメージ300。"
   },
   {
     "id": "bomb_4_s",
     "name": "時限爆弾IV弱",
     "category": "combat",
     "effect": "place_bomb",
-    "value": 20,
+    "value": 40,
     "bombDelay": 4,
     "bombRadius": 4,
     "appearsFrom": 8,
     "shopPrice": 120,
     "dropWeight": 7,
-    "description": "4ターン後に5×5範囲で爆発。小ダメージ20。"
+    "description": "4ターン後に5×5範囲で爆発。小ダメージ40。"
   },
   {
     "id": "bomb_4_m",
     "name": "時限爆弾IV中",
     "category": "combat",
     "effect": "place_bomb",
-    "value": 50,
+    "value": 125,
     "bombDelay": 4,
     "bombRadius": 4,
     "appearsFrom": 15,
     "shopPrice": 220,
     "dropWeight": 5,
-    "description": "4ターン後に5×5範囲で爆発。中ダメージ50。"
+    "description": "4ターン後に5×5範囲で爆発。中ダメージ125。"
   },
   {
     "id": "bomb_4_h",
     "name": "時限爆弾IV強",
     "category": "combat",
     "effect": "place_bomb",
-    "value": 100,
+    "value": 300,
     "bombDelay": 4,
     "bombRadius": 4,
     "appearsFrom": 22,
     "shopPrice": 380,
     "dropWeight": 3,
-    "description": "4ターン後に5×5範囲で爆発。大ダメージ100。"
+    "description": "4ターン後に5×5範囲で爆発。大ダメージ300。"
   },
   {
     "id": "grenade_1_s",
     "name": "爆弾I弱",
     "category": "combat",
     "effect": "throw_bomb",
-    "value": 25,
+    "value": 50,
     "bombRadius": 0,
     "appearsFrom": 1,
     "shopPrice": 60,
     "dropWeight": 10,
-    "description": "投げると着地点で即時爆発。0マス範囲に25ダメージ。"
+    "description": "投げると着地点で即時爆発。0マス範囲に50ダメージ。"
   },
   {
     "id": "grenade_1_m",
     "name": "爆弾I中",
     "category": "combat",
     "effect": "throw_bomb",
-    "value": 60,
+    "value": 150,
     "bombRadius": 0,
     "appearsFrom": 5,
     "shopPrice": 120,
     "dropWeight": 7,
-    "description": "投げると着地点で即時爆発。0マス範囲に60ダメージ。"
+    "description": "投げると着地点で即時爆発。0マス範囲に150ダメージ。"
   },
   {
     "id": "grenade_1_h",
     "name": "爆弾I強",
     "category": "combat",
     "effect": "throw_bomb",
-    "value": 120,
+    "value": 360,
     "bombRadius": 0,
     "appearsFrom": 10,
     "shopPrice": 200,
     "dropWeight": 4,
-    "description": "投げると着地点で即時爆発。0マス範囲に120ダメージ。"
+    "description": "投げると着地点で即時爆発。0マス範囲に360ダメージ。"
   },
   {
     "id": "grenade_2_s",
     "name": "爆弾II弱",
     "category": "combat",
     "effect": "throw_bomb",
-    "value": 25,
+    "value": 50,
     "bombRadius": 1,
     "appearsFrom": 3,
     "shopPrice": 90,
     "dropWeight": 9,
-    "description": "投げると着地点で即時爆発。十字5マス範囲に25ダメージ。"
+    "description": "投げると着地点で即時爆発。十字5マス範囲に50ダメージ。"
   },
   {
     "id": "grenade_2_m",
     "name": "爆弾II中",
     "category": "combat",
     "effect": "throw_bomb",
-    "value": 60,
+    "value": 150,
     "bombRadius": 1,
     "appearsFrom": 8,
     "shopPrice": 180,
     "dropWeight": 6,
-    "description": "投げると着地点で即時爆発。十字5マス範囲に60ダメージ。"
+    "description": "投げると着地点で即時爆発。十字5マス範囲に150ダメージ。"
   },
   {
     "id": "grenade_2_h",
     "name": "爆弾II強",
     "category": "combat",
     "effect": "throw_bomb",
-    "value": 120,
+    "value": 360,
     "bombRadius": 1,
     "appearsFrom": 15,
     "shopPrice": 300,
     "dropWeight": 3,
-    "description": "投げると着地点で即時爆発。十字5マス範囲に120ダメージ。"
+    "description": "投げると着地点で即時爆発。十字5マス範囲に360ダメージ。"
   },
   {
     "id": "grenade_3_s",
     "name": "爆弾III弱",
     "category": "combat",
     "effect": "throw_bomb",
-    "value": 25,
+    "value": 50,
     "bombRadius": 2,
     "appearsFrom": 5,
     "shopPrice": 120,
     "dropWeight": 8,
-    "description": "投げると着地点で即時爆発。3×3範囲に25ダメージ。"
+    "description": "投げると着地点で即時爆発。3×3範囲に50ダメージ。"
   },
   {
     "id": "grenade_3_m",
     "name": "爆弾III中",
     "category": "combat",
     "effect": "throw_bomb",
-    "value": 60,
+    "value": 150,
     "bombRadius": 2,
     "appearsFrom": 12,
     "shopPrice": 240,
     "dropWeight": 5,
-    "description": "投げると着地点で即時爆発。3×3範囲に60ダメージ。"
+    "description": "投げると着地点で即時爆発。3×3範囲に150ダメージ。"
   },
   {
     "id": "grenade_3_h",
     "name": "爆弾III強",
     "category": "combat",
     "effect": "throw_bomb",
-    "value": 120,
+    "value": 360,
     "bombRadius": 2,
     "appearsFrom": 20,
     "shopPrice": 420,
     "dropWeight": 2,
-    "description": "投げると着地点で即時爆発。3×3範囲に120ダメージ。"
+    "description": "投げると着地点で即時爆発。3×3範囲に360ダメージ。"
   },
   {
     "id": "grenade_4_s",
     "name": "爆弾IV弱",
     "category": "combat",
     "effect": "throw_bomb",
-    "value": 25,
+    "value": 50,
     "bombRadius": 4,
     "appearsFrom": 8,
     "shopPrice": 150,
     "dropWeight": 7,
-    "description": "投げると着地点で即時爆発。5×5範囲に25ダメージ。"
+    "description": "投げると着地点で即時爆発。5×5範囲に50ダメージ。"
   },
   {
     "id": "grenade_4_m",
     "name": "爆弾IV中",
     "category": "combat",
     "effect": "throw_bomb",
-    "value": 60,
+    "value": 150,
     "bombRadius": 4,
     "appearsFrom": 16,
     "shopPrice": 280,
     "dropWeight": 4,
-    "description": "投げると着地点で即時爆発。5×5範囲に60ダメージ。"
+    "description": "投げると着地点で即時爆発。5×5範囲に150ダメージ。"
   },
   {
     "id": "grenade_4_h",
     "name": "爆弾IV強",
     "category": "combat",
     "effect": "throw_bomb",
-    "value": 120,
+    "value": 360,
     "bombRadius": 4,
     "appearsFrom": 25,
     "shopPrice": 500,
     "dropWeight": 2,
-    "description": "投げると着地点で即時爆発。5×5範囲に120ダメージ。"
+    "description": "投げると着地点で即時爆発。5×5範囲に360ダメージ。"
   },
   {
     "id": "flash_grenade_weak",
@@ -927,156 +927,156 @@
     "name": "フローズンボムI弱",
     "category": "combat",
     "effect": "ice_bomb",
-    "value": 20,
+    "value": 40,
     "bombRadius": 0,
     "frozenTurns": 1,
     "appearsFrom": 1,
     "shopPrice": 80,
     "dropWeight": 9,
-    "description": "投げると着地点で爆発。0マス範囲に20ダメージ+1ターン凍結。"
+    "description": "投げると着地点で爆発。0マス範囲に40ダメージ+1ターン凍結。"
   },
   {
     "id": "ice_bomb_1_m",
     "name": "フローズンボムI中",
     "category": "combat",
     "effect": "ice_bomb",
-    "value": 45,
+    "value": 110,
     "bombRadius": 0,
     "frozenTurns": 1,
     "appearsFrom": 5,
     "shopPrice": 160,
     "dropWeight": 6,
-    "description": "投げると着地点で爆発。0マス範囲に45ダメージ+1ターン凍結。"
+    "description": "投げると着地点で爆発。0マス範囲に110ダメージ+1ターン凍結。"
   },
   {
     "id": "ice_bomb_1_h",
     "name": "フローズンボムI強",
     "category": "combat",
     "effect": "ice_bomb",
-    "value": 90,
+    "value": 270,
     "bombRadius": 0,
     "frozenTurns": 1,
     "appearsFrom": 10,
     "shopPrice": 260,
     "dropWeight": 3,
-    "description": "投げると着地点で爆発。0マス範囲に90ダメージ+1ターン凍結。"
+    "description": "投げると着地点で爆発。0マス範囲に270ダメージ+1ターン凍結。"
   },
   {
     "id": "ice_bomb_2_s",
     "name": "フローズンボムII弱",
     "category": "combat",
     "effect": "ice_bomb",
-    "value": 20,
+    "value": 40,
     "bombRadius": 1,
     "frozenTurns": 2,
     "appearsFrom": 3,
     "shopPrice": 110,
     "dropWeight": 8,
-    "description": "投げると着地点で爆発。十字5マス範囲に20ダメージ+2ターン凍結。"
+    "description": "投げると着地点で爆発。十字5マス範囲に40ダメージ+2ターン凍結。"
   },
   {
     "id": "ice_bomb_2_m",
     "name": "フローズンボムII中",
     "category": "combat",
     "effect": "ice_bomb",
-    "value": 45,
+    "value": 110,
     "bombRadius": 1,
     "frozenTurns": 2,
     "appearsFrom": 8,
     "shopPrice": 220,
     "dropWeight": 5,
-    "description": "投げると着地点で爆発。十字5マス範囲に45ダメージ+2ターン凍結。"
+    "description": "投げると着地点で爆発。十字5マス範囲に110ダメージ+2ターン凍結。"
   },
   {
     "id": "ice_bomb_2_h",
     "name": "フローズンボムII強",
     "category": "combat",
     "effect": "ice_bomb",
-    "value": 90,
+    "value": 270,
     "bombRadius": 1,
     "frozenTurns": 2,
     "appearsFrom": 15,
     "shopPrice": 360,
     "dropWeight": 3,
-    "description": "投げると着地点で爆発。十字5マス範囲に90ダメージ+2ターン凍結。"
+    "description": "投げると着地点で爆発。十字5マス範囲に270ダメージ+2ターン凍結。"
   },
   {
     "id": "ice_bomb_3_s",
     "name": "フローズンボムIII弱",
     "category": "combat",
     "effect": "ice_bomb",
-    "value": 20,
+    "value": 40,
     "bombRadius": 2,
     "frozenTurns": 3,
     "appearsFrom": 5,
     "shopPrice": 140,
     "dropWeight": 7,
-    "description": "投げると着地点で爆発。3×3範囲に20ダメージ+3ターン凍結。"
+    "description": "投げると着地点で爆発。3×3範囲に40ダメージ+3ターン凍結。"
   },
   {
     "id": "ice_bomb_3_m",
     "name": "フローズンボムIII中",
     "category": "combat",
     "effect": "ice_bomb",
-    "value": 45,
+    "value": 110,
     "bombRadius": 2,
     "frozenTurns": 3,
     "appearsFrom": 12,
     "shopPrice": 280,
     "dropWeight": 4,
-    "description": "投げると着地点で爆発。3×3範囲に45ダメージ+3ターン凍結。"
+    "description": "投げると着地点で爆発。3×3範囲に110ダメージ+3ターン凍結。"
   },
   {
     "id": "ice_bomb_3_h",
     "name": "フローズンボムIII強",
     "category": "combat",
     "effect": "ice_bomb",
-    "value": 90,
+    "value": 270,
     "bombRadius": 2,
     "frozenTurns": 3,
     "appearsFrom": 20,
     "shopPrice": 480,
     "dropWeight": 2,
-    "description": "投げると着地点で爆発。3×3範囲に90ダメージ+3ターン凍結。"
+    "description": "投げると着地点で爆発。3×3範囲に270ダメージ+3ターン凍結。"
   },
   {
     "id": "ice_bomb_4_s",
     "name": "フローズンボムIV弱",
     "category": "combat",
     "effect": "ice_bomb",
-    "value": 20,
+    "value": 40,
     "bombRadius": 4,
     "frozenTurns": 4,
     "appearsFrom": 8,
     "shopPrice": 180,
     "dropWeight": 6,
-    "description": "投げると着地点で爆発。5×5範囲に20ダメージ+4ターン凍結。"
+    "description": "投げると着地点で爆発。5×5範囲に40ダメージ+4ターン凍結。"
   },
   {
     "id": "ice_bomb_4_m",
     "name": "フローズンボムIV中",
     "category": "combat",
     "effect": "ice_bomb",
-    "value": 45,
+    "value": 110,
     "bombRadius": 4,
     "frozenTurns": 4,
     "appearsFrom": 16,
     "shopPrice": 340,
     "dropWeight": 3,
-    "description": "投げると着地点で爆発。5×5範囲に45ダメージ+4ターン凍結。"
+    "description": "投げると着地点で爆発。5×5範囲に110ダメージ+4ターン凍結。"
   },
   {
     "id": "ice_bomb_4_h",
     "name": "フローズンボムIV強",
     "category": "combat",
     "effect": "ice_bomb",
-    "value": 90,
+    "value": 270,
     "bombRadius": 4,
     "frozenTurns": 4,
     "appearsFrom": 25,
     "shopPrice": 580,
     "dropWeight": 1,
-    "description": "投げると着地点で爆発。5×5範囲に90ダメージ+4ターン凍結。"
+    "description": "投げると着地点で爆発。5×5範囲に270ダメージ+4ターン凍結。"
   },
   {
     "id": "nanobot_s",
