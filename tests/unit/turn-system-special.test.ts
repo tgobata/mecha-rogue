@@ -131,11 +131,13 @@ describe('processTurn: Special Mechanics', () => {
   });
 
   it('Trap Tile (large_pitfall) triggers damage and floor transition', () => {
+    // 可視罠の75%ランダム発動判定をモックして確実に発動させる
+    const mockRandom = vi.spyOn(Math, 'random').mockReturnValue(0.4);
     const state = createInitialGameState();
     state.phase = 'exploring';
     state.map = createMockMap(5, 5);
     state.map.cells[0][1].tile = TILE_TRAP;
-    
+
     // トラップを配置
     state.traps = [{
       id: 999,
@@ -161,6 +163,7 @@ describe('processTurn: Special Mechanics', () => {
     };
 
     const nextState = processTurn(state, 'move_right');
+    mockRandom.mockRestore();
 
     // 次フロアへ落ちる場合、transitionToNextFloor が呼ばれて新マップ上にジャンプし、HPは減る
     expect(nextState.floor).toBe(2);

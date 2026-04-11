@@ -46,8 +46,8 @@ describe('createWeaponInstance', () => {
 
   it('durability が null でない武器は maxDurability と同値で初期化する', () => {
     const w = createWeaponInstance('blade_arm');
-    expect(w.durability).toBe(40);
-    expect(w.maxDurability).toBe(40);
+    expect(w.durability).toBe(44);
+    expect(w.maxDurability).toBe(44);
   });
 
   it('machine_punch は durability が null（壊れない）', () => {
@@ -77,15 +77,15 @@ describe('createWeaponInstance', () => {
 
 describe('consumeDurability', () => {
   it('耐久度が durabilityLoss 分減少する', () => {
-    const w = createWeaponInstance('blade_arm'); // durability=40, loss=1
+    const w = createWeaponInstance('blade_arm'); // durability=44, loss=1
     const w2 = consumeDurability(w);
-    expect(w2.durability).toBe(39);
+    expect(w2.durability).toBe(43);
   });
 
   it('元のオブジェクトは変更されない（immutable）', () => {
     const w = createWeaponInstance('blade_arm');
     consumeDurability(w);
-    expect(w.durability).toBe(40);
+    expect(w.durability).toBe(44);
   });
 
   it('耐久度が 0 以下になっても負にならない', () => {
@@ -223,10 +223,10 @@ function makeState(playerOverrides: Partial<Player> = {}, enemies: Enemy[] = [])
 
 describe('processTurn: 武器耐久度', () => {
   it('attack アクションで equippedWeapon の耐久度が 1 減る', () => {
-    const weapon = createWeaponInstance('blade_arm'); // durability=40
+    const weapon = createWeaponInstance('blade_arm'); // durability=44
     const state = makeState({ facing: 'up', equippedWeapon: weapon });
     const result = processTurn(state, 'attack');
-    expect(result.player!.equippedWeapon?.durability).toBe(39);
+    expect(result.player!.equippedWeapon?.durability).toBe(43);
   });
 
   it('耐久度 1 の武器で攻撃すると武器が破壊されて null になる', () => {

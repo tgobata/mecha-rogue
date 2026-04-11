@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi, afterEach } from 'vitest';
 import { decideBossAction } from '../../src/game/core/boss-ai';
 import { processTurn } from '../../src/game/core/turn-system';
 import { createInitialGameState } from '../../src/game/core/game-state';
@@ -55,12 +55,13 @@ describe('Full Boss AI & Trap Suite', () => {
 
   describe('Boss AI Individual Behaviors', () => {
     
-    it('Bug Swarm (2F) - Basic Chase', () => {
+    it('Bug Swarm (2F) - Initial Teleport Surround', () => {
       const { state, boss } = createTestState();
       boss.bossState = { id: 'bug_swarm' };
       const actions = decideBossAction(boss, state, Math.random);
       expect(actions.length).toBe(1);
-      expect(actions[0].type).toBe('move');
+      // Bug Swarm は初遭遇時にプレイヤー包囲位置へテレポートする
+      expect(actions[0].type).toBe('teleport');
     });
 
     it('Mach Runner (4F) - Triple Action', () => {
@@ -160,18 +161,22 @@ describe('Full Boss AI & Trap Suite', () => {
   });
 
   describe('Comprehensive Trap Interactions', () => {
-    
+    // 可視罠には75%のランダム発動判定があるため、Math.random をモックして確実に発動させる
+    afterEach(() => { vi.restoreAllMocks(); });
+
     it('Pitfall Trap (visible_pitfall) - Damages and drops floor', () => {
+      vi.spyOn(Math, 'random').mockReturnValue(0.4); // 0.4 < 0.75 → 確実に発動
       const { state } = createTestState({ x: 0, y: 0 });
       state.map!.cells[1][0].tile = TILE_TRAP;
       state.traps = [{ id: 101, type: 'visible_pitfall', pos: { x: 0, y: 1 }, isVisible: true, isTriggered: false }];
 
       const next = processTurn(state, 'move_down');
-      expect(next.player?.hp).toBeLessThanOrEqual(80); // 100 - 20 (might be less if enemy hits)
+      expect(next.player?.hp).toBeLessThanOrEqual(80); // 100 - 20
       expect(next.floor).toBe(2);
     });
 
     it('Landmine (landmine) - AoE Damage', () => {
+      vi.spyOn(Math, 'random').mockReturnValue(0.4); // 0.4 < 0.75 → 確実に発動
       const { state } = createTestState({ x: 0, y: 0 });
       state.map!.cells[1][0].tile = TILE_TRAP;
       const enemy = { ...state.enemies[0], pos: { x: 1, y: 1 }, hp: 100 };
@@ -179,12 +184,13 @@ describe('Full Boss AI & Trap Suite', () => {
       state.traps = [{ id: 102, type: 'landmine', pos: { x: 0, y: 1 }, isVisible: true, isTriggered: false }];
 
       const next = processTurn(state, 'move_down');
-      expect(next.player?.hp).toBeLessThanOrEqual(75); // 100 - 25
+      expect(next.player?.hp).toBeLessThanOrEqual(75); // 100 - 25（敵の攻撃分さらに減る可能性あり）
       expect(next.enemies[0].hp).toBe(75); // 100 - 25 (AoE)
       expect(next.battleLog).toEqual(expect.arrayContaining(['地雷が爆発した！ 25のダメージ！']));
     });
 
     it('Poison Gas (poison_gas) - Simple Damage', () => {
+      vi.spyOn(Math, 'random').mockReturnValue(0.4); // 0.4 < 0.75 → 確実に発動
       const { state } = createTestState({ x: 0, y: 0 });
       state.map!.cells[1][0].tile = TILE_TRAP;
       state.traps = [{ id: 103, type: 'poison_gas', pos: { x: 0, y: 1 }, isVisible: true, isTriggered: false }];
@@ -195,6 +201,7 @@ describe('Full Boss AI & Trap Suite', () => {
     });
 
     it('Arrow Trap (arrow_trap) - Simple Damage', () => {
+      vi.spyOn(Math, 'random').mockReturnValue(0.4); // 0.4 < 0.75 → 確実に発動
       const { state } = createTestState({ x: 0, y: 0 });
       state.map!.cells[1][0].tile = TILE_TRAP;
       state.traps = [{ id: 104, type: 'arrow_trap', pos: { x: 0, y: 1 }, isVisible: true, isTriggered: false }];
@@ -205,6 +212,8 @@ describe('Full Boss AI & Trap Suite', () => {
     });
 
     it('Teleport Trap (teleport_trap) - Changes position', () => {
+      // 0.4 < 0.75 → 発動。テレポート先: Math.floor(0.4 * 10) = 4 → row4(TILE_FLOOR)
+      vi.spyOn(Math, 'random').mockReturnValue(0.4);
       const { state } = createTestState({ x: 0, y: 0 });
       state.map!.cells[1][0].tile = TILE_TRAP;
       state.traps = [{ id: 105, type: 'teleport_trap', pos: { x: 0, y: 1 }, isVisible: true, isTriggered: false }];

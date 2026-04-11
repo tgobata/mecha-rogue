@@ -68,11 +68,11 @@ const ENEMY_POS = { x: 4, y: 3 };
 
 describe('バンプ攻撃での耐久消費', () => {
   it('バンプ攻撃で equippedWeapon の durability が durabilityLoss 分減る', () => {
-    const weapon = createWeaponInstance('blade_arm'); // durability=40, loss=1
+    const weapon = createWeaponInstance('blade_arm'); // durability=44, loss=1
     const enemy = makeEnemy(0, ENEMY_POS);
     const state = makeState({ equippedWeapon: weapon }, [enemy]);
     const result = processTurn(state, 'move_up');
-    expect(result.player!.equippedWeapon?.durability).toBe(39);
+    expect(result.player!.equippedWeapon?.durability).toBe(43);
   });
 
   it('durabilityLoss=2 の武器はバンプ攻撃で 2 減る', () => {
