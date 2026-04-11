@@ -341,9 +341,50 @@ const TitleScreen: React.FC<TitleScreenProps> = ({
         style={{ objectFit: "contain", objectPosition: "center", zIndex: 0 }}
         draggable={false}
       />
+      {/* ===== 背景画像と同じ領域を占めるオーバーレイ（object-fit:contain に合わせた位置合わせ用）===== */}
+      {/* 画像サイズ 1101×890 のアスペクト比を保ちつつ、コンテナに収まる最大サイズを算出 */}
+      <div
+        className="absolute inset-0 flex items-center justify-center pointer-events-none z-10"
+      >
+        <div
+          className="relative pointer-events-none"
+          style={{
+            width: "min(100%, calc(100vh * 1101 / 890))",
+            aspectRatio: "1101 / 890",
+          }}
+        >
+          {/* サウンドボタン（背景画像の右上） */}
+          <button
+            className="absolute top-3 right-3 flex flex-col items-center gap-0.5 pointer-events-auto"
+            onClick={(e) => {
+              e.stopPropagation();
+              const next = !getMuted();
+              setMuted(next);
+              setIsMuted(next);
+            }}
+            onTouchStart={(e) => { unlockAudioContext(); e.stopPropagation(); }}
+            title={isMuted ? "サウンドON" : "サウンドOFF"}
+            style={{
+              background: isMuted ? "rgba(30,30,50,0.85)" : "rgba(20,40,80,0.85)",
+              border: `2px solid ${isMuted ? "#555577" : "#4488cc"}`,
+              borderRadius: 8,
+              cursor: "pointer",
+              padding: "6px 10px",
+              boxShadow: isMuted ? "none" : "0 0 12px rgba(68,170,255,0.4)",
+              transition: "all 0.15s",
+            }}
+          >
+            <span style={{ fontSize: 22, lineHeight: 1 }}>{isMuted ? "🔇" : "🔊"}</span>
+            <span style={{ fontSize: 9, color: isMuted ? "#888" : "#88ccff", letterSpacing: 1 }}>
+              {isMuted ? "OFF" : "ON"}
+            </span>
+          </button>
+        </div>
+      </div>
+
       {/* ===== メニュー (背景画像の中央下部に重ねる) ===== */}
       <div
-        className="absolute left-1/2 flex flex-col gap-2 z-10"
+        className="absolute left-1/2 flex flex-col items-center gap-2 z-10"
         style={{ bottom: "16%", transform: "translateX(-50%)" }}
       >
         {menuMode === "main" ? (
@@ -353,35 +394,12 @@ const TitleScreen: React.FC<TitleScreenProps> = ({
         )}
       </div>
 
+      {/* バージョン・コピーライト（フッター） */}
       <div
-        className="absolute bottom-3 left-1/2 text-[10px] text-gray-500 tracking-tighter z-10"
-        style={{ transform: "translateX(-50%)", whiteSpace: "nowrap", display: "flex", alignItems: "center", gap: 10 }}
+        className="absolute bottom-3 left-1/2 text-[10px] text-gray-400 font-bold tracking-widest pointer-events-none z-10"
+        style={{ transform: "translateX(-50%)", whiteSpace: "nowrap" }}
       >
-        <span>© 2026 o77bata / VER 0.2.{process.env.NEXT_PUBLIC_BUILD_VERSION ?? '0000.00.00.00.00.00'}</span>
-        <button
-          onClick={(e) => {
-            e.stopPropagation();
-            const next = !getMuted();
-            setMuted(next);
-            setIsMuted(next);
-          }}
-          onTouchStart={(e) => { unlockAudioContext(); e.stopPropagation(); }}
-          title={isMuted ? "サウンドON" : "サウンドOFF"}
-          style={{
-            background: "none",
-            border: "1px solid #444466",
-            borderRadius: 4,
-            cursor: "pointer",
-            fontSize: 13,
-            lineHeight: 1,
-            padding: "1px 5px",
-            opacity: isMuted ? 0.5 : 0.85,
-            color: isMuted ? "#888" : "#ffdd88",
-            pointerEvents: "auto",
-          }}
-        >
-          {isMuted ? "🔇" : "🔊"}
-        </button>
+        © 2026 o77bata / VER 0.2.{process.env.NEXT_PUBLIC_BUILD_VERSION ?? '0000.00.00.00.00.00'}
       </div>
 
       {/* マニュアルオーバーレイ */}

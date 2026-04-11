@@ -1305,6 +1305,8 @@ export default function GameCanvas() {
           if (allUnitsDefeated) {
             // ボス撃破演出を表示
             setBossDefeatEffect(defeatedBoss.enemyType);
+            // 撃破済みボスのミニマップマーカーを削除
+            setSeenBossPositions([]);
             // ラスボスは専用 BGM、それ以外は通常探索 BGM に戻す
             if (defeatedBoss.enemyType === "last_boss_shadow") {
               playBGM("bossDefeat");
