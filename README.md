@@ -1,5 +1,7 @@
 # メカローグ
 <img src="./public/mecha-rogue_sample_tilte.png">
+Vercel URL: https://mecha-rogue.vercel.app/
+
 ※ Claude Code により実装したゲームです。
 
 
