@@ -2119,23 +2119,140 @@ const BGM_PLAYERS: Record<BGMName, (dest: any) => void> = {
 
   /**
    * ゲームオーバー
-   * A minor, 80BPM, 4小節ジングル
+   * 「大爆発→後悔→希望→やるぞ！」の感情弧
+   * A minor → C major → A major, 100BPM, 6小節ジングル
+   *
+   * Phase 1 (bar 0)  : 爆発クラッシュ ─ 衝撃音＋速い下降フレーズ
+   * Phase 2 (bars 1-2): 後悔         ─ ゆったりしたAminの下降メロディ
+   * Phase 3 (bars 3-4): 希望の萌芽   ─ Cメジャーへ転調、上昇メロディ
+   * Phase 4 (bar 5)  : やるぞ！      ─ Aメジャーアルペジオ、ファンファーレ
    */
   gameOver: (dest: any) => {
     const transport = Tone.getTransport();
-    transport.bpm.value = 80;
-    const synth = new Tone.Synth({ oscillator: { type: 'sawtooth' }, envelope: { attack: 0.05, decay: 0.5, sustain: 0, release: 0.1 } }).connect(dest);
-    const notes: [string, string][] = [
-        ['0:0:0', 'A3'], ['0:2:0', 'G3'],
-        ['1:0:0', 'F3'], ['1:2:0', 'E3'],
-        ['2:0:0', 'D3'], ['3:0:0', 'C3'],
-    ];
-    const part = new Tone.Part((time: number, note: string) => { synth.triggerAttackRelease(note, '2n', time); }, notes);
-    part.loop = false;
-    part.start(0);
+    transport.bpm.value = 100;
+
+    // ① 衝撃音（爆発感）
+    const metal = new Tone.MetalSynth({
+      frequency: 80, harmonicity: 5.1, resonance: 2500, octaves: 1.5,
+      envelope: { attack: 0.001, decay: 1.5, release: 0.8 },
+    }).connect(dest);
+    metal.volume.value = -8;
+
+    // ② 後悔メロディ（sawtooth：ざらついた音で緊張感）
+    const sadSynth = new Tone.Synth({
+      oscillator: { type: 'sawtooth' },
+      envelope: { attack: 0.02, decay: 0.4, sustain: 0.3, release: 0.5 },
+    }).connect(dest);
+    sadSynth.volume.value = -7;
+
+    // ③ 希望メロディ（triangle：澄んだ音で前向き感）
+    const hopeSynth = new Tone.Synth({
+      oscillator: { type: 'triangle' },
+      envelope: { attack: 0.05, decay: 0.25, sustain: 0.6, release: 0.4 },
+    }).connect(dest);
+    hopeSynth.volume.value = -7;
+
+    // ④ ファンファーレ（square：パンチのある音）
+    const fanfareSynth = new Tone.Synth({
+      oscillator: { type: 'square' },
+      envelope: { attack: 0.01, decay: 0.12, sustain: 0.65, release: 0.2 },
+    }).connect(dest);
+    fanfareSynth.volume.value = -5;
+
+    // ⑤ 背景和音パッド（希望〜ファンファーレを下支え）
+    const chordPad = new Tone.PolySynth(Tone.Synth, {
+      oscillator: { type: 'sine' },
+      envelope: { attack: 0.4, decay: 0.5, sustain: 0.5, release: 1.2 },
+    }).connect(dest);
+    chordPad.volume.value = -14;
+
+    // ⑥ 低音（各フェーズの根音を補強）
+    const bass = new Tone.Synth({
+      oscillator: { type: 'sine' },
+      envelope: { attack: 0.01, decay: 1.5, sustain: 0, release: 0.1 },
+    }).connect(dest);
+    bass.volume.value = -4;
+
+    // Phase 1: 爆発クラッシュ (bar 0) ─ 速い下降フレーズ
+    const crashPart = new Tone.Part((time: number, note: string) => {
+      sadSynth.triggerAttackRelease(note, '16n', time);
+    }, [
+      ['0:0:0', 'A4'], ['0:0:1', 'G4'], ['0:0:2', 'E4'], ['0:0:3', 'C4'],
+      ['0:1:0', 'A3'], ['0:1:2', 'G3'],
+    ] as [string, string][]);
+    crashPart.loop = false;
+
+    // Phase 2: 後悔・悲しみ (bars 1-2) ─ ゆっくりした下降Aminメロディ
+    const regretPart = new Tone.Part((time: number, note: string) => {
+      sadSynth.triggerAttackRelease(note, '2n', time);
+    }, [
+      ['1:0:0', 'A3'], ['1:2:0', 'G3'],
+      ['2:0:0', 'F3'], ['2:2:0', 'E3'],
+    ] as [string, string][]);
+    regretPart.loop = false;
+
+    // Phase 3: 希望の萌芽 (bars 3-4) ─ Cメジャーへ転調、上昇メロディ
+    const hopePart = new Tone.Part((time: number, note: string) => {
+      hopeSynth.triggerAttackRelease(note, '4n', time);
+    }, [
+      ['3:0:0', 'C4'], ['3:1:0', 'E4'],
+      ['3:2:0', 'G4'], ['3:3:0', 'A4'],
+      ['4:0:0', 'B4'], ['4:1:0', 'C5'],
+      ['4:2:0', 'E5'], ['4:3:0', 'A4'],
+    ] as [string, string][]);
+    hopePart.loop = false;
+
+    // Phase 4: やるぞ！ファンファーレ (bar 5) ─ Aメジャーアルペジオで締め
+    const fanfarePart = new Tone.Part((time: number, note: string) => {
+      fanfareSynth.triggerAttackRelease(note, '4n', time);
+    }, [
+      ['5:0:0', 'A4'], ['5:0:2', 'C#5'],
+      ['5:1:0', 'E5'], ['5:2:0', 'A5'],
+    ] as [string, string][]);
+    fanfarePart.loop = false;
+
+    // 背景和音 (bars 3〜5)
+    const chordPart = new Tone.Part((time: number, chord: string[]) => {
+      chordPad.triggerAttackRelease(chord, '2m', time);
+    }, [
+      ['3:0:0', ['C4', 'E4', 'G4']],
+      ['5:0:0', ['A4', 'C#5', 'E5']],
+    ] as [string, string[]][]);
+    chordPart.loop = false;
+
+    // 低音補強（各フェーズの根音）
+    const bassPart = new Tone.Part((time: number, note: string) => {
+      bass.triggerAttackRelease(note, '2n', time);
+    }, [
+      ['0:0:0', 'A1'],
+      ['2:0:0', 'F2'],
+      ['4:0:0', 'A2'],
+      ['5:0:0', 'A3'],
+    ] as [string, string][]);
+    bassPart.loop = false;
+
+    // 衝撃音 (bar 0 beat 0)
+    const metalPart = new Tone.Part((time: number) => {
+      metal.triggerAttackRelease('2n', time);
+    }, [['0:0:0', null]] as [string, null][]);
+    metalPart.loop = false;
+
+    crashPart.start(0);
+    regretPart.start(0);
+    hopePart.start(0);
+    fanfarePart.start(0);
+    chordPart.start(0);
+    bassPart.start(0);
+    metalPart.start(0);
     transport.start();
-    activeBGMParts = [part, synth];
-    setTimeout(() => stopBGM(), 4 * 60 / 80 * 1000); // Stop after 4 measures
+
+    activeBGMParts = [
+      crashPart, regretPart, hopePart, fanfarePart, chordPart, bassPart, metalPart,
+      metal, sadSynth, hopeSynth, fanfareSynth, chordPad, bass,
+    ];
+
+    // 6小節 @ 100BPM = 14.4 秒、余韻 +2s
+    setTimeout(() => stopBGM(), 6 * (60 / 100) * 4 * 1000 + 2000);
   },
 
   /**

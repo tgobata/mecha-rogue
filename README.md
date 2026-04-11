@@ -80,3 +80,31 @@ npx vitest      # テスト実行
 ## ドキュメント
 
 詳細なゲームデザインは [game-design.md](game-design.md) 、各ボスの仕様は [docs/全ボス.html](docs/全ボス.html) を参照。
+
+## 利用規約
+
+- 本ゲームは個人・非商用目的での無償プレイを許可します。
+- ゲーム内コンテンツ（画像・音声・コード）の無断転載・再配布・商用利用を禁止します。
+- 本ゲームの利用により生じた損害について、作者は一切の責任を負いません。
+- 予告なく内容変更・公開停止を行う場合があります。
+
+## プライバシーポリシー
+
+本ゲームはユーザーの個人情報を一切収集しません。セーブデータはブラウザのローカルストレージにのみ保存されます。
+
+## 年齢制限
+
+年齢制限なし。ロボット同士の戦闘を題材としており、暴力表現は軽微です。
+
+## ライセンス
+
+本ゲームは以下のオープンソースライブラリを使用しています。
+
+| ライブラリ | ライセンス |
+|---|---|
+| [Next.js](https://github.com/vercel/next.js/blob/canary/LICENSE) | MIT |
+| [React](https://github.com/facebook/react/blob/main/LICENSE) | MIT |
+| [TypeScript](https://github.com/microsoft/TypeScript/blob/main/LICENSE.txt) | Apache-2.0 |
+| [Tone.js](https://github.com/Tonejs/Tone.js/blob/dev/LICENSE.md) | MIT |
+| [Tailwind CSS](https://github.com/tailwindlabs/tailwindcss/blob/main/LICENSE) | MIT |
+| [Vitest](https://github.com/vitest-dev/vitest/blob/main/LICENSE) | MIT |
