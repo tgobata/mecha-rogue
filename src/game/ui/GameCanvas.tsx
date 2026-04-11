@@ -3539,8 +3539,10 @@ export default function GameCanvas() {
       {gameState.phase === "gameover" && (
         <GameOverOverlay
           floor={gameState.floor}
+          pilotLevel={gameState.pilot.level}
           enemiesDefeated={enemiesDefeated}
           goldEarned={goldEarned}
+          bossesDefeated={gameState.bossesDefeated}
           onRestart={() => handleGameOverReturn(false)}
           onTitle={() => handleGameOverReturn(true)}
         />
