@@ -32,7 +32,7 @@ import {
   type ShopItem,
 } from "../core/shop-system";
 import { createInitialGameState, INITIAL_FACING } from "../core/game-state";
-import { saveGame, loadGame, getAllSaves } from "../core/save-system";
+import { saveGame, loadGame, getAllSaves, getGlobalAchievements, mergeGlobalAchievements } from "../core/save-system";
 import {
   INITIAL_PLAYER_ATK,
   INITIAL_PLAYER_DEF,
@@ -88,7 +88,7 @@ import {
 } from "../core/throw-system";
 import { learnSkill, useActiveSkill, getAvailableSkills, getSkillDefinition } from "../core/skill-system";
 import type { Skill } from "../core/skill-system";
-import { checkAchievements } from "../systems/achievement-system";
+import { checkAchievements, ACHIEVEMENT_DEFS } from "../systems/achievement-system";
 import bossesRaw from "../assets/data/bosses.json";
 import weaponsRaw from "../assets/data/weapons.json";
 
@@ -689,6 +689,8 @@ export default function GameCanvas() {
   /** 休憩所倉庫: 開く前の確認が完了したか */
   const [storageConfirmed, setStorageConfirmed] = useState(false);
   const [breakNotif, setBreakNotif] = useState<string | null>(null);
+  const [achievementToasts, setAchievementToasts] = useState<{ id: string; name: string; icon: string }[]>([]);
+  const achievementToastTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [bossWarning, setBossWarning] = useState(false);
   const [floorNotif, setFloorNotif] = useState<string | null>(null);
   const breakNotifTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -1420,10 +1422,22 @@ export default function GameCanvas() {
       // ── 実績チェック ──────────────────────────────────────────
       const newUnlocked = checkAchievements(next);
       if (newUnlocked.length > 0) {
+        // グローバルストアに永続化
+        mergeGlobalAchievements(newUnlocked);
+        // 解除された実績の定義を取得してトーストキューに追加
+        const toastItems = newUnlocked.map((id) => {
+          const def = ACHIEVEMENT_DEFS.find((d) => d.id === id);
+          return { id, name: def?.name ?? id, icon: def?.icon ?? '🏆' };
+        });
         setBattleLog((prev) => [
           ...prev,
-          ...newUnlocked.map((id) => `実績解除: ${id}`),
+          ...toastItems.map((t) => `実績解除: ${t.icon} ${t.name}`),
         ]);
+        setAchievementToasts((prev) => [...prev, ...toastItems]);
+        if (achievementToastTimerRef.current) clearTimeout(achievementToastTimerRef.current);
+        achievementToastTimerRef.current = setTimeout(() => {
+          setAchievementToasts([]);
+        }, 4000);
         setGameState((s) => ({
           ...s,
           achievements: [...(s.achievements || []), ...newUnlocked],
@@ -3522,7 +3536,11 @@ export default function GameCanvas() {
           onNewGame={handleNewGame}
           onLoadGame={handleLoadGameFromSlot}
           onAchievements={() =>
-            setGameState((prev) => ({ ...prev, phase: "achievements" }))
+            setGameState((prev) => ({
+              ...prev,
+              phase: "achievements",
+              achievements: getGlobalAchievements(),
+            }))
           }
         />
       )}
@@ -3533,6 +3551,31 @@ export default function GameCanvas() {
           unlockedIds={gameState.achievements}
           onClose={() => setGameState((prev) => ({ ...prev, phase: "title" }))}
         />
+      )}
+
+      {/* ── 実績解除トースト通知 ── */}
+      {achievementToasts.length > 0 && (
+        <div
+          className="absolute top-4 right-4 flex flex-col gap-2 z-50 pointer-events-none"
+          style={{ maxWidth: 280 }}
+        >
+          {achievementToasts.map((t) => (
+            <div
+              key={t.id}
+              className="flex items-center gap-3 px-4 py-3 rounded border-2 border-blue-400 font-mono shadow-lg"
+              style={{
+                backgroundColor: 'rgba(10, 20, 50, 0.97)',
+                animation: 'fadeInSlide 0.3s ease-out',
+              }}
+            >
+              <span className="text-2xl">{t.icon}</span>
+              <div>
+                <div className="text-[10px] text-blue-400 font-bold tracking-widest">ACHIEVEMENT UNLOCKED</div>
+                <div className="text-sm text-white font-bold">{t.name}</div>
+              </div>
+            </div>
+          ))}
+        </div>
       )}
 
       {/* ── ゲームオーバーオーバーレイ ── */}

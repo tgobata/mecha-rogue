@@ -269,3 +269,41 @@ export function hasSave(slot: number): boolean {
   }
 }
 
+// ---------------------------------------------------------------------------
+// グローバル実績ストア（スロットをまたいで永続化）
+// ---------------------------------------------------------------------------
+
+const GLOBAL_ACHIEVEMENTS_KEY = `${SAVE_KEY_PREFIX}global_achievements`;
+
+/**
+ * 全スロットをまたいで保存されたグローバル実績IDリストを返す。
+ */
+export function getGlobalAchievements(): string[] {
+  if (!isStorageAvailable()) return [];
+  try {
+    const raw = window.localStorage.getItem(GLOBAL_ACHIEVEMENTS_KEY);
+    if (!raw) return [];
+    const parsed: unknown = JSON.parse(raw);
+    return Array.isArray(parsed) ? (parsed as string[]) : [];
+  } catch {
+    return [];
+  }
+}
+
+/**
+ * 新たに解除された実績IDをグローバルストアにマージして保存する。
+ * 重複は除去される。
+ *
+ * @param ids - 追加する実績IDのリスト
+ */
+export function mergeGlobalAchievements(ids: string[]): void {
+  if (!isStorageAvailable() || ids.length === 0) return;
+  try {
+    const existing = getGlobalAchievements();
+    const merged = Array.from(new Set([...existing, ...ids]));
+    window.localStorage.setItem(GLOBAL_ACHIEVEMENTS_KEY, JSON.stringify(merged));
+  } catch {
+    // 失敗は無視する
+  }
+}
+

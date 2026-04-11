@@ -71,8 +71,7 @@ const TitleScreen: React.FC<TitleScreenProps> = ({
       } else if (selectedIndex === 3) {
         setShowManual(true);
       } else if (selectedIndex === 4) {
-        // ACHIEVEMENTS は未実装のため無効
-        playSE("ui_cancel");
+        onAchievements();
       }
     } else if (menuMode === "load") {
       if (selectedIndex === 5) {
@@ -128,7 +127,7 @@ const TitleScreen: React.FC<TitleScreenProps> = ({
       // マニュアル表示中は他のキー操作を受け付けない
       if (showManual) return;
 
-      const maxIndex = menuMode === "main" ? 4 : 5; // main = 0-4 (4 items + achievements disabled), load/delete = 5 (slots 1-5 + back)
+      const maxIndex = menuMode === "main" ? 4 : 5; // main = 0-4 (5 items), load/delete = 5 (slots 1-5 + back)
 
       if (e.key === "ArrowUp" || e.key === "w") {
         setSelectedIndex((prev) => (prev > 0 ? prev - 1 : maxIndex));
@@ -160,7 +159,7 @@ const TitleScreen: React.FC<TitleScreenProps> = ({
       { label: "つづきから", enabled: hasSaves },
       { label: "データ削除", enabled: hasSaves },
       { label: "マニュアル確認", enabled: true },
-      { label: "実績", enabled: false, comingSoon: true },
+      { label: "実績", enabled: true },
     ];
 
     return (
@@ -197,17 +196,13 @@ const TitleScreen: React.FC<TitleScreenProps> = ({
           else if (idx === 1 && item.enabled) setMenuMode("load");
           else if (idx === 2 && item.enabled) setMenuMode("delete");
           else if (idx === 3) setShowManual(true);
+          else if (idx === 4) onAchievements();
         }}
         onTouchStart={unlockAudioContext}
         onMouseEnter={() => { if (item.enabled) setSelectedIndex(idx); }}
       >
         {selectedIndex === idx && item.enabled ? "▶ " : ""}
         {item.label}
-        {"comingSoon" in item && item.comingSoon && (
-          <span style={{ fontSize: 9, color: "#666688", marginLeft: 6, fontWeight: "normal" }}>
-            (COMING SOON)
-          </span>
-        )}
       </button>
         ))}
       </>
