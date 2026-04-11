@@ -150,6 +150,36 @@ function getAllItemIds(): string[] {
   );
 }
 
+/** 回復系アイテムID（リペアキット・ナノボット・エネルギーパック）の重み倍率 */
+const HEAL_ITEM_WEIGHT = 5;
+
+/** 重み付き選択プール: 回復アイテムを HEAL_ITEM_WEIGHT 倍の出現率にする */
+const HEAL_ITEM_IDS = new Set([
+  'repair_kit_small',
+  'repair_kit_medium',
+  'repair_kit_large',
+  'full_repair_kit',
+  'energy_pack',
+  'energy_pack_large',
+  'nanobot_s',
+  'nanobot_m',
+  'nanobot_l',
+]);
+
+/**
+ * 回復アイテムを重み付きで含む選択プールを返す。
+ * 通常アイテムは1票、回復アイテムは HEAL_ITEM_WEIGHT 票分プールに追加する。
+ */
+function getWeightedItemPool(): string[] {
+  const allIds = getAllItemIds();
+  const pool: string[] = [];
+  for (const id of allIds) {
+    const weight = HEAL_ITEM_IDS.has(id) ? HEAL_ITEM_WEIGHT : 1;
+    for (let i = 0; i < weight; i++) pool.push(id);
+  }
+  return pool;
+}
+
 /**
  * 配列からランダムに n 件をシャッフル選択する（重複なし）。
  *
@@ -200,10 +230,19 @@ export function getShopInventory(floorNumber: number, rng: () => number): ShopIt
     SHOP_ITEM_MIN + Math.floor(rng() * (SHOP_ITEM_MAX - SHOP_ITEM_MIN + 1));
 
   const availableWeaponIds = getAvailableWeaponIds(floorNumber);
-  const allItemIds = getAllItemIds();
 
   const selectedWeaponIds = sampleWithoutReplacement(availableWeaponIds, weaponCount, rng);
-  const selectedItemIds = sampleWithoutReplacement(allItemIds, itemCount, rng);
+
+  // 回復アイテムを重み付きプールからサンプリング（重複IDを除去しながら選択）
+  const weightedItemPool = getWeightedItemPool();
+  const shuffledPool = sampleWithoutReplacement(weightedItemPool, weightedItemPool.length, rng);
+  const selectedItemIds: string[] = [];
+  for (const id of shuffledPool) {
+    if (!selectedItemIds.includes(id)) {
+      selectedItemIds.push(id);
+      if (selectedItemIds.length >= itemCount) break;
+    }
+  }
 
   const weaponItems: ShopItem[] = selectedWeaponIds.map((id) => {
     const priceEntry = SHOP_PRICES.weapons[id];

@@ -333,7 +333,7 @@ export default function ShopPanel({
                         style={{ display: 'flex', flexDirection: 'column', padding: '6px 8px', backgroundColor: isExpanded ? 'rgba(20,50,30,0.5)' : 'rgba(0,0,0,0.2)', marginBottom: 2, borderRadius: 4, cursor: 'pointer', border: isExpanded ? '1px solid #44aa88' : '1px solid transparent' }}
                       >
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                          <span style={{ fontSize: 12 }}>{getDisplayName(it.itemId)}{it.quantity > 1 ? ` x${it.quantity}` : ''}</span>
+                          <span style={{ fontSize: 12 }}>{getDisplayName(it.itemId)}{it.quantity > 1 ? ` × ${it.quantity}` : ''}</span>
                           <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
                             <span style={{ fontSize: 12, color: '#ffdd22' }}>{sellPrice} G</span>
                             <button

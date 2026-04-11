@@ -240,7 +240,7 @@ export default function InventoryPanel({
                   {/* 個数 */}
                   {item.quantity > 1 && (
                     <span style={{ fontSize: 12, color: '#99bbcc' }}>
-                      ×{item.quantity}
+                      × {item.quantity}
                     </span>
                   )}
 

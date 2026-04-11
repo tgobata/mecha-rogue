@@ -634,6 +634,10 @@ function placeCrackedWalls(floor: Floor, rng: () => number): void {
  * 通常部屋の中心付近に施設タイルを確率で配置する。
  */
 function placeRoomFacilities(floor: Floor, rng: () => number): void {
+  /** 各階のショップ配置上限 */
+  const MAX_SHOPS_PER_FLOOR = 2;
+  let shopCount = 0;
+
   for (const room of floor.rooms) {
     if (room.type !== RoomType.NORMAL) continue;
 
@@ -647,7 +651,10 @@ function placeRoomFacilities(floor: Floor, rng: () => number): void {
     } else if (roll < REST_SPAWN_RATE + REPAIR_SPAWN_RATE) {
       floor.cells[center.y][center.x].tile = TILE_REPAIR;
     } else if (roll < REST_SPAWN_RATE + REPAIR_SPAWN_RATE + SHOP_SPAWN_RATE) {
-      floor.cells[center.y][center.x].tile = TILE_SHOP;
+      if (shopCount < MAX_SHOPS_PER_FLOOR) {
+        floor.cells[center.y][center.x].tile = TILE_SHOP;
+        shopCount++;
+      }
     } else if (roll < REST_SPAWN_RATE + REPAIR_SPAWN_RATE + SHOP_SPAWN_RATE + HINT_SPAWN_RATE) {
       floor.cells[center.y][center.x].tile = TILE_HINT;
     }

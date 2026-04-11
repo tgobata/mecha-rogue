@@ -2040,7 +2040,10 @@ export default function GameCanvas() {
     const item = state.inventory.items[index];
     if (!item) return;
 
-    const newItems = state.inventory.items.filter((_, i) => i !== index);
+    // quantity > 1 の場合は1つだけ減らす。1つなら除去。
+    const newItems = item.quantity > 1
+      ? state.inventory.items.map((it, i) => i === index ? { ...it, quantity: it.quantity - 1 } : it)
+      : state.inventory.items.filter((_, i) => i !== index);
     const next: GameState = {
       ...state,
       inventory: { ...state.inventory, items: newItems },
