@@ -3793,10 +3793,15 @@ const ENEMIES_DATA = [
       return `../public/sprites/enemies/${id}_${state}_dir_${dir}_idle_${frame}.png`;
     }
 
-    function renderSprite(id) {
+    function renderSprite(id, baseId) {
       // メイン表示: idle down
-      const mainUrl = spriteUrl(id);
-      const fallback = `../public/sprites/enemies/${id}_dir_down_idle_0.png`;
+      // フォールバック順: lv別フル形式 → lv別シンプル形式 → baseId形式
+      const mainUrl  = spriteUrl(id);
+      const fallback1 = `../public/sprites/enemies/${id}_dir_down_idle_0.png`;
+      const fallback2 = baseId ? `../public/sprites/enemies/${baseId}_dir_down_idle_0.png` : '';
+      const onerrorChain = fallback2
+        ? `this.onerror=null;this.src='${fallback1}';this.onerror=function(){this.onerror=null;this.src='${fallback2}';this.onerror=function(){this.style.display='none';var ns=this.parentNode.querySelector('.no-sprite');if(ns)ns.style.display='flex';}};`
+        : `this.onerror=null;this.src='${fallback1}';this.onerror=function(){this.style.display='none';var ns=this.parentNode.querySelector('.no-sprite');if(ns)ns.style.display='flex';};`;
       // ホバー時に全状態を展開するサムネイルグリッド
       const thumbs = SPRITE_PREVIEWS.map(([st, dir, fr, label]) => {
         const u = spriteUrl(id, st, dir, fr);
@@ -3807,7 +3812,7 @@ const ENEMIES_DATA = [
       }).join('');
       return `<div class="sprite-wrap" title="ホバーで全状態表示">
         <img class="sprite-main" src="${mainUrl}"
-          onerror="this.onerror=null;this.src='${fallback}';this.onerror=function(){this.style.display='none';this.parentNode.querySelector('.no-sprite')?.style&&(this.parentNode.querySelector('.no-sprite').style.display='flex');}"
+          onerror="${onerrorChain}"
           alt="${id}">
         <div class="no-sprite" style="display:none"></div>
         <div class="sprite-states">${thumbs}</div>
@@ -3827,7 +3832,7 @@ const ENEMIES_DATA = [
       const hostileBadge = e.canAttackAllies
         ? '<span class="hostile-badge">&#x26A0; 敵VS敵</span>' : '';
       return `<tr data-level="${e.level}" data-faction="${e.factionType||''}" data-floor-from="${e.appearsFrom||0}" data-floor-until="${e.appearsUntil||99}" data-base="${e.baseEnemyId||''}" data-hostile="${e.canAttackAllies?1:0}">
-        <td class="sprite-cell">${renderSprite(e.id)}</td>
+        <td class="sprite-cell">${renderSprite(e.id, e.baseEnemyId)}</td>
         <td class="id-cell" title="${e.id}">${e.id}</td>
         <td class="name-cell">${e.name}${hostileBadge}</td>
         <td><span class="level-badge" style="background:${lvColor}">Lv.${e.level}</span></td>
