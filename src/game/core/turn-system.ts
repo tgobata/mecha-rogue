@@ -1501,18 +1501,78 @@ function processEnemyActions(
       continue;
     }
 
+    // 身代わり・混乱状態の残りターンをメッセージ欄に通知
+    const decoyEff = (enemy.statusEffects ?? []).find(s => s.type === 'decoy');
+    const confusedEff = (enemy.statusEffects ?? []).find(s => s.type === 'confused');
+    if (decoyEff) {
+      enemyEventMessages.push(`[身代わり]${enemy.name ?? enemy.enemyType} は身代わり状態（残${decoyEff.remainingTurns}ターン）`);
+    }
+    if (confusedEff) {
+      enemyEventMessages.push(`[混乱]${enemy.name ?? enemy.enemyType} は混乱状態（残${confusedEff.remainingTurns}ターン）`);
+    }
+
+    // 混乱状態の敵: 敵味方問わず隣接エンティティをランダムに攻撃
+    const isConfused = !!(confusedEff);
+    if (isConfused) {
+      // 隣接（マンハッタン距離1）のエンティティを列挙
+      const allEnemiesNow = [...processedEnemies, ...currentEnemies.filter(
+        e => e.id !== enemy.id && !processedEnemies.some(p => p.id === e.id),
+      )];
+      const adjacentTargets: Array<{ kind: 'player' } | { kind: 'enemy'; id: number }> = [];
+      if (manhattanDistance(enemy.pos, newPlayer.pos) === 1) {
+        adjacentTargets.push({ kind: 'player' });
+      }
+      for (const other of allEnemiesNow) {
+        if (other.hp > 0 && manhattanDistance(enemy.pos, other.pos) === 1) {
+          adjacentTargets.push({ kind: 'enemy', id: other.id });
+        }
+      }
+      if (adjacentTargets.length > 0) {
+        const tgt = adjacentTargets[Math.floor(Math.random() * adjacentTargets.length)];
+        if (tgt.kind === 'player') {
+          const confDmg = Math.max(1, enemy.atk - (newPlayer.def ?? 0));
+          newPlayer = { ...newPlayer, hp: newPlayer.hp - confDmg, animState: 'hit' as const };
+          enemyEventMessages.push(`[混乱]${enemy.name ?? enemy.enemyType} がプレイヤーを攻撃！ ${confDmg}ダメージ！`);
+        } else {
+          const confTarget = allEnemiesNow.find(e => e.id === tgt.id);
+          if (confTarget) {
+            const confDmg = Math.max(1, enemy.atk - (confTarget.def ?? 0));
+            const updIdx = processedEnemies.findIndex(e => e.id === confTarget.id);
+            if (updIdx >= 0) {
+              processedEnemies[updIdx] = { ...processedEnemies[updIdx], hp: processedEnemies[updIdx].hp - confDmg };
+            }
+            enemyEventMessages.push(`[混乱]${enemy.name ?? enemy.enemyType} が ${confTarget.name ?? confTarget.enemyType} を攻撃！ ${confDmg}ダメージ！`);
+          }
+        }
+      } else {
+        enemyEventMessages.push(`[混乱]${enemy.name ?? enemy.enemyType} は混乱して動けない`);
+      }
+      processedEnemies.push({ ...enemy, animState: 'attack' as const });
+      continue;
+    }
+
     // enemy-ai または boss-ai に行動を委譲
+    // decoy状態の敵が近くにいれば、その敵の位置をプレイヤー位置として使わせる
+    const allEnemiesForDecoy = [...processedEnemies, ...currentEnemies.filter(
+      (e) => e.id !== enemy.id && !processedEnemies.some((p) => p.id === e.id),
+    )];
+    const decoyEnemy = allEnemiesForDecoy.find(e =>
+      e.hp > 0 &&
+      (e.statusEffects ?? []).some(s => s.type === 'decoy') &&
+      manhattanDistance(enemy.pos, e.pos) <= ENEMY_SIGHT_RANGE
+    );
+
     const stateWithCurrent: GameState = {
       ...state,
-      player: newPlayer,
-      enemies: [...processedEnemies, ...currentEnemies.filter(
-        (e) => e.id !== enemy.id && !processedEnemies.some((p) => p.id === e.id),
-      )],
+      player: decoyEnemy
+        ? { ...newPlayer, pos: decoyEnemy.pos }
+        : newPlayer,
+      enemies: allEnemiesForDecoy,
     };
 
     let actions: EnemyAction[] = [];
     if (enemy.aiType === 'boss') {
-      actions = decideBossAction(enemy, stateWithCurrent, Math.random);
+      actions = decideBossAction(enemy, { ...stateWithCurrent, player: newPlayer }, Math.random);
     } else {
       actions = [decideEnemyAction(enemy, stateWithCurrent, Math.random)];
     }
@@ -1525,6 +1585,25 @@ function processEnemyActions(
       switch (action.type) {
         case 'attack': {
           if (action.targetId === 'player') {
+            // decoy状態の敵が隣接していれば、攻撃をそちらに転送
+            const allForDecoyCheck = [...processedEnemies, ...currentEnemies.filter(
+              e => e.id !== currentEnemyState.id && !processedEnemies.some(p => p.id === e.id),
+            )];
+            const adjDecoy = allForDecoyCheck.find(e =>
+              e.hp > 0 &&
+              (e.statusEffects ?? []).some(s => s.type === 'decoy') &&
+              manhattanDistance(currentEnemyState.pos, e.pos) === 1
+            );
+            if (adjDecoy) {
+              const decoyDmg = Math.max(1, currentEnemyState.atk - (adjDecoy.def ?? 0));
+              const di = processedEnemies.findIndex(e => e.id === adjDecoy.id);
+              if (di >= 0) {
+                processedEnemies[di] = { ...processedEnemies[di], hp: processedEnemies[di].hp - decoyDmg };
+              }
+              enemyEventMessages.push(`${currentEnemyState.name ?? currentEnemyState.enemyType}が身代わり[${adjDecoy.name ?? adjDecoy.enemyType}]を攻撃！ ${decoyDmg}ダメージ！`);
+              currentEnemyState = { ...currentEnemyState, animState: 'attack' as const };
+              break;
+            }
             // 盾・アーマーの def ボーナスを加算
             const shieldDef = newPlayer.equippedShield?.def ?? 0;
             const armorDef = newPlayer.equippedArmor?.def ?? 0;
@@ -2017,6 +2096,33 @@ function processEnemyActions(
                   : state.exploration,
               };
               enemyEventMessages.push(`オイルマスに火がついた！`);
+            }
+          }
+          currentEnemyState = { ...currentEnemyState, animState: 'attack' as const };
+          break;
+        }
+
+        case 'ignite_item': {
+          // 着火ロボ(Lv2+)/ファイヤーピーポー(Lv3+)がアイテム・装備を燃やす
+          const iiAction = action as { type: 'ignite_item'; pos: import('./types').Position };
+          const iiPos = iiAction.pos;
+          if (state.map && iiPos.y >= 0 && iiPos.y < state.map.height && iiPos.x >= 0 && iiPos.x < state.map.width) {
+            const targetTile = state.map.cells[iiPos.y][iiPos.x].tile;
+            if (targetTile === TILE_ITEM || targetTile === TILE_WEAPON) {
+              const iiCells = state.map.cells.map(row => row.map(cell => ({ ...cell })));
+              iiCells[iiPos.y][iiPos.x] = { ...iiCells[iiPos.y][iiPos.x], tile: TILE_FIRE, itemId: undefined, weaponId: undefined };
+              const iiMap = { ...state.map, cells: iiCells };
+              const newFireTimers = { ...(state.fireTileTimers ?? {}), [`${iiPos.x},${iiPos.y}`]: FIRE_TILE_DURATION };
+              state = {
+                ...state,
+                map: iiMap,
+                fireTileTimers: newFireTimers,
+                exploration: state.exploration
+                  ? { ...state.exploration, currentFloor: iiMap }
+                  : state.exploration,
+              };
+              const tileLabel = targetTile === TILE_ITEM ? 'アイテム' : '装備';
+              enemyEventMessages.push(`${currentEnemyState.name ?? currentEnemyState.enemyType}が${tileLabel}に火をつけた！`);
             }
           }
           currentEnemyState = { ...currentEnemyState, animState: 'attack' as const };

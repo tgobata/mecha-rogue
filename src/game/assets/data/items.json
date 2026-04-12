@@ -1113,5 +1113,77 @@
     "shopPrice": 350,
     "dropWeight": 4,
     "description": "8ターン間、毎ターン20HP回復する。"
+  },
+  {
+    "id": "decoy_ball_1",
+    "name": "身代わりボールI",
+    "category": "combat",
+    "effect": "decoy_ball",
+    "value": 3,
+    "stunTurns": 3,
+    "appearsFrom": 6,
+    "shopPrice": 120,
+    "dropWeight": 6,
+    "description": "投げて敵に命中すると微量ダメージを与え、命中した敵を3ターン身代わり状態にする。身代わり状態の敵は他の敵からプレイヤーとして狙われる。命中しなかった場合は着地点に置かれる。「使う」で隣接するランダムな敵へ同命中率で発動。"
+  },
+  {
+    "id": "decoy_ball_2",
+    "name": "身代わりボールII",
+    "category": "combat",
+    "effect": "decoy_ball",
+    "value": 3,
+    "stunTurns": 5,
+    "appearsFrom": 12,
+    "shopPrice": 220,
+    "dropWeight": 4,
+    "description": "投げて敵に命中すると微量ダメージを与え、命中した敵を5ターン身代わり状態にする。強化版。命中しなかった場合は着地点に置かれる。「使う」で隣接するランダムな敵へ同命中率で発動。"
+  },
+  {
+    "id": "decoy_ball_3",
+    "name": "身代わりボールIII",
+    "category": "combat",
+    "effect": "decoy_ball",
+    "value": 3,
+    "stunTurns": 7,
+    "appearsFrom": 20,
+    "shopPrice": 380,
+    "dropWeight": 2,
+    "description": "投げて敵に命中すると微量ダメージを与え、命中した敵を7ターン身代わり状態にする。超強化版。命中しなかった場合は着地点に置かれる。「使う」で隣接するランダムな敵へ同命中率で発動。"
+  },
+  {
+    "id": "confusion_ball_1",
+    "name": "混乱ボールI",
+    "category": "combat",
+    "effect": "confusion_ball",
+    "value": 3,
+    "stunTurns": 3,
+    "appearsFrom": 6,
+    "shopPrice": 130,
+    "dropWeight": 6,
+    "description": "投げて敵に命中すると微量ダメージを与え、命中した敵を3ターン混乱状態にする。混乱した敵は敵味方関係なくランダムに攻撃する。命中しなかった場合は着地点に置かれる。「使う」で隣接するランダムな敵へ同命中率で発動。"
+  },
+  {
+    "id": "confusion_ball_2",
+    "name": "混乱ボールII",
+    "category": "combat",
+    "effect": "confusion_ball",
+    "value": 3,
+    "stunTurns": 5,
+    "appearsFrom": 12,
+    "shopPrice": 240,
+    "dropWeight": 4,
+    "description": "投げて敵に命中すると微量ダメージを与え、命中した敵を5ターン混乱状態にする。強化版。命中しなかった場合は着地点に置かれる。「使う」で隣接するランダムな敵へ同命中率で発動。"
+  },
+  {
+    "id": "confusion_ball_3",
+    "name": "混乱ボールIII",
+    "category": "combat",
+    "effect": "confusion_ball",
+    "value": 3,
+    "stunTurns": 7,
+    "appearsFrom": 20,
+    "shopPrice": 420,
+    "dropWeight": 2,
+    "description": "投げて敵に命中すると微量ダメージを与え、命中した敵を7ターン混乱状態にする。超強化版。命中しなかった場合は着地点に置かれる。「使う」で隣接するランダムな敵へ同命中率で発動。"
   }
 ]

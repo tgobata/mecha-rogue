@@ -21,7 +21,7 @@ import type { Enemy, Player, GameState, EnemyAiType } from './game-state';
 import type { Position } from './types';
 import { getTileAt, isWalkable, manhattanDistance } from './floorUtils';
 import { nextStep, findPath } from './pathfinding';
-import { TILE_OIL, TILE_FIRE, FIRE_TILE_DURATION } from './constants';
+import { TILE_OIL, TILE_FIRE, TILE_ITEM, TILE_WEAPON, FIRE_TILE_DURATION } from './constants';
 
 // ---------------------------------------------------------------------------
 // 型定義
@@ -40,6 +40,7 @@ export type EnemyAction =
   | { type: 'iaido'; range: number; damage: number }
   | { type: 'spread_oil'; positions: Position[] }
   | { type: 'ignite_oil'; pos: Position }
+  | { type: 'ignite_item'; pos: Position }
   | { type: 'lob_grenade'; targetPos: Position; radius: number; damage: number }
   | { type: 'call_allies'; pos: Position }
   | { type: 'pack_howl'; pos: Position }
@@ -657,10 +658,11 @@ function decideIgniter(
   const map = state.map;
   if (!map) return { type: 'skip' };
 
+  const level = enemy.level ?? 1;
   // 周囲3マス以内のオイルマスを探す
   const searchRadius = 3;
   let nearestOil: Position | null = null;
-  let nearestDist = Infinity;
+  let nearestOilDist = Infinity;
 
   for (let dy = -searchRadius; dy <= searchRadius; dy++) {
     for (let dx = -searchRadius; dx <= searchRadius; dx++) {
@@ -669,8 +671,8 @@ function decideIgniter(
       if (ny < 0 || ny >= map.height || nx < 0 || nx >= map.width) continue;
       if (map.cells[ny][nx].tile === TILE_OIL) {
         const d = Math.abs(dx) + Math.abs(dy);
-        if (d < nearestDist) {
-          nearestDist = d;
+        if (d < nearestOilDist) {
+          nearestOilDist = d;
           nearestOil = { x: nx, y: ny };
         }
       }
@@ -678,19 +680,55 @@ function decideIgniter(
   }
 
   // 隣接オイルマスがあれば即着火
-  if (nearestOil && nearestDist === 1) {
+  if (nearestOil && nearestOilDist === 1) {
     return { type: 'ignite_oil', pos: nearestOil };
   }
 
   // 近くにオイルがあれば向かう（プレイヤーより優先）
-  if (nearestOil && nearestDist <= searchRadius) {
+  if (nearestOil && nearestOilDist <= searchRadius) {
     const step = nextStep(enemy.pos, nearestOil, map);
     if (step && (step.x !== enemy.pos.x || step.y !== enemy.pos.y)) {
       return { type: 'move', to: step };
     }
   }
 
-  // オイルがなければプレイヤーへ接近
+  // Lv2以上: 周囲のアイテム・装備マスを探して着火
+  if (level >= 2) {
+    const itemSearchRadius = 4;
+    // まれに（30%）武器も対象にする
+    const includeWeapons = Math.random() < 0.3;
+    let nearestItem: Position | null = null;
+    let nearestItemDist = Infinity;
+
+    for (let dy = -itemSearchRadius; dy <= itemSearchRadius; dy++) {
+      for (let dx = -itemSearchRadius; dx <= itemSearchRadius; dx++) {
+        const nx = enemy.pos.x + dx;
+        const ny = enemy.pos.y + dy;
+        if (ny < 0 || ny >= map.height || nx < 0 || nx >= map.width) continue;
+        const tile = map.cells[ny][nx].tile;
+        const isTarget = tile === TILE_ITEM || (includeWeapons && tile === TILE_WEAPON);
+        if (isTarget) {
+          const d = Math.abs(dx) + Math.abs(dy);
+          if (d < nearestItemDist) {
+            nearestItemDist = d;
+            nearestItem = { x: nx, y: ny };
+          }
+        }
+      }
+    }
+
+    if (nearestItem && nearestItemDist === 1) {
+      return { type: 'ignite_item', pos: nearestItem };
+    }
+    if (nearestItem && nearestItemDist <= itemSearchRadius) {
+      const step = nextStep(enemy.pos, nearestItem, map);
+      if (step && (step.x !== enemy.pos.x || step.y !== enemy.pos.y)) {
+        return { type: 'move', to: step };
+      }
+    }
+  }
+
+  // オイル・アイテムがなければプレイヤーへ接近
   const dist = manhattanDistance(enemy.pos, playerPos);
   if (dist === 1) return { type: 'attack', targetId: 'player' };
   return decideChase(enemy, playerPos, state, otherEnemies);
@@ -713,6 +751,42 @@ function decideFireBody(
   const currentTile = map.cells[enemy.pos.y]?.[enemy.pos.x]?.tile;
   if (currentTile === TILE_OIL) {
     return { type: 'ignite_oil', pos: enemy.pos };
+  }
+
+  // Lv3以上: 周囲のアイテム・装備マスを探して着火
+  const level = enemy.level ?? 1;
+  if (level >= 3) {
+    const itemSearchRadius = 4;
+    const includeWeapons = Math.random() < 0.3;
+    let nearestItem: Position | null = null;
+    let nearestItemDist = Infinity;
+
+    for (let dy = -itemSearchRadius; dy <= itemSearchRadius; dy++) {
+      for (let dx = -itemSearchRadius; dx <= itemSearchRadius; dx++) {
+        const nx = enemy.pos.x + dx;
+        const ny = enemy.pos.y + dy;
+        if (ny < 0 || ny >= map.height || nx < 0 || nx >= map.width) continue;
+        const tile = map.cells[ny][nx].tile;
+        const isTarget = tile === TILE_ITEM || (includeWeapons && tile === TILE_WEAPON);
+        if (isTarget) {
+          const d = Math.abs(dx) + Math.abs(dy);
+          if (d < nearestItemDist) {
+            nearestItemDist = d;
+            nearestItem = { x: nx, y: ny };
+          }
+        }
+      }
+    }
+
+    if (nearestItem && nearestItemDist === 1) {
+      return { type: 'ignite_item', pos: nearestItem };
+    }
+    if (nearestItem && nearestItemDist <= itemSearchRadius) {
+      const step = nextStep(enemy.pos, nearestItem, map);
+      if (step && (step.x !== enemy.pos.x || step.y !== enemy.pos.y)) {
+        return { type: 'move', to: step };
+      }
+    }
   }
 
   // 通常はプレイヤーへ接近

@@ -7,7 +7,7 @@
 
 import toolsRaw from '../assets/data/tools-equipment.json';
 import itemsRaw from '../assets/data/items.json';
-import type { ToolInstance, ToolCategory } from './game-state';
+import type { ToolInstance, ToolCategory, StatusEffect } from './game-state';
 import type { GameState } from './game-state';
 
 // ---------------------------------------------------------------------------
@@ -701,6 +701,38 @@ export function useInventoryItem(
       return { nextState, log: `${itemName} を使用した（ワープポイント設定）` };
     case 'decoy':
       return { nextState, log: `${itemName} を使用した（デコイ展開）` };
+
+    // ── 身代わりボール: 隣接するランダムな敵へ投げ命中率で効果発動 ──
+    case 'decoy_ball':
+    case 'confusion_ball': {
+      if (!player) break;
+      const adjacentEnemies = (nextState.enemies ?? []).filter(e =>
+        e.hp > 0 &&
+        Math.abs(e.pos.x - player.pos.x) + Math.abs(e.pos.y - player.pos.y) === 1
+      );
+      if (adjacentEnemies.length === 0) {
+        return { nextState, log: `${itemName} を使おうとしたが、隣に敵がいない。アイテムは消えた。` };
+      }
+      const target = adjacentEnemies[Math.floor(Math.random() * adjacentEnemies.length)];
+      const hitChance = 0.88 + Math.random() * (0.96 - 0.88);
+      if (Math.random() >= hitChance) {
+        return { nextState, log: `${itemName} を使ったが命中しなかった。アイテムは消えた。` };
+      }
+      const turns: number = (def as any).stunTurns ?? 3;
+      const dmg = Math.max(1, ((def as any).value ?? 3) - (target.def ?? 0));
+      const effType = def.effect === 'decoy_ball' ? 'decoy' : 'confused';
+      const effLabel = effType === 'decoy' ? '身代わり' : '混乱';
+      const newEnemies = nextState.enemies.map(e => {
+        if (e.id !== target.id) return e;
+        const damagedHp = Math.max(0, e.hp - dmg);
+        const eff: StatusEffect = { type: effType as any, remainingTurns: turns, sourceId: def.id };
+        const effects = [...(e.statusEffects ?? []).filter(s => s.type !== effType), eff];
+        return { ...e, hp: damagedHp, statusEffects: effects };
+      });
+      nextState = { ...nextState, enemies: newEnemies };
+      return { nextState, log: `${target.name ?? target.enemyType} に${dmg}ダメージ！${effLabel}状態（${turns}ターン）！` };
+    }
+
     case 'reveal_enemies':
       return { nextState, log: `${itemName} を使用した（敵探知）` };
 

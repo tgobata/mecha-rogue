@@ -106,7 +106,9 @@ export function applyStatusEffects<T extends EntityWithStatus>(
       case 'frozen':
       case 'stunned':
       case 'oiled':
-      case 'shielded': {
+      case 'shielded':
+      case 'decoy':
+      case 'confused': {
         if (newRemaining > 0) {
           updatedEffects.push({ ...effect, remainingTurns: newRemaining });
         } else {
@@ -120,6 +122,8 @@ export function applyStatusEffects<T extends EntityWithStatus>(
             regen: '修復',
             attack_up: '攻撃力強化',
             speed_up: '速度強化',
+            decoy: '身代わり',
+            confused: '混乱',
           };
           logs.push(`[${label[effect.type]}] 解除`);
         }

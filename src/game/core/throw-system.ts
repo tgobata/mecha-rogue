@@ -77,12 +77,12 @@ const DIR_DELTA: Record<Direction, { dx: number; dy: number }> = {
 /** 射程: 6〜12マスをランダムに決定 */
 const THROW_RANGE_MIN = 6;
 const THROW_RANGE_MAX = 12;
-const HIT_CHANCE_MIN = 0.80;
-const HIT_CHANCE_MAX = 0.90;
+const HIT_CHANCE_MIN = 0.88;
+const HIT_CHANCE_MAX = 0.96;
 
 /**
  * 投げアイテムの軌道を計算する。
- * 射程7〜8マス（ランダム）、壁の1マス手前に落ちる、敵に80-90%で命中する。
+ * 射程7〜8マス（ランダム）、壁の1マス手前に落ちる、敵に88-96%で命中する。
  * path に飛行中の通過タイル一覧を含めて返す（軌道アニメーション用）。
  */
 function calcThrowTrajectory(
@@ -1006,6 +1006,26 @@ function applyItemEffectOnEnemy(
       return nextState;
     }
 
+    // ── 身代わりボール（命中敵を身代わり状態に） ──
+    case 'decoy_ball': {
+      const dmg = Math.max(1, (def.value ?? 3) - (enemy.def ?? 0));
+      const turns: number = def.stunTurns ?? 3;
+      logs.push(`${enemy.name ?? enemy.enemyType} に${dmg}ダメージ！身代わり状態（${turns}ターン）！`);
+      let nextState = dealDamageToEnemy(state, enemy.id, dmg);
+      const decoyEff: StatusEffect = { type: 'decoy', remainingTurns: turns, sourceId: itemId };
+      return applyStatusToEnemy(nextState, enemy.id, decoyEff);
+    }
+
+    // ── 混乱ボール（命中敵を混乱状態に） ──
+    case 'confusion_ball': {
+      const dmg = Math.max(1, (def.value ?? 3) - (enemy.def ?? 0));
+      const turns: number = def.stunTurns ?? 3;
+      logs.push(`${enemy.name ?? enemy.enemyType} に${dmg}ダメージ！混乱状態（${turns}ターン）！`);
+      let nextState = dealDamageToEnemy(state, enemy.id, dmg);
+      const confEff: StatusEffect = { type: 'confused', remainingTurns: turns, sourceId: itemId };
+      return applyStatusToEnemy(nextState, enemy.id, confEff);
+    }
+
     // ── デフォルト（非攻撃・非回復・非強化系）→ 小ダメージ ──
     default: {
       const smallDmg = Math.max(1, 5 - (enemy.def ?? 0));
@@ -1062,6 +1082,12 @@ function applyItemEffectOnLand(
         logs.push(...trapLogs);
         return stunned;
       }
+      return dropItemOnFloor(state, itemId, landPos, true, logs, def.name);
+    }
+
+    // ── 身代わりボール・混乱ボール（着地: そのまま床に置く） ──
+    case 'decoy_ball':
+    case 'confusion_ball': {
       return dropItemOnFloor(state, itemId, landPos, true, logs, def.name);
     }
 
