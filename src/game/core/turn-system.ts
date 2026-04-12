@@ -2659,13 +2659,24 @@ function processDefeatedEnemies(
     inventory = { ...inventory, gold: inventory.gold + goldGained };
   }
   if (droppedItems.length > 0) {
-    // ポーチ容量を超えないようにドロップアイテムを制限する
+    // ポーチ容量を超えないようにドロップアイテムをスタック対応で追加する
     const maxPouch = stateAfterExp.machine.itemPouch;
-    const freeSlots = Math.max(0, maxPouch - inventory.items.length);
-    const itemsToAdd = droppedItems.slice(0, freeSlots);
-    if (itemsToAdd.length > 0) {
-      inventory = { ...inventory, items: [...inventory.items, ...itemsToAdd] };
+    let newItems = [...inventory.items];
+    for (const drop of droppedItems) {
+      const currentCount = newItems.reduce((acc, it) => acc + it.quantity, 0);
+      if (currentCount >= maxPouch) break; // 容量上限
+      const existingIdx = newItems.findIndex(
+        (it) => it.itemId === drop.itemId && it.unidentified === drop.unidentified,
+      );
+      if (existingIdx >= 0) {
+        newItems = newItems.map((it, idx) =>
+          idx === existingIdx ? { ...it, quantity: it.quantity + drop.quantity } : it,
+        );
+      } else {
+        newItems = [...newItems, { ...drop }];
+      }
     }
+    inventory = { ...inventory, items: newItems };
   }
   if (droppedWeapons.length > 0) {
     // 武器スロット容量を超えないようにドロップ武器を制限する
