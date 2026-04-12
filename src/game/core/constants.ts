@@ -308,6 +308,39 @@ export const UPGRADE_ATK_LARGE = {
   maxTimes: 2,
 };
 
+/** 強化オプション: スパイクタイヤ（氷上で滑らない）upgrade_core_ii × 2、最大1回 */
+export const UPGRADE_SPIKE_TIRES = {
+  id: 'upgrade_spike_tires',
+  type: 'spike_tires' as const,
+  description: '氷耐性: 氷上を滑らずに移動できる',
+  requiredItemId: 'upgrade_core_ii',
+  requiredCount: 2,
+  effect: 1,
+  maxTimes: 1,
+};
+
+/** 強化オプション: 耐熱装甲（溶岩ダメージ無効）upgrade_core_ii × 2、最大1回 */
+export const UPGRADE_HEAT_RESIST = {
+  id: 'upgrade_heat_resist',
+  type: 'heat_resist' as const,
+  description: '耐熱装甲: 溶岩でダメージを受けない',
+  requiredItemId: 'upgrade_core_ii',
+  requiredCount: 2,
+  effect: 1,
+  maxTimes: 1,
+};
+
+/** 強化オプション: 磁場シールド（磁場での武器耐久消耗を無効）upgrade_core_iii × 1、最大1回 */
+export const UPGRADE_MAGNET_SHIELD = {
+  id: 'upgrade_magnet_shield',
+  type: 'magnet_shield' as const,
+  description: '磁場シールド: 磁場タイルでの武器耐久消耗を防ぐ',
+  requiredItemId: 'upgrade_core_iii',
+  requiredCount: 1,
+  effect: 1,
+  maxTimes: 1,
+};
+
 /** 全強化オプションの配列（upgrade-system で参照する） */
 export const ALL_UPGRADE_OPTIONS = [
   UPGRADE_ATK_SMALL,
@@ -315,6 +348,9 @@ export const ALL_UPGRADE_OPTIONS = [
   UPGRADE_MAX_HP,
   UPGRADE_ATK_MEDIUM,
   UPGRADE_ATK_LARGE,
+  UPGRADE_SPIKE_TIRES,
+  UPGRADE_HEAT_RESIST,
+  UPGRADE_MAGNET_SHIELD,
 ] as const;
 
 // ---------------------------------------------------------------------------

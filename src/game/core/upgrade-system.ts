@@ -18,7 +18,7 @@ import { ALL_UPGRADE_OPTIONS } from './constants';
 // ---------------------------------------------------------------------------
 
 /** 強化の種別 */
-export type UpgradeType = 'atk' | 'def' | 'hp' | 'maxHp' | 'moveSpeed';
+export type UpgradeType = 'atk' | 'def' | 'hp' | 'maxHp' | 'moveSpeed' | 'spike_tires' | 'heat_resist' | 'magnet_shield';
 
 /**
  * マシン強化の1オプションを表す。
@@ -198,6 +198,13 @@ export function applyUpgrade(state: GameState, upgradeId: string): GameState {
     }
     case 'moveSpeed': {
       newMachine = { ...newMachine, moveSpeed: newMachine.moveSpeed + opt.effect };
+      break;
+    }
+    case 'spike_tires':
+    case 'heat_resist':
+    case 'magnet_shield': {
+      // フラグ型アップグレード: upgradeCount への記録のみ（ステータス変更なし）
+      // turn-system が upgradeCount を参照して効果を適用する
       break;
     }
   }

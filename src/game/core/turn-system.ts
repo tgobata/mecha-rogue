@@ -42,6 +42,7 @@ import {
   TILE_ICE,
   TILE_LAVA,
   TILE_WARP,
+  TILE_MAGNETIC,
   TILE_OIL,
   TILE_FIRE,
   TILE_WATER,
@@ -1101,9 +1102,8 @@ function processPlayerAction(
         let slideTile = targetTile;
         
         // 氷の滑走処理
-        // TODO: upgrade-system からのパーツ情報を参照する（spike_tires）
-        // 現在は status-effect に spike_tires がないので単に判定
-        const hasSpikeTires = false;
+        // upgrade_spike_tires アップグレードがあれば氷上を滑らない
+        const hasSpikeTires = (state.upgradeCount['upgrade_spike_tires'] ?? 0) >= 1;
         if (targetTile === TILE_ICE && !hasSpikeTires) {
            while (isWalkable(getTileAt(mapData, { x: slidePos.x + delta.dx, y: slidePos.y + delta.dy }))) {
               const nx = slidePos.x + delta.dx;
@@ -1147,14 +1147,36 @@ function processPlayerAction(
            }
         }
 
+        // 磁場処理: 装備武器の耐久値 -1（upgrade_magnet_shield があれば無効）
+        if (slideTile === TILE_MAGNETIC) {
+          const hasMagnetShield = (state.upgradeCount['upgrade_magnet_shield'] ?? 0) >= 1;
+          if (hasMagnetShield) {
+            logMessages.push('磁場シールドが電磁干渉を遮断した！');
+          } else if (newPlayer.equippedWeapon) {
+            const magnetWeaponName = newPlayer.equippedWeapon.name;
+            const magnetWeapon = consumeDurability(newPlayer.equippedWeapon);
+            if (isBroken(magnetWeapon)) {
+              newPlayer = { ...newPlayer, equippedWeapon: null };
+              logMessages.push(`磁場の電磁干渉で武器「${magnetWeaponName}」が破損した！`);
+            } else {
+              newPlayer = { ...newPlayer, equippedWeapon: magnetWeapon };
+              logMessages.push(`磁場の電磁干渉で武器「${magnetWeaponName}」の耐久値が1減少した！`);
+            }
+          } else {
+            logMessages.push('磁場の電磁干渉を受けた！（武器なし）');
+          }
+        }
+
         // 移動実行
         newPlayer = { ...newPlayer, pos: slidePos, animState: 'move' as const };
 
-        // 溶岩ダメージ
-        const hasHeatResist = false; // TODO: アップグレード判定
+        // 溶岩ダメージ（upgrade_heat_resist があれば無効）
+        const hasHeatResist = (state.upgradeCount['upgrade_heat_resist'] ?? 0) >= 1;
         if (slideTile === TILE_LAVA && !hasHeatResist) {
            newPlayer = { ...newPlayer, hp: newPlayer.hp - 5, hpEverDroppedBelowMax: true };
            logMessages.push('溶岩の熱で5ダメージを受けた！');
+        } else if (slideTile === TILE_LAVA && hasHeatResist) {
+           logMessages.push('耐熱装甲が溶岩のダメージを防いだ！');
         }
 
         // 炎マスダメージ（最大HPの7%）
