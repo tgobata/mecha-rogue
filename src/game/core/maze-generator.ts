@@ -1123,6 +1123,7 @@ function attemptGenerateConcentric(floorNumber: number, seed: number): Floor {
   placeOilTilesConcentric(tempFloor, floorNumber, rng, protectedPos);
   placeFireTilesConcentric(tempFloor, floorNumber, rng, protectedPos);
   placeCrackedWalls(tempFloor, rng);
+  placeShopsConcentric(tempFloor, bossWall, rng, protectedPos);
   placeEntities(tempFloor, floorNumber, rng);
   ensureMinimumItems(tempFloor, 3, rng, 1);
 
@@ -1440,6 +1441,41 @@ function placeFireTilesConcentric(
         Math.abs(x - floor.stairsPos.x) + Math.abs(y - floor.stairsPos.y) <= 1;
       if (nearStairs) continue;
       if (rng() < rate) floor.cells[y][x].tile = TILE_FIRE;
+    }
+  }
+}
+
+/**
+ * 同心円ボスフロアにショップを配置する（通常階と同じ確率）。
+ * ボス部屋エリアおよび保護ゾーンを除いた TILE_FLOOR セルに配置する。
+ */
+function placeShopsConcentric(
+  floor: Floor,
+  bossWall: RingBounds,
+  rng: () => number,
+  protectedPos: Set<string>,
+): void {
+  const MAX_SHOPS_PER_FLOOR = 2;
+
+  const candidates: Position[] = [];
+  for (let y = 1; y < floor.height - 1; y++) {
+    for (let x = 1; x < floor.width - 1; x++) {
+      if (floor.cells[y][x].tile !== TILE_FLOOR) continue;
+      if (protectedPos.has(`${x},${y}`)) continue;
+      // ボス部屋エリア内はスキップ
+      if (x >= bossWall.x && x <= bossWall.right && y >= bossWall.y && y <= bossWall.bottom) continue;
+      candidates.push({ x, y });
+    }
+  }
+
+  shuffleArray(candidates, rng);
+
+  let shopCount = 0;
+  for (const pos of candidates) {
+    if (shopCount >= MAX_SHOPS_PER_FLOOR) break;
+    if (rng() < SHOP_SPAWN_RATE) {
+      floor.cells[pos.y][pos.x].tile = TILE_SHOP;
+      shopCount++;
     }
   }
 }
