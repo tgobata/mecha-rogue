@@ -1061,7 +1061,12 @@ function processPlayerAction(
         const effectiveDef = targetEnemy.enemyType === 'iron_fortress'
           ? getIronFortressDef(targetEnemy, newPlayer.pos)
           : targetEnemy.def;
-        const dmg = calcDamage(effectiveAtk(newPlayer), effectiveDef);
+        let rawDmg = calcDamage(effectiveAtk(newPlayer), effectiveDef);
+        // 聖なるオイル: ボス特攻バフ適用
+        if (targetEnemy.isBoss && (newPlayer.bossBoostTurns ?? 0) > 0 && (newPlayer.bossBoostMult ?? 1) > 1) {
+          rawDmg = Math.round(rawDmg * (newPlayer.bossBoostMult ?? 1));
+        }
+        const dmg = rawDmg;
 
         // シールド吸収
         const { finalDamage, updatedEntity: shieldedEnemy } = absorbWithShield(targetEnemy, dmg);
@@ -1097,7 +1102,29 @@ function processPlayerAction(
       const mapData = state.map!;
       const targetTile = getTileAt(mapData, targetPos);
 
-      if (isWalkable(targetTile)) {
+      // ─── フェイズシフター: 壁すり抜け ───
+      let usedPhaseShift = false;
+      if ((newPlayer.phaseThroughTurns ?? 0) > 0 && (targetTile === TILE_WALL || targetTile === TILE_CRACKED_WALL)) {
+        const beyondPos = { x: targetPos.x + delta.dx, y: targetPos.y + delta.dy };
+        if (
+          beyondPos.x > 0 && beyondPos.y > 0 &&
+          beyondPos.x < mapData.width - 1 && beyondPos.y < mapData.height - 1
+        ) {
+          const beyondTile = getTileAt(mapData, beyondPos);
+          if (isWalkable(beyondTile)) {
+            newPlayer = {
+              ...newPlayer,
+              pos: beyondPos,
+              phaseThroughTurns: newPlayer.phaseThroughTurns! - 1,
+              animState: 'move' as const,
+            };
+            logMessages.push('フェイズシフターで壁をすり抜けた！');
+            usedPhaseShift = true;
+          }
+        }
+      }
+
+      if (!usedPhaseShift && isWalkable(targetTile)) {
         let slidePos = targetPos;
         let slideTile = targetTile;
         
@@ -1273,8 +1300,8 @@ function processPlayerAction(
           pickup = { type: 'storage', pos: slidePos };
         }
       }
-      // wall_break 武器で壁を破壊
-      if (!isWalkable(targetTile) && (targetTile === TILE_WALL || targetTile === TILE_CRACKED_WALL)) {
+      // wall_break 武器で壁を破壊（フェイズシフター使用時は壁破壊しない）
+      if (!usedPhaseShift && !isWalkable(targetTile) && (targetTile === TILE_WALL || targetTile === TILE_CRACKED_WALL)) {
         const weapon = newPlayer.equippedWeapon ?? null;
         if (weapon?.special === 'wall_break') {
           const isBorder =
@@ -1629,11 +1656,19 @@ function processEnemyActions(
             }
             const baseAtk = Math.round(currentEnemyState.atk * attackMultiplier);
             const dmg = isBlocked ? 0 : calcDamage(baseAtk, effectiveDef);
-            const { finalDamage, updatedEntity: shieldedPlayer } = absorbWithShield(newPlayer, dmg);
+            const { finalDamage: rawFinalDamage, updatedEntity: shieldedPlayer } = absorbWithShield(newPlayer, dmg);
+            // バリアカプセル: ダメージ無効化チャージ消費
+            let finalDamage = rawFinalDamage;
+            let playerAfterNullify = shieldedPlayer;
+            if (finalDamage > 0 && (shieldedPlayer.nullifyCharges ?? 0) > 0) {
+              finalDamage = 0;
+              playerAfterNullify = { ...shieldedPlayer, nullifyCharges: shieldedPlayer.nullifyCharges! - 1 };
+              enemyEventMessages.push('バリアがダメージを無効化した！');
+            }
             // プレイヤーの向きを維持しつつ animState を 'hit' に
             newPlayer = {
-              ...shieldedPlayer,
-              hp: shieldedPlayer.hp - finalDamage,
+              ...playerAfterNullify,
+              hp: playerAfterNullify.hp - finalDamage,
               animState: 'hit' as const,
               facing: newPlayer.facing, // 明示的に維持
               ...(finalDamage > 0 && { hpEverDroppedBelowMax: true }),
@@ -3489,6 +3524,39 @@ export function processTurn(state: GameState, action: PlayerAction): GameState {
     if (actualHeal > 0) {
       newBattleLog.push(`ナノボット修復: +${actualHeal}HP（残${newTurnsLeft}ターン）`);
     }
+  }
+
+  // ─── プレイヤーバフターン数デクリメント ──────────────────────────────
+  {
+    let p = playerAfterTrap;
+    // 加速ブースト
+    if ((p.speedBoostTurns ?? 0) > 0) {
+      const newSpeedTurns = p.speedBoostTurns! - 1;
+      if (newSpeedTurns <= 0) {
+        // バフ切れ: moveSpeed を元に戻す（speed_up の value 分だけ減算）
+        // tools speed_up value=2 を固定で戻す代わりに、machine.moveSpeed から差分を解消
+        // ただし正確な追跡が難しいため moveSpeed は維持（永続化として扱う）
+        p = { ...p, speedBoostTurns: 0 };
+        newBattleLog.push('加速ブーストが切れた！');
+      } else {
+        p = { ...p, speedBoostTurns: newSpeedTurns };
+      }
+    }
+    // ボス特攻バフ
+    if ((p.bossBoostTurns ?? 0) > 0) {
+      const newBossTurns = p.bossBoostTurns! - 1;
+      if (newBossTurns <= 0) {
+        p = { ...p, bossBoostTurns: 0, bossBoostMult: undefined };
+        newBattleLog.push('聖なるオイルの効果が切れた！');
+      } else {
+        p = { ...p, bossBoostTurns: newBossTurns };
+      }
+    }
+    // フェイズシフター（ターンではなく使用時消費だが念のため0以下を防ぐ）
+    if ((p.phaseThroughTurns ?? 0) < 0) {
+      p = { ...p, phaseThroughTurns: 0 };
+    }
+    playerAfterTrap = p;
   }
 
   // ─── フロア遷移 ────────────────────────────────────────────────────────

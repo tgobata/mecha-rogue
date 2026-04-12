@@ -470,6 +470,16 @@ export interface Player {
   healPerTurn?: number;
   /** 修理ナノボットの残りターン数 */
   healTurnsLeft?: number;
+  /** フェイズシフター: 壁すり抜け可能な残り回数（1使用で-1） */
+  phaseThroughTurns?: number;
+  /** バリアカプセル: ダメージ無効化の残り回数（被弾1回で-1） */
+  nullifyCharges?: number;
+  /** 加速ブーストの残りターン数（>0の間 moveSpeed一時増加） */
+  speedBoostTurns?: number;
+  /** 聖なるオイル: ボス特攻バフの残りターン数 */
+  bossBoostTurns?: number;
+  /** 聖なるオイル: ボスへのダメージ倍率（例: 1.5 = 50%増） */
+  bossBoostMult?: number;
   /** 現在装備中の武器（null は素手） */
   equippedWeapon?: WeaponInstance | null;
   /** 所持武器一覧（最大 MachineStats.weaponSlots 本） */
@@ -885,6 +895,8 @@ export interface GameState {
    * 拠点での出発階選択（2F以上）に使用する。
    */
   highestFloorReached: number;
+  /** テレポートビーコンで設置したワープ地点（フロア遷移でリセット） */
+  warpPoint?: Position;
 }
 
 // ---------------------------------------------------------------------------

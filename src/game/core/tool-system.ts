@@ -9,6 +9,8 @@ import toolsRaw from '../assets/data/tools-equipment.json';
 import itemsRaw from '../assets/data/items.json';
 import type { ToolInstance, ToolCategory, StatusEffect } from './game-state';
 import type { GameState } from './game-state';
+import { updateVisibility } from './visibility';
+import { VIEW_RADIUS } from './constants';
 
 // ---------------------------------------------------------------------------
 // items.json の型定義（useInventoryItem で使用）
@@ -185,12 +187,18 @@ function applyToolEffect(state: GameState, tool: ToolInstance): GameState {
       return { ...state, machine: { ...state.machine, energy: newEnergy } };
     }
 
-    case 'phase_through_wall':
-      // フェイズシフター: 移動システムが参照するフラグを立てる（将来実装）
-      return state;
+    case 'phase_through_wall': {
+      // フェイズシフター: 次の移動で壁を1枚すり抜けられるチャージを付与
+      const currentCharges = (state.player?.phaseThroughTurns ?? 0);
+      return {
+        ...state,
+        player: state.player
+          ? { ...state.player, phaseThroughTurns: currentCharges + 1 }
+          : state.player,
+      };
+    }
 
     default:
-      // 未実装効果は何もしない
       return state;
   }
 }
@@ -584,16 +592,84 @@ export function useInventoryItem(
         : `${itemName} を使用した（煙幕展開、敵の追跡を妨害）`;
       return { nextState, log: logMsg };
     }
-    case 'stun_area':
-      return { nextState, log: `${itemName} を使用した（EMP爆発）` };
-    case 'stun_radius_2':
-      return { nextState, log: `${itemName} を使用した（フラッシュ炸裂）` };
-    case 'speed_up':
-      return { nextState, log: `${itemName} を使用した（加速ブースト）` };
-    case 'damage_nullify':
-      return { nextState, log: `${itemName} を使用した（バリア展開）` };
-    case 'boss_damage_up':
-      return { nextState, log: `${itemName} を使用した（ボス対策強化）` };
+    case 'stun_area': {
+      if (!player) break;
+      const areaRadius = (def as any).radius ?? 1;
+      const areaTurns = def.value;
+      const areaEffect: StatusEffect = { type: 'stunned', remainingTurns: areaTurns, sourceId: def.id };
+      let areaCount = 0;
+      const empEnemies = nextState.enemies.map((e) => {
+        if (e.hp <= 0) return e;
+        if (Math.max(Math.abs(e.pos.x - player.pos.x), Math.abs(e.pos.y - player.pos.y)) <= areaRadius) {
+          areaCount++;
+          const effects = [...(e.statusEffects ?? []).filter((s) => s.type !== 'stunned'), areaEffect];
+          return { ...e, statusEffects: effects };
+        }
+        return e;
+      });
+      nextState = { ...nextState, enemies: empEnemies };
+      return {
+        nextState,
+        log: areaCount > 0
+          ? `${itemName} を使用した（EMP爆発！ ${areaCount}体を${areaTurns}ターンスタン）`
+          : `${itemName} を使用した（周囲に敵なし）`,
+      };
+    }
+    case 'stun_radius_2': {
+      if (!player) break;
+      const flashRadius = (def as any).radius ?? 2;
+      const flashTurns = def.value;
+      const flashEffect: StatusEffect = { type: 'stunned', remainingTurns: flashTurns, sourceId: def.id };
+      let flashCount = 0;
+      const flashEnemies = nextState.enemies.map((e) => {
+        if (e.hp <= 0) return e;
+        const dist = Math.max(Math.abs(e.pos.x - player.pos.x), Math.abs(e.pos.y - player.pos.y));
+        if (dist <= flashRadius) {
+          flashCount++;
+          const effects = [...(e.statusEffects ?? []).filter((s) => s.type !== 'stunned'), flashEffect];
+          return { ...e, statusEffects: effects };
+        }
+        return e;
+      });
+      nextState = { ...nextState, enemies: flashEnemies };
+      return {
+        nextState,
+        log: flashCount > 0
+          ? `${itemName} を使用した（閃光炸裂！ ${flashCount}体を${flashTurns}ターンスタン）`
+          : `${itemName} を使用した（周囲に敵なし）`,
+      };
+    }
+    case 'speed_up': {
+      const boostDuration = (def as any).duration ?? 5;
+      const boostVal = def.value;
+      // 移動速度を一時的に増加（上限5）し、残りターンを記録
+      const newSpeed = Math.min(5, machine.moveSpeed + boostVal);
+      nextState = {
+        ...nextState,
+        machine: { ...machine, moveSpeed: newSpeed },
+        player: player ? { ...player, speedBoostTurns: (player.speedBoostTurns ?? 0) + boostDuration } : player,
+      };
+      return { nextState, log: `${itemName} を使用した（移動速度 +${boostVal}、${boostDuration}ターン）` };
+    }
+    case 'damage_nullify': {
+      const charges = def.value;
+      nextState = {
+        ...nextState,
+        player: player ? { ...player, nullifyCharges: (player.nullifyCharges ?? 0) + charges } : player,
+      };
+      return { nextState, log: `${itemName} を使用した（次の${charges}回のダメージを無効化）` };
+    }
+    case 'boss_damage_up': {
+      const boostTurns = (def as any).duration ?? 5;
+      const boostMult = def.value;
+      nextState = {
+        ...nextState,
+        player: player
+          ? { ...player, bossBoostTurns: (player.bossBoostTurns ?? 0) + boostTurns, bossBoostMult: boostMult }
+          : player,
+      };
+      return { nextState, log: `${itemName} を使用した（ボスへのダメージ ×${boostMult}、${boostTurns}ターン）` };
+    }
 
     // ── 時限爆弾設置 ──
     case 'place_bomb': {
@@ -663,6 +739,22 @@ export function useInventoryItem(
       return { nextState, log: `${itemName} を投入した（${healDuration}ターン間 +${healAmt}HP/ターン）` };
     }
 
+    // ── スタート帰還 ──
+    case 'return_to_start': {
+      if (!player || !nextState.map) break;
+      const startPos = nextState.map.startPos;
+      const updatedMap = updateVisibility(nextState.map, startPos, VIEW_RADIUS);
+      nextState = {
+        ...nextState,
+        map: updatedMap,
+        player: { ...player, pos: startPos, animState: 'move' as const },
+        exploration: nextState.exploration
+          ? { ...nextState.exploration, playerPos: startPos, currentFloor: updatedMap }
+          : nextState.exploration,
+      };
+      return { nextState, log: `${itemName} を起動した（スタート地点へ帰還）` };
+    }
+
     // ── ワープ系（GameCanvas.tsx で専用処理） ──
     case 'warp_down':
       return { nextState, log: `${itemName} を起動した（下階転送）` };
@@ -701,8 +793,12 @@ export function useInventoryItem(
       }
       return { nextState, log: `${itemName} を使用したが、鑑定できるアイテムがない` };
     }
-    case 'set_warp_point':
-      return { nextState, log: `${itemName} を使用した（ワープポイント設定）` };
+    case 'set_warp_point': {
+      if (!player) break;
+      const savedPos = { ...player.pos };
+      nextState = { ...nextState, warpPoint: savedPos };
+      return { nextState, log: `${itemName} を設置した（座標 ${savedPos.x},${savedPos.y} にビーコン設置）` };
+    }
     case 'decoy':
       return { nextState, log: `${itemName} を使用した（デコイ展開）` };
 
@@ -737,8 +833,27 @@ export function useInventoryItem(
       return { nextState, log: `${target.name ?? target.enemyType} に${dmg}ダメージ！${effLabel}状態（${turns}ターン）！` };
     }
 
-    case 'reveal_enemies':
+    case 'reveal_enemies': {
+      // 生存している全敵の立っているセルを可視化（マップ上でも確認可能に）
+      if (nextState.map) {
+        const revCells = nextState.map.cells.map((row) => row.map((c) => ({ ...c })));
+        let count = 0;
+        for (const e of nextState.enemies) {
+          if (e.hp <= 0) continue;
+          const cell = revCells[e.pos.y]?.[e.pos.x];
+          if (cell && !cell.isVisible) {
+            revCells[e.pos.y][e.pos.x] = { ...cell, isVisible: true, isExplored: true };
+            count++;
+          }
+        }
+        nextState = { ...nextState, map: { ...nextState.map, cells: revCells } };
+        const msg = count > 0
+          ? `${itemName} を使用した（${nextState.enemies.filter(e => e.hp > 0).length}体の敵を探知）`
+          : `${itemName} を使用した（周囲に隠れた敵はいない）`;
+        return { nextState, log: msg };
+      }
       return { nextState, log: `${itemName} を使用した（敵探知）` };
+    }
 
     default:
       break;
