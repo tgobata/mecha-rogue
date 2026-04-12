@@ -275,6 +275,10 @@ export function getItemEffectSummary(itemId: string): string | null {
     case 'stun_area':           return `3×3範囲の敵を${v}ターン行動不能`;
     case 'stun_radius_2':       return `周囲${def.radius ?? 2}マスの敵を${v}ターン行動不能`;
     case 'decoy':               return `デコイ展開 ${def.duration ?? v}ターン（敵の注意を誘導）`;
+    case 'decoy_ball':
+      return `命中した敵を身代わり状態 ${def.stunTurns ?? 3}ターン（他の敵がその敵をプレイヤーと見なして攻撃）＋微量ダメージ ${v}。外れたら着地点に置かれる。「使う」は隣接敵に同命中率で発動`;
+    case 'confusion_ball':
+      return `命中した敵を混乱状態 ${def.stunTurns ?? 3}ターン（敵味方問わずランダムに攻撃）＋微量ダメージ ${v}。外れたら着地点に置かれる。「使う」は隣接敵に同命中率で発動`;
 
     // ── 爆弾・投擲 ────────────────────────────────────────────
     case 'place_bomb':
