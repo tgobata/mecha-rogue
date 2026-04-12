@@ -123,7 +123,7 @@ function getWeaponName(weaponId: string): string {
   return WEAPON_DEFS_MIN.find((d) => d.id === weaponId)?.name ?? weaponId;
 }
 import { createWeaponInstance, getAttackTargetPositions } from "../core/weapon-system";
-import HUD from "./HUD";
+import HUD, { BigMapOverlay } from "./HUD";
 import VirtualController from "./VirtualController";
 import InventoryPanel from "./InventoryPanel";
 import WeaponPanel from "./WeaponPanel";
@@ -260,6 +260,13 @@ function migrateGameState(saved: GameState): GameState {
     isBlackMarket: saved.isBlackMarket ?? false,
     highestFloorReached: saved.highestFloorReached ?? 0,
   };
+
+  // itemPouch 最低容量保証: 初期値が引き上げられた場合に古いセーブデータを自動補完する
+  // ただしアイテムツールで拡張済みの場合は大きい方を維持する
+  const minPouch = defaults.machine.itemPouch;
+  if (migrated.machine && (migrated.machine.itemPouch ?? 0) < minPouch) {
+    migrated.machine = { ...migrated.machine, itemPouch: minPouch };
+  }
 
   // フェーズ自動修復:
   // title フェーズはゲームのロード先として無効（タイトル画面のままになるため）
@@ -752,6 +759,9 @@ export default function GameCanvas() {
 
   /** ミュート状態 */
   const [isMuted, setIsMuted] = useState(false);
+
+  /** 大マップ表示状態 */
+  const [showBigMap, setShowBigMap] = useState(false);
 
   /** 発見済みボスの座標（フロアが変わるとリセット） */
   const [seenBossPositions, setSeenBossPositions] = useState<Position[]>([]);
@@ -3061,6 +3071,24 @@ export default function GameCanvas() {
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [gameState.phase, isMenuOpen, skillSelectState, handleUseSkill]);
 
+  // ── M キー: 大マップ表示切替 / Esc: 大マップを閉じる ──────────
+  // capture: true でゲーム入力ハンドラより先に実行し、大マップ表示中の Esc が
+  // システムメニューに流れないよう stopImmediatePropagation する
+  useEffect(() => {
+    if (gameState.phase !== "exploring") return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "m" || e.key === "M") {
+        setShowBigMap((v) => !v);
+      } else if (e.key === "Escape" && showBigMap) {
+        e.stopImmediatePropagation();
+        e.preventDefault();
+        setShowBigMap(false);
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown, { capture: true });
+    return () => window.removeEventListener("keydown", handleKeyDown, { capture: true });
+  }, [gameState.phase, showBigMap]);
+
   // ── 常にキャンバスをレンダリングし、タイトル/ゲームオーバーはオーバーレイで表示 ──
   // 理由: Canvas が DOM に存在しないとき canvasRef.current === null のため
   // DPR セットアップ useEffect が効かず、キャンバスがデフォルトの 300×150px のまま
@@ -3072,6 +3100,19 @@ export default function GameCanvas() {
   return (
     // 外枠: 相対配置でオーバーレイを重ねる
     <div className="relative flex flex-col w-full h-full bg-black">
+      {/* ── 大マップオーバーレイ（position:fixed で viewport 全体を覆う） ── */}
+      {showBigMap && gameState.player && gameState.map && (
+        <BigMapOverlay
+          floor={gameState.map}
+          playerPos={gameState.player.pos}
+          enemies={gameState.enemies}
+          viewRadius={VIEW_RADIUS}
+          seenBossPositions={seenBossPositions}
+          floorNumber={gameState.floor}
+          isRestFloor={gameState.isRestFloor ?? false}
+          onClose={() => setShowBigMap(false)}
+        />
+      )}
       {/*
        * Canvas エリア: containerRef はここに設置。
        * flex-1 + min-h-0 で仮想コントローラー分を除いた残り高さを確保。
@@ -3114,6 +3155,7 @@ export default function GameCanvas() {
                 isMuted={isMuted}
                 onToggleMute={handleToggleMute}
                 seenBossPositions={seenBossPositions}
+                onToggleBigMap={() => setShowBigMap((v) => !v)}
               />
             )}
 

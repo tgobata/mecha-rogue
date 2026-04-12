@@ -956,7 +956,7 @@ const INITIAL_ARMOR_SLOTS = 1;
 /** 道具スロット初期値（GDD 3.3） */
 const INITIAL_TOOL_SLOTS = 3;
 /** アイテムポーチ初期容量（GDD 3.3） */
-const INITIAL_ITEM_POUCH = 15;
+const INITIAL_ITEM_POUCH = 20;
 /** エネルギー初期値（GDD 3.3） */
 const INITIAL_ENERGY = 100;
 /** 所持金初期値 */

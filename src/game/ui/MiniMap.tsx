@@ -50,6 +50,8 @@ interface MiniMapProps {
   viewRadius: number;
   /** 発見済みボスの座標リスト（発見後は画面外でも表示） */
   seenBossPositions?: Position[];
+  /** クリック/タップ時のコールバック */
+  onClick?: () => void;
 }
 
 // ---------------------------------------------------------------------------
@@ -66,6 +68,7 @@ export default function MiniMap({
   enemies,
   viewRadius,
   seenBossPositions = [],
+  onClick,
 }: MiniMapProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [blinkOn, setBlinkOn] = useState(true);
@@ -186,13 +189,15 @@ export default function MiniMap({
   return (
     <canvas
       ref={canvasRef}
+      onClick={onClick}
       style={{
         display: 'block',
         border: '1px solid rgba(85,85,102,0.8)',
         borderRadius: 2,
         imageRendering: 'pixelated',
+        cursor: onClick ? 'pointer' : undefined,
       }}
-      aria-label="ミニマップ"
+      aria-label="ミニマップ（クリックで拡大）"
     />
   );
 }
