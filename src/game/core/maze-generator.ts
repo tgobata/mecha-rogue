@@ -934,6 +934,517 @@ function randomFloorInRoom(room: Room, cells: Cell[][], rng: () => number): Posi
 }
 
 // ---------------------------------------------------------------------------
+// 同心円ボスフロア（5の倍数階）
+// ---------------------------------------------------------------------------
+
+/** 同心円レイアウトで使う矩形境界（各辺の座標を保持） */
+interface RingBounds {
+  x: number;      // 左壁の x 座標
+  y: number;      // 上壁の y 座標
+  right: number;  // 右壁の x 座標（inclusive）
+  bottom: number; // 下壁の y 座標（inclusive）
+}
+
+/**
+ * 5の倍数階用: マップサイズを 1.1〜1.2倍に拡張した値を返す。
+ * 階層が増すごとに倍率が上がる（1.1 → 1.133 → 1.167 → 1.2 → 繰り返し）。
+ */
+function getConcentricMapSize(floorNumber: number): { width: number; height: number } {
+  const base = getMapSize(floorNumber);
+  const step = Math.floor(floorNumber / 5) - 1; // 0-indexed (floor5=0, floor10=1, ...)
+  const scale = 1.1 + (step % 4) * 0.033;
+  const s = Math.min(1.2, Math.max(1.1, scale));
+  return {
+    width:  Math.round(base.width  * s),
+    height: Math.round(base.height * s),
+  };
+}
+
+/**
+ * 同心円ボスフロアを生成する（5の倍数階専用）。
+ *
+ * 構造:
+ *   - マップ中央にボス大部屋（階段あり）
+ *   - ボス部屋を取り囲む層（リング）が複数存在し、各層は壁・部屋・通路で構成される
+ *   - 外側層 → 内側層への入り口は1か所のみ
+ *   - プレイヤーは最外層からスタート
+ *   - 特殊地形は入り口周辺に配置しない
+ */
+export function generateConcentricBossFloor(floorNumber: number, seed?: number): Floor {
+  const resolvedSeed = seed ?? Date.now();
+  const MAX_RETRY = 15;
+
+  for (let attempt = 0; attempt < MAX_RETRY; attempt++) {
+    const floor = attemptGenerateConcentric(floorNumber, resolvedSeed + attempt);
+    if (validateFloor(floor)) return floor;
+  }
+
+  const { width, height } = getConcentricMapSize(floorNumber);
+  return generateFallbackFloor(floorNumber, width, height, resolvedSeed);
+}
+
+/**
+ * 同心円ボスフロアの1回分生成を試みる。
+ */
+function attemptGenerateConcentric(floorNumber: number, seed: number): Floor {
+  const rng = createRng(seed);
+  const { width, height } = getConcentricMapSize(floorNumber);
+  const cells = createEmptyCells(width, height);
+
+  const bossSize = BOSS_FLOOR_SIZE_MAP.get(floorNumber) ?? 2;
+  const bossInnerSize = Math.max(8, bossSize * 2 + 2);
+
+  // マップ中心
+  const cx = Math.floor(width  / 2);
+  const cy = Math.floor(height / 2);
+
+  // ボス部屋の内部（床タイル領域）
+  const bossHalf = Math.floor(bossInnerSize / 2);
+  const bossX1 = cx - bossHalf;
+  const bossY1 = cy - bossHalf;
+  const bossX2 = cx + bossHalf;
+  const bossY2 = cy + bossHalf;
+
+  // ボス部屋を囲む壁ライン（リング0の内壁）
+  const bossWall: RingBounds = {
+    x: bossX1 - 1, y: bossY1 - 1,
+    right: bossX2 + 1, bottom: bossY2 + 1,
+  };
+
+  // ---- リング数・厚みを計算 ----
+  const MIN_RING_THICKNESS = 7;
+  const availLeft   = bossWall.x - 1;
+  const availTop    = bossWall.y - 1;
+  const availRight  = (width  - 1) - bossWall.right  - 1;
+  const availBottom = (height - 1) - bossWall.bottom - 1;
+  const available   = Math.min(availLeft, availTop, availRight, availBottom);
+  const numRings    = Math.max(2, Math.floor(available / MIN_RING_THICKNESS));
+  const ringThickness = Math.floor(available / numRings);
+
+  // wallBounds[0] = ボス壁, wallBounds[i] = リング i の外壁境界
+  const wallBounds: RingBounds[] = [bossWall];
+  for (let i = 1; i <= numRings; i++) {
+    const exp = i * ringThickness;
+    wallBounds.push({
+      x:      bossWall.x      - exp,
+      y:      bossWall.y      - exp,
+      right:  bossWall.right  + exp,
+      bottom: bossWall.bottom + exp,
+    });
+  }
+  // 最外壁はマップ外周にクランプ
+  wallBounds[numRings] = { x: 0, y: 0, right: width - 1, bottom: height - 1 };
+
+  // ---- ボス部屋の床を彫る ----
+  for (let y = bossY1; y <= bossY2; y++) {
+    for (let x = bossX1; x <= bossX2; x++) {
+      cells[y][x].tile = TILE_FLOOR;
+    }
+  }
+
+  // ---- 入り口位置の保護セット（特殊地形禁止ゾーン） ----
+  const protectedPos = new Set<string>();
+  // ボス部屋内部を保護（階段・ボスは特殊地形禁止）
+  for (let y = bossY1; y <= bossY2; y++) {
+    for (let x = bossX1; x <= bossX2; x++) {
+      protectedPos.add(`${x},${y}`);
+    }
+  }
+
+  // ---- 各リングを彫り、仕切り・入り口を設置 ----
+  // リング i = wallBounds[i-1]（内壁）と wallBounds[i]（外壁）の間
+  for (let ringIdx = 1; ringIdx <= numRings; ringIdx++) {
+    const inner = wallBounds[ringIdx - 1];
+    const outer = wallBounds[ringIdx];
+
+    carveRingFloor(cells, inner, outer);
+    addRingRoomStructure(cells, inner, outer, rng, protectedPos);
+    cutEntranceInWall(cells, inner, rng, protectedPos);
+  }
+
+  // ---- ボスを中心に配置 ----
+  cells[cy][cx].tile = TILE_BOSS;
+
+  // ---- 階段をボス部屋内のランダム位置に配置（ボス位置除く） ----
+  const bossFloorTiles: Position[] = [];
+  for (let y = bossY1; y <= bossY2; y++) {
+    for (let x = bossX1; x <= bossX2; x++) {
+      if (x !== cx || y !== cy) bossFloorTiles.push({ x, y });
+    }
+  }
+  shuffleArray(bossFloorTiles, rng);
+  const stairsPos: Position = bossFloorTiles[0] ?? { x: bossX1, y: bossY2 };
+  cells[stairsPos.y][stairsPos.x].tile = TILE_STAIRS_DOWN;
+
+  // ---- プレイヤースタートを最外リングのランダム床に配置 ----
+  const outerInner = wallBounds[numRings - 1];
+  const outerOuter = wallBounds[numRings];
+  const startPos: Position =
+    randomFloorInRingArea(cells, outerInner, outerOuter, rng)
+    ?? { x: outerOuter.x + 2, y: outerOuter.y + 2 };
+  cells[startPos.y][startPos.x].tile = TILE_START;
+
+  // ---- 部屋リスト構築（BFS検証・entity配置に必要） ----
+  const rooms: Room[] = [];
+  rooms.push({
+    id: 0,
+    type: RoomType.BOSS,
+    bounds: {
+      x: bossWall.x,
+      y: bossWall.y,
+      width:  bossWall.right  - bossWall.x + 1,
+      height: bossWall.bottom - bossWall.y + 1,
+    },
+    doors: [],
+    isLocked: true,
+  });
+  for (let i = 1; i <= numRings; i++) {
+    const wb = wallBounds[i];
+    rooms.push({
+      id: i,
+      type: RoomType.NORMAL,
+      bounds: {
+        x: wb.x,
+        y: wb.y,
+        width:  wb.right  - wb.x + 1,
+        height: wb.bottom - wb.y + 1,
+      },
+      doors: [],
+      isLocked: false,
+    });
+  }
+
+  const tempFloor: Floor = {
+    floorNumber, width, height, cells, rooms, startPos, stairsPos, seed,
+  };
+
+  // ---- 特殊地形・エンティティ配置（保護ゾーンを避ける） ----
+  placeSpecialTerrainConcentric(tempFloor, floorNumber, rng, protectedPos);
+  placeOilTilesConcentric(tempFloor, floorNumber, rng, protectedPos);
+  placeFireTilesConcentric(tempFloor, floorNumber, rng, protectedPos);
+  placeCrackedWalls(tempFloor, rng);
+  placeEntities(tempFloor, floorNumber, rng);
+  ensureMinimumItems(tempFloor, 3, rng, 1);
+
+  return tempFloor;
+}
+
+// ---------------------------------------------------------------------------
+// 同心円ボスフロア用ヘルパー
+// ---------------------------------------------------------------------------
+
+/**
+ * inner と outer の間のリング状エリアを TILE_FLOOR で塗りつぶす。
+ * inner 壁・outer 壁は TILE_WALL のまま残す。
+ */
+function carveRingFloor(cells: Cell[][], inner: RingBounds, outer: RingBounds): void {
+  for (let y = outer.y + 1; y <= outer.bottom - 1; y++) {
+    for (let x = outer.x + 1; x <= outer.right - 1; x++) {
+      // inner 領域（壁ラインを含む）はスキップ
+      if (x >= inner.x && x <= inner.right && y >= inner.y && y <= inner.bottom) continue;
+      if (cells[y]?.[x] !== undefined) {
+        cells[y][x].tile = TILE_FLOOR;
+      }
+    }
+  }
+}
+
+/**
+ * リングの上下左右アームそれぞれに仕切り壁を追加し、部屋風の構造を作る。
+ * 各仕切りには通路ギャップを設け、コーナー経由で全体が連結されることを保証する。
+ */
+function addRingRoomStructure(
+  cells: Cell[][],
+  inner: RingBounds,
+  outer: RingBounds,
+  rng: () => number,
+  protectedPos: Set<string>,
+): void {
+  const GAP   = 2; // 仕切りに残す通路幅（タイル数）
+  const MIN_SEG = 6; // セグメントの最小長
+
+  // ---- 上アーム: y = outer.y+1 〜 inner.y-1, x = outer.x+1 〜 outer.right-1 ----
+  const topH = inner.y - outer.y - 1;
+  const topW = outer.right - outer.x - 1;
+  if (topH >= 3 && topW >= MIN_SEG * 2) {
+    const nd = Math.max(1, Math.floor(topW / MIN_SEG) - 1);
+    const sl = Math.floor(topW / (nd + 1));
+    for (let d = 1; d <= nd; d++) {
+      const divX = outer.x + d * sl;
+      if (divX <= outer.x || divX >= outer.right) continue;
+      const gapY = outer.y + 1 + Math.floor(rng() * Math.max(1, topH - GAP));
+      for (let y = outer.y + 1; y < inner.y; y++) {
+        if (y >= gapY && y < gapY + GAP) continue;
+        if (!protectedPos.has(`${divX},${y}`) && cells[y]?.[divX] !== undefined) {
+          cells[y][divX].tile = TILE_WALL;
+        }
+      }
+    }
+  }
+
+  // ---- 下アーム: y = inner.bottom+1 〜 outer.bottom-1 ----
+  const botH = outer.bottom - inner.bottom - 1;
+  const botW = outer.right - outer.x - 1;
+  if (botH >= 3 && botW >= MIN_SEG * 2) {
+    const nd = Math.max(1, Math.floor(botW / MIN_SEG) - 1);
+    const sl = Math.floor(botW / (nd + 1));
+    for (let d = 1; d <= nd; d++) {
+      const divX = outer.x + d * sl;
+      if (divX <= outer.x || divX >= outer.right) continue;
+      const gapY = inner.bottom + 1 + Math.floor(rng() * Math.max(1, botH - GAP));
+      for (let y = inner.bottom + 1; y < outer.bottom; y++) {
+        if (y >= gapY && y < gapY + GAP) continue;
+        if (!protectedPos.has(`${divX},${y}`) && cells[y]?.[divX] !== undefined) {
+          cells[y][divX].tile = TILE_WALL;
+        }
+      }
+    }
+  }
+
+  // ---- 左アーム: x = outer.x+1 〜 inner.x-1, y = inner.y 〜 inner.bottom ----
+  const leftW = inner.x - outer.x - 1;
+  const leftH = inner.bottom - inner.y + 1;
+  if (leftW >= 3 && leftH >= MIN_SEG * 2) {
+    const nd = Math.max(1, Math.floor(leftH / MIN_SEG) - 1);
+    const sl = Math.floor(leftH / (nd + 1));
+    for (let d = 1; d <= nd; d++) {
+      const divY = inner.y + d * sl;
+      if (divY <= inner.y || divY >= inner.bottom) continue;
+      const gapX = outer.x + 1 + Math.floor(rng() * Math.max(1, leftW - GAP));
+      for (let x = outer.x + 1; x < inner.x; x++) {
+        if (x >= gapX && x < gapX + GAP) continue;
+        if (!protectedPos.has(`${x},${divY}`) && cells[divY]?.[x] !== undefined) {
+          cells[divY][x].tile = TILE_WALL;
+        }
+      }
+    }
+  }
+
+  // ---- 右アーム: x = inner.right+1 〜 outer.right-1 ----
+  const rightW = outer.right - inner.right - 1;
+  const rightH = inner.bottom - inner.y + 1;
+  if (rightW >= 3 && rightH >= MIN_SEG * 2) {
+    const nd = Math.max(1, Math.floor(rightH / MIN_SEG) - 1);
+    const sl = Math.floor(rightH / (nd + 1));
+    for (let d = 1; d <= nd; d++) {
+      const divY = inner.y + d * sl;
+      if (divY <= inner.y || divY >= inner.bottom) continue;
+      const gapX = inner.right + 1 + Math.floor(rng() * Math.max(1, rightW - GAP));
+      for (let x = inner.right + 1; x < outer.right; x++) {
+        if (x >= gapX && x < gapX + GAP) continue;
+        if (!protectedPos.has(`${x},${divY}`) && cells[divY]?.[x] !== undefined) {
+          cells[divY][x].tile = TILE_WALL;
+        }
+      }
+    }
+  }
+}
+
+/**
+ * inner 壁の1辺にランダムな位置で2タイル幅の入り口を開ける。
+ * 入り口とその周囲 BUFFER タイルを protectedPos に登録する。
+ */
+function cutEntranceInWall(
+  cells: Cell[][],
+  inner: RingBounds,
+  rng: () => number,
+  protectedPos: Set<string>,
+): void {
+  const EW     = 2; // 入り口幅
+  const MARGIN = 2; // コーナーから離す距離
+  const BUFFER = 2; // 保護半径
+
+  const innerW = inner.right  - inner.x + 1;
+  const innerH = inner.bottom - inner.y + 1;
+
+  // 辺をシャッフルして試みる
+  const sides: Array<0 | 1 | 2 | 3> = [0, 1, 2, 3];
+  shuffleArray(sides, rng);
+
+  for (const side of sides) {
+    if (side === 0 && innerW >= EW + MARGIN * 2) {
+      // 上壁 (y = inner.y)
+      const minX = inner.x + MARGIN;
+      const maxX = inner.right - MARGIN - EW;
+      if (maxX < minX) continue;
+      const sx = minX + Math.floor(rng() * (maxX - minX + 1));
+      for (let i = 0; i < EW; i++) carveEntranceTile(cells, sx + i, inner.y, BUFFER, protectedPos);
+      return;
+    }
+    if (side === 1 && innerW >= EW + MARGIN * 2) {
+      // 下壁 (y = inner.bottom)
+      const minX = inner.x + MARGIN;
+      const maxX = inner.right - MARGIN - EW;
+      if (maxX < minX) continue;
+      const sx = minX + Math.floor(rng() * (maxX - minX + 1));
+      for (let i = 0; i < EW; i++) carveEntranceTile(cells, sx + i, inner.bottom, BUFFER, protectedPos);
+      return;
+    }
+    if (side === 2 && innerH >= EW + MARGIN * 2) {
+      // 左壁 (x = inner.x)
+      const minY = inner.y + MARGIN;
+      const maxY = inner.bottom - MARGIN - EW;
+      if (maxY < minY) continue;
+      const sy = minY + Math.floor(rng() * (maxY - minY + 1));
+      for (let i = 0; i < EW; i++) carveEntranceTile(cells, inner.x, sy + i, BUFFER, protectedPos);
+      return;
+    }
+    if (side === 3 && innerH >= EW + MARGIN * 2) {
+      // 右壁 (x = inner.right)
+      const minY = inner.y + MARGIN;
+      const maxY = inner.bottom - MARGIN - EW;
+      if (maxY < minY) continue;
+      const sy = minY + Math.floor(rng() * (maxY - minY + 1));
+      for (let i = 0; i < EW; i++) carveEntranceTile(cells, inner.right, sy + i, BUFFER, protectedPos);
+      return;
+    }
+  }
+
+  // フォールバック: 上壁中央を強制的に開ける
+  const fx = Math.floor((inner.x + inner.right) / 2);
+  const fy = inner.y;
+  carveEntranceTile(cells, fx, fy, BUFFER, protectedPos);
+  if (cells[fy]?.[fx + 1] !== undefined) carveEntranceTile(cells, fx + 1, fy, BUFFER, protectedPos);
+}
+
+/**
+ * 指定座標を TILE_FLOOR にし、BUFFER 半径内を protectedPos に登録する。
+ */
+function carveEntranceTile(
+  cells: Cell[][],
+  x: number,
+  y: number,
+  buffer: number,
+  protectedPos: Set<string>,
+): void {
+  if (cells[y]?.[x] !== undefined) {
+    cells[y][x].tile = TILE_FLOOR;
+  }
+  for (let dy = -buffer; dy <= buffer; dy++) {
+    for (let dx = -buffer; dx <= buffer; dx++) {
+      protectedPos.add(`${x + dx},${y + dy}`);
+    }
+  }
+}
+
+/**
+ * 配列を Fisher-Yates シャッフルする（副作用あり）。
+ */
+function shuffleArray<T>(arr: T[], rng: () => number): void {
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(rng() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+}
+
+/**
+ * inner と outer の間のリングエリアでランダムな TILE_FLOOR 座標を返す。
+ */
+function randomFloorInRingArea(
+  cells: Cell[][],
+  inner: RingBounds,
+  outer: RingBounds,
+  rng: () => number,
+): Position | null {
+  const candidates: Position[] = [];
+  for (let y = outer.y + 1; y <= outer.bottom - 1; y++) {
+    for (let x = outer.x + 1; x <= outer.right - 1; x++) {
+      if (x >= inner.x && x <= inner.right && y >= inner.y && y <= inner.bottom) continue;
+      if (cells[y]?.[x]?.tile === TILE_FLOOR) {
+        candidates.push({ x, y });
+      }
+    }
+  }
+  if (candidates.length === 0) return null;
+  return candidates[Math.floor(rng() * candidates.length)];
+}
+
+/**
+ * protectedPos を避けて特殊地形を配置する（同心円ボスフロア用）。
+ */
+function placeSpecialTerrainConcentric(
+  floor: Floor,
+  floorNumber: number,
+  rng: () => number,
+  protectedPos: Set<string>,
+): void {
+  for (let y = 1; y < floor.height - 1; y++) {
+    for (let x = 1; x < floor.width - 1; x++) {
+      if (floor.cells[y][x].tile !== TILE_FLOOR) continue;
+      if (protectedPos.has(`${x},${y}`)) continue;
+      if ((x === floor.startPos.x  && y === floor.startPos.y) ||
+          (x === floor.stairsPos.x && y === floor.stairsPos.y)) continue;
+
+      const roll = rng();
+      if (roll < SPECIAL_TERRAIN_RATE) {
+        const tr = rng();
+        const av: TileType[] = [TILE_WATER];
+        if (floorNumber >= LAVA_MIN_FLOOR)     av.push(TILE_LAVA);
+        if (floorNumber >= ICE_MIN_FLOOR)      av.push(TILE_ICE);
+        if (floorNumber >= WARP_MIN_FLOOR)     av.push(TILE_WARP);
+        if (floorNumber >= MAGNETIC_MIN_FLOOR) av.push(TILE_MAGNETIC);
+        floor.cells[y][x].tile = av[Math.floor(tr * av.length)];
+      }
+    }
+  }
+}
+
+/**
+ * protectedPos を避けてオイルマスを配置する（同心円ボスフロア用）。
+ */
+function placeOilTilesConcentric(
+  floor: Floor,
+  floorNumber: number,
+  rng: () => number,
+  protectedPos: Set<string>,
+): void {
+  if (floorNumber < OIL_MIN_FLOOR) return;
+  const rate = (floorNumber % 4 === 0) ? OIL_SPAWN_RATE * 2 : OIL_SPAWN_RATE;
+
+  for (let y = 1; y < floor.height - 1; y++) {
+    for (let x = 1; x < floor.width - 1; x++) {
+      if (floor.cells[y][x].tile !== TILE_FLOOR) continue;
+      if (protectedPos.has(`${x},${y}`)) continue;
+      if ((x === floor.startPos.x  && y === floor.startPos.y) ||
+          (x === floor.stairsPos.x && y === floor.stairsPos.y)) continue;
+      const nearStairs =
+        Math.abs(x - floor.stairsPos.x) + Math.abs(y - floor.stairsPos.y) <= 1;
+      if (nearStairs) continue;
+      if (rng() < rate) floor.cells[y][x].tile = TILE_OIL;
+    }
+  }
+}
+
+/**
+ * protectedPos を避けて炎マスを配置する（同心円ボスフロア用）。
+ */
+function placeFireTilesConcentric(
+  floor: Floor,
+  floorNumber: number,
+  rng: () => number,
+  protectedPos: Set<string>,
+): void {
+  if (floorNumber < FIRE_MIN_FLOOR) return;
+  let rate: number;
+  if (floorNumber >= 10)     rate = FIRE_SPAWN_RATE_NORMAL;
+  else if (floorNumber >= 7) rate = FIRE_SPAWN_RATE_SMALL;
+  else                       rate = FIRE_SPAWN_RATE_RARE;
+
+  for (let y = 1; y < floor.height - 1; y++) {
+    for (let x = 1; x < floor.width - 1; x++) {
+      if (floor.cells[y][x].tile !== TILE_FLOOR) continue;
+      if (protectedPos.has(`${x},${y}`)) continue;
+      if ((x === floor.startPos.x  && y === floor.startPos.y) ||
+          (x === floor.stairsPos.x && y === floor.stairsPos.y)) continue;
+      const nearStairs =
+        Math.abs(x - floor.stairsPos.x) + Math.abs(y - floor.stairsPos.y) <= 1;
+      if (nearStairs) continue;
+      if (rng() < rate) floor.cells[y][x].tile = TILE_FIRE;
+    }
+  }
+}
+
+// ---------------------------------------------------------------------------
 // メイン: フロア生成
 // ---------------------------------------------------------------------------
 
@@ -946,6 +1457,11 @@ function randomFloorInRoom(room: Room, cells: Cell[][], rng: () => number): Posi
  * @throws 最大試行回数を超えても有効なフロアを生成できなかった場合
  */
 export function generateFloor(floorNumber: number, seed?: number): Floor {
+  // 5の倍数階は同心円ボスフロアを生成する
+  if (floorNumber % 5 === 0) {
+    return generateConcentricBossFloor(floorNumber, seed);
+  }
+
   const resolvedSeed = seed ?? Date.now();
   const rng = createRng(resolvedSeed);
 
