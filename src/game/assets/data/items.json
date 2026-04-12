@@ -16,9 +16,9 @@
     "category": "recovery",
     "effect": "hp_restore",
     "value": 80,
-    "appearsFrom": 5,
+    "appearsFrom": 3,
     "shopPrice": 120,
-    "dropWeight": 9,
+    "dropWeight": 16,
     "description": "マシンHPを80回復する。中盤以降の標準的な修理キット。"
   },
   {
@@ -27,9 +27,9 @@
     "category": "recovery",
     "effect": "hp_restore",
     "value": 200,
-    "appearsFrom": 12,
+    "appearsFrom": 8,
     "shopPrice": 280,
-    "dropWeight": 5,
+    "dropWeight": 9,
     "description": "マシンHPを200回復する。深層探索に欠かせない大型キット。"
   },
   {
@@ -38,9 +38,9 @@
     "category": "recovery",
     "effect": "hp_restore_full",
     "value": 9999,
-    "appearsFrom": 20,
+    "appearsFrom": 15,
     "shopPrice": 800,
-    "dropWeight": 2,
+    "dropWeight": 4,
     "description": "マシンHPを全回復する。希少だが緊急時に非常に有効。"
   },
   {

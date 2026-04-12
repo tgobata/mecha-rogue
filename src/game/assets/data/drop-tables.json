@@ -590,7 +590,7 @@
         {
           "item_id": "nanobot_m",
           "type": "item",
-          "weight": 12,
+          "weight": 22,
           "floor_min": 12
         },
         {
@@ -1211,7 +1211,7 @@
         {
           "item_id": "nanobot_m",
           "type": "item",
-          "weight": 12,
+          "weight": 22,
           "floor_min": 12
         }
       ]
@@ -1277,7 +1277,7 @@
         {
           "item_id": "repair_kit_medium",
           "type": "item",
-          "weight": 25,
+          "weight": 45,
           "floor_min": 5
         },
         {
@@ -1322,7 +1322,7 @@
         {
           "item_id": "repair_kit_medium",
           "type": "item",
-          "weight": 25,
+          "weight": 45,
           "floor_min": 5
         },
         {
@@ -1367,7 +1367,7 @@
         {
           "item_id": "repair_kit_medium",
           "type": "item",
-          "weight": 28,
+          "weight": 50,
           "floor_min": 5
         },
         {
@@ -1409,7 +1409,7 @@
         {
           "item_id": "nanobot_m",
           "type": "item",
-          "weight": 12,
+          "weight": 22,
           "floor_min": 12
         }
       ]
@@ -1430,7 +1430,7 @@
         {
           "item_id": "repair_kit_medium",
           "type": "item",
-          "weight": 28,
+          "weight": 50,
           "floor_min": 6
         },
         {
@@ -1475,7 +1475,7 @@
         {
           "item_id": "repair_kit_medium",
           "type": "item",
-          "weight": 30,
+          "weight": 54,
           "floor_min": 6
         },
         {
@@ -1532,7 +1532,7 @@
         {
           "item_id": "repair_kit_medium",
           "type": "item",
-          "weight": 28,
+          "weight": 50,
           "floor_min": 6
         },
         {
@@ -1574,7 +1574,7 @@
         {
           "item_id": "nanobot_m",
           "type": "item",
-          "weight": 12,
+          "weight": 22,
           "floor_min": 12
         },
         {
@@ -1607,7 +1607,7 @@
         {
           "item_id": "repair_kit_medium",
           "type": "item",
-          "weight": 22,
+          "weight": 40,
           "floor_min": 6
         },
         {
@@ -1694,7 +1694,7 @@
         {
           "item_id": "repair_kit_medium",
           "type": "item",
-          "weight": 22,
+          "weight": 40,
           "floor_min": 7
         },
         {
@@ -1745,7 +1745,7 @@
         {
           "item_id": "repair_kit_medium",
           "type": "item",
-          "weight": 25,
+          "weight": 45,
           "floor_min": 7
         },
         {
@@ -1814,7 +1814,7 @@
         {
           "item_id": "repair_kit_medium",
           "type": "item",
-          "weight": 22,
+          "weight": 40,
           "floor_min": 7
         },
         {
@@ -1850,7 +1850,7 @@
         {
           "item_id": "nanobot_m",
           "type": "item",
-          "weight": 12,
+          "weight": 22,
           "floor_min": 12
         }
       ]
@@ -1871,7 +1871,7 @@
         {
           "item_id": "repair_kit_medium",
           "type": "item",
-          "weight": 20,
+          "weight": 36,
           "floor_min": 7
         },
         {
@@ -1928,7 +1928,7 @@
         {
           "item_id": "repair_kit_medium",
           "type": "item",
-          "weight": 28,
+          "weight": 50,
           "floor_min": 8
         },
         {
@@ -1973,7 +1973,7 @@
         {
           "item_id": "repair_kit_medium",
           "type": "item",
-          "weight": 30,
+          "weight": 54,
           "floor_min": 8
         },
         {
@@ -2003,7 +2003,7 @@
         {
           "item_id": "nanobot_m",
           "type": "item",
-          "weight": 12,
+          "weight": 22,
           "floor_min": 12
         },
         {
@@ -2123,7 +2123,7 @@
         {
           "item_id": "nanobot_l",
           "type": "item",
-          "weight": 12,
+          "weight": 22,
           "floor_min": 15
         },
         {
@@ -2150,7 +2150,7 @@
         {
           "item_id": "repair_kit_medium",
           "type": "item",
-          "weight": 40,
+          "weight": 72,
           "floor_min": 10
         },
         {
@@ -2189,7 +2189,7 @@
         {
           "item_id": "repair_kit_medium",
           "type": "item",
-          "weight": 38,
+          "weight": 68,
           "floor_min": 10
         },
         {
@@ -2213,7 +2213,7 @@
         {
           "item_id": "nanobot_m",
           "type": "item",
-          "weight": 15,
+          "weight": 27,
           "floor_min": 12
         },
         {
@@ -2234,7 +2234,7 @@
         {
           "item_id": "repair_kit_medium",
           "type": "item",
-          "weight": 32,
+          "weight": 58,
           "floor_min": 10
         },
         {
@@ -2264,7 +2264,7 @@
         {
           "item_id": "nanobot_m",
           "type": "item",
-          "weight": 15,
+          "weight": 27,
           "floor_min": 12
         },
         {
@@ -2291,7 +2291,7 @@
         {
           "item_id": "repair_kit_medium",
           "type": "item",
-          "weight": 28,
+          "weight": 50,
           "floor_min": 10
         },
         {
@@ -2315,7 +2315,7 @@
         {
           "item_id": "repair_kit_large",
           "type": "item",
-          "weight": 48,
+          "weight": 86,
           "floor_min": 14
         },
         {
@@ -2327,7 +2327,7 @@
         {
           "item_id": "nanobot_l",
           "type": "item",
-          "weight": 12,
+          "weight": 22,
           "floor_min": 15
         },
         {
@@ -2360,7 +2360,7 @@
         {
           "item_id": "repair_kit_medium",
           "type": "item",
-          "weight": 28,
+          "weight": 50,
           "floor_min": 11
         },
         {
@@ -2384,7 +2384,7 @@
         {
           "item_id": "nanobot_m",
           "type": "item",
-          "weight": 12,
+          "weight": 22,
           "floor_min": 12
         }
       ]
@@ -2399,7 +2399,7 @@
         {
           "item_id": "repair_kit_medium",
           "type": "item",
-          "weight": 30,
+          "weight": 54,
           "floor_min": 11
         },
         {
@@ -2462,7 +2462,7 @@
         {
           "item_id": "repair_kit_medium",
           "type": "item",
-          "weight": 20,
+          "weight": 36,
           "floor_min": 11
         },
         {
@@ -2486,7 +2486,7 @@
         {
           "item_id": "nanobot_l",
           "type": "item",
-          "weight": 12,
+          "weight": 22,
           "floor_min": 15
         },
         {
@@ -2525,7 +2525,7 @@
         {
           "item_id": "repair_kit_large",
           "type": "item",
-          "weight": 90,
+          "weight": 162,
           "floor_min": 14
         },
         {
@@ -2564,7 +2564,7 @@
         {
           "item_id": "repair_kit_large",
           "type": "item",
-          "weight": 108,
+          "weight": 194,
           "floor_min": 14
         },
         {
@@ -2603,7 +2603,7 @@
         {
           "item_id": "repair_kit_medium",
           "type": "item",
-          "weight": 28,
+          "weight": 50,
           "floor_min": 12
         },
         {
@@ -2642,7 +2642,7 @@
         {
           "item_id": "repair_kit_medium",
           "type": "item",
-          "weight": 28,
+          "weight": 50,
           "floor_min": 12
         },
         {
@@ -2717,7 +2717,7 @@
         {
           "item_id": "repair_kit_medium",
           "type": "item",
-          "weight": 10,
+          "weight": 18,
           "floor_min": 12
         },
         {
@@ -2774,7 +2774,7 @@
         {
           "item_id": "repair_kit_large",
           "type": "item",
-          "weight": 60,
+          "weight": 108,
           "floor_min": 14
         },
         {
@@ -2792,7 +2792,7 @@
         {
           "item_id": "nanobot_l",
           "type": "item",
-          "weight": 12,
+          "weight": 22,
           "floor_min": 15
         }
       ]
@@ -2813,7 +2813,7 @@
         {
           "item_id": "repair_kit_large",
           "type": "item",
-          "weight": 168,
+          "weight": 302,
           "floor_min": 14
         },
         {
@@ -2846,7 +2846,7 @@
         {
           "item_id": "repair_kit_large",
           "type": "item",
-          "weight": 150,
+          "weight": 270,
           "floor_min": 14
         },
         {
@@ -2891,7 +2891,7 @@
         {
           "item_id": "repair_kit_large",
           "type": "item",
-          "weight": 120,
+          "weight": 216,
           "floor_min": 14
         },
         {
@@ -2948,7 +2948,7 @@
         {
           "item_id": "repair_kit_large",
           "type": "item",
-          "weight": 48,
+          "weight": 86,
           "floor_min": 14
         },
         {
@@ -2975,7 +2975,7 @@
         {
           "item_id": "repair_kit_large",
           "type": "item",
-          "weight": 168,
+          "weight": 302,
           "floor_min": 16
         },
         {
@@ -3008,7 +3008,7 @@
         {
           "item_id": "repair_kit_large",
           "type": "item",
-          "weight": 150,
+          "weight": 270,
           "floor_min": 16
         },
         {
@@ -3065,7 +3065,7 @@
         {
           "item_id": "repair_kit_large",
           "type": "item",
-          "weight": 60,
+          "weight": 108,
           "floor_min": 16
         },
         {
@@ -3110,7 +3110,7 @@
         {
           "item_id": "repair_kit_large",
           "type": "item",
-          "weight": 60,
+          "weight": 108,
           "floor_min": 16
         },
         {
@@ -3143,7 +3143,7 @@
         {
           "item_id": "repair_kit_large",
           "type": "item",
-          "weight": 150,
+          "weight": 270,
           "floor_min": 17
         },
         {
@@ -3176,7 +3176,7 @@
         {
           "item_id": "repair_kit_large",
           "type": "item",
-          "weight": 132,
+          "weight": 238,
           "floor_min": 17
         },
         {
@@ -3227,7 +3227,7 @@
         {
           "item_id": "repair_kit_large",
           "type": "item",
-          "weight": 60,
+          "weight": 108,
           "floor_min": 17
         },
         {
@@ -3272,7 +3272,7 @@
         {
           "item_id": "repair_kit_large",
           "type": "item",
-          "weight": 60,
+          "weight": 108,
           "floor_min": 17
         },
         {
@@ -3317,7 +3317,7 @@
         {
           "item_id": "full_repair_kit",
           "type": "item",
-          "weight": 8,
+          "weight": 14,
           "floor_min": 18
         },
         {
@@ -3350,7 +3350,7 @@
         {
           "item_id": "full_repair_kit",
           "type": "item",
-          "weight": 25,
+          "weight": 45,
           "floor_min": 18
         },
         {
@@ -3383,7 +3383,7 @@
         {
           "item_id": "full_repair_kit",
           "type": "item",
-          "weight": 20,
+          "weight": 36,
           "floor_min": 18
         },
         {
@@ -3422,7 +3422,7 @@
         {
           "item_id": "full_repair_kit",
           "type": "item",
-          "weight": 18,
+          "weight": 32,
           "floor_min": 18
         },
         {
@@ -3473,7 +3473,7 @@
         {
           "item_id": "full_repair_kit",
           "type": "item",
-          "weight": 15,
+          "weight": 27,
           "floor_min": 18
         },
         {
@@ -3506,7 +3506,7 @@
         {
           "item_id": "repair_kit_large",
           "type": "item",
-          "weight": 168,
+          "weight": 302,
           "floor_min": 19
         },
         {
@@ -3539,7 +3539,7 @@
         {
           "item_id": "repair_kit_large",
           "type": "item",
-          "weight": 150,
+          "weight": 270,
           "floor_min": 19
         },
         {
@@ -3641,7 +3641,7 @@
         {
           "item_id": "repair_kit_large",
           "type": "item",
-          "weight": 48,
+          "weight": 86,
           "floor_min": 19
         },
         {
@@ -3686,7 +3686,7 @@
         {
           "item_id": "full_repair_kit",
           "type": "item",
-          "weight": 6,
+          "weight": 11,
           "floor_min": 19
         },
         {
@@ -3719,7 +3719,7 @@
         {
           "item_id": "repair_kit_large",
           "type": "item",
-          "weight": 150,
+          "weight": 270,
           "floor_min": 20
         },
         {
@@ -3752,7 +3752,7 @@
         {
           "item_id": "repair_kit_large",
           "type": "item",
-          "weight": 132,
+          "weight": 238,
           "floor_min": 20
         },
         {
@@ -3854,7 +3854,7 @@
         {
           "item_id": "full_repair_kit",
           "type": "item",
-          "weight": 4,
+          "weight": 7,
           "floor_min": 20
         }
       ]
@@ -3881,7 +3881,7 @@
         {
           "item_id": "full_repair_kit",
           "type": "item",
-          "weight": 25,
+          "weight": 45,
           "floor_min": 22
         },
         {
@@ -3914,7 +3914,7 @@
         {
           "item_id": "full_repair_kit",
           "type": "item",
-          "weight": 22,
+          "weight": 40,
           "floor_min": 22
         },
         {
@@ -3959,7 +3959,7 @@
         {
           "item_id": "full_repair_kit",
           "type": "item",
-          "weight": 8,
+          "weight": 14,
           "floor_min": 22
         },
         {
@@ -4070,7 +4070,7 @@
         {
           "item_id": "repair_kit_large",
           "type": "item",
-          "weight": 150,
+          "weight": 270,
           "floor_min": 24
         },
         {
@@ -4103,7 +4103,7 @@
         {
           "item_id": "repair_kit_large",
           "type": "item",
-          "weight": 132,
+          "weight": 238,
           "floor_min": 24
         },
         {
@@ -4253,7 +4253,7 @@
         {
           "item_id": "full_repair_kit",
           "type": "item",
-          "weight": 22,
+          "weight": 40,
           "floor_min": 26
         },
         {
@@ -4292,7 +4292,7 @@
         {
           "item_id": "full_repair_kit",
           "type": "item",
-          "weight": 20,
+          "weight": 36,
           "floor_min": 26
         },
         {
@@ -4448,7 +4448,7 @@
         {
           "item_id": "repair_kit_large",
           "type": "item",
-          "weight": 150,
+          "weight": 270,
           "floor_min": 27
         },
         {
@@ -4481,7 +4481,7 @@
         {
           "item_id": "repair_kit_large",
           "type": "item",
-          "weight": 132,
+          "weight": 238,
           "floor_min": 27
         },
         {
@@ -4610,7 +4610,7 @@
         {
           "item_id": "full_repair_kit",
           "type": "item",
-          "weight": 25,
+          "weight": 45,
           "floor_min": 28
         },
         {
@@ -4649,7 +4649,7 @@
         {
           "item_id": "full_repair_kit",
           "type": "item",
-          "weight": 22,
+          "weight": 40,
           "floor_min": 28
         },
         {
@@ -4706,7 +4706,7 @@
         {
           "item_id": "full_repair_kit",
           "type": "item",
-          "weight": 10,
+          "weight": 18,
           "floor_min": 28
         },
         {
@@ -4757,7 +4757,7 @@
         {
           "item_id": "full_repair_kit",
           "type": "item",
-          "weight": 4,
+          "weight": 7,
           "floor_min": 28
         }
       ]
@@ -4802,7 +4802,7 @@
         {
           "item_id": "full_repair_kit",
           "type": "item",
-          "weight": 3,
+          "weight": 5,
           "floor_min": 28
         }
       ]
@@ -4829,7 +4829,7 @@
         {
           "item_id": "full_repair_kit",
           "type": "item",
-          "weight": 25,
+          "weight": 45,
           "floor_min": 30
         },
         {
@@ -4862,7 +4862,7 @@
         {
           "item_id": "full_repair_kit",
           "type": "item",
-          "weight": 22,
+          "weight": 40,
           "floor_min": 30
         },
         {
@@ -4913,7 +4913,7 @@
         {
           "item_id": "full_repair_kit",
           "type": "item",
-          "weight": 10,
+          "weight": 18,
           "floor_min": 30
         },
         {
@@ -5009,7 +5009,7 @@
         {
           "item_id": "full_repair_kit",
           "type": "item",
-          "weight": 3,
+          "weight": 5,
           "floor_min": 30
         }
       ]
@@ -5036,7 +5036,7 @@
         {
           "item_id": "full_repair_kit",
           "type": "item",
-          "weight": 25,
+          "weight": 45,
           "floor_min": 33
         },
         {
@@ -5075,7 +5075,7 @@
         {
           "item_id": "full_repair_kit",
           "type": "item",
-          "weight": 22,
+          "weight": 40,
           "floor_min": 33
         },
         {
@@ -5132,7 +5132,7 @@
         {
           "item_id": "full_repair_kit",
           "type": "item",
-          "weight": 10,
+          "weight": 18,
           "floor_min": 33
         },
         {
@@ -5222,7 +5222,7 @@
         {
           "item_id": "full_repair_kit",
           "type": "item",
-          "weight": 6,
+          "weight": 11,
           "floor_min": 33
         },
         {
@@ -5255,7 +5255,7 @@
         {
           "item_id": "full_repair_kit",
           "type": "item",
-          "weight": 25,
+          "weight": 45,
           "floor_min": 36
         },
         {
@@ -5294,7 +5294,7 @@
         {
           "item_id": "full_repair_kit",
           "type": "item",
-          "weight": 22,
+          "weight": 40,
           "floor_min": 36
         },
         {
@@ -5450,7 +5450,7 @@
         {
           "item_id": "full_repair_kit",
           "type": "item",
-          "weight": 25,
+          "weight": 45,
           "floor_min": 40
         },
         {
@@ -5489,7 +5489,7 @@
         {
           "item_id": "full_repair_kit",
           "type": "item",
-          "weight": 22,
+          "weight": 40,
           "floor_min": 40
         },
         {
@@ -5546,7 +5546,7 @@
         {
           "item_id": "full_repair_kit",
           "type": "item",
-          "weight": 10,
+          "weight": 18,
           "floor_min": 40
         },
         {
