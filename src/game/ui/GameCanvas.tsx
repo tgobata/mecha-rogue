@@ -699,6 +699,7 @@ export default function GameCanvas() {
   const [spritesReady, setSpritesReady] = useState(false);
   const [menuPanel, setMenuPanel] = useState<MenuPanel>(null);
   const menuPanelRef = useRef<MenuPanel>(null);
+  const confirmDialogRef = useRef<ConfirmDialog>(null);
   const [hasSaveData, setHasSaveData] = useState(false);
   const [isLoadingSave, setIsLoadingSave] = useState(false);
   /** ロード失敗時のエラーメッセージ */
@@ -766,6 +767,11 @@ export default function GameCanvas() {
   useEffect(() => {
     menuPanelRef.current = menuPanel;
   }, [menuPanel]);
+
+  // confirmDialogRef は常に最新の confirmDialog を反映する（クロージャ対策）
+  useEffect(() => {
+    confirmDialogRef.current = confirmDialog;
+  }, [confirmDialog]);
 
   // ── スプライト読み込み ─────────────────────────────────────────────
   useEffect(() => {
@@ -2634,6 +2640,11 @@ export default function GameCanvas() {
             return { type: "status", index: 0 };
 
           case "close_menu":
+            // 確認ダイアログが開いている場合はキャンセル（menuPanel は変更しない）
+            if (confirmDialogRef.current !== null) {
+              setConfirmDialog(null);
+              return prev;
+            }
             // 何も開いていなければポーズメニューを開く
             if (prev === null) return { type: "pause", index: 0 };
             return null;
@@ -2671,6 +2682,14 @@ export default function GameCanvas() {
       });
 
       if (action === "menu_select") {
+        // 確認ダイアログが開いている場合は「はい」として確定する
+        const dialog = confirmDialogRef.current;
+        if (dialog !== null) {
+          dialog.onConfirm();
+          setConfirmDialog(null);
+          return;
+        }
+
         // menuPanelRef で最新値を読む（state updater 内で side effect を起こすアンチパターンを回避）
         const panel = menuPanelRef.current;
         if (!panel) return;
@@ -2699,7 +2718,8 @@ export default function GameCanvas() {
   );
 
   // ── キーボード入力フック ─────────────────────────────────────
-  const isMenuOpen = menuPanel !== null;
+  // confirmDialog が開いている間も入力を遮断する
+  const isMenuOpen = menuPanel !== null || confirmDialog !== null;
 
   useGameInput(
     handleAction,
