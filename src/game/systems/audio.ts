@@ -36,7 +36,10 @@ export type SoundEffectName =
   | 'level_up'
   | 'equipment_break_long'
   | 'wall_break'
-  | 'wall_break_fail';
+  | 'wall_break_fail'
+  | 'boss_absorb'
+  | 'boss_shoot'
+  | 'drum_roll';
 
 /** 再生可能なBGM名の列挙型 */
 export type BGMName =
@@ -744,6 +747,76 @@ const SE_PLAYERS: Record<SoundEffectName, () => void> = {
     syn.triggerAttackRelease('E3', '32n', t);
     syn.triggerAttackRelease('A3', '32n', t + 0.05);
     setTimeout(() => { try { syn.dispose(); } catch { /* disposed */ } }, 500);
+  },
+
+  /** ジャンクキング廃材吸収: 「ガリガリッ！」金属が砕ける音 */
+  boss_absorb: () => {
+    const t = now();
+    const noise = new Tone.NoiseSynth({
+      noise: { type: 'brown' },
+      envelope: { attack: 0.01, decay: 0.25, sustain: 0.05, release: 0.1 },
+    }).connect(seVol);
+    noise.triggerAttackRelease('8n', t);
+    const metalSyn = new Tone.MetalSynth({
+      frequency: 180,
+      envelope: { attack: 0.005, decay: 0.2, release: 0.05 },
+      harmonicity: 5.1,
+      modulationIndex: 12,
+      resonance: 3200,
+      octaves: 1.5,
+    }).connect(seVol);
+    metalSyn.triggerAttackRelease('16n', t);
+    metalSyn.triggerAttackRelease('16n', t + 0.08);
+    setTimeout(() => { try { noise.dispose(); metalSyn.dispose(); } catch { /* disposed */ } }, 800);
+  },
+
+  /** ドラムロール突進: 「ゴロゴロゴロ…ドーン！」重い円筒が転がる音 */
+  drum_roll: () => {
+    const t = now();
+    // ゴロゴロ感：低い連打音（MembraneSynth）
+    const drum = new Tone.MembraneSynth({
+      pitchDecay: 0.05,
+      octaves: 5,
+      envelope: { attack: 0.001, decay: 0.25, sustain: 0, release: 0 },
+    }).connect(seVol);
+    drum.triggerAttackRelease('C1', '16n', t);
+    drum.triggerAttackRelease('C1', '16n', t + 0.08);
+    drum.triggerAttackRelease('B0', '16n', t + 0.16);
+    drum.triggerAttackRelease('A0', '8n', t + 0.24);
+    // 衝撃音：MetalSynth
+    const metal = new Tone.MetalSynth({
+      frequency: 80,
+      envelope: { attack: 0.002, decay: 0.4, release: 0.1 },
+      harmonicity: 3.1,
+      modulationIndex: 8,
+      resonance: 2000,
+      octaves: 1.2,
+    }).connect(seVol);
+    metal.triggerAttackRelease('16n', t + 0.32);
+    // 地鳴り感：Noise
+    const noise = new Tone.NoiseSynth({
+      noise: { type: 'brown' },
+      envelope: { attack: 0.01, decay: 0.3, sustain: 0, release: 0 },
+    }).connect(seVol);
+    noise.triggerAttackRelease('8n', t);
+    setTimeout(() => { try { drum.dispose(); metal.dispose(); noise.dispose(); } catch { /* disposed */ } }, 1200);
+  },
+
+  /** ジャンクキング弾丸発射: 「ドガッ！」重い金属弾 */
+  boss_shoot: () => {
+    const t = now();
+    const syn = new Tone.Synth({
+      oscillator: { type: 'square' },
+      envelope: { attack: 0.005, decay: 0.18, sustain: 0, release: 0 },
+    }).connect(seVol);
+    syn.triggerAttackRelease('C2', '8n', t);
+    syn.triggerAttackRelease('F1', '16n', t + 0.04);
+    const noise = new Tone.NoiseSynth({
+      noise: { type: 'white' },
+      envelope: { attack: 0.001, decay: 0.08, sustain: 0, release: 0 },
+    }).connect(seVol);
+    noise.triggerAttackRelease('32n', t);
+    setTimeout(() => { try { syn.dispose(); noise.dispose(); } catch { /* disposed */ } }, 800);
   },
 };
 

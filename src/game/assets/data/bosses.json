@@ -373,7 +373,7 @@
   {
     "id": "big_oil_drum_lv2",
     "name": "ビッグ！オイルドラム Lv.2",
-    "floor": 16,
+    "floor": 17,
     "tier": "mid",
     "hp": 520,
     "atk": 35,
@@ -394,7 +394,7 @@
   {
     "id": "big_oil_drum_lv3",
     "name": "ビッグ！オイルドラム Lv.3",
-    "floor": 24,
+    "floor": 27,
     "tier": "mid",
     "hp": 750,
     "atk": 50,
@@ -415,7 +415,7 @@
   {
     "id": "big_oil_drum_lv4",
     "name": "ビッグ！オイルドラム Lv.4",
-    "floor": 32,
+    "floor": 37,
     "tier": "major",
     "hp": 1100,
     "atk": 70,

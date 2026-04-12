@@ -158,9 +158,19 @@ export function decideBossAction(
         if (boss.bossState.currentCooldown <= 0) {
           boss.bossState.currentCooldown = boss.bossState.projectileCooldown ?? 3;
           if ((boss.bossState.absorbCount ?? 0) > 0) {
-            // 吸収した破片を弾丸として発射
+            // 吸収した破片を弾丸として発射（軌道付き）
             boss.bossState.absorbCount = 0;
-            actions.push({ type: 'attack', targetId: 'player' });
+            const junkAtk = boss.atk;
+            const bossCenter = {
+              x: boss.pos.x + Math.floor((boss.bossSize ?? 2) / 2),
+              y: boss.pos.y + Math.floor((boss.bossSize ?? 2) / 2),
+            };
+            actions.push({
+              type: 'shoot_projectile',
+              from: bossCenter,
+              to: player.pos,
+              damage: junkAtk,
+            });
           } else {
             actions.push(decideChaseWithAttack(boss, player.pos, state));
           }
@@ -278,6 +288,7 @@ export function decideBossAction(
       // 暴走処理（パートナーが存在して死んだ場合のみ、一度だけ発動）
       if (partnerExists && !partnerAlive && !boss.bossState.isEnraged) {
         boss.bossState.isEnraged = true;
+        boss.bossState.enrageTriggerThisTurn = true; // フラッシュ演出用フラグ
         // ATK を2倍にする
         boss.atk = Math.round(boss.atk * (boss.bossState.enragedAtkMult ?? 2));
       }
@@ -297,12 +308,82 @@ export function decideBossAction(
       break;
     }
 
-    case 'queen_of_shadow':
+    case 'queen_of_shadow': {
       // クイーン・オブ・シャドウ (20F): 3フェーズ変化
-      // HP に応じてフェーズを変え、行動（召喚、視界縮小、吸収強化）を変える。
-      // 現状はHP割合に関わらずChase。
-      actions.push(decideChaseWithAttack(boss, player.pos, state));
+      // フェーズ1 (HP 60-100%): 3ターンごとにクローン3体召喚（HP30/ATK15）
+      // フェーズ2 (HP 30-60%): プレイヤー視界を1タイルに縮小
+      // フェーズ3 (HP 0-30%):  クローン吸収・ATK×2・DEF=0
+
+      const hpRatio = boss.hp / boss.maxHp;
+
+      // フェーズ判定
+      let queenPhase: 1 | 2 | 3;
+      if (hpRatio >= 0.6) {
+        queenPhase = 1;
+      } else if (hpRatio >= 0.3) {
+        queenPhase = 2;
+      } else {
+        queenPhase = 3;
+      }
+
+      // 初期化
+      if (boss.bossState.queenPhase === undefined) {
+        boss.bossState.queenPhase = 1;
+        boss.bossState.queenTurnCounter = 0;
+        boss.bossState.phase3Activated = false;
+      }
+
+      // フェーズ変化検出
+      const prevPhase = boss.bossState.queenPhase ?? 1;
+      if (queenPhase !== prevPhase) {
+        boss.bossState.queenPhase = queenPhase;
+        actions.push({ type: 'queen_phase_change', phase: queenPhase });
+      }
+
+      boss.bossState.queenTurnCounter = (boss.bossState.queenTurnCounter ?? 0) + 1;
+
+      if (queenPhase === 1) {
+        // 3ターンごとにクローン召喚
+        if (boss.bossState.queenTurnCounter % 3 === 0 && state.map) {
+          const clonePositions: Position[] = [];
+          const candidates: Position[] = [];
+          for (let dy = -3; dy <= 3; dy++) {
+            for (let dx = -3; dx <= 3; dx++) {
+              if (dx === 0 && dy === 0) continue;
+              const nx = boss.pos.x + dx;
+              const ny = boss.pos.y + dy;
+              if (nx < 1 || ny < 1 || ny >= state.map.height - 1 || nx >= state.map.width - 1) continue;
+              if (!isWalkable(getTileAt(state.map, { x: nx, y: ny }))) continue;
+              if (state.enemies.some(e => e.pos.x === nx && e.pos.y === ny)) continue;
+              if (player.pos.x === nx && player.pos.y === ny) continue;
+              candidates.push({ x: nx, y: ny });
+            }
+          }
+          // ランダムに最大3箇所選択
+          for (let i = 0; i < Math.min(3, candidates.length); i++) {
+            const idx = Math.floor(rng() * candidates.length);
+            clonePositions.push(candidates.splice(idx, 1)[0]);
+          }
+          if (clonePositions.length > 0) {
+            actions.push({ type: 'summon_clones', positions: clonePositions });
+          }
+        }
+        actions.push(decideChaseWithAttack(boss, player.pos, state));
+
+      } else if (queenPhase === 2) {
+        // 視界縮小は queen_phase_change アクション処理時に turn-system 側で設定
+        actions.push(decideChaseWithAttack(boss, player.pos, state));
+
+      } else {
+        // フェーズ3: クローン吸収・ATK×2・DEF=0
+        if (!boss.bossState.phase3Activated) {
+          boss.bossState.phase3Activated = true;
+          // ATK×2・DEF=0 は queen_phase_change アクション処理時に turn-system 側で設定
+        }
+        actions.push(decideChaseWithAttack(boss, player.pos, state));
+      }
       break;
+    }
 
     case 'mind_controller':
       // マインドコントローラー (25F): 操作反転
@@ -348,10 +429,13 @@ export function decideBossAction(
       }
       break;
 
-    case 'big_oil_drum': {
+    case 'big_oil_drum_lv1':
+    case 'big_oil_drum_lv2':
+    case 'big_oil_drum_lv3':
+    case 'big_oil_drum_lv4': {
       // ビッグ！オイルドラム (8F/16F/24F/32F)
       // 行動1: 毎ターンオイルを撒く
-      // 行動2: rollCooldown ターンごとにドラムロール（高速突進）
+      // 行動2: rollCooldown ターンごとにドラムロール（高速突進） ← 炎耐性85%はturn-system側で処理
       // 行動3: 隣接時に通常攻撃
 
       if (!boss.bossState) (boss as any).bossState = {};
@@ -363,16 +447,16 @@ export function decideBossAction(
       let rollCooldownLeft: number = bossState.rollCooldownLeft;
 
       // オイル撒き（毎ターン周囲にオイルを配置）
-      const map = state.map;
-      if (map) {
+      const drumMap = state.map;
+      if (drumMap) {
         const oilPositions: Position[] = [];
         for (let dy = -oilRadius; dy <= oilRadius; dy++) {
           for (let dx = -oilRadius; dx <= oilRadius; dx++) {
             if (dx === 0 && dy === 0) continue;
             const nx = boss.pos.x + dx;
             const ny = boss.pos.y + dy;
-            if (ny < 0 || ny >= map.height || nx < 0 || nx >= map.width) continue;
-            if (map.cells[ny][nx].tile === TILE_FLOOR) {
+            if (ny < 0 || ny >= drumMap.height || nx < 0 || nx >= drumMap.width) continue;
+            if (drumMap.cells[ny][nx].tile === TILE_FLOOR) {
               oilPositions.push({ x: nx, y: ny });
             }
           }
@@ -386,31 +470,48 @@ export function decideBossAction(
       rollCooldownLeft--;
       if (rollCooldownLeft <= 0) {
         // ドラムロール: プレイヤー方向に一直線に突進
-        const dx = player.pos.x - boss.pos.x;
-        const dy = player.pos.y - boss.pos.y;
+        const rdx = player.pos.x - boss.pos.x;
+        const rdy = player.pos.y - boss.pos.y;
         // 主方向を決める
-        const moveDir = Math.abs(dx) >= Math.abs(dy)
-          ? { x: dx > 0 ? 1 : -1, y: 0 }
-          : { x: 0, y: dy > 0 ? 1 : -1 };
+        const moveDir = Math.abs(rdx) >= Math.abs(rdy)
+          ? { x: rdx > 0 ? 1 : -1, y: 0 }
+          : { x: 0, y: rdy > 0 ? 1 : -1 };
 
         let rollPos = { ...boss.pos };
         let moved = 0;
+        let rollHit = false;
         const bmap = state.map;
+        const rollFrom = { ...boss.pos };
         while (moved < rollDist && bmap) {
           const nx = rollPos.x + moveDir.x;
           const ny = rollPos.y + moveDir.y;
           const nextTile = bmap.cells[ny]?.[nx]?.tile;
           if (!nextTile || !isWalkable(nextTile)) break;
-          // プレイヤーに当たったら攻撃
+          // プレイヤーに当たったら突進攻撃
           if (nx === player.pos.x && ny === player.pos.y) {
-            actions.push({ type: 'attack', targetId: 'player' });
+            rollHit = true;
+            actions.push({
+              type: 'drum_roll',
+              from: rollFrom,
+              to: { x: nx, y: ny },
+              damage: boss.atk,
+            });
             break;
           }
           rollPos = { x: nx, y: ny };
           moved++;
         }
-        if (moved > 0) {
-          actions.push({ type: 'move', to: rollPos });
+        if (!rollHit) {
+          // 突進先まで移動＋演出
+          if (moved > 0) {
+            actions.push({
+              type: 'drum_roll',
+              from: rollFrom,
+              to: rollPos,
+              damage: 0, // ヒットなし
+            });
+            actions.push({ type: 'move', to: rollPos });
+          }
         }
         bossState.rollCooldownLeft = rollCooldown;
       } else {

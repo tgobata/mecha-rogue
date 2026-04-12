@@ -17,18 +17,20 @@ import type { PlayerAction } from '../core/turn-system';
  * メニュー・パネル操作に関するアクション型。
  * PlayerAction とは分離して管理する。
  *
- * - open_inventory : I キー — アイテムパネル開閉
- * - open_weapons   : E キー — 武器/装備パネル開閉
- * - close_menu     : Escape キー — 開いているパネルを閉じる
- * - menu_up        : ↑/W — メニューカーソルを上へ
- * - menu_down      : ↓/S — メニューカーソルを下へ
- * - menu_select    : Enter/Z — 選択確定
+ * - open_inventory  : I キー — アイテムパネル開閉
+ * - open_weapons    : E キー — 武器/装備パネル開閉
+ * - open_floor_item : F キー — 足元アイテム操作
+ * - close_menu      : Escape キー — 開いているパネルを閉じる
+ * - menu_up         : ↑/W — メニューカーソルを上へ
+ * - menu_down       : ↓/S — メニューカーソルを下へ
+ * - menu_select     : Enter/Z — 選択確定
  */
 export type UIAction =
   | 'open_inventory'
   | 'open_weapons'
   | 'open_status'
   | 'open_help'
+  | 'open_floor_item'
   | 'close_menu'
   | 'menu_up'
   | 'menu_down'
@@ -122,6 +124,10 @@ export function keyToUIAction(key: string): UIAction | null {
     case 'H':
       return 'open_help';
 
+    case 'f':
+    case 'F':
+      return 'open_floor_item';
+
     case 'Escape':
       return 'close_menu';
 
@@ -188,6 +194,7 @@ export function useGameInput(
         event.key === 'e' || event.key === 'E' ||
         event.key === 'c' || event.key === 'C' ||
         event.key === 'h' || event.key === 'H' ||
+        event.key === 'f' || event.key === 'F' ||
         event.key === 'Escape' ||
         event.key === 'Enter';
 

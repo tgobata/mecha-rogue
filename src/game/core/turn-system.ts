@@ -27,7 +27,7 @@ import itemsRaw from '../assets/data/items.json';
 import enemyDefsRaw from '../assets/data/enemies.json';
 import bossDefsRaw from '../assets/data/bosses.json';
 import { checkAchievements } from '../systems/achievement-system';
-import { RoomType, type Position } from './types';
+import { RoomType, type Position, type Cell } from './types';
 import {
   TILE_STAIRS_DOWN,
   TILE_ITEM,
@@ -959,6 +959,60 @@ export function spawnEnemiesFromMap(
                   special: (minionDef as any).special ?? null,
                 });
               }
+
+              // ── ボス直近（エッジ距離1）に着火ロボ×1 + ファイヤーピーポー×1 を追加配置 ──
+              const adjacentIgniterId = minionTypes[1]; // igniter
+              const adjacentFirePeopleId = minionTypes[2]; // fire_people
+              const bossEdge = bossSize; // ボス右端 x = x + bossSize
+              // ボスの周囲1マス（ボスタイルの外周）から空きを探す
+              const adjCandidates: Position[] = [];
+              for (let ady = -1; ady <= bossSize; ady++) {
+                for (let adx = -1; adx <= bossSize; adx++) {
+                  // ボス占有タイル内は除外（エッジのみ）
+                  if (adx >= 0 && adx < bossEdge && ady >= 0 && ady < bossEdge) continue;
+                  const ax = x + adx;
+                  const ay = y + ady;
+                  if (ax < 1 || ay < 1 || ax >= floor.width - 1 || ay >= floor.height - 1) continue;
+                  if (!isWalkable(floor.cells[ay]?.[ax]?.tile ?? TILE_WALL)) continue;
+                  if (enemies.some(e => e.pos.x === ax && e.pos.y === ay)) continue;
+                  adjCandidates.push({ x: ax, y: ay });
+                }
+              }
+              adjCandidates.sort(() => Math.random() - 0.5);
+
+              for (const [adjIdx, adjId] of [[0, adjacentIgniterId], [1, adjacentFirePeopleId]] as [number, string | undefined][]) {
+                if (!adjId) continue;
+                const adjPos = adjCandidates[adjIdx];
+                if (!adjPos) continue;
+                const adjDef = ENEMY_DEFS.find(d => d.id === adjId);
+                if (!adjDef) continue;
+                enemies.push({
+                  id: idCounter++,
+                  enemyType: adjDef.id,
+                  name: adjDef.name,
+                  pos: adjPos,
+                  hp: Math.round(adjDef.hp * hpScale),
+                  maxHp: Math.round(adjDef.hp * hpScale),
+                  atk: Math.round(adjDef.atk * atkScale),
+                  def: adjDef.def,
+                  expReward: Math.round(adjDef.expReward * hpScale),
+                  aiType: (adjDef.aiType ?? (adjDef as any).movementPattern ?? 'straight') as EnemyAiType,
+                  facing: 'down',
+                  attackRange: (adjDef as any).attackRange ?? 1,
+                  baseEnemyId: adjDef.baseEnemyId,
+                  level: adjDef.level ?? 1,
+                  factionType: adjDef.factionType,
+                  canAttackAllies: adjDef.canAttackAllies ?? false,
+                  levelColor: adjDef.levelColor,
+                  attackMissColor: adjDef.attackMissColor,
+                  equippedWeaponId: (adjDef as any).equippedWeapon ?? null,
+                  equippedArmorId: (adjDef as any).equippedArmor ?? null,
+                  equippedShieldId: (adjDef as any).equippedShield ?? null,
+                  equipDropChance: adjDef.equipDropChance ?? 0,
+                  lastAttackedEnemyId: null,
+                  special: (adjDef as any).special ?? null,
+                });
+              }
             }
           }
         }
@@ -1604,6 +1658,18 @@ function processEnemyActions(
       actions = [decideEnemyAction(enemy, stateWithCurrent, Math.random)];
     }
 
+    // シャドウツイン暴走フラッシュ検出
+    if (enemy.bossState?.enrageTriggerThisTurn) {
+      enemy.bossState.enrageTriggerThisTurn = false; // リセット
+      state = {
+        ...state,
+        turnEffects: [
+          ...(state.turnEffects ?? []),
+          { type: 'enrage_flash' as const, center: enemy.pos, color: '#ff2200' },
+        ],
+      };
+    }
+
     // 複数アクション（マッハランナーなど）に対応するためループ処理
     let currentEnemyState = enemy;
     for (const action of actions) {
@@ -1912,6 +1978,18 @@ function processEnemyActions(
             },
           };
           enemyEventMessages.push(`ジャンクキングが廃材を吸収！ HP+${absorbHp}、ATK+${absorbAtk}（計${newAbsorbCount}個吸収）`);
+          // TurnEffect: 壁→ボス方向への吸収エフェクト
+          const jkBossCenter = {
+            x: currentEnemyState.pos.x + Math.floor((currentEnemyState.bossSize ?? 2) / 2),
+            y: currentEnemyState.pos.y + Math.floor((currentEnemyState.bossSize ?? 2) / 2),
+          };
+          state = {
+            ...state,
+            turnEffects: [
+              ...(state.turnEffects ?? []),
+              { type: 'boss_absorb' as const, from: wallPos, to: jkBossCenter, center: wallPos },
+            ],
+          };
           break;
         }
 
@@ -1968,6 +2046,43 @@ function processEnemyActions(
           const playerY = newPlayer.pos.y;
           const bx = currentEnemyState.pos.x;
           const by = currentEnemyState.pos.y;
+
+          // 斬撃範囲タイルを計算してTurnEffectに追加
+          {
+            const slashTiles: { x: number; y: number }[] = [];
+            if (slashFacing === 'right') {
+              for (let ddx = 0; ddx < 2; ddx++) {
+                for (let ddy = -1; ddy <= bossSlashSize; ddy++) {
+                  slashTiles.push({ x: bx + bossSlashSize + ddx, y: by + ddy });
+                }
+              }
+            } else if (slashFacing === 'left') {
+              for (let ddx = 1; ddx <= 2; ddx++) {
+                for (let ddy = -1; ddy <= bossSlashSize; ddy++) {
+                  slashTiles.push({ x: bx - ddx, y: by + ddy });
+                }
+              }
+            } else if (slashFacing === 'down') {
+              for (let ddy = 0; ddy < 2; ddy++) {
+                for (let ddx = -1; ddx <= bossSlashSize; ddx++) {
+                  slashTiles.push({ x: bx + ddx, y: by + bossSlashSize + ddy });
+                }
+              }
+            } else { // up
+              for (let ddy = 1; ddy <= 2; ddy++) {
+                for (let ddx = -1; ddx <= bossSlashSize; ddx++) {
+                  slashTiles.push({ x: bx + ddx, y: by - ddy });
+                }
+              }
+            }
+            state = {
+              ...state,
+              turnEffects: [
+                ...(state.turnEffects ?? []),
+                { type: 'slash_range' as const, tiles: slashTiles },
+              ],
+            };
+          }
           if (slashFacing === 'right') {
             // 前方2列：x = bx+bossSlashSize, bx+bossSlashSize+1
             // y範囲：by-1 〜 by+bossSlashSize
@@ -2033,6 +2148,44 @@ function processEnemyActions(
           const iaidoPlayerY = newPlayer.pos.y;
           const ibx = currentEnemyState.pos.x;
           const iby = currentEnemyState.pos.y;
+
+          // 居合い範囲タイルを計算してTurnEffectに追加（幅：ボスサイズ分、奥行：iaidoAction.range）
+          {
+            const iaidoTiles: { x: number; y: number }[] = [];
+            if (iaidoFacing === 'right') {
+              for (let ddx = 0; ddx < iaidoAction.range; ddx++) {
+                for (let ddy = 0; ddy < bossIaidoSize; ddy++) {
+                  iaidoTiles.push({ x: ibx + bossIaidoSize + ddx, y: iby + ddy });
+                }
+              }
+            } else if (iaidoFacing === 'left') {
+              for (let ddx = 1; ddx <= iaidoAction.range; ddx++) {
+                for (let ddy = 0; ddy < bossIaidoSize; ddy++) {
+                  iaidoTiles.push({ x: ibx - ddx, y: iby + ddy });
+                }
+              }
+            } else if (iaidoFacing === 'down') {
+              for (let ddy = 0; ddy < iaidoAction.range; ddy++) {
+                for (let ddx = 0; ddx < bossIaidoSize; ddx++) {
+                  iaidoTiles.push({ x: ibx + ddx, y: iby + bossIaidoSize + ddy });
+                }
+              }
+            } else { // up
+              for (let ddy = 1; ddy <= iaidoAction.range; ddy++) {
+                for (let ddx = 0; ddx < bossIaidoSize; ddx++) {
+                  iaidoTiles.push({ x: ibx + ddx, y: iby - ddy });
+                }
+              }
+            }
+            state = {
+              ...state,
+              turnEffects: [
+                ...(state.turnEffects ?? []),
+                { type: 'iaido_range' as const, tiles: iaidoTiles },
+              ],
+            };
+          }
+
           if (iaidoFacing === 'right') {
             const frontEdge = ibx + bossIaidoSize;
             inIaidoRange = iaidoPlayerX >= frontEdge && iaidoPlayerX < frontEdge + iaidoAction.range
@@ -2108,6 +2261,39 @@ function processEnemyActions(
               enemyEventMessages.push(`オイルドラムがオイルを撒いた！`);
             }
           }
+          currentEnemyState = { ...currentEnemyState, animState: 'attack' as const };
+          break;
+        }
+
+        case 'drum_roll': {
+          // ビッグ！オイルドラムのドラムロール突進
+          const rollAction = action as { type: 'drum_roll'; from: Position; to: Position; damage: number };
+          if (rollAction.damage > 0) {
+            // プレイヤーに当たった場合のみダメージ
+            const shieldDefDr = newPlayer.equippedShield?.def ?? 0;
+            const armorDefDr = newPlayer.equippedArmor?.def ?? 0;
+            const effectiveDefDr = newPlayer.def + shieldDefDr + armorDefDr;
+            const drumDmg = Math.max(1, rollAction.damage - effectiveDefDr);
+            const { finalDamage: drumFinal, updatedEntity: drumPlayer } = absorbWithShield(newPlayer, drumDmg);
+            newPlayer = {
+              ...drumPlayer,
+              hp: drumPlayer.hp - drumFinal,
+              animState: 'hit' as const,
+              facing: newPlayer.facing,
+              ...(drumFinal > 0 && { hpEverDroppedBelowMax: true }),
+            };
+            enemyEventMessages.push(`${currentEnemyState.name ?? currentEnemyState.enemyType}のドラムロール！ ${drumFinal}ダメージ！`);
+          } else {
+            enemyEventMessages.push(`${currentEnemyState.name ?? currentEnemyState.enemyType}がドラムロールで突進！`);
+          }
+          // TurnEffect: 突進軌道 + 爆音エフェクト
+          state = {
+            ...state,
+            turnEffects: [
+              ...(state.turnEffects ?? []),
+              { type: 'drum_roll' as const, from: rollAction.from, to: rollAction.to, color: '#884400cc' },
+            ],
+          };
           currentEnemyState = { ...currentEnemyState, animState: 'attack' as const };
           break;
         }
@@ -2336,6 +2522,144 @@ function processEnemyActions(
             processedEnemies.push(newUnit);
             enemyEventMessages.push(`${currentEnemyState.name ?? currentEnemyState.enemyType}の仲間が復活した！`);
           }
+          break;
+        }
+
+        case 'shoot_projectile': {
+          // ジャンクキングが吸収した破片を弾丸として発射
+          const projAction = action as { type: 'shoot_projectile'; from: Position; to: Position; damage: number };
+          const shieldDefP = newPlayer.equippedShield?.def ?? 0;
+          const armorDefP = newPlayer.equippedArmor?.def ?? 0;
+          const effectiveDefP = newPlayer.def + shieldDefP + armorDefP;
+          const projDmg = Math.max(1, projAction.damage - effectiveDefP);
+          const { finalDamage: projFinal, updatedEntity: projPlayer } = absorbWithShield(newPlayer, projDmg);
+          newPlayer = {
+            ...projPlayer,
+            hp: projPlayer.hp - projFinal,
+            animState: 'hit' as const,
+            facing: newPlayer.facing,
+            ...(projFinal > 0 && { hpEverDroppedBelowMax: true }),
+          };
+          enemyEventMessages.push(`${currentEnemyState.name ?? currentEnemyState.enemyType}が廃材の弾丸を発射！ ${projFinal}ダメージ！`);
+          // TurnEffect: 弾丸軌道（専用 SE 付き）
+          state = {
+            ...state,
+            turnEffects: [
+              ...(state.turnEffects ?? []),
+              { type: 'boss_projectile' as const, from: projAction.from, to: projAction.to, color: '#cc8800aa' },
+            ],
+          };
+          // 反射シールドの反撃処理
+          if (projFinal > 0) {
+            const shieldSpecialP = WEAPON_DEFS_ALL.find(d => d.id === newPlayer.equippedShield?.shieldId)?.special;
+            const reflectCfgP = getReflectConfig(shieldSpecialP);
+            if (reflectCfgP && Math.random() < reflectCfgP.chance) {
+              const reflectDmgP = Math.max(1, Math.round(projDmg * reflectCfgP.mult));
+              currentEnemyState = { ...currentEnemyState, hp: currentEnemyState.hp - reflectDmgP };
+              enemyEventMessages.push(`⚡反射！ ${currentEnemyState.name ?? currentEnemyState.enemyType}に${reflectDmgP}ダメージ返却！`);
+              state = {
+                ...state,
+                turnEffects: [
+                  ...(state.turnEffects ?? []),
+                  { type: 'reflect' as const, from: newPlayer.pos, to: currentEnemyState.pos, color: '#00eeff' },
+                ],
+              };
+            }
+          }
+          currentEnemyState = { ...currentEnemyState, animState: 'attack' as const };
+          break;
+        }
+
+        case 'summon_clones': {
+          // クイーン・オブ・シャドウ: クローン3体召喚（HP30/ATK15）
+          const cloneAction = action as { type: 'summon_clones'; positions: Position[] };
+          let summonCount = 0;
+          for (const clonePos of cloneAction.positions) {
+            const occupiedC = [...processedEnemies, ...currentEnemies].some(
+              e => e.pos.x === clonePos.x && e.pos.y === clonePos.y
+            );
+            const isPlayerC = newPlayer.pos.x === clonePos.x && newPlayer.pos.y === clonePos.y;
+            if (!occupiedC && !isPlayerC) {
+              const cloneHp = currentEnemyState.bossState?.phases?.[0]?.cloneHp ?? 30;
+              const cloneAtk = currentEnemyState.bossState?.phases?.[0]?.cloneAtk ?? 15;
+              const cloneUnit: Enemy = {
+                id: Date.now() + summonCount + Math.floor(Math.random() * 5000),
+                enemyType: 'shadow_clone',
+                baseEnemyId: 'shadow_clone',
+                name: 'シャドウクローン',
+                hp: cloneHp,
+                maxHp: cloneHp,
+                atk: cloneAtk,
+                def: 0,
+                expReward: 0,
+                pos: clonePos,
+                aiType: 'straight',
+                isBoss: false,
+                animState: 'idle',
+                facing: 'down',
+                statusEffects: [],
+              };
+              processedEnemies.push(cloneUnit);
+              summonCount++;
+            }
+          }
+          if (summonCount > 0) {
+            enemyEventMessages.push(`クイーン・オブ・シャドウがシャドウクローン${summonCount}体を召喚！`);
+            state = {
+              ...state,
+              turnEffects: [
+                ...(state.turnEffects ?? []),
+                { type: 'area_buff' as const, center: currentEnemyState.pos, radius: 3, color: '#8800ff' },
+              ],
+            };
+          }
+          break;
+        }
+
+        case 'queen_phase_change': {
+          // クイーン・オブ・シャドウ: フェーズ変化
+          const qpAction = action as { type: 'queen_phase_change'; phase: number };
+          if (qpAction.phase === 2) {
+            // フェーズ2: 視界を1タイルに縮小
+            state = { ...state, visionRadiusOverride: 1 };
+            enemyEventMessages.push('クイーン・オブ・シャドウが闇を広げた！ 視界が1タイルに縮小！');
+          } else if (qpAction.phase === 3) {
+            // フェーズ3: クローンを吸収、ATK×2、DEF=0
+            state = { ...state, visionRadiusOverride: null };
+            // クローンを除去してATKを強化
+            let cloneAbsorbCount = 0;
+            const remainingEnemies = processedEnemies.filter(e => {
+              if (e.enemyType === 'shadow_clone') { cloneAbsorbCount++; return false; }
+              return true;
+            });
+            processedEnemies.length = 0;
+            for (const e of remainingEnemies) processedEnemies.push(e);
+            // currentEnemiesにもクローンがいれば除去
+            for (let ci = currentEnemies.length - 1; ci >= 0; ci--) {
+              if (currentEnemies[ci].enemyType === 'shadow_clone') {
+                currentEnemies.splice(ci, 1);
+                cloneAbsorbCount++;
+              }
+            }
+            // フェーズ3: ATK×2、DEF=0
+            currentEnemyState = {
+              ...currentEnemyState,
+              atk: currentEnemyState.atk * 2,
+              def: 0,
+            };
+            const msg = cloneAbsorbCount > 0
+              ? `クイーン・オブ・シャドウがクローン${cloneAbsorbCount}体を吸収！ 攻撃力2倍！`
+              : 'クイーン・オブ・シャドウが全力解放！ 攻撃力2倍！';
+            enemyEventMessages.push(msg);
+          }
+          // TurnEffect: フェーズ変化エフェクト
+          state = {
+            ...state,
+            turnEffects: [
+              ...(state.turnEffects ?? []),
+              { type: 'queen_phase' as const, center: currentEnemyState.pos, phase: qpAction.phase, color: qpAction.phase === 2 ? '#000044' : '#ff0088' },
+            ],
+          };
           break;
         }
 
@@ -2908,6 +3232,199 @@ export function applyBlastToTraps(
   if (revealed > 0) logs.push(revealed === 1 ? '爆発で罠を発見した！' : `爆発で罠を${revealed}個発見した！`);
   if (destroyed > 0) logs.push(destroyed === 1 ? '爆発で罠を破壊した！' : `爆発で罠を${destroyed}個破壊した！`);
   return updated;
+}
+
+// ---------------------------------------------------------------------------
+// 足元アイテム操作ユーティリティ
+// ---------------------------------------------------------------------------
+
+/**
+ * プレイヤーが立っているマスのアイテム/装備を拾う。
+ * TILE_ITEM → itemPouch へ追加、TILE_WEAPON → weaponSlots/shieldSlots/armorSlots へ追加。
+ * 容量不足の場合は success=false を返し状態は変更しない。
+ */
+export function pickupFloorItem(
+  state: GameState,
+  pos: Position,
+): { nextState: GameState; log: string; success: boolean } {
+  if (!state.map) return { nextState: state, log: '足元に何もない', success: false };
+  const cells = (state.map.cells as Cell[][]);
+  const cell = cells[pos.y]?.[pos.x];
+  if (!cell) return { nextState: state, log: '足元に何もない', success: false };
+
+  if (cell.tile === TILE_ITEM && cell.itemId) {
+    const itemId = cell.itemId;
+    const maxCap = state.machine.itemPouch;
+    const currentCount = state.inventory.items.reduce((acc, it) => acc + it.quantity, 0);
+    if (currentCount >= maxCap) {
+      return {
+        nextState: state,
+        log: `アイテムポーチがいっぱいで ${getItemDisplayName(itemId)} を拾えなかった`,
+        success: false,
+      };
+    }
+    const itemDef = ITEM_DEFS_ALL.find((d: { id: string }) => d.id === itemId);
+    const isUnidentified = itemDef && (itemDef as { category?: string }).category === 'unidentified';
+    const newMapCells = cells.map((row, y) =>
+      row.map((c, x) =>
+        y === pos.y && x === pos.x ? { ...c, tile: TILE_FLOOR, itemId: undefined } : c,
+      ),
+    ) as Cell[][];
+    let newItems = [...state.inventory.items];
+    const existingIdx = newItems.findIndex(
+      (it) => it.itemId === itemId && it.unidentified === (isUnidentified ? true : false),
+    );
+    if (existingIdx >= 0) {
+      newItems = newItems.map((it, idx) =>
+        idx === existingIdx ? { ...it, quantity: it.quantity + 1 } : it,
+      );
+    } else {
+      newItems = [...newItems, { itemId, quantity: 1, unidentified: isUnidentified ? true : false }];
+    }
+    return {
+      nextState: {
+        ...state,
+        map: { ...state.map, cells: newMapCells },
+        inventory: { ...state.inventory, items: newItems },
+      },
+      log: `${getItemDisplayName(itemId)} を拾った`,
+      success: true,
+    };
+  }
+
+  if (cell.tile === TILE_WEAPON && cell.weaponId) {
+    const weaponId = cell.weaponId;
+    const weaponDef = WEAPON_DEFS_ALL.find((d) => d.id === weaponId);
+    const category = weaponDef?.category ?? 'melee';
+    const newMapCells = cells.map((row, y) =>
+      row.map((c, x) =>
+        y === pos.y && x === pos.x ? { ...c, tile: TILE_FLOOR, weaponId: undefined } : c,
+      ),
+    ) as Cell[][];
+
+    if (category === 'shield') {
+      const maxShieldSlots = state.machine.shieldSlots ?? 1;
+      const currentCount = state.player?.shieldSlots?.length ?? state.inventory.equippedShields.length;
+      if (currentCount >= maxShieldSlots) {
+        return { nextState: state, log: `盾枠がいっぱいで ${weaponDef?.name ?? weaponId} を拾えなかった`, success: false };
+      }
+      if (!weaponDef) return { nextState: state, log: '拾えなかった', success: false };
+      const newShield: EquippedShield = {
+        instanceId: `sh_${Date.now()}_${Math.floor(Math.random() * 1e9)}`,
+        shieldId: weaponDef.id,
+        durability: weaponDef.durability ?? 30,
+        maxDurability: weaponDef.durability ?? 30,
+        def: weaponDef.def ?? 3,
+        blockChance: weaponDef.blockChance ?? 0,
+        name: weaponDef.name,
+      };
+      const prevPlayer = state.player;
+      return {
+        nextState: {
+          ...state,
+          map: { ...state.map, cells: newMapCells },
+          inventory: { ...state.inventory, equippedShields: [...(state.inventory.equippedShields ?? []), newShield] },
+          player: prevPlayer ? { ...prevPlayer, shieldSlots: [...(prevPlayer.shieldSlots ?? []), newShield] } : prevPlayer,
+        },
+        log: `${weaponDef.name} を拾った`,
+        success: true,
+      };
+    }
+
+    if (category === 'armor') {
+      const maxArmorSlots = state.machine.armorSlots ?? 1;
+      const currentCount = state.player?.armorSlots?.length ?? state.inventory.equippedArmors.length;
+      if (currentCount >= maxArmorSlots) {
+        return { nextState: state, log: `アーマー枠がいっぱいで ${weaponDef?.name ?? weaponId} を拾えなかった`, success: false };
+      }
+      if (!weaponDef) return { nextState: state, log: '拾えなかった', success: false };
+      const newArmor: EquippedArmor = {
+        instanceId: `ar_${Date.now()}_${Math.floor(Math.random() * 1e9)}`,
+        armorId: weaponDef.id,
+        durability: weaponDef.durability ?? 40,
+        maxDurability: weaponDef.durability ?? 40,
+        def: weaponDef.def ?? 5,
+        maxHpBonus: weaponDef.maxHpBonus ?? 0,
+        special: weaponDef.special ?? null,
+        name: weaponDef.name,
+      };
+      const prevPlayer = state.player;
+      return {
+        nextState: {
+          ...state,
+          map: { ...state.map, cells: newMapCells },
+          inventory: { ...state.inventory, equippedArmors: [...(state.inventory.equippedArmors ?? []), newArmor] },
+          player: prevPlayer
+            ? {
+                ...prevPlayer,
+                armorSlots: [...(prevPlayer.armorSlots ?? []), newArmor],
+                maxHp: (prevPlayer.maxHp ?? 0) + (weaponDef.maxHpBonus ?? 0),
+              }
+            : prevPlayer,
+        },
+        log: `${weaponDef.name} を拾った`,
+        success: true,
+      };
+    }
+
+    // 通常武器
+    const maxCap = state.machine.weaponSlots;
+    if (state.inventory.equippedWeapons.length >= maxCap) {
+      return { nextState: state, log: `武器スロットがいっぱいで ${weaponDef?.name ?? weaponId} を拾えなかった`, success: false };
+    }
+    try {
+      const wi = createWeaponInstance(weaponId);
+      const newWeapon: EquippedWeapon = {
+        instanceId: wi.instanceId,
+        weaponId: wi.id,
+        durability: wi.durability ?? 999,
+        weaponLevel: 1,
+        rarity: 'C',
+      };
+      const prevPlayer = state.player;
+      return {
+        nextState: {
+          ...state,
+          map: { ...state.map, cells: newMapCells },
+          inventory: { ...state.inventory, equippedWeapons: [...state.inventory.equippedWeapons, newWeapon] },
+          player: prevPlayer ? { ...prevPlayer, weaponSlots: [...(prevPlayer.weaponSlots ?? []), wi] } : prevPlayer,
+        },
+        log: `${weaponDef?.name ?? weaponId} を拾った`,
+        success: true,
+      };
+    } catch {
+      return { nextState: state, log: '武器を拾えなかった', success: false };
+    }
+  }
+
+  return { nextState: state, log: '足元に何もない', success: false };
+}
+
+/**
+ * 足元のアイテム/装備を消去する（床からアイテムを削除するだけ）。
+ */
+export function destroyFloorItem(
+  state: GameState,
+  pos: Position,
+): { nextState: GameState; log: string } {
+  if (!state.map) return { nextState: state, log: '' };
+  const cells = (state.map.cells as Cell[][]);
+  const cell = cells[pos.y]?.[pos.x];
+  if (!cell) return { nextState: state, log: '' };
+  const name = cell.itemId
+    ? getItemDisplayName(cell.itemId)
+    : cell.weaponId
+    ? (WEAPON_DEFS_ALL.find((d) => d.id === cell.weaponId)?.name ?? cell.weaponId)
+    : '不明';
+  const newMapCells = cells.map((row, y) =>
+    row.map((c, x) =>
+      y === pos.y && x === pos.x ? { ...c, tile: TILE_FLOOR, itemId: undefined, weaponId: undefined } : c,
+    ),
+  ) as Cell[][];
+  return {
+    nextState: { ...state, map: { ...state.map, cells: newMapCells } },
+    log: `${name} を消去した`,
+  };
 }
 
 // ---------------------------------------------------------------------------
@@ -3489,7 +4006,12 @@ export function processTurn(state: GameState, action: PlayerAction): GameState {
         if (tile !== TILE_FIRE) return e;
         // ファイヤーピーポーは炎ダメージ無効
         if (e.special === 'fire_immune') return e;
-        const fireDmg = Math.max(1, Math.floor((e.maxHp ?? e.hp) * FIRE_DAMAGE_ENEMY_RATE));
+        const baseDmg = Math.floor((e.maxHp ?? e.hp) * FIRE_DAMAGE_ENEMY_RATE);
+        // ビッグ！オイルドラム系: 炎耐性85%（微量のみ受ける）
+        const resistRate: number = (e.isBoss && typeof e.bossState?.fireDamageResist === 'number')
+          ? e.bossState.fireDamageResist
+          : 0;
+        const fireDmg = Math.max(1, Math.floor(baseDmg * (1 - resistRate)));
         return { ...e, hp: e.hp - fireDmg };
       });
 
@@ -3573,6 +4095,7 @@ export function processTurn(state: GameState, action: PlayerAction): GameState {
       battleLog: newBattleLog.length > 0 ? newBattleLog : transitionFields.battleLog,
       placedBombs: [],
       phase: 'exploring',
+      visionRadiusOverride: null, // フロア遷移時は視界縮小を解除
     };
   }
 
@@ -3670,8 +4193,11 @@ export function processTurn(state: GameState, action: PlayerAction): GameState {
     };
   }
 
-  // プレイヤー移動後の視界を更新
-  const updatedMap = updateVisibility(stateWithPickup.map!, finalPlayerActual.pos, VIEW_RADIUS);
+  // プレイヤー移動後の視界を更新（ボス能力による視界縮小を考慮）
+  const effectiveViewRadius = stateWithPickup.visionRadiusOverride != null
+    ? stateWithPickup.visionRadiusOverride
+    : VIEW_RADIUS;
+  const updatedMap = updateVisibility(stateWithPickup.map!, finalPlayerActual.pos, effectiveViewRadius);
 
   // exploration の同期更新（playerPos・turn）
   const prevExploration = stateWithPickup.exploration!;
@@ -3713,6 +4239,10 @@ export function processTurn(state: GameState, action: PlayerAction): GameState {
     finalBattleLog = [...finalBattleLog, pickupMsg];
   }
 
+  // クイーン・オブ・シャドウが撃破されたら視界縮小を解除
+  const queenDefeated = bossDefeatedIds.includes('queen_of_shadow');
+  const visionOverride = queenDefeated ? null : stateWithPickup.visionRadiusOverride;
+
   const stateBeforeCooldown: GameState = {
     ...stateWithPickup,
     phase: stateWithPickup.phase,
@@ -3726,6 +4256,7 @@ export function processTurn(state: GameState, action: PlayerAction): GameState {
     battleLog: finalBattleLog,
     bossesDefeated: updatedBossesDefeated,
     achievements: updatedAchievements,
+    visionRadiusOverride: visionOverride,
   };
 
   return tickSkillCooldowns(stateBeforeCooldown);

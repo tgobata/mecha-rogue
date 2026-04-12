@@ -67,6 +67,8 @@ interface VirtualControllerProps {
   onSkillUse?: (slotIndex: number) => void;
   /** true の間はボタンを無効化する */
   disabled?: boolean;
+  /** true のとき足元にアイテム/装備あり → 「足元」ボタンを表示する */
+  hasFloorItem?: boolean;
 }
 
 // ---------------------------------------------------------------------------
@@ -143,6 +145,7 @@ export default function VirtualController({
   skillSlots,
   onSkillUse,
   disabled = false,
+  hasFloorItem = false,
 }: VirtualControllerProps) {
   /** 向きモード: true のとき方向ボタンが move_* の代わりに turn_* を emit する */
   const [turnMode, setTurnMode] = useState(false);
@@ -282,6 +285,38 @@ export default function VirtualController({
             {turnMode ? "↑" : "▲"}
           </button>
         </div>
+
+        {/* 足元ボタン: 1行3列（足元にアイテム/装備がある場合のみ表示） */}
+        {hasFloorItem && (
+          <div style={{ gridColumn: 3, gridRow: 1 }}>
+            <button
+              onPointerDown={(e) => {
+                e.preventDefault();
+                if (!disabled && onUIAction) onUIAction("open_floor_item");
+              }}
+              style={{
+                width: DPAD_BUTTON_SIZE,
+                height: DPAD_BUTTON_SIZE,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                backgroundColor: "rgba(60,100,60,0.9)",
+                border: "2px solid rgba(100,200,100,0.6)",
+                borderRadius: 8,
+                color: "#aaffaa",
+                fontSize: 13,
+                fontWeight: "bold",
+                touchAction: "none",
+                userSelect: "none",
+                cursor: "pointer",
+                WebkitUserSelect: "none",
+              }}
+              aria-label="足元のアイテムを操作"
+            >
+              足元
+            </button>
+          </div>
+        )}
 
         {/* 左ボタン: 2行1列 */}
         <div style={{ gridColumn: 1, gridRow: 2 }}>

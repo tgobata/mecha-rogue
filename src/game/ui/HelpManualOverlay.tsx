@@ -126,6 +126,7 @@ function TabBasic() {
       <Row label="向きだけ変える" value={<><KeyBadge>Ctrl</KeyBadge> + 方向キー（ターン消費なし）</>} />
       <Row label="アイテム一覧" value={<KeyBadge>I</KeyBadge>} />
       <Row label="装備一覧" value={<KeyBadge>E</KeyBadge>} />
+      <Row label="足元アイテム操作" value={<><KeyBadge>F</KeyBadge> （足元にアイテム/装備があるとき）</>} />
       <Row label="ステータス" value={<KeyBadge>C</KeyBadge>} />
       <Row label="ヘルプを開く" value={<KeyBadge>H</KeyBadge>} />
       <Row label="メニューを閉じる" value={<KeyBadge>Esc</KeyBadge>} />
@@ -138,6 +139,7 @@ function TabBasic() {
       <Row label="向きだけ変える" value={<>Dpad中央の「<span style={{ color: '#88ccff' }}>向</span>」ボタンをタップして向きモードにしてから方向ボタン</>} />
       <Row label="アイテム" value="「アイ」ボタン" />
       <Row label="装備" value="「装備」ボタン" />
+      <Row label="足元アイテム操作" value={<>Dpad右上の「<span style={{ color: '#aaffaa' }}>足元</span>」ボタン（足元にアイテム/装備があるとき表示）</>} />
       <Row label="ステータス" value="「能力」ボタン" />
       <Row label="ヘルプ" value="「？」ボタン" />
 

@@ -354,7 +354,18 @@ export interface Enemy {
  * processTurn から GameCanvas へ伝達するために使用。
  */
 export interface TurnEffect {
-  type: 'explosion' | 'trajectory' | 'area_buff' | 'electric' | 'reflect' | 'wall_break' | 'wall_break_fail';
+  type:
+    | 'explosion' | 'trajectory' | 'area_buff' | 'electric' | 'reflect'
+    | 'wall_break' | 'wall_break_fail'
+    // ── ボス固有エフェクト ──
+    | 'boss_absorb'     // ジャンクキング: 壁→ボスへ廃材吸収
+    | 'boss_projectile' // ジャンクキング: 弾丸発射軌道
+    | 'drum_roll'       // ビッグ！オイルドラム: ドラムロール突進
+    | 'slash_range'     // サムライマスター: 斬撃範囲ハイライト
+    | 'iaido_range'     // サムライマスター: 居合い範囲ハイライト
+    | 'enrage_flash'    // シャドウツイン: 暴走フラッシュ
+    | 'darkness_vision' // クイーン・オブ・シャドウ フェーズ2: 視界縮小通知
+    | 'queen_phase';    // クイーン・オブ・シャドウ: フェーズ変化エフェクト
   /** 爆発・バフの中心座標 / 壁破壊位置 */
   center?: { x: number; y: number };
   /** 爆発半径 */
@@ -367,6 +378,10 @@ export interface TurnEffect {
   color?: string;
   /** 壁破壊: 破壊された壁の座標リスト（爆発時など複数の場合） */
   positions?: { x: number; y: number }[];
+  /** slash_range / iaido_range: ハイライトするタイル座標リスト */
+  tiles?: { x: number; y: number }[];
+  /** queen_phase: 移行先フェーズ番号 */
+  phase?: number;
 }
 
 /**
@@ -897,6 +912,12 @@ export interface GameState {
   highestFloorReached: number;
   /** テレポートビーコンで設置したワープ地点（フロア遷移でリセット） */
   warpPoint?: Position;
+  /**
+   * ボス能力による視界半径オーバーライド。
+   * クイーン・オブ・シャドウ フェーズ2 が 1 を設定する。
+   * null のとき通常の VIEW_RADIUS を使用する。
+   */
+  visionRadiusOverride?: number | null;
 }
 
 // ---------------------------------------------------------------------------

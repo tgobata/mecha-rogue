@@ -47,7 +47,11 @@ export type EnemyAction =
   | { type: 'lay_mine'; pos: Position }
   | { type: 'ranged_attack'; targetId: 'player'; from: Position; to: Position; damage: number }
   | { type: 'spawn_swarm_unit'; pos: Position }
-  | { type: 'teleport'; to: Position };
+  | { type: 'teleport'; to: Position }
+  | { type: 'shoot_projectile'; from: Position; to: Position; damage: number }
+  | { type: 'summon_clones'; positions: Position[] }
+  | { type: 'queen_phase_change'; phase: number }
+  | { type: 'drum_roll'; from: Position; to: Position; damage: number };
 
 // ---------------------------------------------------------------------------
 // 定数

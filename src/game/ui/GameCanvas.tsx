@@ -39,6 +39,8 @@ import {
   VIEW_RADIUS,
   TILE_FLOOR,
   TILE_STAIRS_DOWN,
+  TILE_ITEM,
+  TILE_WEAPON,
 } from "../core/constants";
 import itemsRaw from "../assets/data/items.json";
 import { generateFloor } from "../core/maze-generator";
@@ -50,6 +52,8 @@ import {
   getEnemyName,
   transitionToNextFloor,
   transitionToPrevFloor,
+  pickupFloorItem,
+  destroyFloorItem,
 } from "../core/turn-system";
 import { getSortedItems } from "../core/inventory-utils";
 import { applyStartReturn } from "../core/start-return";
@@ -181,7 +185,8 @@ type MenuPanel =
   | { type: "status"; index: number }
   | { type: "weapons"; index: number }
   | { type: "pause"; index: number }
-  | { type: "help" };
+  | { type: "help" }
+  | { type: "floor_item" };
 
 // ---------------------------------------------------------------------------
 // BGM 選択ロジック
@@ -1814,6 +1819,136 @@ export default function GameCanvas() {
               playSE('wall_break_fail');
               break;
             }
+            case 'drum_roll': {
+              // ビッグ！オイルドラム ドラムロール突進: 太い茶色軌道 + 着地フラッシュ + SE
+              if (effect.from && effect.to) {
+                const drawRoll = (from: { x: number; y: number }, to: { x: number; y: number }, color: string) => {
+                  let x = from.x;
+                  let y = from.y;
+                  const dx = Math.abs(to.x - x);
+                  const dy = Math.abs(to.y - y);
+                  const sx = to.x > x ? 1 : -1;
+                  const sy = to.y > y ? 1 : -1;
+                  let err = dx - dy;
+                  const maxSteps = 20;
+                  let steps = 0;
+                  while (!(x === to.x && y === to.y) && steps < maxSteps) {
+                    addFlashDuration(x, y, color, 400);
+                    const e2 = err * 2;
+                    if (e2 > -dy) { err -= dy; x += sx; }
+                    if (e2 < dx) { err += dx; y += sy; }
+                    steps++;
+                  }
+                  // 着弾/到達点を大きくフラッシュ
+                  addFlashDuration(to.x, to.y, '#ff6600cc', 500);
+                  addFlashDuration(to.x + 1, to.y, '#ff440044', 300);
+                  addFlashDuration(to.x, to.y + 1, '#ff440044', 300);
+                };
+                drawRoll(effect.from, effect.to, effect.color ?? '#884400cc');
+              }
+              playSE('drum_roll');
+              triggerScreenFlash('rgba(80,40,0,0.2)', 350);
+              break;
+            }
+            case 'boss_projectile': {
+              // ジャンクキング弾丸発射: 茶色い軌道 + SE
+              if (effect.from && effect.to) {
+                const drawBullet = (from: { x: number; y: number }, to: { x: number; y: number }, color: string) => {
+                  let x = from.x;
+                  let y = from.y;
+                  const dx = Math.abs(to.x - x);
+                  const dy = Math.abs(to.y - y);
+                  const sx = to.x > x ? 1 : -1;
+                  const sy = to.y > y ? 1 : -1;
+                  let err = dx - dy;
+                  const maxSteps = 20;
+                  let steps = 0;
+                  while (!(x === to.x && y === to.y) && steps < maxSteps) {
+                    addFlashDuration(x, y, color, 300);
+                    const e2 = err * 2;
+                    if (e2 > -dy) { err -= dy; x += sx; }
+                    if (e2 < dx) { err += dx; y += sy; }
+                    steps++;
+                  }
+                  addFlashDuration(to.x, to.y, '#ff4400cc', 400);
+                };
+                drawBullet(effect.from, effect.to, effect.color ?? '#cc8800aa');
+              }
+              playSE('boss_shoot');
+              break;
+            }
+            case 'boss_absorb': {
+              // ジャンクキング廃材吸収: 壁タイルをオレンジでフラッシュ + 粒子軌道（壁→ボス） + SE
+              if (effect.center) {
+                addFlashDuration(effect.center.x, effect.center.y, '#ff8800cc', 350);
+                addFlashDuration(effect.center.x, effect.center.y, '#ffcc4466', 200);
+              }
+              if (effect.from && effect.to) {
+                // 粒子が壁からボスへ流れる軌道
+                let x = effect.from.x;
+                let y = effect.from.y;
+                const dx = Math.abs(effect.to.x - x);
+                const dy = Math.abs(effect.to.y - y);
+                const sx = effect.to.x > x ? 1 : -1;
+                const sy = effect.to.y > y ? 1 : -1;
+                let err = dx - dy;
+                const maxSteps = 20;
+                let steps = 0;
+                while (!(x === effect.to.x && y === effect.to.y) && steps < maxSteps) {
+                  addFlashDuration(x, y, '#ff880099', 250 - steps * 10);
+                  const e2 = err * 2;
+                  if (e2 > -dy) { err -= dy; x += sx; }
+                  if (e2 < dx) { err += dx; y += sy; }
+                  steps++;
+                }
+                addFlashDuration(effect.to.x, effect.to.y, '#00ff8888', 300);
+              }
+              playSE('boss_absorb');
+              break;
+            }
+            case 'slash_range': {
+              // サムライマスター斬撃範囲: 赤いハイライト
+              if (effect.tiles) {
+                for (const tile of effect.tiles) {
+                  addFlashDuration(tile.x, tile.y, '#ff222288', 400);
+                }
+              }
+              triggerScreenFlash('rgba(255,50,0,0.08)', 300);
+              break;
+            }
+            case 'iaido_range': {
+              // サムライマスター居合い範囲: 鋭い白/黄色のライン
+              if (effect.tiles) {
+                for (const tile of effect.tiles) {
+                  addFlashDuration(tile.x, tile.y, '#ffffff99', 450);
+                  addFlashDuration(tile.x, tile.y, '#ffff0066', 300);
+                }
+              }
+              triggerScreenFlash('rgba(255,255,200,0.18)', 350);
+              break;
+            }
+            case 'enrage_flash': {
+              // シャドウツイン暴走: ボス位置を赤くフラッシュ + 画面シェイク
+              if (effect.center) {
+                addAreaFlash(effect.center.x, effect.center.y, 2, '#ff0000cc', '#ff000044', true);
+              }
+              triggerScreenFlash('rgba(255,0,0,0.2)', 400);
+              break;
+            }
+            case 'darkness_vision': {
+              // クイーン フェーズ2: 視界縮小通知（画面を暗くするフラッシュ）
+              triggerScreenFlash('rgba(0,0,30,0.6)', 800);
+              break;
+            }
+            case 'queen_phase': {
+              // クイーン フェーズ変化: フェーズに応じた色のフラッシュ
+              if (effect.center) {
+                const pColor = effect.phase === 2 ? '#0000ff' : '#ff0088';
+                addAreaFlash(effect.center.x, effect.center.y, 3, pColor + 'cc', pColor + '33', true);
+              }
+              triggerScreenFlash(effect.phase === 2 ? 'rgba(0,0,80,0.4)' : 'rgba(255,0,100,0.3)', 500);
+              break;
+            }
           }
         }
       }
@@ -1970,7 +2105,7 @@ export default function GameCanvas() {
       const { nextState: consumed } = useInventoryItem(state, index);
       playSE('floor_descend');
       const transitionFields = transitionToNextFloor({ ...consumed, player: consumed.player! });
-      const warpedState = { ...consumed, ...transitionFields, placedBombs: [] as import('../core/game-state').PlacedBomb[], phase: 'exploring' as const };
+      const warpedState = { ...consumed, ...transitionFields, placedBombs: [] as import('../core/game-state').PlacedBomb[], phase: 'exploring' as const, visionRadiusOverride: null };
       setGameState(warpedState);
       stateRef.current = warpedState;
       setBattleLog((prev) => [...prev, `下階転送チップを使用した（B${warpedState.floor}Fへ転送）`].slice(-BATTLE_LOG_MAX));
@@ -1991,7 +2126,7 @@ export default function GameCanvas() {
       const { nextState: consumed } = useInventoryItem(state, index);
       playSE('floor_descend');
       const transitionFields = transitionToPrevFloor({ ...consumed, player: consumed.player! });
-      const warpedState = { ...consumed, ...transitionFields, placedBombs: [] as import('../core/game-state').PlacedBomb[], phase: 'exploring' as const };
+      const warpedState = { ...consumed, ...transitionFields, placedBombs: [] as import('../core/game-state').PlacedBomb[], phase: 'exploring' as const, visionRadiusOverride: null };
       setGameState(warpedState);
       stateRef.current = warpedState;
       setBattleLog((prev) => [...prev, `上階転送チップを使用した（B${warpedState.floor}Fへ転送）`].slice(-BATTLE_LOG_MAX));
@@ -2515,6 +2650,114 @@ export default function GameCanvas() {
     setBattleLog((prev) => [...prev, log].slice(-BATTLE_LOG_MAX));
   }, []);
 
+  // ── 足元アイテム: 床のアイテム/装備情報を返す ────────────────────────
+  const getFloorItemInfo = useCallback((): { type: 'item' | 'weapon'; id: string; name: string; pos: { x: number; y: number } } | null => {
+    const state = stateRef.current;
+    if (!state.player || !state.map) return null;
+    const { x, y } = state.player.pos;
+    const cell = state.map.cells[y]?.[x];
+    if (!cell) return null;
+    if (cell.tile === TILE_ITEM && cell.itemId) {
+      const def = (itemsRaw as any[]).find((d: any) => d.id === cell.itemId);
+      return { type: 'item', id: cell.itemId, name: def?.name ?? cell.itemId, pos: { x, y } };
+    }
+    if (cell.tile === TILE_WEAPON && cell.weaponId) {
+      const def = (weaponsRaw as any[]).find((d: any) => d.id === cell.weaponId);
+      return { type: 'weapon', id: cell.weaponId, name: def?.name ?? cell.weaponId, pos: { x, y } };
+    }
+    return null;
+  }, []);
+
+  // ── 足元アイテム: 拾う ────────────────────────────────────────────
+  const handlePickupFloorItem = useCallback(() => {
+    const state = stateRef.current;
+    if (state.phase !== 'exploring') return;
+    const info = getFloorItemInfo();
+    if (!info) return;
+    const { nextState, log, success } = pickupFloorItem(state, info.pos);
+    if (!success) {
+      playSE('ui_cancel');
+      setBattleLog((prev) => [...prev, log].slice(-BATTLE_LOG_MAX));
+      return;
+    }
+    playSE('item_pickup');
+    setGameState(nextState);
+    stateRef.current = nextState;
+    setMenuPanel(null);
+    setBattleLog((prev) => [...prev, log].slice(-BATTLE_LOG_MAX));
+  }, [getFloorItemInfo]);
+
+  // ── 足元アイテム: 装備する（武器のみ: 拾って equippedWeapon に設定） ────
+  const handleEquipFloorWeapon = useCallback(() => {
+    const state = stateRef.current;
+    if (state.phase !== 'exploring') return;
+    const info = getFloorItemInfo();
+    if (!info || info.type !== 'weapon') return;
+    const { nextState, log, success } = pickupFloorItem(state, info.pos);
+    if (!success) {
+      playSE('ui_cancel');
+      setBattleLog((prev) => [...prev, log].slice(-BATTLE_LOG_MAX));
+      return;
+    }
+    // 武器スロットに追加したうえで equippedWeapon に設定（最後に追加したスロットを装備）
+    const weaponDef = (weaponsRaw as any[]).find((d: any) => d.id === info.id);
+    const category = weaponDef?.category ?? 'melee';
+    let equipped = nextState;
+    if (category === 'melee' || category === 'ranged' || category === 'special') {
+      const lastSlot = nextState.player?.weaponSlots?.[nextState.player.weaponSlots.length - 1] ?? null;
+      if (lastSlot && nextState.player) {
+        equipped = {
+          ...nextState,
+          player: { ...nextState.player, equippedWeapon: lastSlot },
+        };
+      }
+    }
+    playSE('item_pickup');
+    setGameState(equipped);
+    stateRef.current = equipped;
+    setMenuPanel(null);
+    const equipLog = (category === 'shield' || category === 'armor') ? log : `${log}（装備した）`;
+    setBattleLog((prev) => [...prev, equipLog].slice(-BATTLE_LOG_MAX));
+  }, [getFloorItemInfo]);
+
+  // ── 足元アイテム: 使う（アイテムのみ） ───────────────────────────────
+  const handleUseFloorItem = useCallback(() => {
+    const state = stateRef.current;
+    if (state.phase !== 'exploring' || !state.player || !state.map) return;
+    const info = getFloorItemInfo();
+    if (!info || info.type !== 'item') return;
+    // 床のアイテムを消去してからインベントリに一時追加し、使用処理を呼ぶ
+    const cells = (state.map.cells as any[][]).map((row: any[]) => [...row]);
+    cells[info.pos.y][info.pos.x] = { ...cells[info.pos.y][info.pos.x], tile: TILE_FLOOR };
+    const tempState: GameState = {
+      ...state,
+      map: { ...state.map, cells },
+      inventory: {
+        ...state.inventory,
+        items: [...state.inventory.items, { itemId: info.id, quantity: 1, unidentified: false }],
+      },
+    };
+    stateRef.current = tempState;
+    setMenuPanel(null);
+    // handleUseItem は stateRef.current を参照するので更新後に呼ぶ
+    const itemIndex = tempState.inventory.items.length - 1;
+    handleUseItem(itemIndex);
+  }, [getFloorItemInfo, handleUseItem]);
+
+  // ── 足元アイテム: 消す ────────────────────────────────────────────
+  const handleDestroyFloorItem = useCallback(() => {
+    const state = stateRef.current;
+    if (state.phase !== 'exploring') return;
+    const info = getFloorItemInfo();
+    if (!info) return;
+    const { nextState, log } = destroyFloorItem(state, info.pos);
+    playSE('ui_cancel');
+    setGameState(nextState);
+    stateRef.current = nextState;
+    setMenuPanel(null);
+    setBattleLog((prev) => [...prev, log].slice(-BATTLE_LOG_MAX));
+  }, [getFloorItemInfo]);
+
   // ── 投げる共通処理（主人公の向いている方向へ即投げ） ──────────────────
   const executeThrow = useCallback((result: { nextState: GameState; logs: string[]; path: { x: number; y: number }[]; landPos?: { x: number; y: number }; thrownEffect?: string; thrownRadius?: number }) => {
     // 軌道アニメーション: パスに沿って各タイルを時差フラッシュ（飛行している点が流れる演出）
@@ -2614,6 +2857,58 @@ export default function GameCanvas() {
     executeThrow(throwArmor(state, index, state.player.facing));
   }, [executeThrow]);
 
+  // ── 足元アイテム: 投げる ─────────────────────────────────────────
+  const handleThrowFloorItem = useCallback(() => {
+    const state = stateRef.current;
+    if (state.phase !== 'exploring' || !state.player || !state.map) return;
+    const info = getFloorItemInfo();
+    if (!info) return;
+    // 床タイルを消去してから一時的にインベントリ/スロットに追加して投げる
+    const cells = (state.map.cells as any[][]).map((row: any[]) => [...row]);
+    cells[info.pos.y][info.pos.x] = { ...cells[info.pos.y][info.pos.x], tile: TILE_FLOOR };
+    if (info.type === 'item') {
+      const tempState: GameState = {
+        ...state,
+        map: { ...state.map, cells },
+        inventory: {
+          ...state.inventory,
+          items: [...state.inventory.items, { itemId: info.id, quantity: 1, unidentified: false }],
+        },
+      };
+      const itemIndex = tempState.inventory.items.length - 1;
+      const throwResult = throwInventoryItem(tempState, itemIndex, state.player.facing);
+      setMenuPanel(null);
+      executeThrow(throwResult);
+    } else {
+      // 武器: 一時的に weaponSlots に追加して投げる
+      const weaponPickup = pickupFloorItem(state, info.pos);
+      if (!weaponPickup.success) {
+        // スロットが満杯でも一時的にスロットに追加して投げる
+        try {
+          const wi = createWeaponInstance(info.id);
+          const tempState: GameState = {
+            ...state,
+            map: { ...state.map, cells },
+            player: state.player
+              ? { ...state.player, weaponSlots: [...(state.player.weaponSlots ?? []), wi] }
+              : state.player,
+          };
+          const wIdx = (tempState.player?.weaponSlots?.length ?? 1) - 1;
+          const throwResult = throwWeapon(tempState, wIdx, state.player.facing);
+          setMenuPanel(null);
+          executeThrow(throwResult);
+        } catch {
+          playSE('ui_cancel');
+        }
+      } else {
+        const wIdx = (weaponPickup.nextState.player?.weaponSlots?.length ?? 1) - 1;
+        const throwResult = throwWeapon(weaponPickup.nextState, wIdx, state.player.facing);
+        setMenuPanel(null);
+        executeThrow(throwResult);
+      }
+    }
+  }, [getFloorItemInfo, executeThrow]);
+
   // ── UIAction 処理 ────────────────────────────────────────────
   const handleUIAction = useCallback(
     (action: UIAction) => {
@@ -2635,6 +2930,19 @@ export default function GameCanvas() {
             if (prev?.type === "weapons") return null;
             return { type: "weapons", index: 0 };
 
+          case "open_floor_item": {
+            if (prev?.type === "floor_item") return null;
+            // 足元にアイテム/装備がある場合のみ開く
+            const { player, map } = stateRef.current;
+            if (!player || !map) return prev;
+            const cell = map.cells[player.pos.y]?.[player.pos.x];
+            if (!cell) return prev;
+            if ((cell.tile === TILE_ITEM && cell.itemId) || (cell.tile === TILE_WEAPON && cell.weaponId)) {
+              return { type: "floor_item" };
+            }
+            return prev;
+          }
+
           case "open_status":
             if (prev?.type === "status") return null;
             return { type: "status", index: 0 };
@@ -2650,13 +2958,13 @@ export default function GameCanvas() {
             return null;
 
           case "menu_up": {
-            if (!prev || prev.type === "help") return prev;
+            if (!prev || prev.type === "help" || prev.type === "floor_item") return prev;
             const newIndex = Math.max(0, prev.index - 1);
             return { ...prev, index: newIndex };
           }
 
           case "menu_down": {
-            if (!prev || prev.type === "help") return prev;
+            if (!prev || prev.type === "help" || prev.type === "floor_item") return prev;
             let maxIndex = 0;
             if (prev.type === "inventory") {
               maxIndex =
@@ -2890,6 +3198,136 @@ export default function GameCanvas() {
                   onClose={() => setMenuPanel(null)}
                 />
               )}
+
+            {/* 足元アイテムパネルオーバーレイ */}
+            {menuPanel?.type === "floor_item" && gameState.phase === "exploring" && (() => {
+              const player = gameState.player;
+              const map = gameState.map;
+              if (!player || !map) return null;
+              const cell = map.cells[player.pos.y]?.[player.pos.x];
+              if (!cell) return null;
+              const isFloorItem = cell.tile === TILE_ITEM && !!cell.itemId;
+              const isFloorWeapon = cell.tile === TILE_WEAPON && !!cell.weaponId;
+              if (!isFloorItem && !isFloorWeapon) return null;
+
+              const floorId = isFloorItem ? cell.itemId! : cell.weaponId!;
+              const floorName = isFloorItem
+                ? ((itemsRaw as any[]).find((d: any) => d.id === floorId)?.name ?? floorId)
+                : ((weaponsRaw as any[]).find((d: any) => d.id === floorId)?.name ?? floorId);
+              const weaponDef = isFloorWeapon ? (weaponsRaw as any[]).find((d: any) => d.id === floorId) : null;
+              const weaponCategory = weaponDef?.category ?? 'melee';
+
+              // 容量チェック
+              let canPickup = false;
+              if (isFloorItem) {
+                const currentCount = gameState.inventory.items.reduce((acc, it) => acc + it.quantity, 0);
+                canPickup = currentCount < gameState.machine.itemPouch;
+              } else {
+                if (weaponCategory === 'shield') {
+                  canPickup = (player.shieldSlots?.length ?? 0) < (gameState.machine.shieldSlots ?? 1);
+                } else if (weaponCategory === 'armor') {
+                  canPickup = (player.armorSlots?.length ?? 0) < (gameState.machine.armorSlots ?? 1);
+                } else {
+                  canPickup = gameState.inventory.equippedWeapons.length < gameState.machine.weaponSlots;
+                }
+              }
+
+              const panelStyle: React.CSSProperties = {
+                position: 'absolute',
+                top: '50%',
+                left: '50%',
+                transform: 'translate(-50%, -50%)',
+                backgroundColor: 'rgba(10,10,26,0.95)',
+                border: '1px solid #445566',
+                borderRadius: 10,
+                padding: '14px 18px',
+                zIndex: 30,
+                minWidth: 240,
+                maxWidth: 320,
+                color: '#ccddee',
+                fontFamily: 'monospace',
+              };
+              const titleStyle: React.CSSProperties = {
+                fontSize: 11,
+                color: '#8899aa',
+                marginBottom: 4,
+              };
+              const itemNameStyle: React.CSSProperties = {
+                fontSize: 15,
+                color: isFloorItem ? '#88ffcc' : '#ffcc88',
+                fontWeight: 'bold',
+                marginBottom: 14,
+              };
+              const btnRow: React.CSSProperties = {
+                display: 'flex',
+                gap: 8,
+                flexWrap: 'wrap',
+              };
+              const makeBtn = (label: string, onClick: () => void, enabled: boolean, color: string): React.ReactNode => (
+                <button
+                  key={label}
+                  onPointerDown={(e) => { e.preventDefault(); if (enabled) onClick(); }}
+                  style={{
+                    flex: 1,
+                    minWidth: 52,
+                    padding: '8px 4px',
+                    backgroundColor: enabled ? color : 'rgba(40,40,50,0.8)',
+                    border: `1px solid ${enabled ? 'rgba(200,200,200,0.3)' : 'rgba(80,80,100,0.3)'}`,
+                    borderRadius: 6,
+                    color: enabled ? '#ffffff' : '#555566',
+                    fontSize: 14,
+                    fontWeight: 'bold',
+                    cursor: enabled ? 'pointer' : 'default',
+                    touchAction: 'none',
+                    userSelect: 'none',
+                    WebkitUserSelect: 'none',
+                  }}
+                  aria-disabled={!enabled}
+                >
+                  {label}
+                </button>
+              );
+              const closeBtn: React.CSSProperties = {
+                marginTop: 10,
+                width: '100%',
+                padding: '5px',
+                backgroundColor: 'transparent',
+                border: '1px solid #334455',
+                borderRadius: 5,
+                color: '#8899aa',
+                fontSize: 11,
+                cursor: 'pointer',
+                touchAction: 'none',
+                userSelect: 'none',
+                WebkitUserSelect: 'none',
+              };
+              return (
+                <div style={panelStyle}>
+                  <div style={titleStyle}>
+                    {isFloorItem ? '足元のアイテム' : '足元の装備'}
+                  </div>
+                  <div style={itemNameStyle}>{floorName}</div>
+                  <div style={btnRow}>
+                    {isFloorItem && makeBtn('使', handleUseFloorItem, true, '#224466')}
+                    {isFloorWeapon && makeBtn('装備', handleEquipFloorWeapon, canPickup, '#225533')}
+                    {makeBtn('拾', handlePickupFloorItem, canPickup, '#224433')}
+                    {makeBtn('投', handleThrowFloorItem, true, '#443322')}
+                    {makeBtn('消', handleDestroyFloorItem, true, '#442222')}
+                  </div>
+                  {!canPickup && (
+                    <div style={{ fontSize: 10, color: '#ff8866', marginTop: 8 }}>
+                      {isFloorItem ? 'アイテムポーチがいっぱい' : '装備スロットがいっぱい'}（拾・装備は無効）
+                    </div>
+                  )}
+                  <button
+                    style={closeBtn}
+                    onPointerDown={(e) => { e.preventDefault(); setMenuPanel(null); }}
+                  >
+                    閉じる（Esc）
+                  </button>
+                </div>
+              );
+            })()}
 
             {/* ヘルプマニュアルオーバーレイ（どのフェーズでも表示可能） */}
             {menuPanel?.type === "help" && (
@@ -3573,6 +4011,13 @@ export default function GameCanvas() {
             }
           }}
           disabled={gameState.phase !== "exploring"}
+          hasFloorItem={(() => {
+            const p = gameState.player;
+            const m = gameState.map;
+            if (!p || !m || gameState.phase !== "exploring") return false;
+            const cell = m.cells[p.pos.y]?.[p.pos.x];
+            return !!cell && ((cell.tile === TILE_ITEM && !!cell.itemId) || (cell.tile === TILE_WEAPON && !!cell.weaponId));
+          })()}
         />
       </div>
 
