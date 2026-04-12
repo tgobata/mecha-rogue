@@ -17,7 +17,7 @@
  */
 
 import { useRef, useState, useEffect, useCallback } from "react";
-import type { GameState, Player, WeaponRarity, TurnEffect } from "../core/game-state";
+import type { GameState, Player, WeaponRarity, TurnEffect, InventoryItem } from "../core/game-state";
 import BaseScreen from "./BaseScreen";
 import StatusPanel from "./StatusPanel";
 import HelpManualOverlay from "./HelpManualOverlay";
@@ -432,6 +432,29 @@ function migrateGameState(saved: GameState): GameState {
           shieldSlots: [...(migrated.player.shieldSlots ?? []), ...slotShields],
         };
       }
+    }
+  }
+
+  // ── 旧セーブデータ修正: インベントリアイテムの重複エントリをスタック統合 ──
+  // 修正前のセーブデータでは同じアイテムを拾うたびに quantity:1 のエントリが別々に追加されていた。
+  // ロード時に同じ itemId + unidentified フラグのエントリを1つにまとめ、quantity を合算する。
+  {
+    const mergedItems: InventoryItem[] = [];
+    for (const item of (migrated.inventory.items ?? [])) {
+      const existingIdx = mergedItems.findIndex(
+        (it: InventoryItem) => it.itemId === item.itemId && it.unidentified === item.unidentified,
+      );
+      if (existingIdx >= 0) {
+        mergedItems[existingIdx] = {
+          ...mergedItems[existingIdx],
+          quantity: mergedItems[existingIdx].quantity + item.quantity,
+        };
+      } else {
+        mergedItems.push({ ...item });
+      }
+    }
+    if (mergedItems.length !== (migrated.inventory.items ?? []).length) {
+      migrated.inventory = { ...migrated.inventory, items: mergedItems };
     }
   }
 
@@ -1827,7 +1850,8 @@ export default function GameCanvas() {
       }
     } else {
       const maxItemCap = state.machine.itemPouch;
-      if (state.inventory.items.length >= maxItemCap) {
+      const currentItemCount = state.inventory.items.reduce((acc, it) => acc + it.quantity, 0);
+      if (currentItemCount >= maxItemCap) {
         playSE("ui_cancel");
         setBattleLog((prev) =>
           [...prev, "アイテムポーチがいっぱいです"].slice(-BATTLE_LOG_MAX),
@@ -3446,7 +3470,7 @@ export default function GameCanvas() {
                     }}
                   >
                     アイテム
-                    {gameState.inventory.items.length >= getInventoryCapacity(gameState.pilot.level) && (
+                    {gameState.inventory.items.reduce((acc, it) => acc + it.quantity, 0) >= gameState.machine.itemPouch && (
                       <span style={{ color: "#ff4444", marginLeft: 4, fontSize: 9 }}>
                         [満タン]
                       </span>

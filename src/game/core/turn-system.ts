@@ -2936,27 +2936,27 @@ export function processTurn(state: GameState, action: PlayerAction): GameState {
       // Check if item should be unidentified when picked up
       const itemDef = ITEM_DEFS_ALL.find((d: {id: string}) => d.id === pickup.itemId);
       const isUnidentifiedItem = itemDef && (itemDef as {category?: string}).category === 'unidentified';
-      // スタック可能か確認（同じ itemId かつ同じ未鑑定状態のスロットを探す）
-      const existingIdx = stateWithPickup.inventory.items.findIndex(
-        (it) => it.itemId === pickup.itemId && it.unidentified === (isUnidentifiedItem ? true : false),
-      );
-      if (existingIdx >= 0) {
-        // 既存スロットに数量を加算（ポーチ容量チェック不要）
-        state.map.cells[pickup.pos.y][pickup.pos.x].tile = TILE_FLOOR;
-        const newItems = stateWithPickup.inventory.items.map((it, idx) =>
-          idx === existingIdx ? { ...it, quantity: it.quantity + 1 } : it,
-        );
-        stateWithPickup = {
-          ...stateWithPickup,
-          inventory: { ...stateWithPickup.inventory, items: newItems },
-        };
+      // 容量チェック: 所持総数（quantity の合計）が上限に達していたら拾えない
+      const currentCount = stateWithPickup.inventory.items.reduce((acc, it) => acc + it.quantity, 0);
+      if (currentCount >= maxCap) {
+        customPickupMsg = `アイテムポーチがいっぱいで ${getItemDisplayName(pickup.itemId)} を拾えなかった`;
       } else {
-        // 新規スロット: 所持総数で容量チェック
-        const currentCount = stateWithPickup.inventory.items.reduce((acc, it) => acc + it.quantity, 0);
-        if (currentCount >= maxCap) {
-          customPickupMsg = `アイテムポーチがいっぱいで ${getItemDisplayName(pickup.itemId)} を拾えなかった`;
+        state.map.cells[pickup.pos.y][pickup.pos.x].tile = TILE_FLOOR;
+        // スタック可能か確認（同じ itemId かつ同じ未鑑定状態のスロットを探す）
+        const existingIdx = stateWithPickup.inventory.items.findIndex(
+          (it) => it.itemId === pickup.itemId && it.unidentified === (isUnidentifiedItem ? true : false),
+        );
+        if (existingIdx >= 0) {
+          // 既存スロットに数量を加算（表示をまとめる）
+          const newItems = stateWithPickup.inventory.items.map((it, idx) =>
+            idx === existingIdx ? { ...it, quantity: it.quantity + 1 } : it,
+          );
+          stateWithPickup = {
+            ...stateWithPickup,
+            inventory: { ...stateWithPickup.inventory, items: newItems },
+          };
         } else {
-          state.map.cells[pickup.pos.y][pickup.pos.x].tile = TILE_FLOOR;
+          // 新規スロット追加
           const newItems = [
             ...stateWithPickup.inventory.items,
             { itemId: pickup.itemId, quantity: 1, unidentified: isUnidentifiedItem ? true : false },

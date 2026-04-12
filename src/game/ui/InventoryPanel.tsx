@@ -149,7 +149,7 @@ export default function InventoryPanel({
           }}
         >
           <span style={{ fontSize: 15, fontWeight: 'bold' }}>
-            🎒 アイテム ({items.length}/{maxCapacity})
+            🎒 アイテム ({items.reduce((acc, it) => acc + it.quantity, 0)}/{maxCapacity})
           </span>
           <span style={{ fontSize: 13, color: '#ffcc44' }}>
             G {gold}
