@@ -119,7 +119,13 @@ function calcThrowTrajectory(
     landPos = pos;
 
     // 敵の命中判定（空中では罠は無視）
-    const enemy = enemies.find(e => e.pos.x === pos.x && e.pos.y === pos.y && e.hp > 0);
+    // bossSize を持つ多タイルボスは占有する全タイルで照合する
+    const enemy = enemies.find(e => {
+      if (e.hp <= 0) return false;
+      const size = e.bossSize ?? 1;
+      return pos.x >= e.pos.x && pos.x < e.pos.x + size &&
+             pos.y >= e.pos.y && pos.y < e.pos.y + size;
+    });
     if (enemy) {
       const hitChance = HIT_CHANCE_MIN + Math.random() * (HIT_CHANCE_MAX - HIT_CHANCE_MIN);
       if (Math.random() < hitChance) {
