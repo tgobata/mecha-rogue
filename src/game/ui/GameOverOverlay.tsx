@@ -86,10 +86,18 @@ const GameOverOverlay: React.FC<GameOverOverlayProps> = ({
   onTitle,
 }) => {
   const [visible, setVisible] = useState(false);
+  /** ゴーストタップ防止: オーバーレイ表示直後のタッチで誤ってボタンが押されないよう
+   *  一定時間はポインターイベントを無効化する（iOS のタッチ→クリック変換遅延対策）*/
+  const [interactive, setInteractive] = useState(false);
 
   useEffect(() => {
-    const timer = setTimeout(() => setVisible(true), 200);
-    return () => clearTimeout(timer);
+    const visTimer = setTimeout(() => setVisible(true), 200);
+    // iOS のゴーストタップは最大 350ms 程度遅延するため、それより長い 500ms 後に有効化
+    const intTimer = setTimeout(() => setInteractive(true), 500);
+    return () => {
+      clearTimeout(visTimer);
+      clearTimeout(intTimer);
+    };
   }, []);
 
   const evaluation = getEvaluation(floor, bossesDefeated.length);
@@ -270,6 +278,9 @@ const GameOverOverlay: React.FC<GameOverOverlayProps> = ({
             display: 'flex',
             flexDirection: 'column',
             gap: 12,
+            // ゴーストタップ防止: interactive になるまでポインターイベントを無効化
+            pointerEvents: interactive ? 'auto' : 'none',
+            opacity: interactive ? 1 : 0.5,
           }}
         >
           <button
