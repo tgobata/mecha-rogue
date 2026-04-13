@@ -129,6 +129,19 @@
     .pskill-max { color: #888; font-size: 0.75rem; }
     .pskill-effect { font-size: 0.78rem; color: #aaa; line-height: 1.5; }
 
+    /* スキルアップグレードテーブル */
+    .upgrade-table { width: 100%; border-collapse: collapse; font-size: 0.8rem; margin: 8px 0 16px; }
+    .upgrade-table th { background: #0a2a1a; color: #66cc88; padding: 6px 10px; text-align: left; border-bottom: 1px solid #1a4a2a; }
+    .upgrade-table td { padding: 6px 10px; border-bottom: 1px solid #1a2a1a; color: #aaccaa; vertical-align: top; }
+    .upgrade-table tr:last-child td { border-bottom: none; }
+    .tier-badge {
+      display: inline-block; padding: 1px 6px; border-radius: 3px; font-size: 0.7rem; font-weight: bold;
+      margin-right: 4px; white-space: nowrap;
+    }
+    .tier-0 { background: #1a2a3a; color: #7799cc; border: 1px solid #334466; }
+    .tier-1 { background: #1a3a1a; color: #88cc66; border: 1px solid #336633; }
+    .tier-2 { background: #3a2a00; color: #ffcc44; border: 1px solid #664400; }
+
     /* スプライトギャラリー */
     .sprite-gallery { display: flex; flex-direction: column; gap: 24px; }
     .sprite-group { background: #16213e; border: 1px solid #2a2a5e; border-radius: 8px; padding: 14px 18px; }
@@ -248,7 +261,8 @@
     <h3>スキルシステム概要</h3>
     <div class="note">
       スキルは <strong>レベルアップ時に1つ選んで習得</strong>する。<br>
-      同じスキルを2回習得することはできない。ボス撃破と同時にレベルアップした場合は、<strong>ボス撃破演出が終わってからダイアログが表示</strong>される。
+      同じスキルを2回習得することはできない。ボス撃破と同時にレベルアップした場合は、<strong>ボス撃破演出が終わってからダイアログが表示</strong>される。<br>
+      習得済みのスキルは<strong>パイロットレベルが上がると自動的に強化</strong>される（ティアアップ）。
     </div>
 
     <h3>2種類のスキル</h3>
@@ -277,7 +291,7 @@
           <th>スキル名</th>
           <th>種別</th>
           <th>解放Lv</th>
-          <th>CD</th>
+          <th>CD（T0）</th>
           <th>効果詳細</th>
         </tr>
       </thead>
@@ -286,18 +300,20 @@
           <td class="param">バリア<br><span class="id-cell">barrier</span></td>
           <td><span class="badge badge-active">アクティブ</span></td>
           <td class="val">Lv 2</td>
-          <td class="val">4ターン</td>
+          <td class="val">55ターン</td>
           <td class="effect-cell"><code>shielded</code>状態を1ターン付与。その間 DEF+10。<br>
-            ※ DEF+10は被ダメージ計算で参照される。攻撃を受けないと恩恵なし。</td>
+            ※ DEF+10は被ダメージ計算で参照される。攻撃を受けないと恩恵なし。<br>
+            ティアアップで効果時間・DEFボーナス・CDが強化される。</td>
         </tr>
         <tr class="skill-row-active">
           <td class="param">パワーストライク<br><span class="id-cell">power_strike</span></td>
           <td><span class="badge badge-active">アクティブ</span></td>
           <td class="val">Lv 3</td>
-          <td class="val">5ターン</td>
+          <td class="val">62ターン</td>
           <td class="effect-cell">使用した瞬間に <code>player.atk</code> を×2にする。<br>
             ⚠️ <strong>使用後すぐ（同ターン内）に攻撃しないと恩恵が薄い</strong>。<br>
-            スキル使用 → 移動 → 攻撃 の順より、スキル使用 → 攻撃 が望ましい。</td>
+            スキル使用 → 移動 → 攻撃 の順より、スキル使用 → 攻撃 が望ましい。<br>
+            ティアアップで倍率・CDが強化される。</td>
         </tr>
         <tr class="skill-row-passive">
           <td class="param">リジェネ<br><span class="id-cell">passive_regen</span></td>
@@ -305,15 +321,16 @@
           <td class="val">Lv 4</td>
           <td class="val">-</td>
           <td class="effect-cell">毎ターン開始時に HP+1 自動回復（上限: maxHP）。<br>
-            機体HPも同様に+1回復する。</td>
+            機体HPも同様に回復する。ティアアップで回復量が増加する。</td>
         </tr>
         <tr class="skill-row-active">
           <td class="param">オーバーチャージ<br><span class="id-cell">overcharge</span></td>
           <td><span class="badge badge-active">アクティブ</span></td>
           <td class="val">Lv 5</td>
-          <td class="val">6ターン</td>
-          <td class="effect-cell">今向いている方向の<strong>前方3マス全ての敵</strong>にダメージを与える。<br>
-            壁を貫通しない。複数の敵がいれば全員に当たる。</td>
+          <td class="val">53ターン</td>
+          <td class="effect-cell">今向いている方向の<strong>前方4マス全ての敵</strong>にダメージを与える。<br>
+            壁を貫通しない。複数の敵がいれば全員に当たる。<br>
+            ティアアップでダメージ倍率・範囲・CDが強化される。</td>
         </tr>
         <tr class="skill-row-passive">
           <td class="param">タフネス<br><span class="id-cell">passive_tough</span></td>
@@ -321,7 +338,7 @@
           <td class="val">Lv 6</td>
           <td class="val">-</td>
           <td class="effect-cell">受けるダメージを常時<strong>-2軽減</strong>（ダメージ下限は1）。<br>
-            DEFとは別に計算される追加軽減。</td>
+            DEFとは別に計算される追加軽減。ティアアップで軽減量が増加する。</td>
         </tr>
         <tr class="skill-row-passive">
           <td class="param">スカベンジャー<br><span class="id-cell">passive_scavenger</span></td>
@@ -329,8 +346,83 @@
           <td class="val">Lv 8</td>
           <td class="val">-</td>
           <td class="effect-cell">敵撃破時のアイテムドロップ率が<strong>+20%</strong>（加算ボーナス）。<br>
-            パイロットスキル「トレジャーハンター」との重複加算あり。</td>
+            パイロットスキル「トレジャーハンター」との重複加算あり。<br>
+            ティアアップでボーナスが増加する。</td>
         </tr>
+      </tbody>
+    </table>
+
+    <h3>スキルティアアップ一覧</h3>
+    <div class="note">
+      習得済みスキルはパイロットレベルが閾値に達すると<strong>自動的に強化</strong>（ティアアップ）される。<br>
+      <span class="tier-badge tier-0">T0</span> 習得直後（基本）
+      <span class="tier-badge tier-1">T1</span> 第一強化
+      <span class="tier-badge tier-2">T2</span> 第二強化
+    </div>
+
+    <!-- バリア -->
+    <h3>バリア（barrier）</h3>
+    <table class="upgrade-table">
+      <thead><tr><th>ティア</th><th>到達Lv</th><th>CD</th><th>効果持続</th><th>DEF+</th></tr></thead>
+      <tbody>
+        <tr><td><span class="tier-badge tier-0">T0</span></td><td>Lv 2（習得時）</td><td>55ターン</td><td>1ターン</td><td>+10</td></tr>
+        <tr><td><span class="tier-badge tier-1">T1</span></td><td>Lv 12</td><td>48ターン</td><td>2ターン</td><td>+15</td></tr>
+        <tr><td><span class="tier-badge tier-2">T2</span></td><td>Lv 23</td><td>40ターン</td><td>3ターン</td><td>+20</td></tr>
+      </tbody>
+    </table>
+
+    <!-- パワーストライク -->
+    <h3>パワーストライク（power_strike）</h3>
+    <table class="upgrade-table">
+      <thead><tr><th>ティア</th><th>到達Lv</th><th>CD</th><th>ATK倍率</th></tr></thead>
+      <tbody>
+        <tr><td><span class="tier-badge tier-0">T0</span></td><td>Lv 3（習得時）</td><td>62ターン</td><td>×2</td></tr>
+        <tr><td><span class="tier-badge tier-1">T1</span></td><td>Lv 13</td><td>54ターン</td><td>×2.5</td></tr>
+        <tr><td><span class="tier-badge tier-2">T2</span></td><td>Lv 24</td><td>46ターン</td><td>×3</td></tr>
+      </tbody>
+    </table>
+
+    <!-- リジェネ -->
+    <h3>リジェネ（passive_regen）</h3>
+    <table class="upgrade-table">
+      <thead><tr><th>ティア</th><th>到達Lv</th><th>毎ターン回復量</th></tr></thead>
+      <tbody>
+        <tr><td><span class="tier-badge tier-0">T0</span></td><td>Lv 4（習得時）</td><td>HP+1</td></tr>
+        <tr><td><span class="tier-badge tier-1">T1</span></td><td>Lv 14</td><td>HP+2</td></tr>
+        <tr><td><span class="tier-badge tier-2">T2</span></td><td>Lv 25</td><td>HP+3</td></tr>
+      </tbody>
+    </table>
+
+    <!-- オーバーチャージ -->
+    <h3>オーバーチャージ（overcharge）</h3>
+    <table class="upgrade-table">
+      <thead><tr><th>ティア</th><th>到達Lv</th><th>CD</th><th>攻撃範囲</th><th>ダメージ倍率</th></tr></thead>
+      <tbody>
+        <tr><td><span class="tier-badge tier-0">T0</span></td><td>Lv 5（習得時）</td><td>53ターン</td><td>前方4マス</td><td>×1</td></tr>
+        <tr><td><span class="tier-badge tier-1">T1</span></td><td>Lv 15</td><td>46ターン</td><td>前方4マス</td><td>×1.5</td></tr>
+        <tr><td><span class="tier-badge tier-2">T2</span></td><td>Lv 26</td><td>38ターン</td><td>前方5マス</td><td>×2</td></tr>
+      </tbody>
+    </table>
+
+    <!-- タフネス -->
+    <h3>タフネス（passive_tough）</h3>
+    <table class="upgrade-table">
+      <thead><tr><th>ティア</th><th>到達Lv</th><th>ダメージ軽減量</th></tr></thead>
+      <tbody>
+        <tr><td><span class="tier-badge tier-0">T0</span></td><td>Lv 6（習得時）</td><td>-2（下限1）</td></tr>
+        <tr><td><span class="tier-badge tier-1">T1</span></td><td>Lv 16</td><td>-3（下限1）</td></tr>
+        <tr><td><span class="tier-badge tier-2">T2</span></td><td>Lv 27</td><td>-4（下限1）</td></tr>
+      </tbody>
+    </table>
+
+    <!-- スカベンジャー -->
+    <h3>スカベンジャー（passive_scavenger）</h3>
+    <table class="upgrade-table">
+      <thead><tr><th>ティア</th><th>到達Lv</th><th>ドロップ率ボーナス</th></tr></thead>
+      <tbody>
+        <tr><td><span class="tier-badge tier-0">T0</span></td><td>Lv 8（習得時）</td><td>+20%</td></tr>
+        <tr><td><span class="tier-badge tier-1">T1</span></td><td>Lv 18</td><td>+35%</td></tr>
+        <tr><td><span class="tier-badge tier-2">T2</span></td><td>Lv 29</td><td>+50%</td></tr>
       </tbody>
     </table>
 
@@ -339,7 +431,8 @@
       1. レベルアップ → ダイアログが開く<br>
       2. 現在のレベルで<strong>解放条件(unlockLevel)を満たすスキル</strong>のうち、<strong>未習得のもの</strong>だけが選択肢に表示される<br>
       3. 1つ選んで習得。選ばなかったスキルは次回レベルアップ時に再び選択肢に現れる<br>
-      4. 全スキルを習得済みの場合、ダイアログは表示されない
+      4. 全スキルを習得済みの場合、ダイアログは表示されない<br>
+      5. 習得後はパイロットLvが閾値に達するたびに<strong>自動強化（ティアアップ）</strong>される
     </div>
   </div>
 

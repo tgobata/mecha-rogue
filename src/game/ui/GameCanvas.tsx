@@ -740,6 +740,10 @@ export default function GameCanvas() {
   const [bossDefeatEffect, setBossDefeatEffect] = useState<string | null>(null);
   /** スキル選択ダイアログの状態。null = 非表示 */
   const [skillSelectState, setSkillSelectState] = useState<{ level: number; available: Skill[] } | null>(null);
+  const skillSelectStateRef = useRef<{ level: number; available: Skill[] } | null>(null);
+  /** スキル選択ダイアログの現在選択インデックス（スキル数 = 「後で決める」） */
+  const [skillSelectIndex, setSkillSelectIndex] = useState<number>(0);
+  const skillSelectIndexRef = useRef<number>(0);
   /** レベルアップ検出用：前回のパイロットレベルを保持 */
   const prevPilotLevelRef = useRef<number>(1);
   /** ボス撃破演出中に保留するスキル選択状態 */
@@ -787,6 +791,14 @@ export default function GameCanvas() {
   useEffect(() => {
     confirmDialogRef.current = confirmDialog;
   }, [confirmDialog]);
+
+  // skillSelectStateRef / skillSelectIndexRef は常に最新値を反映する（クロージャ対策）
+  useEffect(() => {
+    skillSelectStateRef.current = skillSelectState;
+  }, [skillSelectState]);
+  useEffect(() => {
+    skillSelectIndexRef.current = skillSelectIndex;
+  }, [skillSelectIndex]);
 
   // ── スプライト読み込み ─────────────────────────────────────────────
   useEffect(() => {
@@ -977,6 +989,7 @@ export default function GameCanvas() {
           // ボス撃破演出中: 演出終了後に表示するため保留
           pendingSkillSelectRef.current = { level: newLevel, available };
         } else {
+          setSkillSelectIndex(0);
           setSkillSelectState({ level: newLevel, available });
         }
       }
@@ -988,6 +1001,7 @@ export default function GameCanvas() {
   // ボス撃破演出が終了したとき、保留中のスキル選択があれば表示する
   useEffect(() => {
     if (bossDefeatEffect === null && pendingSkillSelectRef.current !== null) {
+      setSkillSelectIndex(0);
       setSkillSelectState(pendingSkillSelectRef.current);
       pendingSkillSelectRef.current = null;
     }
@@ -2968,12 +2982,23 @@ export default function GameCanvas() {
             return null;
 
           case "menu_up": {
+            // スキル選択ダイアログが開いている場合はそちらを優先
+            if (skillSelectStateRef.current !== null) {
+              setSkillSelectIndex((i) => Math.max(0, i - 1));
+              return prev;
+            }
             if (!prev || prev.type === "help" || prev.type === "floor_item") return prev;
             const newIndex = Math.max(0, prev.index - 1);
             return { ...prev, index: newIndex };
           }
 
           case "menu_down": {
+            // スキル選択ダイアログが開いている場合はそちらを優先
+            if (skillSelectStateRef.current !== null) {
+              const maxIdx = skillSelectStateRef.current.available.length; // 最後 = 「後で決める」
+              setSkillSelectIndex((i) => Math.min(maxIdx, i + 1));
+              return prev;
+            }
             if (!prev || prev.type === "help" || prev.type === "floor_item") return prev;
             let maxIndex = 0;
             if (prev.type === "inventory") {
@@ -3008,6 +3033,20 @@ export default function GameCanvas() {
           return;
         }
 
+        // スキル選択ダイアログが開いている場合
+        const skillDialog = skillSelectStateRef.current;
+        if (skillDialog !== null) {
+          const idx = skillSelectIndexRef.current;
+          if (idx < skillDialog.available.length) {
+            // スキルを習得
+            handleLearnSkill(skillDialog.available[idx].id);
+          } else {
+            // 「後で決める」
+            setSkillSelectState(null);
+          }
+          return;
+        }
+
         // menuPanelRef で最新値を読む（state updater 内で side effect を起こすアンチパターンを回避）
         const panel = menuPanelRef.current;
         if (!panel) return;
@@ -3032,12 +3071,12 @@ export default function GameCanvas() {
         }
       }
     },
-    [handleUseItem, handleEquipWeapon, handleSaveAndExit, handleMoveToBase],
+    [handleUseItem, handleEquipWeapon, handleSaveAndExit, handleMoveToBase, handleLearnSkill],
   );
 
   // ── キーボード入力フック ─────────────────────────────────────
-  // confirmDialog が開いている間も入力を遮断する
-  const isMenuOpen = menuPanel !== null || confirmDialog !== null;
+  // confirmDialog・スキル選択ダイアログが開いている間も入力を遮断する
+  const isMenuOpen = menuPanel !== null || confirmDialog !== null || skillSelectState !== null;
 
   useGameInput(
     handleAction,
@@ -3489,42 +3528,45 @@ export default function GameCanvas() {
                     Lv.{skillSelectState.level} レベルアップ！ スキルを習得
                   </h2>
                   <div className="flex flex-col gap-2">
-                    {skillSelectState.available.map((skill) => (
-                      <div
-                        key={skill.id}
-                        className="flex items-start gap-3 bg-gray-800 border border-gray-600 rounded p-2"
-                      >
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-2 mb-0.5">
-                            <span className="text-sm font-bold text-white">{skill.name}</span>
-                            <span
-                              style={{
-                                fontSize: 9,
-                                padding: "1px 5px",
-                                borderRadius: 4,
-                                backgroundColor: skill.type === "active" ? "rgba(80,120,220,0.5)" : "rgba(60,160,80,0.5)",
-                                border: `1px solid ${skill.type === "active" ? "#4466cc" : "#44aa55"}`,
-                                color: skill.type === "active" ? "#aabbff" : "#88ddaa",
-                                whiteSpace: "nowrap",
-                              }}
-                            >
-                              {skill.type === "active" ? "アクティブ" : "パッシブ"}
-                            </span>
-                          </div>
-                          <p className="text-xs text-gray-400 leading-snug">{skill.description}</p>
-                        </div>
-                        <button
-                          onClick={() => handleLearnSkill(skill.id)}
-                          className="flex-shrink-0 px-3 py-1 rounded text-xs font-bold bg-yellow-600 border border-yellow-400 text-yellow-100 hover:bg-yellow-500 transition-colors"
+                    {skillSelectState.available.map((skill, i) => {
+                      const isSelected = skillSelectIndex === i;
+                      return (
+                        <div
+                          key={skill.id}
+                          className={`flex items-start gap-3 rounded p-2 border ${isSelected ? "bg-yellow-900/40 border-yellow-400" : "bg-gray-800 border-gray-600"}`}
                         >
-                          習得
-                        </button>
-                      </div>
-                    ))}
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2 mb-0.5">
+                              <span className="text-sm font-bold text-white">{skill.name}</span>
+                              <span
+                                style={{
+                                  fontSize: 9,
+                                  padding: "1px 5px",
+                                  borderRadius: 4,
+                                  backgroundColor: skill.type === "active" ? "rgba(80,120,220,0.5)" : "rgba(60,160,80,0.5)",
+                                  border: `1px solid ${skill.type === "active" ? "#4466cc" : "#44aa55"}`,
+                                  color: skill.type === "active" ? "#aabbff" : "#88ddaa",
+                                  whiteSpace: "nowrap",
+                                }}
+                              >
+                                {skill.type === "active" ? "アクティブ" : "パッシブ"}
+                              </span>
+                            </div>
+                            <p className="text-xs text-gray-400 leading-snug">{skill.description}</p>
+                          </div>
+                          <button
+                            onClick={() => handleLearnSkill(skill.id)}
+                            className={`flex-shrink-0 px-3 py-1 rounded text-xs font-bold border transition-colors ${isSelected ? "bg-yellow-400 border-yellow-200 text-yellow-900" : "bg-yellow-600 border-yellow-400 text-yellow-100 hover:bg-yellow-500"}`}
+                          >
+                            習得
+                          </button>
+                        </div>
+                      );
+                    })}
                   </div>
                   <button
                     onClick={() => setSkillSelectState(null)}
-                    className="mt-4 w-full py-1.5 rounded text-xs font-bold bg-gray-700 border border-gray-500 text-gray-300 hover:bg-gray-600 transition-colors"
+                    className={`mt-4 w-full py-1.5 rounded text-xs font-bold border transition-colors ${skillSelectIndex === skillSelectState.available.length ? "bg-gray-500 border-gray-300 text-white" : "bg-gray-700 border-gray-500 text-gray-300 hover:bg-gray-600"}`}
                   >
                     後で決める
                   </button>
@@ -3749,10 +3791,24 @@ export default function GameCanvas() {
             >
               {/* キーボード操作ガイド */}
               <div style={{ width: 170, flexShrink: 0 }}>
-                <div style={{ marginBottom: 3 }}>
+                <div style={{ marginBottom: 3, display: "flex", alignItems: "baseline", gap: 0 }}>
                   <span style={{ color: "#ffee88", fontWeight: "bold", fontSize: 11 }}>
                     キーボード操作
                   </span>
+                  {(() => {
+                    const px = gameState.player?.pos?.x;
+                    const py = gameState.player?.pos?.y;
+                    const tile = (px !== undefined && py !== undefined)
+                      ? gameState.map?.cells[py]?.[px]?.tile
+                      : undefined;
+                    if (tile !== TILE_ITEM && tile !== TILE_WEAPON) return null;
+                    return (
+                      <span style={{ marginLeft: 10, display: "inline-flex", alignItems: "baseline", gap: 4 }}>
+                        <span style={{ color: "#ffdd88", fontWeight: "bold", fontSize: 11 }}>F</span>
+                        <span style={{ color: "#ddddff", fontSize: 10 }}>足元</span>
+                      </span>
+                    );
+                  })()}
                 </div>
                 <table style={{ borderCollapse: "collapse", width: "100%" }}>
                   <thead>

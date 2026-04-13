@@ -386,6 +386,55 @@ export const SKILL_OVERCHARGE_RANGE = 4;
 export const SKILL_POWER_STRIKE_MULTIPLIER = 2;
 
 // ---------------------------------------------------------------------------
+// スキルアップグレード閾値（各ティアに達するパイロットLv）
+// ---------------------------------------------------------------------------
+
+/** barrier: [ティア1到達Lv, ティア2到達Lv] */
+export const SKILL_BARRIER_UPGRADE_LEVELS = [12, 23] as const;
+/** power_strike: [ティア1到達Lv, ティア2到達Lv] */
+export const SKILL_POWER_STRIKE_UPGRADE_LEVELS = [13, 24] as const;
+/** passive_regen: [ティア1到達Lv, ティア2到達Lv] */
+export const SKILL_REGEN_UPGRADE_LEVELS = [14, 25] as const;
+/** overcharge: [ティア1到達Lv, ティア2到達Lv] */
+export const SKILL_OVERCHARGE_UPGRADE_LEVELS = [15, 26] as const;
+/** passive_tough: [ティア1到達Lv, ティア2到達Lv] */
+export const SKILL_TOUGH_UPGRADE_LEVELS = [16, 27] as const;
+/** passive_scavenger: [ティア1到達Lv, ティア2到達Lv] */
+export const SKILL_SCAVENGER_UPGRADE_LEVELS = [18, 29] as const;
+
+// ---------------------------------------------------------------------------
+// スキルティア別パラメータ（インデックス = ティア 0/1/2）
+// ---------------------------------------------------------------------------
+
+/** barrier: 付与 DEF ボーナス [T0, T1, T2] */
+export const SKILL_BARRIER_DEF_BONUS_TIERS = [10, 15, 20] as const;
+/** barrier: 効果持続ターン数 [T0, T1, T2] */
+export const SKILL_BARRIER_DURATION_TIERS = [1, 2, 3] as const;
+/** barrier: クールダウン [T0, T1, T2] */
+export const SKILL_BARRIER_COOLDOWN_TIERS = [55, 48, 40] as const;
+
+/** power_strike: ATK 倍率 [T0, T1, T2] */
+export const SKILL_POWER_STRIKE_MULTIPLIER_TIERS = [2, 2.5, 3] as const;
+/** power_strike: クールダウン [T0, T1, T2] */
+export const SKILL_POWER_STRIKE_COOLDOWN_TIERS = [62, 54, 46] as const;
+
+/** passive_regen: 毎ターン回復量 [T0, T1, T2] */
+export const SKILL_REGEN_AMOUNT_TIERS = [1, 2, 3] as const;
+
+/** overcharge: 攻撃範囲（前方タイル数）[T0, T1, T2] */
+export const SKILL_OVERCHARGE_RANGE_TIERS = [4, 4, 5] as const;
+/** overcharge: ダメージ倍率 [T0, T1, T2] */
+export const SKILL_OVERCHARGE_DMG_MULTIPLIER_TIERS = [1, 1.5, 2] as const;
+/** overcharge: クールダウン [T0, T1, T2] */
+export const SKILL_OVERCHARGE_COOLDOWN_TIERS = [53, 46, 38] as const;
+
+/** passive_tough: ダメージ軽減量 [T0, T1, T2] */
+export const SKILL_TOUGH_DAMAGE_REDUCTION_TIERS = [2, 3, 4] as const;
+
+/** passive_scavenger: ドロップ率ボーナス（0〜1）[T0, T1, T2] */
+export const SKILL_SCAVENGER_DROP_BONUS_TIERS = [0.20, 0.35, 0.50] as const;
+
+// ---------------------------------------------------------------------------
 // セーブシステム
 // ---------------------------------------------------------------------------
 
