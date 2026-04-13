@@ -152,7 +152,11 @@ export default function HUD({ player, floorNumber, floor, enemies, inventory, le
                   color: isMuted ? '#888' : '#ffdd88',
                 }}
               >
-                {isMuted ? '🔇' : '🔊'}
+                <img
+                  src={isMuted ? '/sprites/ui/sound_off.png' : '/sprites/ui/sound_on.png'}
+                  alt={isMuted ? 'OFF' : 'ON'}
+                  style={{ width: 16, height: 16, imageRendering: 'pixelated', display: 'block' }}
+                />
               </button>
             )}
           </div>

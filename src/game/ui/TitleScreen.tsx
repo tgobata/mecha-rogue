@@ -374,7 +374,11 @@ const TitleScreen: React.FC<TitleScreenProps> = ({
               transition: "all 0.15s",
             }}
           >
-            <span style={{ fontSize: 22, lineHeight: 1 }}>{isMuted ? "🔇" : "🔊"}</span>
+            <img
+              src={isMuted ? "/sprites/ui/sound_off.png" : "/sprites/ui/sound_on.png"}
+              alt={isMuted ? "OFF" : "ON"}
+              style={{ width: 22, height: 22, imageRendering: "pixelated" }}
+            />
             <span style={{ fontSize: 9, color: isMuted ? "#888" : "#88ccff", letterSpacing: 1 }}>
               {isMuted ? "OFF" : "ON"}
             </span>

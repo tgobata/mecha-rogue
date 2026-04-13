@@ -690,6 +690,129 @@ async function generateIconStorage(outDir: string): Promise<void> {
 }
 
 // ---------------------------------------------------------------------------
+// サウンドボタンアイコン生成
+// ---------------------------------------------------------------------------
+
+/**
+ * スピーカー本体（コーン形）を描画するヘルパー。
+ * 20×20 バッファ上に描画する。
+ */
+function drawSpeakerBody(buf: Uint8Array, W: number): void {
+  const body  = hexToRGBA('#88ccff');   // スピーカー本体（水色）
+  const bodyD = hexToRGBA('#224466');   // アウトライン（濃紺）
+  const bodyH = hexToRGBA('#aaeeff');   // ハイライト（明るい水色）
+
+  // コーン：x=5〜9 でY範囲が広がるスピーカー形状
+  const cone: [number, number, number][] = [
+    // [x, yMin, yMax]
+    [5, 7, 12],
+    [6, 6, 13],
+    [7, 5, 14],
+    [8, 4, 15],
+    [9, 3, 16],
+  ];
+  for (const [x, yMin, yMax] of cone) {
+    for (let y = yMin; y <= yMax; y++) setPixel(buf, W, x, y, body);
+  }
+
+  // キャビネット（左側の矩形）：x=2〜4, y=7〜12
+  fillRect(buf, W, 2, 7, 3, 6, body);
+
+  // アウトライン
+  // キャビネット外枠
+  strokeRect(buf, W, 2, 7, 3, 6, bodyD);
+  // コーン輪郭（上辺・下辺の斜線）
+  for (const [x, yMin, yMax] of cone) {
+    setPixel(buf, W, x, yMin, bodyD);
+    setPixel(buf, W, x, yMax, bodyD);
+  }
+  // コーン先端（右端）の縦線
+  for (let y = 3; y <= 16; y++) setPixel(buf, W, 9, y, bodyD);
+  // キャビネットとコーン接続部の縦線
+  vLine(buf, W, 5, 7, 6, bodyD);
+
+  // ハイライト（左上エッジ）
+  setPixel(buf, W, 3, 8, bodyH);
+  setPixel(buf, W, 3, 9, bodyH);
+  setPixel(buf, W, 4, 8, bodyH);
+}
+
+/**
+ * サウンド ON アイコン（sound_on.png）を生成する。
+ * 20×20px のドット絵スピーカー + 音波2本。
+ */
+async function generateSoundOn(outDir: string): Promise<void> {
+  const W = 20;
+  const H = 20;
+  const buf = createBuffer(W, H);
+
+  const wave1 = hexToRGBA('#44aaff');   // 小波（中青）
+  const wave2 = hexToRGBA('#66ccff');   // 大波（明青）
+  const waveD = hexToRGBA('#1166aa');   // 波アウトライン（濃青）
+
+  drawSpeakerBody(buf, W);
+
+  // 小波（右に向かう弧、スピーカー出口から距離2）
+  // 弧の中心 (10, 9.5)、半径 ~2.5
+  const smallArc: [number, number][] = [
+    [11, 6], [12, 7], [12, 8], [12, 9], [12, 10], [12, 11], [11, 13],
+  ];
+  for (const [x, y] of smallArc) setPixel(buf, W, x, y, wave1);
+  // アウトライン（1px内側）
+  setPixel(buf, W, 11, 7, waveD);
+  setPixel(buf, W, 11, 12, waveD);
+
+  // 大波（距離4）
+  const bigArc: [number, number][] = [
+    [13, 4], [14, 5], [15, 6], [15, 7], [15, 8], [15, 9],
+    [15, 10], [15, 11], [15, 12], [14, 13], [13, 14],
+  ];
+  for (const [x, y] of bigArc) setPixel(buf, W, x, y, wave2);
+  // 端点を少し濃く
+  setPixel(buf, W, 13, 4, waveD);
+  setPixel(buf, W, 13, 14, waveD);
+
+  await savePNG(buf, W, H, path.join(outDir, 'sound_on.png'));
+  console.log('  generated: sound_on.png');
+}
+
+/**
+ * サウンド OFF アイコン（sound_off.png）を生成する。
+ * 20×20px のドット絵スピーカー + 赤い×マーク。
+ */
+async function generateSoundOff(outDir: string): Promise<void> {
+  const W = 20;
+  const H = 20;
+  const buf = createBuffer(W, H);
+
+  const muteR  = hexToRGBA('#ff4444');  // × 赤色
+  const muteRD = hexToRGBA('#aa1111');  // × 濃い赤（アウトライン）
+
+  drawSpeakerBody(buf, W);
+
+  // × マーク（x=11〜16, y=5〜15 の領域に 2 本の対角線）
+  // 右下がり diagonal: (11,5)→(16,10)
+  for (let i = 0; i <= 5; i++) {
+    setPixel(buf, W, 11 + i, 5 + i, muteR);
+    // 太さを 2px に
+    if (i > 0 && i < 5) setPixel(buf, W, 11 + i, 6 + i, muteRD);
+  }
+  // 右上がり diagonal: (11,10)→(16,5)
+  for (let i = 0; i <= 5; i++) {
+    setPixel(buf, W, 11 + i, 10 - i, muteR);
+    if (i > 0 && i < 5) setPixel(buf, W, 11 + i, 9 - i, muteRD);
+  }
+  // 端点を濃くしてシャープに
+  setPixel(buf, W, 11, 5, muteRD);
+  setPixel(buf, W, 16, 10, muteRD);
+  setPixel(buf, W, 11, 10, muteRD);
+  setPixel(buf, W, 16, 5, muteRD);
+
+  await savePNG(buf, W, H, path.join(outDir, 'sound_off.png'));
+  console.log('  generated: sound_off.png');
+}
+
+// ---------------------------------------------------------------------------
 // メイン
 // ---------------------------------------------------------------------------
 
@@ -713,6 +836,8 @@ async function main(): Promise<void> {
   await generateIconSword(uiDir);
   await generateIconItem(uiDir);
   await generateIconStorage(uiDir);
+  await generateSoundOn(uiDir);
+  await generateSoundOff(uiDir);
 
   console.log('\n全スプライト生成完了。');
   console.log(`  NPC  -> ${npcDir}`);

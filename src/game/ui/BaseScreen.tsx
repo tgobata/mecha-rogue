@@ -512,7 +512,11 @@ export default function BaseScreen({ gameState, deathFloor, onEnterDungeon, onUp
               color: isMuted ? '#888' : '#ffdd88',
             }}
           >
-            {isMuted ? '🔇' : '🔊'}
+            <img
+              src={isMuted ? '/sprites/ui/sound_off.png' : '/sprites/ui/sound_on.png'}
+              alt={isMuted ? 'OFF' : 'ON'}
+              style={{ width: 18, height: 18, imageRendering: 'pixelated', display: 'block' }}
+            />
           </button>
         </div>
       </div>
