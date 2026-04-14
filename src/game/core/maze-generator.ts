@@ -1676,6 +1676,7 @@ export function generateRestFloor(parentFloor: number): Floor {
 /**
  * BFS 検証が全試行で失敗した場合のフォールバックフロアを生成する。
  * 全マス FLOOR の単純な構造で、ゲームが止まらないことを優先する。
+ * ボス階では BOSS タイル・施設を手動配置し、通常階では placeRoomFacilities / placeEntities を呼ぶ。
  */
 function generateFallbackFloor(
   floorNumber: number,
@@ -1697,16 +1698,18 @@ function generateFallbackFloor(
   cells[startPos.y][startPos.x].tile = TILE_START;
   cells[stairsPos.y][stairsPos.x].tile = TILE_STAIRS_DOWN;
 
+  const isBossFloor = BOSS_FLOOR_SET.has(floorNumber);
+
   const bounds: Bounds = { x: 0, y: 0, width, height };
   const room: Room = {
     id: 0,
-    type: RoomType.NORMAL,
+    type: isBossFloor ? RoomType.BOSS : RoomType.NORMAL,
     bounds,
     doors: [],
-    isLocked: false,
+    isLocked: isBossFloor,
   };
 
-  return {
+  const floor: Floor = {
     floorNumber,
     width,
     height,
@@ -1716,4 +1719,31 @@ function generateFallbackFloor(
     stairsPos,
     seed,
   };
+
+  const rng = createRng(seed);
+
+  if (isBossFloor) {
+    // ボス階: placeEntities がボス部屋中心に TILE_BOSS を置く（room.type === BOSS）。
+    // placeRoomFacilities は BOSS 部屋をスキップするため、施設を手動配置する。
+    const shopX = Math.min(4, width - 2);
+    const shopY = Math.min(4, height - 2);
+    const repairX = Math.min(4, width - 2);
+    const repairY = Math.max(height - 5, 1);
+    if (cells[shopY]?.[shopX]?.tile === TILE_FLOOR) {
+      cells[shopY][shopX].tile = TILE_SHOP;
+    }
+    if (cells[repairY]?.[repairX]?.tile === TILE_FLOOR) {
+      cells[repairY][repairX].tile = TILE_REPAIR;
+    }
+  } else {
+    // 通常階: 施設をランダム配置する
+    placeRoomFacilities(floor, rng);
+  }
+
+  // 敵・アイテム・ゴールド・ボス配置
+  placeEntities(floor, floorNumber, rng);
+  // アイテム・武器の最低数を保証
+  ensureMinimumItems(floor, 3, rng, 1);
+
+  return floor;
 }
