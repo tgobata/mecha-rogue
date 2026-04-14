@@ -77,7 +77,7 @@ import { rollDrops, rollFloorGold, rollFloorItem, rollFloorWeapon } from './drop
 import type { DropResult } from './drop-system';
 import { createWeaponInstance } from './weapon-system';
 import type { EquippedWeapon, EquippedShield, EquippedArmor } from './game-state';
-import { consumeDurability, isBroken, getAttackTargetPositions } from './weapon-system';
+import { consumeDurability, isBroken, getAttackTargetPositions, getBaseAttackRange } from './weapon-system';
 import { updateVisibility } from './visibility';
 import { VIEW_RADIUS } from './constants';
 
@@ -1109,30 +1109,94 @@ function processPlayerAction(
         logMessages.push('透明な敵には攻撃が当たらない！（煙幕弾かトラップセンサーが必要）');
         // ダメージ処理をスキップ（移動もキャンセル）
       } else {
-        // バンプ攻撃: 装備武器の atk を加算した実効攻撃力でダメージ計算
+        // バンプ攻撃: 武器の射程・パターン全体で攻撃（attack アクションと同ロジック）
         const weapon = newPlayer.equippedWeapon ?? null;
-        // iron_fortress の方向装甲チェック
-        const effectiveDef = targetEnemy.enemyType === 'iron_fortress'
-          ? getIronFortressDef(targetEnemy, newPlayer.pos)
-          : targetEnemy.def;
-        let rawDmg = calcDamage(effectiveAtk(newPlayer), effectiveDef);
-        // 聖なるオイル: ボス特攻バフ適用
-        if (targetEnemy.isBoss && (newPlayer.bossBoostTurns ?? 0) > 0 && (newPlayer.bossBoostMult ?? 1) > 1) {
-          rawDmg = Math.round(rawDmg * (newPlayer.bossBoostMult ?? 1));
-        }
-        const dmg = rawDmg;
 
-        // シールド吸収
-        const { finalDamage, updatedEntity: shieldedEnemy } = absorbWithShield(targetEnemy, dmg);
-
-        // 状態異常付与
-        let hitEnemy = { ...shieldedEnemy, hp: shieldedEnemy.hp - finalDamage, animState: 'hit' as const };
+        // ── 確率的射程延伸（attack アクションと同ロジック）──────────────
+        let attackRangeOverride: number | undefined;
         if (weapon) {
-          const statusEffect = applyWeaponSpecial(weapon);
-          if (statusEffect) {
-            hitEnemy = addStatusEffect(hitEnemy, statusEffect) as typeof hitEnemy;
+          const baseRange = getBaseAttackRange(weapon.id);
+          const extProb =
+            baseRange <= 1 ? 0.30 :
+            baseRange <= 2 ? 0.20 :
+            baseRange <= 3 ? 0.15 :
+            baseRange <= 5 ? 0.12 : 0.10;
+          if (Math.random() < extProb) {
+            const ext = Math.floor(Math.random() * 4) + 1;
+            attackRangeOverride = baseRange + ext;
+            logMessages.push(`射程が+${ext}延伸した！`);
           }
-          // バンプ攻撃でも耐久消費
+        }
+
+        // ── 武器射程全体を取得 ──────────────────────────────────────────
+        const bumpTargetPositions = getAttackTargetPositions(
+          player.pos,
+          newPlayer.facing,
+          weapon,
+          state.map,
+          attackRangeOverride,
+        );
+
+        // ── 全ターゲットに攻撃（attack アクションと同ロジック）────────────
+        for (const bumpPos of bumpTargetPositions) {
+          const bumpEnemy = enemyAt(newEnemies, bumpPos);
+          if (bumpEnemy === undefined) continue;
+
+          // 透明チェック（射程内の各敵）
+          const isInvisibleB = bumpEnemy.bossState?.isInvisible === true;
+          const hasSensorB = newPlayer.equippedTools?.some((t: any) => t.id === 'trap_sensor' && t.isEquipped);
+          const isRevealedB = (bumpEnemy.bossState?.revealedTurns ?? 0) > 0;
+          if (isInvisibleB && !hasSensorB && !isRevealedB) {
+            logMessages.push('透明な敵には攻撃が当たらない！（煙幕弾かトラップセンサーが必要）');
+            continue;
+          }
+
+          // iron_fortress の方向装甲チェック
+          let effectiveDefB = bumpEnemy.enemyType === 'iron_fortress'
+            ? getIronFortressDef(bumpEnemy, newPlayer.pos)
+            : bumpEnemy.def;
+
+          // 特殊能力による防御補正（directional_armor / front_damage_halved）
+          if (bumpEnemy.special === 'front_damage_halved' || bumpEnemy.special === 'directional_armor') {
+            const ef = bumpEnemy.facing ?? 'down';
+            const isFromFront =
+              ef === 'right' ? newPlayer.pos.x > bumpEnemy.pos.x :
+              ef === 'left'  ? newPlayer.pos.x < bumpEnemy.pos.x :
+              ef === 'up'    ? newPlayer.pos.y < bumpEnemy.pos.y :
+              /* down */       newPlayer.pos.y > bumpEnemy.pos.y;
+            if (isFromFront) {
+              if (bumpEnemy.special === 'front_damage_halved') {
+                effectiveDefB = effectiveDefB + Math.floor(effectiveAtk(newPlayer) * 0.375);
+              } else {
+                effectiveDefB = effectiveDefB + Math.floor(effectiveAtk(newPlayer) * 0.85);
+              }
+              logMessages.push(
+                bumpEnemy.special === 'front_damage_halved'
+                  ? `${bumpEnemy.name ?? bumpEnemy.enemyType}は前方からのダメージを半減した！`
+                  : `${bumpEnemy.name ?? bumpEnemy.enemyType}の方向装甲が攻撃を弾いた！`,
+              );
+            }
+          }
+
+          let rawDmgB = calcDamage(effectiveAtk(newPlayer), effectiveDefB);
+          // 聖なるオイル: ボス特攻バフ
+          if (bumpEnemy.isBoss && (newPlayer.bossBoostTurns ?? 0) > 0 && (newPlayer.bossBoostMult ?? 1) > 1) {
+            rawDmgB = Math.round(rawDmgB * (newPlayer.bossBoostMult ?? 1));
+          }
+
+          const { finalDamage: finalDmgB, updatedEntity: shieldedEnemyB } = absorbWithShield(bumpEnemy, rawDmgB);
+          let hitEnemyB = { ...shieldedEnemyB, hp: shieldedEnemyB.hp - finalDmgB, animState: 'hit' as const };
+          if (weapon) {
+            const statusEffectB = applyWeaponSpecial(weapon);
+            if (statusEffectB) {
+              hitEnemyB = addStatusEffect(hitEnemyB, statusEffectB) as typeof hitEnemyB;
+            }
+          }
+          newEnemies = newEnemies.map(e => e.id === bumpEnemy.id ? hitEnemyB : e);
+        }
+
+        // ── 武器耐久消費（ループ外で1回のみ）────────────────────────────
+        if (weapon) {
           const updatedWeapon = consumeDurability(weapon);
           if (isBroken(updatedWeapon)) {
             logMessages.push(`武器「${weapon.name}」が壊れた！`);
@@ -1143,13 +1207,8 @@ function processPlayerAction(
             animState: 'attack' as const,
           };
         } else {
-          // 素手攻撃でもアニメーション
           newPlayer = { ...newPlayer, animState: 'attack' as const };
         }
-
-        newEnemies = newEnemies.map((e) =>
-          e.id === targetEnemy.id ? hitEnemy : e,
-        );
       }
     } else {
       // 移動先のタイルを確認
@@ -1385,11 +1444,29 @@ function processPlayerAction(
   } else if (action === 'attack') {
     // attack アクション: 装備武器の範囲タイプで攻撃
     const weapon = newPlayer.equippedWeapon ?? null;
+
+    // ── 確率的射程延伸 ──────────────────────────────────────────────
+    let attackRangeOverride: number | undefined;
+    if (weapon) {
+      const baseRange = getBaseAttackRange(weapon.id);
+      const extProb =
+        baseRange <= 1 ? 0.30 :
+        baseRange <= 2 ? 0.20 :
+        baseRange <= 3 ? 0.15 :
+        baseRange <= 5 ? 0.12 : 0.10;
+      if (Math.random() < extProb) {
+        const ext = Math.floor(Math.random() * 4) + 1; // +1〜+4
+        attackRangeOverride = baseRange + ext;
+        logMessages.push(`射程が+${ext}延伸した！`);
+      }
+    }
+
     const targetPositions = getAttackTargetPositions(
       player.pos,
       newPlayer.facing,
       weapon,
       state.map,
+      attackRangeOverride,
     );
 
     for (const targetPos of targetPositions) {

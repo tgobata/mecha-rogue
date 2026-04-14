@@ -318,6 +318,7 @@ export function getAttackTargetPositions(
   facing: string,
   weapon: WeaponInstance | null,
   floor: Floor | null,
+  attackRangeOverride?: number,
 ): Position[] {
   // 素手は正面1マス
   if (!weapon) {
@@ -333,7 +334,7 @@ export function getAttackTargetPositions(
   const def = WEAPON_DEFS.find((wd) => wd.id === weapon.id);
   if (def?.attackPattern) {
     const pattern = def.attackPattern as AttackPattern;
-    const attackRange = def.attackRange ?? range;
+    const attackRange = attackRangeOverride ?? def.attackRange ?? range;
     const pierce = pattern === 'pierce' || rawType.includes('pierce');
     return resolveByPattern(attackerPos, facing, pattern, attackRange, floor, pierce);
   }
@@ -442,6 +443,17 @@ export function getAttackTargetPositions(
 /** weapons.json の全定義を返す */
 export function getAllWeaponDefs(): WeaponDef[] {
   return WEAPON_DEFS;
+}
+
+/**
+ * 武器の基本攻撃射程を返す。
+ * @param weaponId - 武器ID
+ * @returns 基本 attackRange（不明な場合は 1）
+ */
+export function getBaseAttackRange(weaponId: string): number {
+  const def = WEAPON_DEFS.find((d) => d.id === weaponId);
+  if (!def) return 1;
+  return def.attackRange ?? def.range ?? 1;
 }
 
 /**
