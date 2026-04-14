@@ -111,8 +111,8 @@ for (const target of TARGETS) {
   grandBytes += totalBytes;
 }
 
-// 合計行
-rows.push({ label: '合計', files: grandFiles, lines: grandLines, bytes: grandBytes, isTotal: true });
+// total row
+rows.push({ label: 'TOTAL', files: grandFiles, lines: grandLines, bytes: grandBytes, isTotal: true });
 
 // ---------------------------------------------------------------------------
 // 出力フォーマット
@@ -125,7 +125,7 @@ function fmtBytes(b) {
 }
 
 function fmtNum(n) {
-  return n.toLocaleString('ja-JP');
+  return n.toLocaleString('en-US');
 }
 
 const args = process.argv.slice(2);
@@ -136,9 +136,9 @@ if (outputJson) {
   console.log(JSON.stringify({ generated: new Date().toISOString(), rows }, null, 2));
 
 } else if (outputMarkdown) {
-  console.log('# メカローグ プロジェクト統計\n');
-  console.log(`> 生成日時: ${new Date().toLocaleString('ja-JP')}\n`);
-  console.log('| ディレクトリ / 項目 | ファイル数 | 行数 | サイズ |');
+  console.log('# Mecha-Rogue Project Statistics\n');
+  console.log(`> Generated: ${new Date().toISOString()}\n`);
+  console.log('| Directory / Category | Files | Lines | Size |');
   console.log('|---|---:|---:|---:|');
   for (const r of rows) {
     const sep = r.isTotal ? '**' : '';
@@ -146,13 +146,13 @@ if (outputJson) {
   }
 
 } else {
-  // デフォルト: テキスト表
+  // default: plain text table
   const colW = [30, 10, 10, 12];
-  const header = ['ディレクトリ / 項目', 'ファイル数', '行数', 'サイズ'];
+  const header = ['Directory / Category', 'Files', 'Lines', 'Size'];
   const sep    = colW.map(w => '-'.repeat(w)).join('-+-');
 
-  console.log('\nメカローグ プロジェクト統計');
-  console.log(`生成日時: ${new Date().toLocaleString('ja-JP')}\n`);
+  console.log('\nMecha-Rogue Project Statistics');
+  console.log(`Generated: ${new Date().toISOString()}\n`);
   console.log(header.map((h, i) => h.padEnd(colW[i])).join(' | '));
   console.log(sep);
 
