@@ -730,7 +730,7 @@ const BOSSES_DATA = [
     let allBosses = [];
 
     function spriteUrl(id) {
-      return `../public/sprites/enemies/${id}_move_0.png`;
+      return `../public/sprites/enemies/${id}_dir_down_move_0.png`;
     }
 
     function renderExtra(b) {
@@ -767,7 +767,7 @@ const BOSSES_DATA = [
         <div class="boss-header">
           <div class="boss-sprite">
             <img src="${spriteUrl(b.id)}"
-              onerror="this.onerror=null;this.src='../public/sprites/enemies/${b.id}_dir_down_move_0.png';this.onerror=function(){this.style.display='none';this.parentNode.innerHTML='<div class=\\'no-sprite\\'></div>';}"
+              onerror="this.onerror=null;this.src='../public/sprites/enemies/${b.id}_move_0.png';this.onerror=function(){this.style.display='none';this.parentNode.innerHTML='<div class=\\'no-sprite\\'></div>';}"
               alt="${b.id}">
           </div>
           <div class="boss-info">

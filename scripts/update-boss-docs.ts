@@ -3,6 +3,10 @@
  */
 import * as fs from 'fs';
 import * as path from 'path';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const ROOT = path.join(__dirname, '..');
 const BOSSES_JSON = path.join(ROOT, 'src', 'game', 'assets', 'data', 'bosses.json');
