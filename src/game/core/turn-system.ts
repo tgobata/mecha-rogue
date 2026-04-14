@@ -2964,6 +2964,7 @@ function processDefeatedEnemies(
   let goldGained = 0;
   const droppedItems: Array<{ itemId: string; quantity: number; unidentified: boolean }> = [];
   const droppedWeapons: EquippedWeapon[] = [];
+  const droppedWeaponInstances: import('./game-state').WeaponInstance[] = [];
   const droppedArmors: EquippedArmor[] = [];
   const droppedShields: EquippedShield[] = [];
   for (const deadEnemy of dead) {
@@ -3007,6 +3008,7 @@ function processDefeatedEnemies(
               weaponLevel: 1,
               rarity: 'C',
             });
+            droppedWeaponInstances.push(wi);
           }
         } catch { /* 存在しない武器IDは無視 */ }
       }
@@ -3037,13 +3039,22 @@ function processDefeatedEnemies(
     }
     inventory = { ...inventory, items: newItems };
   }
+  let playerAfterDrops = stateAfterExp.player;
   if (droppedWeapons.length > 0) {
     // 武器スロット容量を超えないようにドロップ武器を制限する
     const maxWeaponSlots = stateAfterExp.machine.weaponSlots;
     const freeWeaponSlots = Math.max(0, maxWeaponSlots - inventory.equippedWeapons.length);
     const weaponsToAdd = droppedWeapons.slice(0, freeWeaponSlots);
+    const weaponInstancesToAdd = droppedWeaponInstances.slice(0, freeWeaponSlots);
     if (weaponsToAdd.length > 0) {
       inventory = { ...inventory, equippedWeapons: [...inventory.equippedWeapons, ...weaponsToAdd] };
+      // player.weaponSlots も同期して更新（UIとピックアップ判定の整合性を保つ）
+      if (playerAfterDrops) {
+        playerAfterDrops = {
+          ...playerAfterDrops,
+          weaponSlots: [...(playerAfterDrops.weaponSlots ?? []), ...weaponInstancesToAdd],
+        };
+      }
     }
   }
   if (droppedArmors.length > 0) {
@@ -3053,6 +3064,13 @@ function processDefeatedEnemies(
     const armorsToAdd = droppedArmors.slice(0, freeArmorSlots);
     if (armorsToAdd.length > 0) {
       inventory = { ...inventory, equippedArmors: [...(inventory.equippedArmors ?? []), ...armorsToAdd] };
+      // player.armorSlots も同期して更新
+      if (playerAfterDrops) {
+        playerAfterDrops = {
+          ...playerAfterDrops,
+          armorSlots: [...(playerAfterDrops.armorSlots ?? []), ...armorsToAdd],
+        };
+      }
     }
   }
   if (droppedShields.length > 0) {
@@ -3062,6 +3080,13 @@ function processDefeatedEnemies(
     const shieldsToAdd = droppedShields.slice(0, freeShieldSlots);
     if (shieldsToAdd.length > 0) {
       inventory = { ...inventory, equippedShields: [...(inventory.equippedShields ?? []), ...shieldsToAdd] };
+      // player.shieldSlots も同期して更新
+      if (playerAfterDrops) {
+        playerAfterDrops = {
+          ...playerAfterDrops,
+          shieldSlots: [...(playerAfterDrops.shieldSlots ?? []), ...shieldsToAdd],
+        };
+      }
     }
   }
 
@@ -3074,7 +3099,7 @@ function processDefeatedEnemies(
   return {
     enemies: [...alive, ...spawnedEnemies],
     pilot: stateAfterExp.pilot,
-    player: stateAfterExp.player,
+    player: playerAfterDrops,
     machine: stateAfterExp.machine,
     battleLog: spawnBattleLog,
     inventory,
