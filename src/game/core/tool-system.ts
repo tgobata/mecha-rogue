@@ -303,6 +303,8 @@ export function getItemEffectSummary(itemId: string): string | null {
     case 'speed_up_permanent': return `移動速度 +${v}（永続）`;
     case 'weapon_slot_up':     return '武器スロット +1（永続）';
     case 'tool_slot_up':       return '道具スロット +1（永続）';
+    case 'armor_slot_up':      return 'アーマースロット +1（永続）';
+    case 'shield_slot_up':     return 'シールドスロット +1（永続）';
     case 'pouch_capacity_up':  return `アイテムポーチ容量 +${v}（永続）`;
     case 'energy_max_up':      return `最大EN +${v}（永続）`;
     case 'max_hp_up':          return `最大HP +${v}（永続）`;
@@ -445,6 +447,16 @@ export function useInventoryItem(
       const newToolSlots = Math.min(8, machine.toolSlots + def.value);
       nextState = { ...nextState, machine: { ...machine, toolSlots: newToolSlots } };
       return { nextState, log: `${itemName} を適用した（道具スロット +${def.value}）` };
+    }
+    case 'armor_slot_up': {
+      const newSlots = Math.min(3, machine.armorSlots + def.value);
+      nextState = { ...nextState, machine: { ...machine, armorSlots: newSlots } };
+      return { nextState, log: `${itemName} を適用した（アーマースロット +${def.value}）` };
+    }
+    case 'shield_slot_up': {
+      const newSlots = Math.min(3, machine.shieldSlots + def.value);
+      nextState = { ...nextState, machine: { ...machine, shieldSlots: newSlots } };
+      return { nextState, log: `${itemName} を適用した（シールドスロット +${def.value}）` };
     }
     case 'pouch_capacity_up': {
       nextState = { ...nextState, machine: { ...machine, itemPouch: machine.itemPouch + def.value } };

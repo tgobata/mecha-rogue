@@ -371,8 +371,30 @@
     "value": 1,
     "appearsFrom": 8,
     "shopPrice": 1500,
-    "dropWeight": 2,
+    "dropWeight": 5,
     "description": "武器スロットを永続的に+1する拡張パーツ。"
+  },
+  {
+    "id": "armor_rack_expansion",
+    "name": "拡張アーマーラック",
+    "category": "machine_upgrade",
+    "effect": "armor_slot_up",
+    "value": 1,
+    "appearsFrom": 8,
+    "shopPrice": 1500,
+    "dropWeight": 3,
+    "description": "アーマースロットを永続的に+1する拡張パーツ。最大3スロットまで。"
+  },
+  {
+    "id": "shield_rack_expansion",
+    "name": "拡張シールドラック",
+    "category": "machine_upgrade",
+    "effect": "shield_slot_up",
+    "value": 1,
+    "appearsFrom": 8,
+    "shopPrice": 1500,
+    "dropWeight": 3,
+    "description": "シールドスロットを永続的に+1する拡張パーツ。最大3スロットまで。"
   },
   {
     "id": "tool_bay_expansion",

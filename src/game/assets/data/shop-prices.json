@@ -177,7 +177,17 @@
     "ice_bomb_3_h":           { "buy": 480,  "sell": 216 },
     "ice_bomb_4_s":           { "buy": 180,  "sell": 81  },
     "ice_bomb_4_m":           { "buy": 340,  "sell": 153 },
-    "ice_bomb_4_h":           { "buy": 580,  "sell": 261 }
+    "ice_bomb_4_h":           { "buy": 580,  "sell": 261 },
+    "shield_repair_kit":      { "buy": 100,  "sell": 45  },
+    "armor_repair_kit":       { "buy": 100,  "sell": 45  },
+    "decoy_ball_1":           { "buy": 120,  "sell": 54  },
+    "decoy_ball_2":           { "buy": 220,  "sell": 99  },
+    "decoy_ball_3":           { "buy": 380,  "sell": 171 },
+    "confusion_ball_1":       { "buy": 130,  "sell": 58  },
+    "confusion_ball_2":       { "buy": 240,  "sell": 108 },
+    "confusion_ball_3":       { "buy": 420,  "sell": 189 },
+    "armor_rack_expansion":   { "buy": 1500, "sell": 675 },
+    "shield_rack_expansion":  { "buy": 1500, "sell": 675 }
   },
   "repair": {
     "cost_per_durability": 15
