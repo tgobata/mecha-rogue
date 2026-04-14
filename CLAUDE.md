@@ -4,7 +4,7 @@
 
 ## プロジェクト概要
 2Dローグライク迷路ゲーム。Next.js + TypeScript + Canvas2D。
-Vercel にデプロイ。PC + スマホ対応。
+Cloudflare にデプロイ。PC + スマホ対応。
 
 ## 開発環境
 - OS: Windows 10/11
