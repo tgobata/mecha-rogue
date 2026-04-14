@@ -28,7 +28,10 @@ const ALL_DATA = [
 // ---------------------------------------------------------------------------
 
 const PANEL_WIDTH = 'min(400px, 92vw)';
-const PANEL_MAX_HEIGHT = 'min(780px, 88vh)';
+// 88vh ではなく calc(100% - 20px) を使う。
+// position:fixed + inset:0 の親の 100% = 実際の表示領域高さなので
+// iOS Safari の「最大 viewport 高さ」問題を回避できる。
+const PANEL_MAX_HEIGHT = 'min(780px, calc(100% - 20px))';
 const PANEL_Z_INDEX = 25;
 const PANEL_BG = 'rgba(20, 15, 30, 0.98)';
 const PANEL_BORDER = '2px solid #aa8844';

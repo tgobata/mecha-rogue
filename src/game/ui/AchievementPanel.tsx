@@ -18,8 +18,8 @@ const AchievementPanel: React.FC<AchievementPanelProps> = ({ unlockedIds, onClos
   const achievements = achievementsData as Achievement[];
 
   return (
-    <div className="absolute inset-0 bg-black/95 flex flex-col items-center justify-center z-50 font-mono p-8">
-      <div className="w-full max-w-2xl bg-gray-900 border-2 border-blue-900/50 rounded-lg flex flex-col h-[80vh] shadow-2xl shadow-blue-900/20">
+    <div className="absolute inset-0 bg-black/95 flex flex-col items-center z-50 font-mono overflow-y-auto p-4 gap-4">
+      <div className="w-full max-w-2xl bg-gray-900 border-2 border-blue-900/50 rounded-lg flex flex-col shadow-2xl shadow-blue-900/20 flex-1 min-h-0" style={{ minHeight: 300 }}>
         {/* Header */}
         <div className="p-6 border-b border-blue-900/50 flex justify-between items-center bg-blue-900/10">
           <h2 className="text-2xl font-bold text-blue-400 tracking-wider">RECORDS & RECORDS</h2>
@@ -77,7 +77,7 @@ const AchievementPanel: React.FC<AchievementPanelProps> = ({ unlockedIds, onClos
           playSE('ui_cancel');
           onClose();
         }}
-        className="mt-8 px-8 py-3 bg-gray-800 border-2 border-gray-600 text-gray-300 font-bold hover:bg-gray-700 hover:text-white transition-all"
+        className="mt-2 px-8 py-3 bg-gray-800 border-2 border-gray-600 text-gray-300 font-bold hover:bg-gray-700 hover:text-white transition-all flex-shrink-0"
       >
         BACK TO TITLE
       </button>
