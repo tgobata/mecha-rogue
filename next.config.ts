@@ -18,9 +18,9 @@ const nextConfig: NextConfig = {
   turbopack: {
     resolveExtensions: ['.tsx', '.ts', '.jsx', '.js', '.mjs', '.json'],
   },
-  // プライベートネットワーク全域を許可（スマホ開発時のIPが変わっても動作する）
+  // プライベートネットワーク'192.168.*.*'を許可（スマホ開発時のIPが変わっても動作する）
   // Next.js はワイルドカードドメイン形式のみ対応（CIDR 不可）
-  allowedDevOrigins: ['192.168.*.*', '10.*.*.*', '172.*.*.*'],
+  allowedDevOrigins: ['192.168.*.*'],
 };
 
 export default nextConfig;
