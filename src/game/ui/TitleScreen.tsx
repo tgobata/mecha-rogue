@@ -491,7 +491,7 @@ const TitleScreen: React.FC<TitleScreenProps> = ({
       {/* ===== メニュー (背景画像の中央下部に重ねる) ===== */}
       {/* bottom: 16% で下端を固定し、maxHeight で上側はみ出しを防止 */}
       <div
-        className="absolute left-1/2 flex flex-col items-center gap-2 z-10 overflow-y-auto overflow-x-hidden no-scrollbar"
+        className="absolute left-1/2 flex flex-col items-center gap-2 z-10 overflow-hidden py-2"
         style={{ bottom: "16%", transform: "translateX(-50%)", maxHeight: "calc(84% - 8px)" }}
       >
         {menuMode === "main" ? (
