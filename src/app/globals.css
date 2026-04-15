@@ -43,3 +43,12 @@ body {
   border-radius: 3px;
 }
 
+/* スクロールバー完全非表示 */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+

@@ -365,7 +365,8 @@ export interface TurnEffect {
     | 'iaido_range'     // サムライマスター: 居合い範囲ハイライト
     | 'enrage_flash'    // シャドウツイン: 暴走フラッシュ
     | 'darkness_vision' // クイーン・オブ・シャドウ フェーズ2: 視界縮小通知
-    | 'queen_phase';    // クイーン・オブ・シャドウ: フェーズ変化エフェクト
+    | 'queen_phase'     // クイーン・オブ・シャドウ: フェーズ変化エフェクト
+    | 'range_extension'; // 確率的射程延伸: 延伸分タイルをハイライト
   /** 爆発・バフの中心座標 / 壁破壊位置 */
   center?: { x: number; y: number };
   /** 爆発半径 */

@@ -1071,7 +1071,7 @@ type PickupInfo =
 function processPlayerAction(
   state: GameState,
   action: PlayerAction,
-): { player: Player; enemies: Enemy[]; shouldTransitionFloor: boolean; pickup: PickupInfo | null; logMessages: string[]; triggeredTrapId?: number; revealedTrapIds: number[]; attackedTrapIds: number[]; wallBreakPositions: Position[]; wallBreakFail: boolean } {
+): { player: Player; enemies: Enemy[]; shouldTransitionFloor: boolean; pickup: PickupInfo | null; logMessages: string[]; triggeredTrapId?: number; revealedTrapIds: number[]; attackedTrapIds: number[]; wallBreakPositions: Position[]; wallBreakFail: boolean; rangeExtensionTiles: Position[] } {
   const player = state.player!;
   let newPlayer = { ...player };
   let newEnemies = [...state.enemies];
@@ -1083,6 +1083,7 @@ function processPlayerAction(
   const attackedTrapIds: number[] = [];
   const wallBreakPositions: Position[] = [];
   let wallBreakFail = false;
+  let rangeExtensionTiles: Position[] = [];
 
   const delta = actionToDelta(action);
 
@@ -1136,6 +1137,13 @@ function processPlayerAction(
           state.map,
           attackRangeOverride,
         );
+
+        // ── 射程延伸があった場合: 延伸分のタイルを収集 ─────────────────
+        if (attackRangeOverride !== undefined && weapon) {
+          const baseTiles = getAttackTargetPositions(player.pos, newPlayer.facing, weapon, state.map, undefined);
+          const baseTileSet = new Set(baseTiles.map(p => `${p.x},${p.y}`));
+          rangeExtensionTiles = bumpTargetPositions.filter(p => !baseTileSet.has(`${p.x},${p.y}`));
+        }
 
         // ── 全ターゲットに攻撃（attack アクションと同ロジック）────────────
         for (const bumpPos of bumpTargetPositions) {
@@ -1469,6 +1477,13 @@ function processPlayerAction(
       attackRangeOverride,
     );
 
+    // ── 射程延伸があった場合: 延伸分のタイルを収集 ─────────────────
+    if (attackRangeOverride !== undefined && weapon) {
+      const baseTiles = getAttackTargetPositions(player.pos, newPlayer.facing, weapon, state.map, undefined);
+      const baseTileSet = new Set(baseTiles.map(p => `${p.x},${p.y}`));
+      rangeExtensionTiles = targetPositions.filter(p => !baseTileSet.has(`${p.x},${p.y}`));
+    }
+
     for (const targetPos of targetPositions) {
       const targetEnemy = enemyAt(newEnemies, targetPos);
       if (targetEnemy !== undefined) {
@@ -1589,7 +1604,7 @@ function processPlayerAction(
   }
   // wait: 何もしない
 
-  return { player: newPlayer, enemies: newEnemies, shouldTransitionFloor, pickup, logMessages, triggeredTrapId, revealedTrapIds, attackedTrapIds, wallBreakPositions, wallBreakFail };
+  return { player: newPlayer, enemies: newEnemies, shouldTransitionFloor, pickup, logMessages, triggeredTrapId, revealedTrapIds, attackedTrapIds, wallBreakPositions, wallBreakFail, rangeExtensionTiles };
 }
 
 // ---------------------------------------------------------------------------
@@ -3586,6 +3601,7 @@ export function processTurn(state: GameState, action: PlayerAction): GameState {
     attackedTrapIds,
     wallBreakPositions,
     wallBreakFail,
+    rangeExtensionTiles,
   } = processPlayerAction(stateForAction, action);
 
   // 壁破壊 TurnEffect を追加
@@ -3594,6 +3610,10 @@ export function processTurn(state: GameState, action: PlayerAction): GameState {
     for (const wallPos of wallBreakPositions) {
       extraTurnEffects = [...extraTurnEffects, { type: 'wall_break' as const, center: wallPos }];
     }
+  }
+  // 射程延伸 TurnEffect を追加
+  if (rangeExtensionTiles.length > 0) {
+    extraTurnEffects = [...extraTurnEffects, { type: 'range_extension' as const, tiles: rangeExtensionTiles }];
   }
   if (wallBreakFail) {
     extraTurnEffects = [...extraTurnEffects, { type: 'wall_break_fail' as const }];

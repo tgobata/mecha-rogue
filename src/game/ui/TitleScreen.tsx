@@ -316,8 +316,8 @@ const TitleScreen: React.FC<TitleScreenProps> = ({
 
   const renderSlotMenu = () => {
     return (
-      <div className="flex flex-col gap-1 w-72">
-        <h2 className="text-base font-bold text-center text-blue-300 mb-1 font-mono drop-shadow-md">
+      <div className="flex flex-col gap-0.5 w-72">
+        <h2 className="text-sm font-bold text-center text-blue-300 mb-0 font-mono drop-shadow-md">
           {menuMode === "load"
             ? "--- セーブデータ選択 ---"
             : "--- セーブデータ削除 ---"}
@@ -337,7 +337,7 @@ const TitleScreen: React.FC<TitleScreenProps> = ({
             <button
               key={`slot-${idx}`}
               style={{ touchAction: "manipulation" }}
-              className={`flex flex-col py-2 px-4 border-2 font-bold transition-all relative overflow-hidden ${
+              className={`flex flex-col py-1 px-3 border-2 font-bold transition-all relative overflow-hidden ${
                 isSelected
                   ? menuMode === "delete"
                     ? "bg-red-900 border-red-400 text-white scale-105 shadow-[0_0_15px_rgba(220,38,38,0.7)] z-20"
@@ -360,52 +360,37 @@ const TitleScreen: React.FC<TitleScreenProps> = ({
               onTouchStart={unlockAudioContext}
               onMouseEnter={() => setSelectedIndex(idx)}
             >
-              <div className="flex justify-between items-center w-full mb-1">
-                <div className="flex items-center gap-1.5">
-                  <span className={`text-sm tracking-tighter ${isSelected ? "text-blue-200" : "text-gray-400"}`}>
+              <div className="flex justify-between items-center w-full">
+                <div className="flex items-center gap-1">
+                  <span className={`text-xs tracking-tighter ${isSelected ? "text-blue-200" : "text-gray-400"}`}>
                     {isSelected ? "▶ " : ""}{slotLabel}
                   </span>
                   {save && (
-                    <span className={`text-[9px] px-1 py-0.5 border rounded font-mono ${modeStyle}`}>
+                    <span className={`text-[8px] px-1 border rounded font-mono ${modeStyle}`}>
                       {modeLabel}
                     </span>
                   )}
                 </div>
-                <span className={`text-[10px] font-mono ${save ? (isSelected ? "text-blue-300" : "text-gray-500") : "text-transparent"}`}>
+                <span className={`text-[9px] font-mono ${save ? (isSelected ? "text-blue-300" : "text-gray-500") : "text-transparent"}`}>
                   {save ? new Date(save.savedAt).toLocaleString("ja-JP", {
-                    year: 'numeric', month: '2-digit', day: '2-digit',
+                    month: '2-digit', day: '2-digit',
                     hour: '2-digit', minute: '2-digit'
                   }) : "---"}
                 </span>
               </div>
 
               {save ? (
-                <div className="grid grid-cols-2 gap-x-4 gap-y-1 w-full text-left">
-                  <div className="flex justify-between items-baseline border-b border-gray-800 pb-0.5">
-                    <span className="text-[9px] opacity-60">LV</span>
-                    <span className={`text-sm ${isSelected ? "text-white" : "text-gray-300"}`}>{save.level}</span>
-                  </div>
-                  <div className="flex justify-between items-baseline border-b border-gray-800 pb-0.5">
-                    <span className="text-[9px] opacity-60">FLOOR</span>
-                    <span className={`text-sm ${isSelected ? "text-white" : "text-gray-300"}`}>B{save.floor}F</span>
-                  </div>
-                  <div className="flex justify-between items-baseline">
-                    <span className="text-[9px] opacity-60">HP</span>
-                    <span className={`text-xs ${isSelected ? "text-green-300" : "text-green-600"}`}>{save.hp}/{save.maxHp}</span>
-                  </div>
-                  <div className="flex justify-between items-baseline">
-                    <span className="text-[9px] opacity-60">GOLD</span>
-                    <span className={`text-xs ${isSelected ? "text-yellow-300" : "text-yellow-600"}`}>{save.gold}G</span>
-                  </div>
-                  <div className="col-span-2 mt-1 pt-1 border-t border-gray-800 flex items-center gap-2">
-                    <span className="text-[9px] opacity-60 italic">EQUIP:</span>
-                    <span className={`text-[10px] truncate ${isSelected ? "text-blue-200" : "text-gray-500"}`}>
-                      {save.weaponName || "---"}
-                    </span>
-                  </div>
+                <div className="flex items-center gap-3 w-full text-left">
+                  <span className={`text-[10px] ${isSelected ? "text-white" : "text-gray-300"}`}>Lv{save.level}</span>
+                  <span className={`text-[10px] ${isSelected ? "text-white" : "text-gray-300"}`}>B{save.floor}F</span>
+                  <span className={`text-[10px] ${isSelected ? "text-green-300" : "text-green-700"}`}>{save.hp}/{save.maxHp}HP</span>
+                  <span className={`text-[10px] ${isSelected ? "text-yellow-300" : "text-yellow-700"}`}>{save.gold}G</span>
+                  <span className={`text-[10px] truncate flex-1 ${isSelected ? "text-blue-200" : "text-gray-600"}`}>
+                    {save.weaponName || "---"}
+                  </span>
                 </div>
               ) : (
-                <div className="flex items-center justify-center h-12 w-full text-gray-700 italic text-sm tracking-widest bg-black/20 rounded">
+                <div className="flex items-center justify-center h-5 w-full text-gray-700 italic text-[10px] tracking-widest bg-black/20 rounded">
                   データなし
                 </div>
               )}
@@ -416,7 +401,7 @@ const TitleScreen: React.FC<TitleScreenProps> = ({
         <button
           key="back"
           style={{ touchAction: "manipulation" }}
-          className={`mt-2 py-2 border-2 font-bold transition-all ${
+          className={`mt-1 py-1.5 border-2 font-bold transition-all ${
             selectedIndex === 5
               ? "bg-gray-700 border-gray-400 text-white shadow-[0_0_10px_rgba(156,163,175,0.4)] z-20 relative"
               : "bg-gray-950 border-gray-700 text-gray-500 opacity-60 z-10"
@@ -506,7 +491,7 @@ const TitleScreen: React.FC<TitleScreenProps> = ({
       {/* ===== メニュー (背景画像の中央下部に重ねる) ===== */}
       {/* bottom: 16% で下端を固定し、maxHeight で上側はみ出しを防止 */}
       <div
-        className="absolute left-1/2 flex flex-col items-center gap-2 z-10 overflow-y-auto"
+        className="absolute left-1/2 flex flex-col items-center gap-2 z-10 overflow-y-auto overflow-x-hidden no-scrollbar"
         style={{ bottom: "16%", transform: "translateX(-50%)", maxHeight: "calc(84% - 8px)" }}
       >
         {menuMode === "main" ? (

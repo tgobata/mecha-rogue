@@ -2003,6 +2003,17 @@ export default function GameCanvas() {
               triggerScreenFlash(effect.phase === 2 ? 'rgba(0,0,80,0.4)' : 'rgba(255,0,100,0.3)', 500);
               break;
             }
+            case 'range_extension': {
+              // 確率的射程延伸: 延伸分タイルをシアンでフラッシュ
+              if (effect.tiles) {
+                for (const tile of effect.tiles) {
+                  addFlashDuration(tile.x, tile.y, '#00eeff99', 500);
+                  addFlashDuration(tile.x, tile.y, '#00ccff55', 350);
+                }
+              }
+              triggerScreenFlash('rgba(0,220,255,0.07)', 250);
+              break;
+            }
           }
         }
       }
