@@ -12,12 +12,12 @@ import { getAllSaves, deleteSave, SaveSummary } from "../core/save-system";
 import HelpManualOverlay from "./HelpManualOverlay";
 
 interface TitleScreenProps {
-  onNewGame: () => void;
+  onNewGame: (mode: 'normal' | 'easy') => void;
   onLoadGame: (slot: number) => void;
   onAchievements: () => void;
 }
 
-type MenuMode = "main" | "load" | "delete";
+type MenuMode = "main" | "load" | "delete" | "modeSelect";
 
 const TitleScreen: React.FC<TitleScreenProps> = ({
   onNewGame,
@@ -63,7 +63,7 @@ const TitleScreen: React.FC<TitleScreenProps> = ({
           setShowFullSavesNotice(true);
           return;
         }
-        onNewGame();
+        setMenuMode("modeSelect");
       } else if (selectedIndex === 1) {
         setMenuMode("load");
       } else if (selectedIndex === 2) {
@@ -72,6 +72,14 @@ const TitleScreen: React.FC<TitleScreenProps> = ({
         setShowManual(true);
       } else if (selectedIndex === 4) {
         onAchievements();
+      }
+    } else if (menuMode === "modeSelect") {
+      if (selectedIndex === 0) {
+        onNewGame("normal");
+      } else if (selectedIndex === 1) {
+        onNewGame("easy");
+      } else if (selectedIndex === 2) {
+        setMenuMode("main");
       }
     } else if (menuMode === "load") {
       if (selectedIndex === 5) {
@@ -127,7 +135,10 @@ const TitleScreen: React.FC<TitleScreenProps> = ({
       // マニュアル表示中は他のキー操作を受け付けない
       if (showManual) return;
 
-      const maxIndex = menuMode === "main" ? 4 : 5; // main = 0-4 (5 items), load/delete = 5 (slots 1-5 + back)
+      const maxIndex =
+        menuMode === "main" ? 4 :
+        menuMode === "modeSelect" ? 2 :
+        5; // load/delete = 5 (slots 1-5 + back)
 
       if (e.key === "ArrowUp" || e.key === "w") {
         setSelectedIndex((prev) => (prev > 0 ? prev - 1 : maxIndex));
@@ -191,7 +202,7 @@ const TitleScreen: React.FC<TitleScreenProps> = ({
               setShowFullSavesNotice(true);
               return;
             }
-            onNewGame();
+            setMenuMode("modeSelect");
           }
           else if (idx === 1 && item.enabled) setMenuMode("load");
           else if (idx === 2 && item.enabled) setMenuMode("delete");
@@ -209,6 +220,100 @@ const TitleScreen: React.FC<TitleScreenProps> = ({
     );
   };
 
+  const renderModeSelect = () => {
+    const modeItems = [
+      {
+        mode: "normal" as const,
+        label: "ノーマルモード",
+        desc: "ゲームオーバー時は所持品・レベルを失い最初から",
+        color: "cyan",
+      },
+      {
+        mode: "easy" as const,
+        label: "イージーモード",
+        desc: "ゲームオーバー時にLv半減・HP半減・アイテム半減で拠点から再開",
+        color: "green",
+      },
+    ];
+    const backIndex = 2;
+
+    return (
+      <div className="flex flex-col gap-2 w-72">
+        <h2 className="text-base font-bold text-center text-cyan-300 mb-1 font-mono drop-shadow-md">
+          --- ゲームモード選択 ---
+        </h2>
+        <p className="text-[9px] text-center text-gray-400 mb-1 leading-relaxed">
+          モードはゲーム開始後に変更できません
+        </p>
+
+        {modeItems.map((item, idx) => {
+          const isSelected = selectedIndex === idx;
+          const borderColor = item.color === "green" ? "border-green-400" : "border-cyan-400";
+          const bgColor = item.color === "green" ? "bg-green-950" : "bg-cyan-900";
+          const shadowColor = item.color === "green"
+            ? "shadow-[0_0_20px_rgba(0,220,100,0.5)]"
+            : "shadow-[0_0_20px_rgba(0,220,220,0.5)]";
+          const labelColor = item.color === "green" ? "text-green-200" : "text-cyan-100";
+          const badgeColor = item.color === "green"
+            ? "bg-green-800 text-green-200 border-green-500"
+            : "bg-blue-900 text-blue-200 border-blue-500";
+
+          return (
+            <button
+              key={`mode-${idx}`}
+              style={{ touchAction: "manipulation" }}
+              className={`flex flex-col py-3 px-4 border-2 font-bold transition-all text-left ${
+                isSelected
+                  ? `${bgColor} ${borderColor} ${labelColor} scale-105 ${shadowColor} z-20 relative`
+                  : "bg-gray-950 border-gray-700 text-gray-400 opacity-70 z-10"
+              }`}
+              onClick={() => {
+                unlockAudioContext();
+                ensureAudioAndBGM();
+                setSelectedIndex(idx);
+                playSE("ui_select");
+                onNewGame(item.mode);
+              }}
+              onTouchStart={unlockAudioContext}
+              onMouseEnter={() => setSelectedIndex(idx)}
+            >
+              <div className="flex items-center gap-2 mb-1">
+                {isSelected && <span>▶ </span>}
+                <span className="text-sm tracking-wide">{item.label}</span>
+                <span className={`text-[9px] px-1.5 py-0.5 border rounded font-mono ${badgeColor}`}>
+                  {item.mode === "easy" ? "EASY" : "NORMAL"}
+                </span>
+              </div>
+              <p className={`text-[10px] leading-relaxed font-normal ${isSelected ? "opacity-90" : "opacity-50"}`}>
+                {item.desc}
+              </p>
+            </button>
+          );
+        })}
+
+        <button
+          key="back"
+          style={{ touchAction: "manipulation" }}
+          className={`mt-1 py-2 border-2 font-bold transition-all ${
+            selectedIndex === backIndex
+              ? "bg-gray-700 border-gray-400 text-white shadow-[0_0_10px_rgba(156,163,175,0.4)] z-20 relative"
+              : "bg-gray-950 border-gray-700 text-gray-500 opacity-60 z-10"
+          }`}
+          onClick={() => {
+            unlockAudioContext();
+            ensureAudioAndBGM();
+            playSE("ui_cancel");
+            setMenuMode("main");
+          }}
+          onTouchStart={unlockAudioContext}
+          onMouseEnter={() => setSelectedIndex(backIndex)}
+        >
+          {selectedIndex === backIndex ? "▶ " : ""}もどる
+        </button>
+      </div>
+    );
+  };
+
   const renderSlotMenu = () => {
     return (
       <div className="flex flex-col gap-1 w-72">
@@ -222,6 +327,11 @@ const TitleScreen: React.FC<TitleScreenProps> = ({
           const save = saves[idx];
           const isSelected = selectedIndex === idx;
           const slotLabel = `スロット ${idx + 1}`;
+          // gameMode が undefined（旧データ）はノーマル扱い
+          const modeLabel = save?.gameMode === 'easy' ? 'EASY' : 'NORMAL';
+          const modeStyle = save?.gameMode === 'easy'
+            ? 'bg-green-900 text-green-300 border-green-600'
+            : 'bg-blue-950 text-blue-400 border-blue-700';
 
           return (
             <button
@@ -251,9 +361,16 @@ const TitleScreen: React.FC<TitleScreenProps> = ({
               onMouseEnter={() => setSelectedIndex(idx)}
             >
               <div className="flex justify-between items-center w-full mb-1">
-                <span className={`text-sm tracking-tighter ${isSelected ? "text-blue-200" : "text-gray-400"}`}>
-                  {isSelected ? "▶ " : ""}{slotLabel}
-                </span>
+                <div className="flex items-center gap-1.5">
+                  <span className={`text-sm tracking-tighter ${isSelected ? "text-blue-200" : "text-gray-400"}`}>
+                    {isSelected ? "▶ " : ""}{slotLabel}
+                  </span>
+                  {save && (
+                    <span className={`text-[9px] px-1 py-0.5 border rounded font-mono ${modeStyle}`}>
+                      {modeLabel}
+                    </span>
+                  )}
+                </div>
                 <span className={`text-[10px] font-mono ${save ? (isSelected ? "text-blue-300" : "text-gray-500") : "text-transparent"}`}>
                   {save ? new Date(save.savedAt).toLocaleString("ja-JP", {
                     year: 'numeric', month: '2-digit', day: '2-digit',
@@ -394,6 +511,8 @@ const TitleScreen: React.FC<TitleScreenProps> = ({
       >
         {menuMode === "main" ? (
           <div className="flex flex-col gap-2 w-56">{renderMainMenu()}</div>
+        ) : menuMode === "modeSelect" ? (
+          renderModeSelect()
         ) : (
           renderSlotMenu()
         )}

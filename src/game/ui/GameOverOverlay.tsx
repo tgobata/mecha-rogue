@@ -10,6 +10,7 @@ interface GameOverOverlayProps {
   enemiesDefeated: number;
   goldEarned: number;
   bossesDefeated: string[];
+  gameMode?: 'normal' | 'easy';
   onRestart: () => void;
   onTitle: () => void;
 }
@@ -82,9 +83,11 @@ const GameOverOverlay: React.FC<GameOverOverlayProps> = ({
   enemiesDefeated,
   goldEarned,
   bossesDefeated,
+  gameMode,
   onRestart,
   onTitle,
 }) => {
+  const isEasy = gameMode === 'easy';
   const [visible, setVisible] = useState(false);
   /** ゴーストタップ防止: オーバーレイ表示直後のタッチで誤ってボタンが押されないよう
    *  一定時間はポインターイベントを無効化する（iOS のタッチ→クリック変換遅延対策）*/
@@ -270,6 +273,31 @@ const GameOverOverlay: React.FC<GameOverOverlayProps> = ({
           </div>
         )}
 
+        {/* イージーモード: 帰還時ペナルティ説明 */}
+        {isEasy && (
+          <div
+            style={{
+              width: '100%',
+              maxWidth: 280,
+              background: 'rgba(0,40,20,0.85)',
+              border: '1px solid #2a6a3a',
+              borderRadius: 4,
+              padding: '10px 14px',
+            }}
+          >
+            <div style={{ color: '#44cc88', fontSize: 10, marginBottom: 6, letterSpacing: '0.05em' }}>
+              ◆ イージーモード帰還ペナルティ
+            </div>
+            <div style={{ color: '#88ddaa', fontSize: 11, lineHeight: 1.7 }}>
+              ・パイロットLv 2/5 減少<br />
+              ・マシンHP 2/5 減少<br />
+              ・アイテム・装備 ランダムに 2/5 消滅<br />
+              ・生き残った装備の耐久度は全回復<br />
+              ・スキルはそのまま維持
+            </div>
+          </div>
+        )}
+
         {/* ボタン */}
         <div
           style={{
@@ -289,9 +317,9 @@ const GameOverOverlay: React.FC<GameOverOverlayProps> = ({
               onRestart();
             }}
             style={{
-              background: '#4a1a1a',
-              border: '2px solid #cc3333',
-              color: '#ffaaaa',
+              background: isEasy ? '#0a3a1a' : '#4a1a1a',
+              border: `2px solid ${isEasy ? '#22aa55' : '#cc3333'}`,
+              color: isEasy ? '#88ffaa' : '#ffaaaa',
               padding: '14px',
               fontSize: 14,
               fontFamily: 'monospace',
@@ -303,7 +331,7 @@ const GameOverOverlay: React.FC<GameOverOverlayProps> = ({
             onMouseEnter={(e) => (e.currentTarget.style.opacity = '0.8')}
             onMouseLeave={(e) => (e.currentTarget.style.opacity = '1')}
           >
-            ▶ 拠点に帰還する
+            {isEasy ? '▶ 拠点に帰還する（ペナルティあり）' : '▶ 拠点に帰還する'}
           </button>
           <button
             onClick={() => {

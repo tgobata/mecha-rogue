@@ -10,8 +10,9 @@
 
 import type { GameState, Player } from './game-state';
 import { INITIAL_FACING } from './game-state';
-import { INITIAL_PLAYER_ATK, INITIAL_PLAYER_DEF } from './constants';
+import { INITIAL_PLAYER_ATK, INITIAL_PLAYER_DEF, MAX_PILOT_LEVEL } from './constants';
 import { generateFloor } from './maze-generator';
+import { getLevelData } from './level-system';
 
 // ---------------------------------------------------------------------------
 // スタート帰還ペナルティ定数（GDD 3.5）
@@ -53,8 +54,98 @@ function createPrng(seed: number): () => number {
 // applyStartReturn
 // ---------------------------------------------------------------------------
 
+/** イージーモード: アイテム・装備の消滅確率（2/5 を失う → 3/5 が残る） */
+const EASY_LOSS_RATE = 2 / 5;
+
 /**
- * マシンHP 0 時のスタート帰還処理。
+ * イージーモード時のゲームオーバー帰還処理。
+ *
+ * ペナルティ:
+ * - パイロット Lv を ceil(Lv × 3/5) に削減（最小1）、EXP は 0 にリセット
+ * - マシン現在 HP を ceil(maxHp × 3/5) に削減（maxHp は変化なし）
+ * - 所持アイテム・装備をランダムに 2/5 消滅（各 60% 確率で残す）
+ * - 生き残った装備の耐久度は全回復
+ * - スキルはそのまま維持
+ * - 所持金・倉庫・マシン強化・実績など他のデータは変化なし
+ *
+ * @param state - ゲームオーバー直前の GameState
+ * @param seed - ランダム消滅に使うシード値（省略時は Date.now()）
+ * @returns ペナルティ適用後の新しい GameState（phase は呼び出し元で設定すること）
+ */
+export function applyEasyReturn(state: GameState, seed?: number): GameState {
+  const rng = createPrng(seed ?? Date.now());
+
+  // ── パイロットレベル: 2/5 削減（3/5 残す） ──────────────────────────────────
+  const newLevel = Math.max(1, Math.ceil(state.pilot.level * (1 - EASY_LOSS_RATE)));
+  const newExpToNextLevel =
+    newLevel < MAX_PILOT_LEVEL
+      ? getLevelData(newLevel + 1).exp_required
+      : getLevelData(newLevel).exp_required;
+
+  const newPilot = {
+    ...state.pilot,
+    level: newLevel,
+    exp: 0,
+    expToNextLevel: newExpToNextLevel,
+    // skillPoints・allocatedSkills はそのまま維持（スキルはそのまま）
+  };
+
+  // ── マシン HP: 2/5 削減（maxHp の 3/5 を現在 HP として設定） ─────────────
+  const newHp = Math.ceil(state.machine.maxHp * (1 - EASY_LOSS_RATE));
+  const newMachine = {
+    ...state.machine,
+    hp: newHp,
+  };
+
+  // ── アイテム・装備: ランダムに 2/5 消滅（各 60% 確率で残す） ────────────────
+  const survivingItems = state.inventory.items.filter(() => rng() >= EASY_LOSS_RATE);
+
+  // 武器: 生き残ったものの耐久度を maxDurability に全回復
+  // player.weaponSlots（WeaponInstance）から maxDurability を逆引きする
+  const weaponSlots = state.player?.weaponSlots ?? [];
+  const survivingWeapons = state.inventory.equippedWeapons
+    .filter(() => rng() >= EASY_LOSS_RATE)
+    .map((ew) => {
+      const wi = weaponSlots.find((w) => w.instanceId === ew.instanceId);
+      const maxDur = wi?.maxDurability;
+      return maxDur !== null && maxDur !== undefined
+        ? { ...ew, durability: maxDur }
+        : ew;
+    });
+
+  // 盾: 生き残ったものの耐久度を maxDurability に全回復
+  const survivingShields = state.inventory.equippedShields
+    .filter(() => rng() >= EASY_LOSS_RATE)
+    .map((es) => ({ ...es, durability: es.maxDurability }));
+
+  // アーマー: 生き残ったものの耐久度を maxDurability に全回復
+  const survivingArmors = state.inventory.equippedArmors
+    .filter(() => rng() >= EASY_LOSS_RATE)
+    .map((ea) => ({ ...ea, durability: ea.maxDurability }));
+
+  // 道具: 消滅判定のみ（耐久度なし）
+  const survivingTools = state.inventory.equippedTools.filter(() => rng() >= EASY_LOSS_RATE);
+
+  const newInventory = {
+    ...state.inventory,
+    items: survivingItems,
+    equippedWeapons: survivingWeapons,
+    equippedShields: survivingShields,
+    equippedArmors: survivingArmors,
+    equippedTools: survivingTools,
+  };
+
+  return {
+    ...state,
+    pilot: newPilot,
+    machine: newMachine,
+    inventory: newInventory,
+    // skills はそのまま維持（...state で引き継ぎ済み）
+  };
+}
+
+/**
+ * マシンHP 0 時のスタート帰還処理（ノーマルモード）。
  * GDD 3.5 のペナルティを適用し、フロア1の新しい GameState を返す。
  *
  * ペナルティ:

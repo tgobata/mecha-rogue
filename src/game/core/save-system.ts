@@ -32,6 +32,8 @@ export interface SaveSummary {
   itemsCount: number;
   savedAt: number;
   version: string;
+  /** ゲームモード。undefined（旧データ）はノーマル扱い */
+  gameMode?: 'normal' | 'easy';
 }
 
 /**
@@ -121,6 +123,7 @@ function createSaveSummary(state: GameState, savedAt: number): SaveSummary {
     itemsCount: state.inventory.items.length,
     savedAt,
     version: SAVE_VERSION,
+    gameMode: state.gameMode,
   };
 }
 

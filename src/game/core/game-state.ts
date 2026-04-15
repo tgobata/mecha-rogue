@@ -910,6 +910,12 @@ export interface GameState {
    * 拠点での出発階選択（2F以上）に使用する。
    */
   highestFloorReached: number;
+  /**
+   * ゲームモード。'easy' = イージー、'normal' または undefined = ノーマル。
+   * 仕様変更前のセーブデータは undefined のためノーマルとして扱う。
+   * ゲーム途中・セーブデータ再開後は変更不可。
+   */
+  gameMode?: 'normal' | 'easy';
   /** テレポートビーコンで設置したワープ地点（フロア遷移でリセット） */
   warpPoint?: Position;
   /**

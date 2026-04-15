@@ -56,7 +56,7 @@ import {
   destroyFloorItem,
 } from "../core/turn-system";
 import { getSortedItems } from "../core/inventory-utils";
-import { applyStartReturn } from "../core/start-return";
+import { applyStartReturn, applyEasyReturn } from "../core/start-return";
 import { updateVisibility } from "../core/visibility";
 import { getRoomAt } from "../core/floorUtils";
 import { RoomType, type Position } from "../core/types";
@@ -1056,26 +1056,44 @@ export default function GameCanvas() {
     (toTitle: boolean) => {
       // stateRef.current を使って常に最新の状態を参照する（React state は非同期更新のため古い値の場合がある）
       const currentState = stateRef.current;
-      const penalizedState = applyStartReturn(currentState);
-      const finalState: GameState = {
-        ...penalizedState,
-        phase: toTitle ? "title" : "base",
-        player: null,
-        enemies: [],
-        map: null,
-        exploration: null,
-        // machine.hp を maxHp に確実にリセットする
-        machine: { ...penalizedState.machine, hp: penalizedState.machine.maxHp },
-        // ゲームオーバー: 所持アイテム・装備を全て失う
-        inventory: {
-          ...penalizedState.inventory,
-          items: [],
-          equippedWeapons: [],
-          equippedShields: [],
-          equippedArmors: [],
-          equippedTools: [],
-        },
-      };
+      const isEasy = currentState.gameMode === 'easy';
+
+      let finalState: GameState;
+
+      if (isEasy) {
+        // ── イージーモード: Lv半減・HP半減・アイテム/装備ランダム半減・スキルそのまま・拠点へ ──
+        const penalizedState = applyEasyReturn(currentState);
+        finalState = {
+          ...penalizedState,
+          phase: toTitle ? "title" : "base",
+          player: null,
+          enemies: [],
+          map: null,
+          exploration: null,
+        };
+      } else {
+        // ── ノーマルモード: 従来処理（所持品全ロスト・Lv1リセット）──
+        const penalizedState = applyStartReturn(currentState);
+        finalState = {
+          ...penalizedState,
+          phase: toTitle ? "title" : "base",
+          player: null,
+          enemies: [],
+          map: null,
+          exploration: null,
+          // machine.hp を maxHp に確実にリセットする
+          machine: { ...penalizedState.machine, hp: penalizedState.machine.maxHp },
+          // ゲームオーバー: 所持アイテム・装備を全て失う
+          inventory: {
+            ...penalizedState.inventory,
+            items: [],
+            equippedWeapons: [],
+            equippedShields: [],
+            equippedArmors: [],
+            equippedTools: [],
+          },
+        };
+      }
 
       setGameState(finalState);
       stateRef.current = finalState;
@@ -1125,16 +1143,28 @@ export default function GameCanvas() {
     setBattleLog([]);
   }, []);
 
-  const handleNewGame = useCallback(() => {
+  const handleNewGame = useCallback((mode: 'normal' | 'easy') => {
     const saves = getAllSaves();
     const emptyIdx = saves.findIndex((s) => s === null);
     const targetSlot = emptyIdx === -1 ? 1 : emptyIdx + 1;
 
     setActiveSaveSlot(targetSlot);
     setDeathFloor(null);
-    setGameState(createInitialGameState());
-    handleMoveToBase();
-  }, [handleMoveToBase]);
+    initAudio().then(() => playBGM("title")).catch(() => {});
+    setMenuPanel(null);
+    setBattleLog([]);
+
+    // gameMode を含む初期状態を一度にセット（handleMoveToBase を呼ぶと
+    // 関数型 setGameState が gameMode を引き継げないため直接生成する）
+    const initial = createInitialGameState();
+    const next: GameState = {
+      ...initial,
+      gameMode: mode,
+      phase: "base",
+    };
+    stateRef.current = next;
+    setGameState(next);
+  }, []);
 
   const handleLoadGameFromSlot = useCallback(
     (slot: number) => {
@@ -4175,6 +4205,7 @@ export default function GameCanvas() {
           enemiesDefeated={enemiesDefeated}
           goldEarned={goldEarned}
           bossesDefeated={gameState.bossesDefeated}
+          gameMode={gameState.gameMode}
           onRestart={() => handleGameOverReturn(false)}
           onTitle={() => handleGameOverReturn(true)}
         />
