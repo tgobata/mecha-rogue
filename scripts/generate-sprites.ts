@@ -1044,10 +1044,10 @@ function drawHitEffect64(buf: Uint8Array, S: number, frame: number, palette: Let
  * 文字 H キャラクターを描画する（64×64px・明るいオレンジロボット）。
  *
  * 特徴:
- * - 明るいオレンジ本体、水色バイザー、青い楕円目
+ * - 明るいオレンジ本体、水色バイザー、青い縦長楕円目、V字型の口
  * - アンテナ・コアリアクター・腕・手・脚・足の楕円ベースデザイン
- * - UP方向: 背面ベントライン、バイザーなし、目なし
- * - LEFT/RIGHT方向: シアー変形、片目のみ、半面バイザー
+ * - UP方向: 背面ベントライン、バイザーなし、目なし、口なし
+ * - LEFT/RIGHT方向: シアー変形、片目のみ、半面バイザー、口なし
  * - ATTACK: 腕を攻撃方向へ突き出す、拳描画
  * - HIT: 目が大きくなる（ビックリ目）
  */
@@ -1059,17 +1059,22 @@ function drawLetterH(
   frame: number,
 ): void {
   const pal = getLetterPalette('H');
-  const O   = pal.main;                       // #FF8C00 オレンジ
-  const OM  = pal.mid;                        // #CC6000 影オレンジ
-  const OL  = hexToRGBA('#FFBB44');           // ハイライトオレンジ
-  const BV  = pal.accent;                     // #44AAFF 水色バイザー
-  const BH  = hexToRGBA('#99DDFF');           // バイザーハイライト
-  const BE  = pal.sensor;                     // #1A6AFF 青虹彩
-  const WH  = pal.core;                       // #FFFFFF 白
-  const BK  = hexToRGBA('#111122');           // 黒瞳
-  const GD  = pal.edge;                       // #FFD700 ゴールド
-  const AN  = hexToRGBA('#FFDD00');           // アンテナ軸
-  const AB  = hexToRGBA('#FF5500');           // アンテナ球
+  const O   = hexToRGBA('#FF9010');  // オレンジ本体
+  const OM  = hexToRGBA('#CC5A00');  // 影オレンジ
+  const OL  = hexToRGBA('#FFCC55');  // ハイライトオレンジ
+  const OH  = hexToRGBA('#FFE8B0');  // 強光沢
+  const BV  = hexToRGBA('#2288EE');  // バイザー青（手も同色）
+  const BH  = hexToRGBA('#77CCFF');  // バイザーハイライト
+  const BD  = hexToRGBA('#0044AA');  // バイザー影
+  const BE  = hexToRGBA('#0055FF');  // 虹彩（青）
+  const WH  = hexToRGBA('#FFFFFF');  // 白
+  const BK  = hexToRGBA('#111133');  // 瞳（黒）
+  const GD  = pal.edge;              // #FFD700 ゴールドアウトライン
+  const AN  = hexToRGBA('#FFDD00');  // アンテナ軸
+  const AB  = hexToRGBA('#FF4400');  // アンテナ球
+  const AH  = hexToRGBA('#FFAA55');  // アンテナ球ハイライト
+  const MK  = hexToRGBA('#0033BB');  // 口（濃い青）
+  const MT  = hexToRGBA('#66BBFF');  // 口内ハイライト
   const dir = direction;
 
   // ─── アニメーションオフセット ─────────────────────────────────────
@@ -1097,135 +1102,219 @@ function drawLetterH(
 
   // ─── 1. アンテナ ────────────────────────────────────────────────
   if (dir !== 'up') {
-    // 左アンテナ球（cx=25, cy=3）
-    ellipseLocal(25 + ox, 3 + oy, 2, 2, AB);
-    setPixel(buf, S, 25 + ox + dirShearX(2 + oy, dir), 2 + oy, hexToRGBA('#FF8844'));
-    // 左アンテナ軸
-    setPixel(buf, S, 25 + ox + dirShearX(5 + oy, dir), 5 + oy, AN);
-    setPixel(buf, S, 25 + ox + dirShearX(6 + oy, dir), 6 + oy, AN);
-    setPixel(buf, S, 26 + ox + dirShearX(7 + oy, dir), 7 + oy, AN);
-    // 右アンテナ球（cx=39, cy=3）
-    ellipseLocal(39 + ox, 3 + oy, 2, 2, AB);
-    setPixel(buf, S, 39 + ox + dirShearX(2 + oy, dir), 2 + oy, hexToRGBA('#FF8844'));
-    // 右アンテナ軸
-    setPixel(buf, S, 39 + ox + dirShearX(5 + oy, dir), 5 + oy, AN);
-    setPixel(buf, S, 39 + ox + dirShearX(6 + oy, dir), 6 + oy, AN);
-    setPixel(buf, S, 38 + ox + dirShearX(7 + oy, dir), 7 + oy, AN);
+    if (dir !== 'left') {
+      // 左アンテナ球（cx=26, cy=5, rx=3, ry=3）
+      ellipseLocal(26 + ox, 5 + oy, 3, 3, AB);
+      setPixel(buf, S, 25 + ox + dirShearX(4 + oy, dir), 4 + oy, AH);
+      // 左アンテナ軸
+      setPixel(buf, S, 26 + ox + dirShearX(8 + oy, dir),  8 + oy, AN);
+      setPixel(buf, S, 26 + ox + dirShearX(9 + oy, dir),  9 + oy, AN);
+      setPixel(buf, S, 27 + ox + dirShearX(10 + oy, dir), 10 + oy, AN);
+    }
+    if (dir !== 'right') {
+      // 右アンテナ球（cx=38, cy=5, rx=3, ry=3）
+      ellipseLocal(38 + ox, 5 + oy, 3, 3, AB);
+      setPixel(buf, S, 37 + ox + dirShearX(4 + oy, dir), 4 + oy, AH);
+      // 右アンテナ軸
+      setPixel(buf, S, 38 + ox + dirShearX(8 + oy, dir),  8 + oy, AN);
+      setPixel(buf, S, 38 + ox + dirShearX(9 + oy, dir),  9 + oy, AN);
+      setPixel(buf, S, 37 + ox + dirShearX(10 + oy, dir), 10 + oy, AN);
+    }
   } else {
     // UP: アンテナ根元のみ（背面）
-    setPixel(buf, S, 25 + ox + dirShearX(7 + oy, dir), 7 + oy, OM);
-    setPixel(buf, S, 39 + ox + dirShearX(7 + oy, dir), 7 + oy, OM);
+    setPixel(buf, S, 27 + ox + dirShearX(10 + oy, dir), 10 + oy, OM);
+    setPixel(buf, S, 37 + ox + dirShearX(10 + oy, dir), 10 + oy, OM);
   }
 
   // ─── 2. 頭部 ────────────────────────────────────────────────────
   if (dir !== 'up') {
-    // 正面・横: 楕円頭部
-    ellipseLocal(32 + ox, 18 + oy, 13, 10, O);
-    // 上部ハイライト
-    for (let hy = 9 + oy; hy <= 13 + oy; hy++) {
-      const dy2 = (hy - (18 + oy)) / 10;
-      const hw = Math.round(13 * Math.sqrt(Math.max(0, 1 - dy2 * dy2)));
-      if (hw > 2) hLine(buf, S, (32 + ox) + dirShearX(hy, dir) - hw + 2, hy, hw * 2 - 3, OL);
+    // 正面・横: 楕円頭部（cx=32, cy=21, rx=14, ry=11）
+    ellipseLocal(32 + ox, 21 + oy, 14, 11, O);
+    // 下部シェーディング
+    for (let hy = 27 + oy; hy <= 31 + oy; hy++) {
+      const dy2 = (hy - (21 + oy)) / 11;
+      const hw = Math.round(14 * Math.sqrt(Math.max(0, 1 - dy2 * dy2)));
+      if (hw > 2) hLine(buf, S, (32 + ox) + dirShearX(hy, dir) - hw + 1, hy, hw * 2 - 1, OM);
     }
+    // 頭部光沢（左上）
+    ellipseLocal(24 + ox, 14 + oy, 5, 3, OL);
+    setPixel(buf, S, 22 + ox + dirShearX(13 + oy, dir), 13 + oy, OH);
+    setPixel(buf, S, 23 + ox + dirShearX(13 + oy, dir), 13 + oy, OH);
+    setPixel(buf, S, 24 + ox + dirShearX(13 + oy, dir), 13 + oy, OH);
+    setPixel(buf, S, 22 + ox + dirShearX(14 + oy, dir), 14 + oy, OH);
+    setPixel(buf, S, 23 + ox + dirShearX(14 + oy, dir), 14 + oy, OH);
   } else {
     // 背面: 後頭部楕円 + ベントライン
-    ellipseLocal(32 + ox, 18 + oy, 13, 10, O);
-    hLine(buf, S, 24 + ox + dirShearX(11 + oy, dir), 11 + oy, 17, BH);
-    hLine(buf, S, 24 + ox + dirShearX(14 + oy, dir), 14 + oy, 17, OM);
-    hLine(buf, S, 24 + ox + dirShearX(17 + oy, dir), 17 + oy, 17, BH);
-    hLine(buf, S, 24 + ox + dirShearX(20 + oy, dir), 20 + oy, 17, OM);
-    hLine(buf, S, 24 + ox + dirShearX(23 + oy, dir), 23 + oy, 17, BH);
+    ellipseLocal(32 + ox, 21 + oy, 14, 11, O);
+    hLine(buf, S, 24 + ox + dirShearX(13 + oy, dir), 13 + oy, 17, BH);
+    hLine(buf, S, 24 + ox + dirShearX(16 + oy, dir), 16 + oy, 17, OM);
+    hLine(buf, S, 24 + ox + dirShearX(19 + oy, dir), 19 + oy, 17, BH);
+    hLine(buf, S, 24 + ox + dirShearX(22 + oy, dir), 22 + oy, 17, OM);
+    hLine(buf, S, 24 + ox + dirShearX(25 + oy, dir), 25 + oy, 17, BH);
   }
 
   // ─── 3. バイザー ─────────────────────────────────────────────────
   if (dir === 'down') {
-    // 完全バイザー
-    for (let vy = 12 + oy; vy <= 24 + oy; vy++) {
-      let x0 = 21, x1 = 43;
-      if (vy === 12 + oy || vy === 24 + oy) { x0 = 23; x1 = 41; }
-      else if (vy === 13 + oy || vy === 23 + oy) { x0 = 22; x1 = 42; }
+    // 完全バイザー（y=13-28, x=22-42）
+    for (let vy = 13 + oy; vy <= 28 + oy; vy++) {
+      let x0 = 22, x1 = 42;
+      if (vy === 13 + oy || vy === 28 + oy) { x0 = 24; x1 = 40; }
+      else if (vy === 14 + oy || vy === 27 + oy) { x0 = 23; x1 = 41; }
       hLine(buf, S, x0 + ox + dirShearX(vy, dir), vy, x1 - x0 + 1, BV);
     }
-    // バイザーハイライト上部
-    hLine(buf, S, 23 + ox + dirShearX(12 + oy, dir), 12 + oy, 19, BH);
-    hLine(buf, S, 22 + ox + dirShearX(13 + oy, dir), 13 + oy, 21, BH);
+    // バイザー下部影（最下2行）
+    hLine(buf, S, 23 + ox + dirShearX(27 + oy, dir), 27 + oy, 19, BD);
+    hLine(buf, S, 24 + ox + dirShearX(28 + oy, dir), 28 + oy, 17, BD);
+    // バイザー光沢（左上反射帯）
+    hLine(buf, S, 24 + ox + dirShearX(13 + oy, dir), 13 + oy, 8,  BH);
+    hLine(buf, S, 23 + ox + dirShearX(14 + oy, dir), 14 + oy, 11, BH);
+    hLine(buf, S, 22 + ox + dirShearX(15 + oy, dir), 15 + oy, 10, BH);
+    hLine(buf, S, 22 + ox + dirShearX(16 + oy, dir), 16 + oy, 6,  BH);
+    // 最輝点
+    setPixel(buf, S, 24 + ox + dirShearX(13 + oy, dir), 13 + oy, WH);
+    setPixel(buf, S, 25 + ox + dirShearX(13 + oy, dir), 13 + oy, WH);
+    setPixel(buf, S, 23 + ox + dirShearX(14 + oy, dir), 14 + oy, WH);
+    setPixel(buf, S, 24 + ox + dirShearX(14 + oy, dir), 14 + oy, WH);
   } else if (dir === 'right') {
-    // 右向き: 左半分バイザー
-    for (let vy = 12 + oy; vy <= 24 + oy; vy++) {
-      let x0 = 21, x1 = 32;
-      if (vy === 12 + oy || vy === 24 + oy) { x0 = 23; x1 = 31; }
-      else if (vy === 13 + oy || vy === 23 + oy) { x0 = 22; x1 = 31; }
+    // 右向き: 左半分バイザー（x=22-32相当）
+    for (let vy = 13 + oy; vy <= 28 + oy; vy++) {
+      let x0 = 22, x1 = 32;
+      if (vy === 13 + oy || vy === 28 + oy) { x0 = 24; x1 = 31; }
+      else if (vy === 14 + oy || vy === 27 + oy) { x0 = 23; x1 = 31; }
       hLine(buf, S, x0 + ox + dirShearX(vy, dir), vy, x1 - x0 + 1, BV);
     }
+    hLine(buf, S, 23 + ox + dirShearX(27 + oy, dir), 27 + oy, 9, BD);
+    hLine(buf, S, 24 + ox + dirShearX(28 + oy, dir), 28 + oy, 8, BD);
   } else if (dir === 'left') {
-    // 左向き: 右半分バイザー
-    for (let vy = 12 + oy; vy <= 24 + oy; vy++) {
-      let x0 = 32, x1 = 43;
-      if (vy === 12 + oy || vy === 24 + oy) { x0 = 33; x1 = 41; }
-      else if (vy === 13 + oy || vy === 23 + oy) { x0 = 32; x1 = 42; }
+    // 左向き: 右半分バイザー（x=32-42相当）
+    for (let vy = 13 + oy; vy <= 28 + oy; vy++) {
+      let x0 = 32, x1 = 42;
+      if (vy === 13 + oy || vy === 28 + oy) { x0 = 33; x1 = 40; }
+      else if (vy === 14 + oy || vy === 27 + oy) { x0 = 32; x1 = 41; }
       hLine(buf, S, x0 + ox + dirShearX(vy, dir), vy, x1 - x0 + 1, BV);
     }
+    hLine(buf, S, 32 + ox + dirShearX(27 + oy, dir), 27 + oy, 10, BD);
+    hLine(buf, S, 33 + ox + dirShearX(28 + oy, dir), 28 + oy, 8, BD);
   }
   // UP: バイザーなし
 
   // ─── 4. 目 ───────────────────────────────────────────────────────
   if (dir === 'down') {
     const isHit = state === 'hit';
-    const eyeR  = isHit ? 5 : 4;
-    const whR   = isHit ? 3 : 2;
-    // 左目
-    ellipseLocal(26 + ox, 18 + oy, eyeR, eyeR, BE);
-    ellipseLocal(26 + ox, 18 + oy, whR, whR, WH);
+    // 通常: rx=3,ry=5 虹彩 / rx=1,ry=3 白目 / 縦3px瞳
+    // HIT:  rx=5,ry=5 虹彩 / rx=3,ry=3 白目 / 縦1px瞳
+    const eyeRx = isHit ? 5 : 3;
+    const eyeRy = isHit ? 5 : 5;
+    const whRx  = isHit ? 3 : 1;
+    const whRy  = isHit ? 3 : 3;
+    // 左目（cx=26, cy=18）
+    ellipseLocal(26 + ox, 18 + oy, eyeRx, eyeRy, BE);
+    ellipseLocal(26 + ox, 18 + oy, whRx,  whRy,  WH);
+    setPixel(buf, S, 26 + ox + dirShearX(17 + oy, dir), 17 + oy, BK);
     setPixel(buf, S, 26 + ox + dirShearX(18 + oy, dir), 18 + oy, BK);
-    if (!isHit) setPixel(buf, S, 25 + ox + dirShearX(16 + oy, dir), 16 + oy, WH);
-    // 右目
-    ellipseLocal(38 + ox, 18 + oy, eyeR, eyeR, BE);
-    ellipseLocal(38 + ox, 18 + oy, whR, whR, WH);
+    setPixel(buf, S, 26 + ox + dirShearX(19 + oy, dir), 19 + oy, BK);
+    if (!isHit) setPixel(buf, S, 25 + ox + dirShearX(15 + oy, dir), 15 + oy, WH);
+    // 右目（cx=38, cy=18）
+    ellipseLocal(38 + ox, 18 + oy, eyeRx, eyeRy, BE);
+    ellipseLocal(38 + ox, 18 + oy, whRx,  whRy,  WH);
+    setPixel(buf, S, 38 + ox + dirShearX(17 + oy, dir), 17 + oy, BK);
     setPixel(buf, S, 38 + ox + dirShearX(18 + oy, dir), 18 + oy, BK);
-    if (!isHit) setPixel(buf, S, 37 + ox + dirShearX(16 + oy, dir), 16 + oy, WH);
+    setPixel(buf, S, 38 + ox + dirShearX(19 + oy, dir), 19 + oy, BK);
+    if (!isHit) setPixel(buf, S, 37 + ox + dirShearX(15 + oy, dir), 15 + oy, WH);
   } else if (dir === 'right') {
-    // 右向き: 左目のみ（cx=36）
-    ellipseLocal(36 + ox, 18 + oy, 4, 4, BE);
-    ellipseLocal(36 + ox, 18 + oy, 2, 2, WH);
-    setPixel(buf, S, 36 + ox + dirShearX(18 + oy, dir), 18 + oy, BK);
+    // 右向き: 手前の目（大）= 暗青外枠→白内側→黒瞳の順で描画
+    ellipseLocal(40 + ox, 18 + oy, 4, 5, BD);  // 暗青の外枠
+    ellipseLocal(40 + ox, 18 + oy, 3, 4, WH);  // 大きな白目（外枠の内側）
+    { const ex = 40 + ox + dirShearX(18 + oy, dir);
+      hLine(buf, S, ex - 1, 16 + oy, 3, BK);
+      hLine(buf, S, ex - 1, 17 + oy, 3, BK);
+      hLine(buf, S, ex - 1, 18 + oy, 3, BK);
+      hLine(buf, S, ex - 1, 19 + oy, 3, BK); }  // 黒瞳 3×4px
+    // 右向き: 遠い目（小）= バイザー上に白目＋瞳を重ねて描画（青なし）
+    ellipseLocal(26 + ox, 18 + oy, 3, 4, WH);
+    { const ex2 = 26 + ox + dirShearX(18 + oy, dir);
+      hLine(buf, S, ex2 - 1, 17 + oy, 2, BK);
+      hLine(buf, S, ex2 - 1, 18 + oy, 2, BK);
+      hLine(buf, S, ex2 - 1, 19 + oy, 2, BK); }
   } else if (dir === 'left') {
-    // 左向き: 右目のみ（cx=28）
-    ellipseLocal(28 + ox, 18 + oy, 4, 4, BE);
-    ellipseLocal(28 + ox, 18 + oy, 2, 2, WH);
-    setPixel(buf, S, 28 + ox + dirShearX(18 + oy, dir), 18 + oy, BK);
+    // 左向き: 手前の目（大）= 暗青外枠→白内側→黒瞳
+    ellipseLocal(24 + ox, 18 + oy, 4, 5, BD);
+    ellipseLocal(24 + ox, 18 + oy, 3, 4, WH);
+    { const ex = 24 + ox + dirShearX(18 + oy, dir);
+      hLine(buf, S, ex - 1, 16 + oy, 3, BK);
+      hLine(buf, S, ex - 1, 17 + oy, 3, BK);
+      hLine(buf, S, ex - 1, 18 + oy, 3, BK);
+      hLine(buf, S, ex - 1, 19 + oy, 3, BK); }
+    // 左向き: 遠い目（小）= バイザー上に白目＋瞳を重ねて描画（青なし）
+    ellipseLocal(38 + ox, 18 + oy, 3, 4, WH);
+    { const ex2 = 38 + ox + dirShearX(18 + oy, dir);
+      hLine(buf, S, ex2 - 1, 17 + oy, 2, BK);
+      hLine(buf, S, ex2 - 1, 18 + oy, 2, BK);
+      hLine(buf, S, ex2 - 1, 19 + oy, 2, BK); }
   }
   // UP: 目なし
 
-  // ─── 5. ネック ───────────────────────────────────────────────────
-  hLine(buf, S, 29 + ox + dirShearX(28 + oy, dir), 28 + oy, 9, OM);
-  hLine(buf, S, 29 + ox + dirShearX(29 + oy, dir), 29 + oy, 9, OM);
-
-  // ─── 6. 胴体 ─────────────────────────────────────────────────────
-  ellipseLocal(32 + ox, 38 + oy, 12, 10, O);
-  // 上部ハイライト
-  for (let hy = 29 + oy; hy <= 33 + oy; hy++) {
-    const dy2 = (hy - (38 + oy)) / 10;
-    const hw = Math.round(12 * Math.sqrt(Math.max(0, 1 - dy2 * dy2)));
-    if (hw > 2) hLine(buf, S, (32 + ox) + dirShearX(hy, dir) - hw + 2, hy, hw * 2 - 3, OL);
+  // ─── 5. 口（DOWN方向のみ、V字型） ───────────────────────────────
+  if (dir === 'down') {
+    // V の左腕
+    setPixel(buf, S, 27 + ox + dirShearX(22 + oy, dir), 22 + oy, MK);
+    setPixel(buf, S, 28 + ox + dirShearX(23 + oy, dir), 23 + oy, MK);
+    setPixel(buf, S, 29 + ox + dirShearX(24 + oy, dir), 24 + oy, MK);
+    setPixel(buf, S, 30 + ox + dirShearX(25 + oy, dir), 25 + oy, MK);
+    // V の底（中央）
+    setPixel(buf, S, 31 + ox + dirShearX(25 + oy, dir), 25 + oy, MK);
+    setPixel(buf, S, 32 + ox + dirShearX(25 + oy, dir), 25 + oy, MK);
+    setPixel(buf, S, 33 + ox + dirShearX(25 + oy, dir), 25 + oy, MK);
+    // V の右腕
+    setPixel(buf, S, 34 + ox + dirShearX(24 + oy, dir), 24 + oy, MK);
+    setPixel(buf, S, 35 + ox + dirShearX(23 + oy, dir), 23 + oy, MK);
+    setPixel(buf, S, 36 + ox + dirShearX(22 + oy, dir), 22 + oy, MK);
+    setPixel(buf, S, 37 + ox + dirShearX(22 + oy, dir), 22 + oy, MK);
+    // 口内ハイライト（明るい青）
+    setPixel(buf, S, 29 + ox + dirShearX(24 + oy, dir), 24 + oy, MT);
+    setPixel(buf, S, 30 + ox + dirShearX(25 + oy, dir), 25 + oy, MT);
+    setPixel(buf, S, 31 + ox + dirShearX(25 + oy, dir), 25 + oy, MT);
+    setPixel(buf, S, 32 + ox + dirShearX(25 + oy, dir), 25 + oy, MT);
+    setPixel(buf, S, 33 + ox + dirShearX(25 + oy, dir), 25 + oy, MT);
+    setPixel(buf, S, 34 + ox + dirShearX(24 + oy, dir), 24 + oy, MT);
   }
-  // 下部影
-  for (let hy = 43 + oy; hy <= 47 + oy; hy++) {
-    const dy2 = (hy - (38 + oy)) / 10;
-    const hw = Math.round(12 * Math.sqrt(Math.max(0, 1 - dy2 * dy2)));
+
+  // ─── 6. ネック ───────────────────────────────────────────────────
+  ellipseLocal(32 + ox, 32 + oy, 4, 2, OM);
+
+  // ─── 7. 胴体 ─────────────────────────────────────────────────────
+  ellipseLocal(32 + ox, 40 + oy, 11, 9, O);
+  // 下部シェーディング
+  for (let hy = 44 + oy; hy <= 49 + oy; hy++) {
+    const dy2 = (hy - (40 + oy)) / 9;
+    const hw = Math.round(11 * Math.sqrt(Math.max(0, 1 - dy2 * dy2)));
     if (hw > 0) hLine(buf, S, (32 + ox) + dirShearX(hy, dir) - hw, hy, hw * 2 + 1, OM);
   }
-  // コアリアクター
-  ellipseLocal(32 + ox, 38 + oy, 3, 3, BH);
-  setPixel(buf, S, 32 + ox + dirShearX(38 + oy, dir), 38 + oy, WH);
-  setPixel(buf, S, 31 + ox + dirShearX(38 + oy, dir), 38 + oy, WH);
+  // 胴体光沢（左上）
+  ellipseLocal(26 + ox, 34 + oy, 4, 2, OL);
+  setPixel(buf, S, 24 + ox + dirShearX(33 + oy, dir), 33 + oy, OH);
+  setPixel(buf, S, 25 + ox + dirShearX(33 + oy, dir), 33 + oy, OH);
+  setPixel(buf, S, 26 + ox + dirShearX(33 + oy, dir), 33 + oy, OH);
+  // コアリアクター（横長楕円: rx=6,ry=2）
+  ellipseLocal(32 + ox, 40 + oy, 6, 2, BD);
+  ellipseLocal(32 + ox, 40 + oy, 5, 1, BH);
+  setPixel(buf, S, 30 + ox + dirShearX(40 + oy, dir), 40 + oy, WH);
+  setPixel(buf, S, 31 + ox + dirShearX(40 + oy, dir), 40 + oy, WH);
+  setPixel(buf, S, 32 + ox + dirShearX(40 + oy, dir), 40 + oy, WH);
 
-  // ─── 7. 腕 ───────────────────────────────────────────────────────
-  // 左腕
-  ellipseLocal(17 + ox, 35 + oy, 3, 8, O);
-  for (let ay = 28 + oy; ay <= 38 + oy; ay++) setPixelS(buf, S, 17 + ox, ay, OL, dir);
-  // 右腕
-  ellipseLocal(47 + ox, 35 + oy, 3, 8, O);
-  for (let ay = 28 + oy; ay <= 38 + oy; ay++) setPixelS(buf, S, 47 + ox, ay, OL, dir);
+  // ─── 8. 腕 ───────────────────────────────────────────────────────
+  // 左腕（cx=18, cy=37, rx=3, ry=7）
+  ellipseLocal(18 + ox, 37 + oy, 3, 7, O);
+  for (let ay = 31 + oy; ay <= 43 + oy; ay++) {
+    const dy2 = (ay - (37 + oy)) / 7;
+    if (Math.abs(dy2) <= 1) setPixelS(buf, S, 18 + ox, ay, OL, dir);
+  }
+  // 右腕（cx=46, cy=37, rx=3, ry=7）
+  ellipseLocal(46 + ox, 37 + oy, 3, 7, O);
+  for (let ay = 31 + oy; ay <= 43 + oy; ay++) {
+    const dy2 = (ay - (37 + oy)) / 7;
+    if (Math.abs(dy2) <= 1) setPixelS(buf, S, 46 + ox, ay, OL, dir);
+  }
 
   // ATTACK: 腕を伸ばし拳を描く
   if (state === 'attack' && frame >= 1) {
@@ -1234,44 +1323,89 @@ function drawLetterH(
     } else if (dir === 'up') {
       ellipseLocal(47 + ox, 22 + oy, 5, 5, O);
     } else if (dir === 'right') {
-      ellipseLocal(55 + ox, 35 + oy, 8, 5, O);
+      ellipseLocal(55 + ox, 37 + oy, 8, 5, O);
     } else {
-      ellipseLocal(9 + ox, 35 + oy, 8, 5, O);
+      ellipseLocal(9 + ox, 37 + oy, 8, 5, O);
     }
   }
 
-  // ─── 8. 手 ───────────────────────────────────────────────────────
-  // 左手
-  ellipseLocal(16 + ox, 44 + oy, 4, 4, BV);
-  ellipseLocal(16 + ox, 44 + oy, 2, 2, BH);
-  setPixel(buf, S, 15 + ox + dirShearX(42 + oy, dir), 42 + oy, WH);
-  // 右手
-  ellipseLocal(48 + ox, 44 + oy, 4, 4, BV);
-  ellipseLocal(48 + ox, 44 + oy, 2, 2, BH);
-  setPixel(buf, S, 47 + ox + dirShearX(42 + oy, dir), 42 + oy, WH);
+  // ─── 9. 手 ───────────────────────────────────────────────────────
+  // 左手（cx=17, cy=46）
+  ellipseLocal(17 + ox, 46 + oy, 4, 4, BV);
+  ellipseLocal(17 + ox, 46 + oy, 2, 2, BH);
+  setPixel(buf, S, 15 + ox + dirShearX(44 + oy, dir), 44 + oy, WH);
+  // 右手（cx=47, cy=46）
+  ellipseLocal(47 + ox, 46 + oy, 4, 4, BV);
+  ellipseLocal(47 + ox, 46 + oy, 2, 2, BH);
+  setPixel(buf, S, 45 + ox + dirShearX(44 + oy, dir), 44 + oy, WH);
 
-  // ─── 9. 脚 ───────────────────────────────────────────────────────
-  // 左脚
-  ellipseLocal(26 + ox, 52 + leftFootY + oy, 4, 5, O);
-  for (let ly = 48 + oy; ly <= 54 + oy; ly++) setPixelS(buf, S, 26 + ox, ly + leftFootY, OL, dir);
-  // 右脚
-  ellipseLocal(38 + ox, 52 + rightFootY + oy, 4, 5, O);
-  for (let ly = 48 + oy; ly <= 54 + oy; ly++) setPixelS(buf, S, 38 + ox, ly + rightFootY, OL, dir);
+  // ─── 10. 脚 ───────────────────────────────────────────────────────
+  // 左脚（cx=26, cy=53, rx=3, ry=5）
+  ellipseLocal(26 + ox, 53 + leftFootY + oy, 3, 5, O);
+  for (let ly = 49 + oy; ly <= 57 + oy; ly++) setPixelS(buf, S, 26 + ox, ly + leftFootY, OL, dir);
+  // 右脚（cx=38, cy=53, rx=3, ry=5）
+  ellipseLocal(38 + ox, 53 + rightFootY + oy, 3, 5, O);
+  for (let ly = 49 + oy; ly <= 57 + oy; ly++) setPixelS(buf, S, 38 + ox, ly + rightFootY, OL, dir);
 
-  // ─── 10. 足 ──────────────────────────────────────────────────────
-  // 左足
+  // ─── 11. 足 ──────────────────────────────────────────────────────
+  // 左足（cx=24, cy=58, rx=6, ry=3）
   ellipseLocal(24 + ox, 58 + leftFootY + oy, 6, 3, OM);
-  hLine(buf, S, 20 + ox + dirShearX(57 + leftFootY + oy, dir), 57 + leftFootY + oy, 8, OL);
-  // 右足
+  hLine(buf, S, 20 + ox + dirShearX(56 + leftFootY + oy, dir),  56 + leftFootY + oy, 8, OL);
+  setPixel(buf, S, 20 + ox + dirShearX(55 + leftFootY + oy, dir), 55 + leftFootY + oy, OH);
+  // 右足（cx=40, cy=58, rx=6, ry=3）
   ellipseLocal(40 + ox, 58 + rightFootY + oy, 6, 3, OM);
-  hLine(buf, S, 36 + ox + dirShearX(57 + rightFootY + oy, dir), 57 + rightFootY + oy, 8, OL);
+  hLine(buf, S, 36 + ox + dirShearX(56 + rightFootY + oy, dir), 56 + rightFootY + oy, 8, OL);
+  setPixel(buf, S, 36 + ox + dirShearX(55 + rightFootY + oy, dir), 55 + rightFootY + oy, OH);
 
-  // ─── 11. アウトライン ────────────────────────────────────────────
+  // ─── 12. アウトライン ────────────────────────────────────────────
   drawOutline(buf, S, GD);
 
-  // ─── 12. ATTACK エフェクト / HIT エフェクト ──────────────────────
+  // ─── 13. ATTACK エフェクト / HIT エフェクト ──────────────────────
   if (state === 'attack') drawAttackEffect64(buf, S, direction, frame, pal);
-  else if (state === 'hit') drawHitEffect64(buf, S, frame, pal);
+  else if (state === 'hit') {
+    drawHitEffect64(buf, S, frame, pal);
+    // flashBuffer/shiftBufferRight で白目・瞳が消えるため再描画
+    const hitSx = frame === 0 ? Math.round(2 * S / 32) : 0;
+    if (dir !== 'up') {
+      const eyeCenters = dir === 'down'  ? [26 + ox + hitSx, 38 + ox + hitSx]
+                       : dir === 'right' ? [40 + ox + hitSx]
+                       : [24 + ox + hitSx];
+      const ey = 18 + oy;
+      for (const ecx of eyeCenters) {
+        if (dir === 'down') {
+          // 白目（rx=3,ry=3）+ 瞳縦3px
+          ellipseLocal(ecx, ey, 3, 3, WH);
+          setPixel(buf, S, ecx + dirShearX(ey - 1, dir), ey - 1, BK);
+          setPixel(buf, S, ecx + dirShearX(ey,     dir), ey,     BK);
+          setPixel(buf, S, ecx + dirShearX(ey + 1, dir), ey + 1, BK);
+        } else {
+          // 左右: 白目（rx=3,ry=3）+ 瞳3×4ブロック（大きく明確）
+          ellipseLocal(ecx, ey, 3, 3, WH);
+          const ex = ecx + dirShearX(ey, dir);
+          hLine(buf, S, ex - 1, ey - 2, 3, BK);
+          hLine(buf, S, ex - 1, ey - 1, 3, BK);
+          hLine(buf, S, ex - 1, ey,     3, BK);
+          hLine(buf, S, ex - 1, ey + 1, 3, BK);
+        }
+      }
+      // 遠い目（バイザー上）も白目＋瞳を再描画
+      if (dir === 'right') {
+        const farCx = 26 + ox + hitSx;
+        ellipseLocal(farCx, 18 + oy, 3, 4, WH);
+        const ex2 = farCx + dirShearX(18 + oy, dir);
+        hLine(buf, S, ex2 - 1, 17 + oy, 2, BK);
+        hLine(buf, S, ex2 - 1, 18 + oy, 2, BK);
+        hLine(buf, S, ex2 - 1, 19 + oy, 2, BK);
+      } else if (dir === 'left') {
+        const farCx = 38 + ox + hitSx;
+        ellipseLocal(farCx, 18 + oy, 3, 4, WH);
+        const ex2 = farCx + dirShearX(18 + oy, dir);
+        hLine(buf, S, ex2 - 1, 17 + oy, 2, BK);
+        hLine(buf, S, ex2 - 1, 18 + oy, 2, BK);
+        hLine(buf, S, ex2 - 1, 19 + oy, 2, BK);
+      }
+    }
+  }
 }
 
 // ---------------------------------------------------------------------------
