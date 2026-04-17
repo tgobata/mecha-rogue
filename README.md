@@ -42,7 +42,7 @@ Game URL: https://mecha-rogue-tg.pages.dev/
 - **音声**: Tone.js（チップチューン）
 - **スタイル**: Tailwind CSS v4
 - **テスト**: Vitest
-- **デプロイ**: Vercel
+- **デプロイ**: Cloudflare
 
 ## ディレクトリ構成
 
