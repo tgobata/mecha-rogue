@@ -197,130 +197,228 @@ function drawScoutDrone(
   frame: number,
   isLv2: boolean
 ): void {
-  const BODY_BASE   = '#556677';
-  const ANTENNA     = '#aabbcc';
-  const PROPELLER   = '#334455';
-  const BODY_LV2    = '#556644';   // Lv2: 緑がかる
-  const HIGHLIGHT   = '#7799aa';
-
-  const bodyHex  = isLv2 ? BODY_LV2 : BODY_BASE;
-  const body     = hexToRGBA(bodyHex);
-  const ant      = hexToRGBA(ANTENNA);
-  const prop     = hexToRGBA(PROPELLER);
-  const hi       = hexToRGBA(HIGHLIGHT);
+  // ---------------------------------------------------------------------------
+  // パレット（明るく鮮やかな水色系 / Lv2は緑系）
+  // ---------------------------------------------------------------------------
+  const OUTLINE     = hexToRGBA('#223344');       // 輪郭・影（濃い紺）
+  const BODY_COLOR  = isLv2 ? hexToRGBA('#55cc88') : hexToRGBA('#88bbdd'); // ボディ
+  const BODY_MID    = isLv2 ? hexToRGBA('#33aa66') : hexToRGBA('#5599cc'); // ボディ中間色
+  const BODY_HI     = isLv2 ? hexToRGBA('#aaffcc') : hexToRGBA('#cceeff'); // ハイライト
+  const ANTENNA_COL = isLv2 ? hexToRGBA('#88ffaa') : hexToRGBA('#aaddff'); // アンテナ
+  const PROP_BASE   = isLv2 ? hexToRGBA('#22bb66') : hexToRGBA('#4499cc'); // プロペラ（濃いアクセント）
+  const PROP_TIP    = isLv2 ? hexToRGBA('#66ffaa') : hexToRGBA('#88ddff'); // プロペラ先端（明るい）
 
   const dOff = dirOffset(dir);
 
-  // -- ベース位置 --
+  // ---------------------------------------------------------------------------
+  // 座標基準（32×32 グリッドの中心）
+  // ボディ中心: cx=16, cy=16（固定）
+  // idle のみ frame1 で 1px だけ上にホバリング（最小限の差）
+  // ---------------------------------------------------------------------------
   const cx = 16;
-  // move: プロペラがバウンド（ボディ上下）
-  const bounceY = (state === 'move') && frame === 1 ? -1 : 0;
-  // dead: 傾く・煙・消滅
-  const deadTiltX = state === 'dead' ? (frame === 0 ? 2 : frame === 1 ? 4 : 6) : 0;
-  const deadTiltY = state === 'dead' ? (frame === 0 ? 1 : frame === 1 ? 3 : 5) : 0;
-  const cy = 15 + bounceY + deadTiltY;
+  const hoverY = (state === 'idle' && frame === 1) ? -1 : 0;
+  const baseCY = 16 + hoverY;
 
-  // dead frame2 はほぼ透明（爆発点滅）
-  const globalAlpha = state === 'dead' && frame === 2 ? 80 : 255;
+  // ---------------------------------------------------------------------------
+  // dead アニメーション用オフセット（ボディ傾き）
+  // frame0: 少し右傾き, frame1: 煙追加, frame2: 爆発
+  // ---------------------------------------------------------------------------
+  const deadTiltX = state === 'dead' ? (frame === 0 ? 1 : frame >= 1 ? 2 : 0) : 0;
+  const deadTiltY = state === 'dead' ? (frame === 0 ? 1 : frame >= 1 ? 3 : 0) : 0;
 
-  function pixel(x: number, y: number, c: RGBA): void {
-    setPixel(buf, S, x, y, { ...c, a: Math.min(c.a, globalAlpha) });
-  }
+  const cx2 = cx + deadTiltX;
+  const cy2 = baseCY + deadTiltY;
 
-  // -- dead frame2: 爆発（オレンジ円）--
+  // ---------------------------------------------------------------------------
+  // dead frame2: 爆発エフェクト（ボディなし）
+  // ---------------------------------------------------------------------------
   if (state === 'dead' && frame === 2) {
-    fillCircle(buf, S, cx + deadTiltX, cy, 8, hexToRGBA('#ff6600', 120));
-    fillCircle(buf, S, cx + deadTiltX, cy, 5, hexToRGBA('#ffcc00', 180));
+    fillCircle(buf, S, cx + 2, 19, 9, hexToRGBA('#ff6600', 140));
+    fillCircle(buf, S, cx + 2, 19, 6, hexToRGBA('#ffcc00', 200));
+    fillCircle(buf, S, cx + 2, 19, 3, hexToRGBA('#ffffff', 240));
+    // 爆発の破片
+    setPixel(buf, S, cx - 4, 11, hexToRGBA('#ff8800', 200));
+    setPixel(buf, S, cx + 7, 12, hexToRGBA('#ff8800', 200));
+    setPixel(buf, S, cx - 5, 22, hexToRGBA('#ffcc00', 160));
+    setPixel(buf, S, cx + 8, 23, hexToRGBA('#ffcc00', 160));
     return;
   }
 
-  // -- dead frame1: 煙 --
+  // ---------------------------------------------------------------------------
+  // dead frame1: 煙エフェクト（ボディは描く）
+  // ---------------------------------------------------------------------------
   if (state === 'dead' && frame === 1) {
-    // 煙のドット
-    pixel(cx + deadTiltX,     cy - 10, hexToRGBA('#888888', 160));
-    pixel(cx + deadTiltX - 1, cy - 11, hexToRGBA('#aaaaaa', 140));
-    pixel(cx + deadTiltX + 1, cy - 11, hexToRGBA('#aaaaaa', 140));
-    pixel(cx + deadTiltX,     cy - 12, hexToRGBA('#888888', 100));
+    setPixel(buf, S, cx2,     cy2 - 9,  hexToRGBA('#aaaaaa', 180));
+    setPixel(buf, S, cx2 - 1, cy2 - 10, hexToRGBA('#888888', 150));
+    setPixel(buf, S, cx2 + 1, cy2 - 10, hexToRGBA('#888888', 150));
+    setPixel(buf, S, cx2,     cy2 - 11, hexToRGBA('#666666', 110));
+    setPixel(buf, S, cx2 - 1, cy2 - 12, hexToRGBA('#555555', 80));
   }
 
-  // -- アンテナ（2本）--
-  const antBase = state === 'dead' && frame >= 1 ? hexToRGBA('#664444') : ant;
-  vLine(buf, S, cx + deadTiltX - 4, cy - 8, 3, antBase);
-  vLine(buf, S, cx + deadTiltX + 3, cy - 8, 3, antBase);
-  setPixel(buf, S, cx + deadTiltX - 4, cy - 9, antBase);
-  setPixel(buf, S, cx + deadTiltX + 3, cy - 9, antBase);
+  // ---------------------------------------------------------------------------
+  // アンテナ 2本（ボディ上部左右）
+  // dead 時は折れた色に
+  // ---------------------------------------------------------------------------
+  const antColor = (state === 'dead') ? hexToRGBA('#664444') : ANTENNA_COL;
+  const antOutline = OUTLINE;
+  // 左アンテナ: cx2-5 に基部、上に3px
+  vLine(buf, S, cx2 - 5, cy2 - 9, 4, antOutline);   // 輪郭
+  vLine(buf, S, cx2 - 4, cy2 - 9, 4, antColor);      // 本体
+  setPixel(buf, S, cx2 - 4, cy2 - 10, antColor);      // 先端球
+  // 右アンテナ
+  vLine(buf, S, cx2 + 4, cy2 - 9, 4, antColor);
+  vLine(buf, S, cx2 + 5, cy2 - 9, 4, antOutline);
+  setPixel(buf, S, cx2 + 4, cy2 - 10, antColor);
 
-  // -- プロペラ翼（左右）--
-  // move フレームで翼のY位置が変わる仕様: frame0=y12相当, frame1=y10相当
-  const wingY = cy + (state === 'move' && frame === 1 ? -3 : -1);
-  const propColor = state === 'hit' ? hexToRGBA('#ff8888') : prop;
+  // ---------------------------------------------------------------------------
+  // プロペラ翼（左右）
+  // move: プロペラ角度を示す「ぼかし」— 位置は変えず色の明暗のみ変える
+  // frame0: 通常, frame1: 少し明るい（回転感）
+  // ---------------------------------------------------------------------------
+  const propFrame1 = (state === 'move' && frame === 1);
+  const propColorA = propFrame1 ? PROP_TIP  : PROP_BASE;
+  const propColorB = propFrame1 ? PROP_BASE : PROP_TIP;
+  const propHit    = state === 'hit';
+  const propDeadDim = state === 'dead' ? hexToRGBA('#664444') : null;
 
-  // 左翼
-  fillRect(buf, S, cx + deadTiltX - 11, wingY, 4, 2, propColor);
-  // 右翼
-  fillRect(buf, S, cx + deadTiltX + 7,  wingY, 4, 2, propColor);
+  const leftWingX  = cx2 - 12;
+  const rightWingX = cx2 + 7;
+  const wingY      = cy2 - 1;  // 翼の Y 座標（固定）
 
-  // -- 円形ボディ（直径14px = 半径7）--
-  const bodyColor = state === 'hit' ? hexToRGBA('#cc4444') : body;
-  fillCircle(buf, S, cx + deadTiltX, cy, 7, bodyColor);
+  // 左翼（5×2px）
+  if (propDeadDim) {
+    fillRect(buf, S, leftWingX, wingY, 5, 2, propDeadDim);
+  } else if (propHit) {
+    fillRect(buf, S, leftWingX, wingY, 5, 2, hexToRGBA('#ff9999'));
+  } else {
+    fillRect(buf, S, leftWingX,     wingY, 3, 1, propColorA);
+    fillRect(buf, S, leftWingX + 2, wingY + 1, 3, 1, propColorB);
+    fillRect(buf, S, leftWingX,     wingY, 5, 2, { ...propColorA, a: 0 }); // noop sentinel
+    // シンプルに: 前3px=A色, 後ろ2px=B色
+    fillRect(buf, S, leftWingX,     wingY, 3, 2, propColorA);
+    fillRect(buf, S, leftWingX + 3, wingY, 2, 2, propColorB);
+  }
+  setPixel(buf, S, leftWingX - 1,    wingY,     OUTLINE);
+  setPixel(buf, S, leftWingX - 1,    wingY + 1, OUTLINE);
+  setPixel(buf, S, leftWingX + 4,    wingY - 1, OUTLINE);
 
-  // ハイライト（上部左）
-  fillCircle(buf, S, cx + deadTiltX - 2, cy - 3, 2, hi);
+  // 右翼（5×2px）
+  if (propDeadDim) {
+    fillRect(buf, S, rightWingX, wingY, 5, 2, propDeadDim);
+  } else if (propHit) {
+    fillRect(buf, S, rightWingX, wingY, 5, 2, hexToRGBA('#ff9999'));
+  } else {
+    fillRect(buf, S, rightWingX,     wingY, 3, 2, propColorA);
+    fillRect(buf, S, rightWingX + 3, wingY, 2, 2, propColorB);
+  }
+  setPixel(buf, S, rightWingX + 5, wingY,     OUTLINE);
+  setPixel(buf, S, rightWingX + 5, wingY + 1, OUTLINE);
+  setPixel(buf, S, rightWingX - 1, wingY - 1, OUTLINE);
 
-  // levelup: 全体が黄白色フラッシュ
+  // ---------------------------------------------------------------------------
+  // 円形ボディ（半径6px）
+  // hit: ボディが赤みがかる（色変化のみ、形は不変）
+  // ---------------------------------------------------------------------------
+  const bodyMain = state === 'hit' ? hexToRGBA('#dd6666')
+                  : state === 'dead' ? hexToRGBA('#557788')
+                  : BODY_COLOR;
+  const bodyMid  = state === 'hit' ? hexToRGBA('#bb4444')
+                  : state === 'dead' ? hexToRGBA('#334455')
+                  : BODY_MID;
+
+  // ボディ外周（輪郭）
+  drawCircleOutline(buf, S, cx2, cy2, 7, OUTLINE);
+  // ボディ内側（半径6 = メイン色）
+  fillCircle(buf, S, cx2, cy2, 6, bodyMain);
+  // 下半分を少し暗く（立体感）
+  for (let dy = 1; dy <= 6; dy++) {
+    const hw = Math.floor(Math.sqrt(Math.max(0, 36 - dy * dy)));
+    for (let dx = -hw; dx <= hw; dx++) {
+      setPixel(buf, S, cx2 + dx, cy2 + dy, bodyMid);
+    }
+  }
+
+  // ハイライト（上部左に明るい点2px）
+  setPixel(buf, S, cx2 - 2, cy2 - 4, BODY_HI);
+  setPixel(buf, S, cx2 - 3, cy2 - 3, BODY_HI);
+  setPixel(buf, S, cx2 - 2, cy2 - 3, { ...BODY_HI, a: 160 });
+
+  // ボディ中央帯（横ライン: 機械的ディテール）
+  hLine(buf, S, cx2 - 4, cy2,     9, OUTLINE);
+  hLine(buf, S, cx2 - 4, cy2 + 1, 9, { ...BODY_MID, a: 180 });
+
+  // ---------------------------------------------------------------------------
+  // levelup: 黄白色フラッシュ
+  // ---------------------------------------------------------------------------
   if (state === 'levelup') {
-    const flashAlpha = frame === 0 ? 180 : 100;
-    fillCircle(buf, S, cx + deadTiltX, cy, 7, hexToRGBA('#ffffcc', flashAlpha));
-    drawCircleOutline(buf, S, cx + deadTiltX, cy, 9, hexToRGBA('#ffee88', 150));
+    const flashAlpha = frame === 0 ? 180 : 90;
+    fillCircle(buf, S, cx2, cy2, 6, hexToRGBA('#ffffcc', flashAlpha));
+    drawCircleOutline(buf, S, cx2, cy2, 8, hexToRGBA('#ffee88', frame === 0 ? 180 : 100));
+    setPixel(buf, S, cx2,     cy2 - 9, hexToRGBA('#ffff88', 200));
+    setPixel(buf, S, cx2 - 8, cy2,     hexToRGBA('#ffff88', 180));
+    setPixel(buf, S, cx2 + 8, cy2,     hexToRGBA('#ffff88', 180));
   }
 
-  // -- アウトライン --
-  drawCircleOutline(buf, S, cx + deadTiltX, cy, 7, BLACK);
+  // ---------------------------------------------------------------------------
+  // カメラ眼（方向に応じた位置）
+  // attack frame0,1: 眼が赤く光る（色変化のみ）
+  // attack frame2: 眼の周囲に閃光
+  // ---------------------------------------------------------------------------
+  const eyeOffX = dOff.dx * 3;
+  const eyeOffY = dOff.dy * 3;
+  const eyeX = cx2 + eyeOffX;
+  const eyeY = cy2 + eyeOffY;
 
-  // -- カメラ眼 --
-  // 方向に応じた位置: down=下部, up=上部, left=左側, right=右側
-  let eyeOffX = dOff.dx * 4;
-  let eyeOffY = dOff.dy * 4;
-  const eyeX = cx + deadTiltX + eyeOffX;
-  const eyeY = cy + eyeOffY;
+  const isAttackGlow = (state === 'attack' && frame <= 1);
+  const eyeColor = state === 'hit'   ? hexToRGBA('#ff3333')
+                 : isAttackGlow      ? hexToRGBA('#ff4400')
+                 : isLv2             ? hexToRGBA('#44ffaa')
+                 :                    hexToRGBA('#44ccff');
 
-  // Lv2: 眼が2つ（dual_eye_laser）
-  const eyeColor = state === 'hit' ? hexToRGBA('#ff0000') :
-                   isLv2           ? hexToRGBA('#00ffaa') :
-                                     hexToRGBA('#00ccff');
+  // 眼のリング（外周）
+  drawCircleOutline(buf, S, eyeX, eyeY, 3, OUTLINE);
+  // 眼本体
   fillCircle(buf, S, eyeX, eyeY, 2, eyeColor);
-  setPixel(buf, S, eyeX, eyeY, BLACK); // 瞳
+  // 眼の輝き点
+  const eyeGlint = state === 'hit' ? hexToRGBA('#ffaaaa') : hexToRGBA('#ffffff', 200);
+  setPixel(buf, S, eyeX - 1, eyeY - 1, eyeGlint);
 
+  // Lv2: 2つ目の眼（隣接位置に小さな眼）
   if (isLv2) {
-    // 2つ目の眼（90度ずれた位置）
     let eye2X: number, eye2Y: number;
     if (dir === 'down' || dir === 'up') {
-      eye2X = cx + deadTiltX + 3;
-      eye2Y = cy + dOff.dy * 2;
+      eye2X = cx2 + 3;
+      eye2Y = cy2 + dOff.dy * 2;
     } else {
-      eye2X = cx + deadTiltX + dOff.dx * 2;
-      eye2Y = cy + 3;
+      eye2X = cx2 + dOff.dx * 2;
+      eye2Y = cy2 + 3;
     }
     fillCircle(buf, S, eye2X, eye2Y, 2, eyeColor);
-    setPixel(buf, S, eye2X, eye2Y, BLACK);
+    setPixel(buf, S, eye2X - 1, eye2Y - 1, eyeGlint);
+    drawCircleOutline(buf, S, eye2X, eye2Y, 2, OUTLINE);
   }
 
-  // -- attack: 眼からレーザービーム --
+  // ---------------------------------------------------------------------------
+  // attack: レーザービーム
+  // frame0: 短いビーム(5px), frame1: 長いビーム(10px), frame2: 閃光
+  // ---------------------------------------------------------------------------
   if (state === 'attack') {
-    const beamLen = frame === 0 ? 4 : frame === 1 ? 8 : 0;
-    const beamColor = hexToRGBA('#00eeff');
     if (frame === 2) {
-      // frame2: 閃光（眼の周囲が光る）
-      fillCircle(buf, S, eyeX, eyeY, 4, hexToRGBA('#ffffff', 200));
+      // 閃光（眼の周囲）
+      fillCircle(buf, S, eyeX, eyeY, 5, hexToRGBA('#ffffff', 180));
+      fillCircle(buf, S, eyeX + dOff.dx * 4, eyeY + dOff.dy * 4, 3, hexToRGBA('#ffeeaa', 160));
     } else {
+      const beamLen = frame === 0 ? 5 : 10;
+      const beamCore  = hexToRGBA('#ffffff', 240);
+      const beamInner = isLv2 ? hexToRGBA('#44ffaa', 220) : hexToRGBA('#44ccff', 220);
+      const beamOuter = isLv2 ? hexToRGBA('#22aa66', 150) : hexToRGBA('#2299cc', 150);
       for (let i = 1; i <= beamLen; i++) {
         const bx = eyeX + dOff.dx * i;
         const by = eyeY + dOff.dy * i;
-        setPixel(buf, S, bx, by, beamColor);
-        // ビームに幅を持たせる
-        if (i > 1) {
-          setPixel(buf, S, bx + dOff.dy, by + dOff.dx, hexToRGBA('#00ccee', 180));
-          setPixel(buf, S, bx - dOff.dy, by - dOff.dx, hexToRGBA('#00ccee', 180));
+        setPixel(buf, S, bx, by, i <= 2 ? beamCore : beamInner);
+        if (i >= 2 && i <= beamLen - 1) {
+          setPixel(buf, S, bx + dOff.dy, by + dOff.dx, beamOuter);
+          setPixel(buf, S, bx - dOff.dy, by - dOff.dx, beamOuter);
         }
       }
     }
@@ -341,107 +439,157 @@ function drawMineBeetle(
   frame: number,
   isLv2: boolean
 ): void {
-  const SHELL_BASE  = '#4a3a2a';
-  const SHELL_LV2   = '#5a2a2a'; // Lv2: 赤みを帯びる
-  const HIGHLIGHT   = '#6b5a4a';
-  const LEG         = '#2a2a2a';
-  const LAMP_BASE   = '#ff2200';
-  const LAMP_BRIGHT = '#ff6600';
+  // ---- パレット（明るく鮮やか）----
+  const SHELL_BASE  = '#cc7744'; // 琥珀/赤茶
+  const SHELL_HI    = '#ee9955'; // ハイライト
+  const SHELL_SH    = '#aa5533'; // 影
+  const SHELL_LV2   = '#dd4433'; // Lv2 甲羅
+  const SHELL_HI_L2 = '#ff6655'; // Lv2 ハイライト
+  const LEG_COL     = '#664422'; // 脚（濃い茶）
+  const LAMP_BASE   = '#ff3300'; // ランプ基本色
+  const LAMP_BRIGHT = '#ffaa00'; // ランプ明色
 
   const shellHex = isLv2 ? SHELL_LV2 : SHELL_BASE;
-  const shell  = hexToRGBA(shellHex);
-  const hi     = hexToRGBA(HIGHLIGHT);
-  const leg    = hexToRGBA(LEG);
+  const shellHiHex = isLv2 ? SHELL_HI_L2 : SHELL_HI;
 
-  const dOff = dirOffset(dir);
+  const shell   = hexToRGBA(shellHex);
+  const shellHi = hexToRGBA(shellHiHex);
+  const shellSh = hexToRGBA(SHELL_SH);
+  const leg     = hexToRGBA(LEG_COL);
 
-  // move: 脚が交互に動く
-  const bounceY = state === 'move' && frame === 1 ? 1 : 0;
-
-  // dead: 甲羅が割れて爆発
+  // 固定中心座標（フレームで変えない → 点滅防止）
   const cx = 16;
-  const cy = 18 + bounceY;
+  const cy = 17;
 
+  // dead frame2: 爆発（全面描画して return）
   if (state === 'dead' && frame === 2) {
-    // 爆発
-    fillCircle(buf, S, cx, cy, 10, hexToRGBA('#ff6600', 180));
-    fillCircle(buf, S, cx, cy, 6,  hexToRGBA('#ffcc00', 220));
-    fillCircle(buf, S, cx, cy, 3,  hexToRGBA('#ffffff', 240));
+    fillCircle(buf, S, cx, cy, 11, hexToRGBA('#ff6600', 200));
+    fillCircle(buf, S, cx, cy, 7,  hexToRGBA('#ffcc00', 230));
+    fillCircle(buf, S, cx, cy, 3,  hexToRGBA('#ffffff', 255));
     return;
   }
 
-  const shellColor = state === 'hit' ? hexToRGBA('#884444') :
-                     state === 'dead' && frame === 1 ? hexToRGBA('#3a2a1a') :
-                     shell;
+  // hit: 甲羅が赤みがかる（形状は変えない）
+  const shellColor = state === 'hit'
+    ? hexToRGBA('#ee5544')
+    : shell;
+  const shellHiColor = state === 'hit'
+    ? hexToRGBA('#ff8877')
+    : shellHi;
 
-  // 方向によって描画変更
+  // ---- 方向別描画 ----
   if (dir === 'down') {
-    // 正面: 6本脚が下に見える
+    // 正面：楕円甲羅 + 6本脚（左右に張り出し）
+
+    // 脚（甲羅の下に描いて奥行き感）
+    for (let i = 0; i < 3; i++) {
+      const legBaseY = cy - 1 + i * 2;
+      // move 時だけ奇数/偶数の脚で1px動かす（胴体は動かさない）
+      const legOff = (state === 'move' && (frame % 2) === (i % 2)) ? 1 : 0;
+      // 左脚
+      hLine(buf, S, cx - 13, legBaseY + legOff, 5, leg);
+      setPixel(buf, S, cx - 13, legBaseY + legOff + 1, BLACK);
+      setPixel(buf, S, cx - 9,  legBaseY + legOff + 1, BLACK);
+      // 右脚
+      hLine(buf, S, cx + 8, legBaseY + legOff, 5, leg);
+      setPixel(buf, S, cx + 8,  legBaseY + legOff + 1, BLACK);
+      setPixel(buf, S, cx + 12, legBaseY + legOff + 1, BLACK);
+    }
+
     // 甲羅（楕円）
-    fillEllipse(buf, S, cx, cy, 9, 6, shellColor);
-    fillRect(buf, S, cx - 5, cy - 3, 10, 3, hi); // 上部ハイライト
+    fillEllipse(buf, S, cx, cy, 8, 6, shellColor);
+
+    // ハイライト（上部2行）
+    for (let dy = -5; dy <= -3; dy++) {
+      const hw = Math.floor(8 * Math.sqrt(Math.max(0, 1 - (dy / 6) ** 2)));
+      hLine(buf, S, cx - hw + 1, cy + dy, hw * 2 - 1, shellHiColor);
+    }
+    // 影（下部）
+    for (let dy = 3; dy <= 6; dy++) {
+      const hw = Math.floor(8 * Math.sqrt(Math.max(0, 1 - (dy / 6) ** 2)));
+      hLine(buf, S, cx - hw + 1, cy + dy, hw * 2 - 1, shellSh);
+    }
 
     // アウトライン
     for (let dy = -6; dy <= 6; dy++) {
-      const hw = Math.floor(9 * Math.sqrt(Math.max(0, 1 - (dy / 6) ** 2)));
-      if (dy === -6 || dy === 6) {
-        hLine(buf, S, cx - hw, cy + dy, hw * 2 + 1, BLACK);
-      } else {
-        setPixel(buf, S, cx - hw, cy + dy, BLACK);
-        setPixel(buf, S, cx + hw, cy + dy, BLACK);
-      }
-    }
-
-    // 6本脚（左3右3）
-    for (let i = 0; i < 3; i++) {
-      const legX1 = cx - 9;
-      const legX2 = cx + 9;
-      const legBaseY = cy - 2 + i * 2;
-      // 脚の交互動作
-      const legOff = state === 'move' ? ((frame === 0 ? (i % 2) : (1 - i % 2)) * 2) : 0;
-      // 左脚
-      hLine(buf, S, legX1 - 3, legBaseY + legOff, 4, leg);
-      setPixel(buf, S, legX1 - 3, legBaseY + legOff + 1, leg);
-      // 右脚
-      hLine(buf, S, legX2, legBaseY + legOff, 4, leg);
-      setPixel(buf, S, legX2 + 2, legBaseY + legOff + 1, leg);
-    }
-
-    // 爆弾ランプ（背中中央）
-    drawLamps(buf, S, cx, cy - 1, state, frame, isLv2, LAMP_BASE, LAMP_BRIGHT);
-
-  } else if (dir === 'up') {
-    // 背面: 甲羅のみ（ランプが見える）
-    fillEllipse(buf, S, cx, cy, 9, 6, shellColor);
-    fillRect(buf, S, cx - 5, cy - 3, 10, 3, hexToRGBA('#3a2a1a')); // 背面は暗い
-
-    for (let dy = -6; dy <= 6; dy++) {
-      const hw = Math.floor(9 * Math.sqrt(Math.max(0, 1 - (dy / 6) ** 2)));
+      const hw = Math.floor(8 * Math.sqrt(Math.max(0, 1 - (dy / 6) ** 2)));
       setPixel(buf, S, cx - hw, cy + dy, BLACK);
       setPixel(buf, S, cx + hw, cy + dy, BLACK);
     }
-    hLine(buf, S, cx - 9, cy - 6, 19, BLACK);
-    hLine(buf, S, cx - 9, cy + 6, 19, BLACK);
+    hLine(buf, S, cx - 7, cy - 6, 15, BLACK);
+    hLine(buf, S, cx - 7, cy + 6, 15, BLACK);
 
-    // 6本脚（背面でも見える）
+    // 爆弾ランプ（甲羅中央）
+    drawLamps(buf, S, cx, cy, state, frame, isLv2, LAMP_BASE, LAMP_BRIGHT);
+
+  } else if (dir === 'up') {
+    // 背面：甲羅が見える（ランプ目立つ）
+
+    // 脚
     for (let i = 0; i < 3; i++) {
-      const legBaseY = cy - 2 + i * 2;
-      const legOff = state === 'move' ? ((frame === 0 ? (i % 2) : (1 - i % 2)) * 2) : 0;
-      hLine(buf, S, cx - 12, legBaseY + legOff, 4, leg);
-      hLine(buf, S, cx + 9,  legBaseY + legOff, 4, leg);
+      const legBaseY = cy - 1 + i * 2;
+      const legOff = (state === 'move' && (frame % 2) === (i % 2)) ? 1 : 0;
+      hLine(buf, S, cx - 13, legBaseY + legOff, 5, leg);
+      setPixel(buf, S, cx - 13, legBaseY + legOff + 1, BLACK);
+      setPixel(buf, S, cx - 9,  legBaseY + legOff + 1, BLACK);
+      hLine(buf, S, cx + 8, legBaseY + legOff, 5, leg);
+      setPixel(buf, S, cx + 8,  legBaseY + legOff + 1, BLACK);
+      setPixel(buf, S, cx + 12, legBaseY + legOff + 1, BLACK);
     }
 
-    drawLamps(buf, S, cx, cy - 1, state, frame, isLv2, LAMP_BASE, LAMP_BRIGHT);
+    // 甲羅
+    fillEllipse(buf, S, cx, cy, 8, 6, shellColor);
+
+    // 背面はやや暗め（影多め）
+    for (let dy = -6; dy <= 0; dy++) {
+      const hw = Math.floor(8 * Math.sqrt(Math.max(0, 1 - (dy / 6) ** 2)));
+      hLine(buf, S, cx - hw + 1, cy + dy, hw * 2 - 1, shellSh);
+    }
+    // 上部に薄いハイライト
+    for (let dy = -5; dy <= -4; dy++) {
+      const hw = Math.floor(8 * Math.sqrt(Math.max(0, 1 - (dy / 6) ** 2)));
+      hLine(buf, S, cx - hw + 2, cy + dy, hw * 2 - 3, shellHiColor);
+    }
+
+    // アウトライン
+    for (let dy = -6; dy <= 6; dy++) {
+      const hw = Math.floor(8 * Math.sqrt(Math.max(0, 1 - (dy / 6) ** 2)));
+      setPixel(buf, S, cx - hw, cy + dy, BLACK);
+      setPixel(buf, S, cx + hw, cy + dy, BLACK);
+    }
+    hLine(buf, S, cx - 7, cy - 6, 15, BLACK);
+    hLine(buf, S, cx - 7, cy + 6, 15, BLACK);
+
+    // ランプ（背面でよく見える）
+    drawLamps(buf, S, cx, cy, state, frame, isLv2, LAMP_BASE, LAMP_BRIGHT);
 
   } else {
-    // left / right: 側面（3本脚が見える）
-    const facingRight = dir === 'right';
-    const flipX = facingRight ? 1 : -1;
+    // left / right: 側面
 
-    // 胴体（楕円を横に扁平）
+    const flipX = dir === 'right' ? 1 : -1;
+
+    // 3本脚（下側）
+    for (let i = 0; i < 3; i++) {
+      const legX = cx - 4 + i * 4;
+      const legOff = (state === 'move' && (frame % 2) === (i % 2)) ? 1 : 0;
+      vLine(buf, S, legX, cy + 5, 4 + legOff, leg);
+      setPixel(buf, S, legX - 1, cy + 8 + legOff, BLACK);
+      setPixel(buf, S, legX + 1, cy + 8 + legOff, BLACK);
+    }
+
+    // 胴体（横長楕円）
     fillEllipse(buf, S, cx, cy, 8, 5, shellColor);
-    // 背中ハイライト
-    hLine(buf, S, cx - 6, cy - 4, 12, hi);
+
+    // ハイライト（上部）
+    for (let dy = -4; dy <= -2; dy++) {
+      const hw = Math.floor(8 * Math.sqrt(Math.max(0, 1 - (dy / 5) ** 2)));
+      hLine(buf, S, cx - hw + 1, cy + dy, hw * 2 - 1, shellHiColor);
+    }
+    // 影（下部）
+    for (let dy = 2; dy <= 4; dy++) {
+      const hw = Math.floor(8 * Math.sqrt(Math.max(0, 1 - (dy / 5) ** 2)));
+      hLine(buf, S, cx - hw + 1, cy + dy, hw * 2 - 1, shellSh);
+    }
 
     // アウトライン
     for (let dy = -5; dy <= 5; dy++) {
@@ -449,34 +597,33 @@ function drawMineBeetle(
       setPixel(buf, S, cx - hw, cy + dy, BLACK);
       setPixel(buf, S, cx + hw, cy + dy, BLACK);
     }
-    hLine(buf, S, cx - 8, cy - 5, 17, BLACK);
-    hLine(buf, S, cx - 8, cy + 5, 17, BLACK);
+    hLine(buf, S, cx - 7, cy - 5, 15, BLACK);
+    hLine(buf, S, cx - 7, cy + 5, 15, BLACK);
 
-    // 頭部（向いている方向）
+    // 頭部（向いている方向の端に小さな突起）
     const headX = cx + flipX * 8;
-    fillCircle(buf, S, headX, cy, 3, hi);
-    setPixel(buf, S, headX + flipX * 2, cy, hexToRGBA('#ff4400')); // 目
+    fillCircle(buf, S, headX, cy, 3, shellHiColor);
+    setPixel(buf, S, headX + flipX, cy - 1, shellColor);
+    setPixel(buf, S, headX + flipX, cy,     shellColor);
+    // 目（小さな赤点）
+    setPixel(buf, S, headX + flipX * 2, cy, hexToRGBA('#ff4400'));
+    // 頭部輪郭
+    drawCircleOutline(buf, S, headX, cy, 3, BLACK);
 
-    // 3本脚（下側に見える）
-    for (let i = 0; i < 3; i++) {
-      const legX = cx - 5 + i * 5;
-      const legOff = state === 'move' ? ((frame === 0 ? (i % 2) : (1 - i % 2)) * 2) : 0;
-      vLine(buf, S, legX, cy + 5, 3 + legOff, leg);
-      setPixel(buf, S, legX - 1, cy + 5 + 2 + legOff, leg);
-      setPixel(buf, S, legX + 1, cy + 5 + 2 + legOff, leg);
-    }
-
+    // ランプ（甲羅上）
     drawLamps(buf, S, cx, cy - 1, state, frame, isLv2, LAMP_BASE, LAMP_BRIGHT);
   }
 
-  // hit: ランプが消えかかる（関数内で処理）
-  // levelup: ランプが2つに増える演出（関数内で処理）
-  // attack: ランプ点滅はdrawLamps内
-
-  // dead frame0: 甲羅が割れる線
+  // dead frame0: 甲羅にひび割れ線（黒線2本）
   if (state === 'dead' && frame === 0) {
-    drawLine(buf, S, cx - 3, cy - 4, cx + 2, cy + 4, BLACK);
-    drawLine(buf, S, cx + 1, cy - 3, cx - 2, cy + 3, BLACK);
+    drawLine(buf, S, cx - 2, cy - 5, cx + 3, cy + 5, BLACK);
+    drawLine(buf, S, cx + 2, cy - 4, cx - 3, cy + 4, BLACK);
+  }
+  // dead frame1: 煙（半透明灰円）
+  if (state === 'dead' && frame === 1) {
+    fillCircle(buf, S, cx - 2, cy - 3, 3, hexToRGBA('#aaaaaa', 160));
+    fillCircle(buf, S, cx + 3, cy - 4, 2, hexToRGBA('#cccccc', 140));
+    fillCircle(buf, S, cx,     cy - 2, 4, hexToRGBA('#888888', 120));
   }
 }
 
@@ -492,27 +639,39 @@ function drawLamps(
   lampBaseHex: string,
   lampBrightHex: string
 ): void {
-  const lampBase   = hexToRGBA(lampBaseHex);
-  const lampBright = hexToRGBA(lampBrightHex);
-
+  // ランプ色の決定（色変化のみ、形状・位置は変えない）
   const lampColor =
-    state === 'dead'    ? hexToRGBA('#440000') :
-    state === 'hit'     ? hexToRGBA('#884400') :
-    state === 'attack' && frame === 1 ? lampBright :
-    state === 'attack' && frame === 2 ? hexToRGBA('#ffcc00') :
-    state === 'levelup' ? (frame === 0 ? hexToRGBA('#ffff00') : hexToRGBA('#ffffff')) :
-    lampBase;
+    state === 'dead'                   ? hexToRGBA('#552200') :
+    state === 'hit'                    ? hexToRGBA('#cc4400') :
+    state === 'attack' && frame === 0  ? hexToRGBA(lampBaseHex) :
+    state === 'attack' && frame === 1  ? hexToRGBA(lampBrightHex) :
+    state === 'attack' && frame === 2  ? hexToRGBA('#ffdd00') :
+    state === 'levelup' && frame === 0 ? hexToRGBA('#ffdd00') :
+    state === 'levelup' && frame === 1 ? hexToRGBA('#ffff88') :
+    hexToRGBA(lampBaseHex);
 
-  // ランプ1個目
-  fillCircle(buf, S, cx, cy, 2, lampColor);
-  setPixel(buf, S, cx, cy, hexToRGBA('#ffeeee', 200)); // 内部光
+  // 内部光の色（明るさのみ変わる）
+  const innerColor =
+    state === 'dead'                   ? hexToRGBA('#aa3300', 180) :
+    state === 'attack' && frame === 1  ? hexToRGBA('#ffffff', 240) :
+    state === 'attack' && frame === 2  ? hexToRGBA('#ffffff', 200) :
+    state === 'levelup'                ? hexToRGBA('#ffffff', 220) :
+    hexToRGBA('#ffeecc', 200);
+
+  // ランプの外枠（黒）→ 本体 → 内部光の順に描く
+  const drawOneLamp = (lx: number, ly: number) => {
+    fillCircle(buf, S, lx, ly, 3, BLACK);         // 黒縁
+    fillCircle(buf, S, lx, ly, 2, lampColor);      // ランプ本体
+    setPixel(buf, S, lx - 1, ly - 1, innerColor); // 内部光（左上1px）
+  };
 
   if (isLv2) {
-    // Lv2: ランプ2個
-    fillCircle(buf, S, cx - 3, cy, 2, lampColor);
-    setPixel(buf, S, cx - 3, cy, hexToRGBA('#ffeeee', 200));
-    fillCircle(buf, S, cx + 3, cy, 2, lampColor);
-    setPixel(buf, S, cx + 3, cy, hexToRGBA('#ffeeee', 200));
+    // Lv2: ランプ2個（左右対称）
+    drawOneLamp(cx - 3, cy);
+    drawOneLamp(cx + 3, cy);
+  } else {
+    // Lv1: ランプ1個（中央）
+    drawOneLamp(cx, cy);
   }
 }
 
@@ -530,194 +689,349 @@ function drawGuardBot(
   frame: number,
   isLv2: boolean
 ): void {
-  const BODY_BASE  = '#445566';
-  const BODY_LV2   = '#5566aa'; // Lv2: 少し明るい
-  const HIGHLIGHT  = '#6688aa';
-  const SHADOW     = '#223344';
-  const SHIELD     = '#7799aa';
-  const SHIELD_LV2 = '#99bbcc'; // Lv2: 盾が大きい（色も明るく）
-  const BATON      = '#ffcc33';
-  const ARMOR      = '#8899aa'; // Lv3装甲
+  // ---------------------------------------------------------------------------
+  // パレット（明るく鮮やかな青灰色系）
+  // Lv1: 明るい青灰色ボディ  Lv2: より青く明るいボディ＋肩当て追加
+  // ---------------------------------------------------------------------------
+  const OUTLINE    = hexToRGBA('#112233');
+  const BODY_COLOR = isLv2 ? hexToRGBA('#4477cc') : hexToRGBA('#6699bb');
+  const BODY_HI    = isLv2 ? hexToRGBA('#66aaee') : hexToRGBA('#88bbdd');
+  const BODY_SH    = isLv2 ? hexToRGBA('#2255aa') : hexToRGBA('#3366aa');
+  const SHIELD_COL = isLv2 ? hexToRGBA('#cceeff') : hexToRGBA('#aaccdd');
+  const SHIELD_HI  = isLv2 ? hexToRGBA('#eeffff') : hexToRGBA('#cce8f0');
+  const BATON_COL  = hexToRGBA('#ffdd00');
+  const BATON_HI   = hexToRGBA('#ffff88');
+  const BOLT_COL   = hexToRGBA('#ffee44', 230);
+  const ARMOR_COL  = isLv2 ? hexToRGBA('#3366bb') : hexToRGBA('#5588aa');
+  const ARMOR_HI   = isLv2 ? hexToRGBA('#55aaee') : hexToRGBA('#77aacc');
+  const LEG_COL    = isLv2 ? hexToRGBA('#2255aa') : hexToRGBA('#3366aa');
+  const FOOT_COL   = isLv2 ? hexToRGBA('#1144aa') : hexToRGBA('#224466');
 
-  const bodyHex   = isLv2 ? BODY_LV2 : BODY_BASE;
-  const shieldHex = isLv2 ? SHIELD_LV2 : SHIELD;
-  const body      = hexToRGBA(bodyHex);
-  const hi        = hexToRGBA(HIGHLIGHT);
-  const sh        = hexToRGBA(SHADOW);
-  const shield    = hexToRGBA(shieldHex);
-  const baton     = hexToRGBA(BATON);
+  const isHit     = state === 'hit';
+  const isDead    = state === 'dead';
+  const isAttack  = state === 'attack';
+  const isLevelup = state === 'levelup';
 
-  const bounceY = state === 'move' && frame === 1 ? 1 : 0;
+  // hit: 色変化のみ（形状変化なし）
+  const bodyC  = isHit ? hexToRGBA('#cc5566') : BODY_COLOR;
+  const bodyHi = isHit ? hexToRGBA('#ee7788') : BODY_HI;
+  const bodySh = isHit ? hexToRGBA('#993344') : BODY_SH;
 
-  // dead: 横向きに崩れる
-  const isDead = state === 'dead';
-  const deadTiltX = isDead ? frame * 3 : 0;
-  const deadTiltY = isDead ? frame * 2 : 0;
+  // ---------------------------------------------------------------------------
+  // 固定座標（全フレームで共通。ボディ位置は動かさない）
+  // ---------------------------------------------------------------------------
+  const cx      = 16;
+  const headTop =  5;
+  const bodyTop = 12;
+  const legTop  = bodyTop + 11;
 
-  const cx = 16 + deadTiltX;
-  const headTop = 6 + bounceY + deadTiltY;
-  const bodyTop = 13 + bounceY + deadTiltY;
-  const bodyBot = bodyTop + 12;
-  const legTop  = bodyBot;
+  // ---------------------------------------------------------------------------
+  // 目の色
+  // ---------------------------------------------------------------------------
+  const eyeColor =
+    isDead      ? OUTLINE :
+    isHit       ? hexToRGBA('#ff2200') :
+    isAttack    ? hexToRGBA('#ff4400') :
+    isLevelup   ? hexToRGBA('#ffffff', frame === 0 ? 255 : 200) :
+                  hexToRGBA('#ff8800');
+  const eyeGlow =
+    isLevelup   ? hexToRGBA('#ffffff', frame === 0 ? 200 : 120) :
+    isAttack    ? hexToRGBA('#ffaa00', 180) :
+                  hexToRGBA('#ffcc00', 160);
 
-  // hit: ボディが赤くなる
-  const bodyColor = state === 'hit' ? hexToRGBA('#774455') : body;
+  // ---------------------------------------------------------------------------
+  // 内部ヘルパー: 盾
+  // ---------------------------------------------------------------------------
+  const drawShield = (sx: number, sy: number): void => {
+    const sw = isLv2 ? 5 : 4;
+    const sh = isLv2 ? 8 : 7;
+    const sColor = isHit ? hexToRGBA('#aaddff') : SHIELD_COL;
+    fillRect(buf, S, sx, sy, sw, sh, sColor);
+    vLine(buf, S, sx,      sy, sh,     SHIELD_HI);
+    hLine(buf, S, sx,      sy, sw,     SHIELD_HI);
+    hLine(buf, S, sx,      sy,      sw,     OUTLINE);
+    hLine(buf, S, sx,      sy + sh, sw,     OUTLINE);
+    vLine(buf, S, sx,      sy,      sh + 1, OUTLINE);
+    vLine(buf, S, sx + sw, sy,      sh + 1, OUTLINE);
+  };
 
-  // -- 頭部（8x8）--
-  fillRect(buf, S, cx - 4, headTop, 8, 7, bodyColor);
-  // 頭部ハイライト（上）
-  hLine(buf, S, cx - 4, headTop, 8, hi);
+  // ---------------------------------------------------------------------------
+  // 内部ヘルパー: バトン（縦持ち）
+  // ---------------------------------------------------------------------------
+  const drawBatonVertical = (bx: number, by: number, len: number): void => {
+    fillRect(buf, S, bx, by, 2, len, BATON_COL);
+    vLine(buf, S, bx, by, len, BATON_HI);
+    fillRect(buf, S, bx - 1, by + len - 1, 4, 2, hexToRGBA('#ffbb00'));
+    hLine(buf, S, bx - 1, by + len + 1, 4, OUTLINE);
+    vLine(buf, S, bx - 1, by,           len + 2, OUTLINE);
+    vLine(buf, S, bx + 2, by,           len + 2, OUTLINE);
+    hLine(buf, S, bx - 1, by,           4, OUTLINE);
+    if (isLevelup) {
+      fillRect(buf, S, bx, by, 2, len, hexToRGBA('#ffffff', frame === 0 ? 180 : 100));
+    }
+  };
 
-  // 目（方向によって位置変化）
-  const dOff = dirOffset(dir);
-  const eyeColor = state === 'dead' ? hexToRGBA('#223344') :
-                   state === 'hit'  ? hexToRGBA('#ff2200') :
-                   hexToRGBA('#ff8800');
-  // 正面/背面では両目、横向きでは1つ
-  if (dir === 'down') {
-    setPixel(buf, S, cx - 2, headTop + 3, eyeColor);
-    setPixel(buf, S, cx + 1, headTop + 3, eyeColor);
-    // 眼の光
-    setPixel(buf, S, cx - 2, headTop + 2, hexToRGBA('#ffcc00', 180));
-    setPixel(buf, S, cx + 1, headTop + 2, hexToRGBA('#ffcc00', 180));
-  } else if (dir === 'up') {
-    // 背面: 目が見えない（暗い）
-    setPixel(buf, S, cx - 2, headTop + 3, hexToRGBA('#334455'));
-    setPixel(buf, S, cx + 1, headTop + 3, hexToRGBA('#334455'));
-  } else if (dir === 'left') {
-    setPixel(buf, S, cx - 3, headTop + 3, eyeColor);
-  } else {
-    setPixel(buf, S, cx + 2, headTop + 3, eyeColor);
+  // ---------------------------------------------------------------------------
+  // 内部ヘルパー: バトン（横持ち）
+  // ---------------------------------------------------------------------------
+  const drawBatonHorizontal = (bx: number, by: number, len: number): void => {
+    fillRect(buf, S, bx, by, len, 2, BATON_COL);
+    hLine(buf, S, bx, by, len, BATON_HI);
+    fillRect(buf, S, bx + len - 1, by - 1, 2, 4, hexToRGBA('#ffbb00'));
+    hLine(buf, S, bx - 1, by - 1,       len + 3, OUTLINE);
+    hLine(buf, S, bx - 1, by + 2,       len + 3, OUTLINE);
+    vLine(buf, S, bx - 1, by - 1,       4, OUTLINE);
+    vLine(buf, S, bx + len + 1, by - 1, 4, OUTLINE);
+    if (isLevelup) {
+      fillRect(buf, S, bx, by, len, 2, hexToRGBA('#ffffff', frame === 0 ? 180 : 100));
+    }
+  };
+
+  // ---------------------------------------------------------------------------
+  // dead アニメーション: ボディを傾けて横倒しに見せる
+  // frame0=少し右傾き, frame1=大きく傾き, frame2=ほぼ横倒し
+  // ボディ全体を描いた後にオーバーレイで暗くする方式
+  // ---------------------------------------------------------------------------
+  if (isDead) {
+    // dead frame2: 完全倒壊（横倒し状態をラスタ描画）
+    // ロボを横向きに描く（頭が右、足が左）
+    const tiltY = frame === 0 ? 1 : frame === 1 ? 3 : 6;
+    const tiltX = frame === 0 ? 1 : frame === 1 ? 3 : 5;
+
+    // 暗くなったボディ色（死亡）。元色より20〜30%暗くして視認性を保つ
+    const deadBodyC  = isLv2 ? hexToRGBA('#2255aa', 230) : hexToRGBA('#4477aa', 230);
+    const deadBodySh = hexToRGBA('#223355', 200);
+
+    // ボディ（傾きで描画）
+    for (let row = 0; row < 11; row++) {
+      const tiltRow = Math.round(row * tiltY / 10);
+      const colShift = Math.round(row * tiltX / 10);
+      fillRect(buf, S, cx - 5 + colShift, bodyTop + row + tiltRow, 10, 1, deadBodyC);
+    }
+    // ボディ輪郭
+    hLine(buf, S, cx - 5, bodyTop, 10, OUTLINE);
+    hLine(buf, S, cx - 5 + tiltX, bodyTop + 10 + tiltY, 10, OUTLINE);
+    vLine(buf, S, cx - 5, bodyTop, 11, OUTLINE);
+    vLine(buf, S, cx + 4, bodyTop, 4, OUTLINE);
+
+    // 頭部（ボディの上 = dead では右側へ）
+    for (let row = 0; row < 7; row++) {
+      const tiltRow = Math.round(row * tiltY / 10);
+      const colShift = Math.round(row * tiltX / 10) + tiltX;
+      fillRect(buf, S, cx - 4 + colShift, headTop + row + tiltRow + tiltY, 8, 1, deadBodyC);
+    }
+    hLine(buf, S, cx - 4 + tiltX, headTop + tiltY, 8, OUTLINE);
+    vLine(buf, S, cx - 4 + tiltX, headTop + tiltY, 7, OUTLINE);
+    vLine(buf, S, cx + 3 + tiltX, headTop + tiltY, 7, OUTLINE);
+    hLine(buf, S, cx - 4 + tiltX + Math.round(tiltX / 2), headTop + 7 + tiltY, 8, OUTLINE);
+
+    // 目がバツ印（頭の中央付近）
+    if (frame >= 1) {
+      const ex = cx - 2 + tiltX;
+      const ey = headTop + 2 + tiltY;
+      setPixel(buf, S, ex,     ey,     OUTLINE);
+      setPixel(buf, S, ex + 1, ey + 1, OUTLINE);
+      setPixel(buf, S, ex + 2, ey + 2, OUTLINE);
+      setPixel(buf, S, ex + 2, ey,     OUTLINE);
+      setPixel(buf, S, ex + 1, ey + 1, OUTLINE);
+      setPixel(buf, S, ex,     ey + 2, OUTLINE);
+    }
+
+    // 脚（倒れて短くなる）
+    if (frame === 0) {
+      fillRect(buf, S, cx - 5, legTop, 3, 5, LEG_COL);
+      fillRect(buf, S, cx + 2, legTop, 3, 5, LEG_COL);
+      fillRect(buf, S, cx - 6, legTop + 4, 4, 2, FOOT_COL);
+      fillRect(buf, S, cx + 2, legTop + 4, 4, 2, FOOT_COL);
+    } else if (frame === 1) {
+      fillRect(buf, S, cx - 4, legTop + 2, 3, 3, LEG_COL);
+      fillRect(buf, S, cx + 2, legTop + 1, 3, 3, LEG_COL);
+    }
+    // frame2 では脚は描かない（完全倒壊）
+
+    return;
   }
 
-  // -- ボディ（12x16）--
-  fillRect(buf, S, cx - 6, bodyTop, 12, 12, bodyColor);
-  // ハイライト（上・左）
-  hLine(buf, S, cx - 6, bodyTop, 12, hi);
-  vLine(buf, S, cx - 6, bodyTop, 12, hi);
-  // 影（右・下）
-  vLine(buf, S, cx + 5, bodyTop, 12, sh);
-  hLine(buf, S, cx - 6, bodyTop + 11, 12, sh);
+  // ---------------------------------------------------------------------------
+  // 通常描画（idle / move / attack / hit / levelup）
+  // ---------------------------------------------------------------------------
 
-  // Lv3: 肩当て・胸当て（装甲板）
+  // ---------------------------------------------------------------------------
+  // 1. 脚（ボディより先に描く）
+  // move: 左右の脚の高さを1px交互にずらす（バウンドの代わり）
+  // ---------------------------------------------------------------------------
+  const isMove = state === 'move';
+  // moveフレーム間で脚の高さを1pxだけ交互にずらす（ボディ固定・脚のみ動く）
+  const legH0 = isMove ? (frame === 0 ? 6 : 5) : 5;
+  const legH1 = isMove ? (frame === 0 ? 5 : 6) : 5;
+
+  // 左脚
+  fillRect(buf, S, cx - 5, legTop, 3, legH0, LEG_COL);
+  fillRect(buf, S, cx - 6, legTop + legH0 - 1, 4, 2, FOOT_COL);
+  hLine(buf, S, cx - 6, legTop + legH0 + 1, 4, OUTLINE);
+  vLine(buf, S, cx - 6, legTop,             legH0 + 2, OUTLINE);
+  vLine(buf, S, cx - 3, legTop,             legH0 + 2, OUTLINE);
+
+  // 右脚
+  fillRect(buf, S, cx + 2, legTop, 3, legH1, LEG_COL);
+  fillRect(buf, S, cx + 2, legTop + legH1 - 1, 4, 2, FOOT_COL);
+  hLine(buf, S, cx + 2, legTop + legH1 + 1, 4, OUTLINE);
+  vLine(buf, S, cx + 2, legTop,             legH1 + 2, OUTLINE);
+  vLine(buf, S, cx + 5, legTop,             legH1 + 2, OUTLINE);
+
+  // ---------------------------------------------------------------------------
+  // 2. ボディ（10x11）固定位置
+  // ---------------------------------------------------------------------------
+  fillRect(buf, S, cx - 5, bodyTop, 10, 11, bodyC);
+  hLine(buf, S, cx - 5, bodyTop,      10, bodyHi);
+  vLine(buf, S, cx - 5, bodyTop,      11, bodyHi);
+  vLine(buf, S, cx + 4, bodyTop,      11, bodySh);
+  hLine(buf, S, cx - 5, bodyTop + 10, 10, bodySh);
+  // 装甲パネル区切り線
+  hLine(buf, S, cx - 4, bodyTop + 5,  8, bodySh);
+  // アウトライン
+  hLine(buf, S, cx - 5, bodyTop,      10, OUTLINE);
+  hLine(buf, S, cx - 5, bodyTop + 11, 10, OUTLINE);
+  vLine(buf, S, cx - 5, bodyTop,      12, OUTLINE);
+  vLine(buf, S, cx + 4, bodyTop,      12, OUTLINE);
+
+  // Lv2: 肩当て
   if (isLv2) {
-    fillRect(buf, S, cx - 8, bodyTop, 3, 4, hexToRGBA(ARMOR));
-    fillRect(buf, S, cx + 5, bodyTop, 3, 4, hexToRGBA(ARMOR));
-    fillRect(buf, S, cx - 4, bodyTop + 2, 8, 3, hexToRGBA(ARMOR));
+    // 左肩当て
+    fillRect(buf, S, cx - 8, bodyTop, 3, 4, ARMOR_COL);
+    hLine(buf, S, cx - 8, bodyTop,     3, ARMOR_HI);
+    hLine(buf, S, cx - 8, bodyTop,     3, OUTLINE);
+    hLine(buf, S, cx - 8, bodyTop + 4, 3, OUTLINE);
+    vLine(buf, S, cx - 8, bodyTop,     5, OUTLINE);
+    vLine(buf, S, cx - 6, bodyTop,     5, OUTLINE);
+    // 右肩当て
+    fillRect(buf, S, cx + 5, bodyTop, 3, 4, ARMOR_COL);
+    hLine(buf, S, cx + 5, bodyTop,     3, ARMOR_HI);
+    hLine(buf, S, cx + 5, bodyTop,     3, OUTLINE);
+    hLine(buf, S, cx + 5, bodyTop + 4, 3, OUTLINE);
+    vLine(buf, S, cx + 5, bodyTop,     5, OUTLINE);
+    vLine(buf, S, cx + 7, bodyTop,     5, OUTLINE);
   }
 
-  // アウトライン（ボディ）
-  hLine(buf, S, cx - 6, bodyTop, 12, BLACK);
-  hLine(buf, S, cx - 6, bodyTop + 12, 12, BLACK);
-  vLine(buf, S, cx - 6, bodyTop, 13, BLACK);
-  vLine(buf, S, cx + 5, bodyTop, 13, BLACK);
-  // 頭部アウトライン
-  hLine(buf, S, cx - 4, headTop, 8, BLACK);
-  vLine(buf, S, cx - 4, headTop, 7, BLACK);
-  vLine(buf, S, cx + 3, headTop, 7, BLACK);
+  // ---------------------------------------------------------------------------
+  // 3. 頭部（8x7）固定位置
+  // ---------------------------------------------------------------------------
+  fillRect(buf, S, cx - 4, headTop, 8, 7, bodyC);
+  hLine(buf, S, cx - 4, headTop,     8, bodyHi);
+  vLine(buf, S, cx - 4, headTop,     7, bodyHi);
+  vLine(buf, S, cx + 3, headTop,     7, bodySh);
+  hLine(buf, S, cx - 4, headTop + 6, 8, bodySh);
+  // アウトライン
+  hLine(buf, S, cx - 4, headTop,     8, OUTLINE);
+  vLine(buf, S, cx - 4, headTop,     7, OUTLINE);
+  vLine(buf, S, cx + 3, headTop,     7, OUTLINE);
+  hLine(buf, S, cx - 4, headTop + 7, 8, OUTLINE);
 
-  // -- 脚（二足歩行）--
-  const legOff0 = state === 'move' && frame === 0 ? -2 : 0;
-  const legOff1 = state === 'move' && frame === 0 ? 2  : 0;
-  if (!isDead) {
-    // 左脚
-    fillRect(buf, S, cx - 5, legTop, 3, 5 + legOff0, sh);
-    // 右脚
-    fillRect(buf, S, cx + 2, legTop, 3, 5 + legOff1, sh);
-    // 足先
-    fillRect(buf, S, cx - 6, legTop + 4 + legOff0, 4, 2, hexToRGBA(SHADOW));
-    fillRect(buf, S, cx + 2, legTop + 4 + legOff1, 4, 2, hexToRGBA(SHADOW));
+  // アンテナ（頭頂）
+  setPixel(buf, S, cx - 1, headTop - 1, BODY_HI);
+  setPixel(buf, S, cx - 1, headTop - 2, OUTLINE);
+  setPixel(buf, S, cx + 1, headTop - 1, BODY_HI);
+  setPixel(buf, S, cx + 1, headTop - 2, OUTLINE);
+
+  // 目（方向別・固定位置）
+  if (dir === 'down') {
+    fillRect(buf, S, cx - 3, headTop + 3, 2, 2, eyeColor);
+    fillRect(buf, S, cx + 1, headTop + 3, 2, 2, eyeColor);
+    setPixel(buf, S, cx - 3, headTop + 3, eyeGlow);
+    setPixel(buf, S, cx + 1, headTop + 3, eyeGlow);
+  } else if (dir === 'up') {
+    // 背面: 目はほぼ見えないが後頭部にわずかに反映
+    setPixel(buf, S, cx - 2, headTop + 3, BODY_SH);
+    setPixel(buf, S, cx + 1, headTop + 3, BODY_SH);
+  } else if (dir === 'left') {
+    fillRect(buf, S, cx - 3, headTop + 3, 2, 2, eyeColor);
+    setPixel(buf, S, cx - 3, headTop + 3, eyeGlow);
+  } else {
+    fillRect(buf, S, cx + 1, headTop + 3, 2, 2, eyeColor);
+    setPixel(buf, S, cx + 2, headTop + 3, eyeGlow);
   }
 
-  // -- 盾と武器の配置（方向別）--
-  // down: 左腕に盾、右腕にバトン
-  // up: 盾と武器が後ろ側（見えにくい）
-  // left: 盾が前（左）、バトンが後ろ（右）
-  // right: バトンが前（右）、盾が後ろ（左）
+  // ---------------------------------------------------------------------------
+  // 4. 武器・盾（方向別）
+  // 攻撃時はバトンを前方に突き出す（frame1のみ +2px）
+  // 形状変化は武器のみ、ボディ・頭部は変化なし
+  // ---------------------------------------------------------------------------
+  const attackPush = isAttack && frame === 1 ? 2 : 0;
 
-  const isAttack = state === 'attack';
-  const attackPush = isAttack && frame === 1 ? 4 : 0;
-  const isHitShield = state === 'hit'; // 盾が光る
-
-  if (!isDead) {
-    if (dir === 'down') {
-      // 左腕: 盾
-      const shieldW = isLv2 ? 6 : 5;
-      const shieldH = isLv2 ? 9 : 7;
-      const sX = cx - 10;
-      const sY = bodyTop + 1;
-      fillRect(buf, S, sX, sY, shieldW, shieldH, isHitShield ? hexToRGBA('#aaccff') : shield);
-      hLine(buf, S, sX, sY, shieldW, BLACK);
-      hLine(buf, S, sX, sY + shieldH, shieldW, BLACK);
-      vLine(buf, S, sX, sY, shieldH, BLACK);
-      vLine(buf, S, sX + shieldW - 1, sY, shieldH + 1, BLACK);
-
-      // 右腕: バトン（攻撃時に突き出す）
-      const batonY = bodyTop + attackPush;
-      fillRect(buf, S, cx + 6, bodyTop + 2, 2, 7 + attackPush, baton);
-      hLine(buf, S, cx + 5, batonY + 6 + attackPush, 4, BLACK);
-      // 電撃エフェクト（攻撃時）
-      if (isAttack) {
-        const boltColor = hexToRGBA('#ffee00', 200);
-        setPixel(buf, S, cx + 7, batonY, boltColor);
-        setPixel(buf, S, cx + 6, batonY - 1, boltColor);
-        setPixel(buf, S, cx + 8, batonY - 1, boltColor);
-        if (frame === 1) {
-          for (let i = 0; i < 4; i++) {
-            setPixel(buf, S, cx + 7 + (i % 2 === 0 ? 1 : -1), batonY - 2 - i, boltColor);
-          }
-        }
+  if (dir === 'down') {
+    // 正面: 左腕=盾（左側）、右腕=バトン（右側・下向き）
+    drawShield(cx - 11, bodyTop + 1);
+    const batonLen = 7 + attackPush;
+    drawBatonVertical(cx + 6, bodyTop + 1, batonLen);
+    // 電撃エフェクト（attack時のみ・バトン先端）
+    if (isAttack) {
+      const tipY = bodyTop + 1 + batonLen + 2;
+      setPixel(buf, S, cx + 5, tipY,     BOLT_COL);
+      setPixel(buf, S, cx + 7, tipY,     BOLT_COL);
+      setPixel(buf, S, cx + 6, tipY + 1, BOLT_COL);
+      if (frame === 1) {
+        setPixel(buf, S, cx + 5, tipY + 2, BOLT_COL);
+        setPixel(buf, S, cx + 7, tipY + 2, BOLT_COL);
+        setPixel(buf, S, cx + 6, tipY + 3, BOLT_COL);
       }
-      // levelup: バトンが光る
-      if (state === 'levelup') {
-        fillRect(buf, S, cx + 6, bodyTop + 2, 2, 7, hexToRGBA('#ffffff', frame === 0 ? 200 : 120));
+    }
+
+  } else if (dir === 'up') {
+    // 背面: 盾とバトンが後ろ側（半透明で見える）
+    const sw = isLv2 ? 5 : 4;
+    const sh = isLv2 ? 8 : 7;
+    fillRect(buf, S, cx - 10, bodyTop + 2, sw, sh, hexToRGBA('#6688aa', 200));
+    hLine(buf, S, cx - 10, bodyTop + 2,      sw, OUTLINE);
+    hLine(buf, S, cx - 10, bodyTop + 2 + sh, sw, OUTLINE);
+    vLine(buf, S, cx - 10, bodyTop + 2,      sh + 1, OUTLINE);
+    vLine(buf, S, cx - 10 + sw, bodyTop + 2, sh + 1, OUTLINE);
+    fillRect(buf, S, cx + 6, bodyTop + 2, 2, 6, hexToRGBA('#ccaa00'));
+    vLine(buf, S, cx + 5, bodyTop + 2, 6, OUTLINE);
+    vLine(buf, S, cx + 7, bodyTop + 2, 6, OUTLINE);
+
+  } else if (dir === 'left') {
+    // 左向き: 盾が前（左側）、バトンが後ろ（右側）
+    const shieldPush = isAttack && frame === 1 ? 2 : 0;
+    drawShield(cx - 11 - shieldPush, bodyTop + 1);
+    // バトン（後ろ側: 右、暗い黄色）
+    fillRect(buf, S, cx + 5, bodyTop + 3, 2, 5, hexToRGBA('#ccaa00'));
+    vLine(buf, S, cx + 4, bodyTop + 3, 5, OUTLINE);
+    vLine(buf, S, cx + 6, bodyTop + 3, 5, OUTLINE);
+    // 電撃（attack時: 盾の左端）
+    if (isAttack) {
+      const boltX = cx - 11 - shieldPush - 1;
+      setPixel(buf, S, boltX,     bodyTop + 3, BOLT_COL);
+      setPixel(buf, S, boltX - 1, bodyTop + 4, BOLT_COL);
+      setPixel(buf, S, boltX,     bodyTop + 5, BOLT_COL);
+      if (frame === 1) {
+        setPixel(buf, S, boltX - 2, bodyTop + 3, BOLT_COL);
+        setPixel(buf, S, boltX - 2, bodyTop + 5, BOLT_COL);
+        setPixel(buf, S, boltX - 3, bodyTop + 4, BOLT_COL);
       }
+    }
 
-    } else if (dir === 'up') {
-      // 背面
-      const shieldW = isLv2 ? 6 : 5;
-      const shieldH = isLv2 ? 9 : 7;
-      fillRect(buf, S, cx - 9, bodyTop + 2, shieldW, shieldH, hexToRGBA('#556677')); // 暗い
-      fillRect(buf, S, cx + 5, bodyTop + 2, 2, 6, hexToRGBA('#bb9922')); // バトン（暗い）
-
-    } else if (dir === 'left') {
-      // 盾が前（左側）、バトンが後ろ（右側）
-      const shieldW = isLv2 ? 6 : 5;
-      const shieldH = isLv2 ? 9 : 7;
-      const sX = cx - 10 - attackPush;
-      const sY = bodyTop + 1;
-      fillRect(buf, S, sX, sY, shieldW, shieldH, isHitShield ? hexToRGBA('#aaccff') : shield);
-      hLine(buf, S, sX, sY, shieldW, BLACK);
-      hLine(buf, S, sX, sY + shieldH, shieldW, BLACK);
-      vLine(buf, S, sX, sY, shieldH, BLACK);
-      vLine(buf, S, sX + shieldW, sY, shieldH + 1, BLACK);
-      // バトン後ろ側
-      fillRect(buf, S, cx + 5, bodyTop + 3, 2, 6, baton);
-
-    } else {
-      // right: バトンが前（右側）、盾が後ろ（左側）
-      const shieldW = isLv2 ? 6 : 5;
-      const shieldH = isLv2 ? 9 : 7;
-      // 盾（後ろ）
-      fillRect(buf, S, cx - 8, bodyTop + 2, shieldW, shieldH, hexToRGBA('#5577889'));
-      fillRect(buf, S, cx - 8, bodyTop + 2, shieldW, shieldH, hexToRGBA('#556677'));
-      // バトン（前、攻撃的）
-      const bX = cx + 6 + attackPush;
-      fillRect(buf, S, bX, bodyTop + 2, 2, 7, baton);
-      hLine(buf, S, bX - 1, bodyTop + 2 + attackPush, 4, BLACK);
-      if (isAttack) {
-        const boltColor = hexToRGBA('#ffee00', 200);
-        setPixel(buf, S, bX + 1, bodyTop + 1, boltColor);
-        setPixel(buf, S, bX,     bodyTop,     boltColor);
-        setPixel(buf, S, bX + 2, bodyTop,     boltColor);
-        if (frame === 1) {
-          for (let i = 0; i < 4; i++) {
-            setPixel(buf, S, bX + 3 + i, bodyTop + (i % 2 === 0 ? 1 : -1), boltColor);
-          }
-        }
-      }
-      if (state === 'levelup') {
-        fillRect(buf, S, bX, bodyTop + 2, 2, 7, hexToRGBA('#ffffff', frame === 0 ? 200 : 120));
+  } else {
+    // right: バトンが前（右側・横向き）、盾が後ろ（左側）
+    const sw = isLv2 ? 5 : 4;
+    const sh = isLv2 ? 8 : 7;
+    fillRect(buf, S, cx - 9, bodyTop + 2, sw, sh, hexToRGBA('#6688aa', 200));
+    hLine(buf, S, cx - 9, bodyTop + 2,      sw, OUTLINE);
+    hLine(buf, S, cx - 9, bodyTop + 2 + sh, sw, OUTLINE);
+    vLine(buf, S, cx - 9, bodyTop + 2,      sh + 1, OUTLINE);
+    vLine(buf, S, cx - 9 + sw, bodyTop + 2, sh + 1, OUTLINE);
+    // バトン（横向き: 右に突き出す）
+    const batonLen = 6 + attackPush;
+    drawBatonHorizontal(cx + 5, bodyTop + 3, batonLen);
+    // 電撃（バトン右端）
+    if (isAttack) {
+      const boltX = cx + 5 + batonLen + 2;
+      setPixel(buf, S, boltX,     bodyTop + 2, BOLT_COL);
+      setPixel(buf, S, boltX + 1, bodyTop + 4, BOLT_COL);
+      setPixel(buf, S, boltX,     bodyTop + 5, BOLT_COL);
+      if (frame === 1) {
+        setPixel(buf, S, boltX + 2, bodyTop + 2, BOLT_COL);
+        setPixel(buf, S, boltX + 2, bodyTop + 5, BOLT_COL);
+        setPixel(buf, S, boltX + 3, bodyTop + 4, BOLT_COL);
       }
     }
   }
