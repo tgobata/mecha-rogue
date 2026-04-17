@@ -44,265 +44,255 @@
       "file": "public/sprites/tiles/shop.png",
       "width": 32,
       "height": 32
-    },
-    "oil": {
-      "file": "public/sprites/tile_oil.png",
-      "width": 32,
-      "height": 32
-    },
-    "fire": {
-      "file": "public/sprites/tile_fire.png",
-      "width": 32,
-      "height": 32
     }
   },
   "player": {
     "idle": [
       {
         "file": "public/sprites/player/idle_0.png",
-        "width": 32,
-        "height": 32
+        "width": 64,
+        "height": 64
       },
       {
         "file": "public/sprites/player/idle_1.png",
-        "width": 32,
-        "height": 32
+        "width": 64,
+        "height": 64
       }
     ],
     "move": [
       {
         "file": "public/sprites/player/move_0.png",
-        "width": 32,
-        "height": 32
+        "width": 64,
+        "height": 64
       },
       {
         "file": "public/sprites/player/move_1.png",
-        "width": 32,
-        "height": 32
+        "width": 64,
+        "height": 64
       }
     ],
     "idle_down": [
       {
         "file": "public/sprites/player/idle_down_0.png",
-        "width": 32,
-        "height": 32
+        "width": 64,
+        "height": 64
       },
       {
         "file": "public/sprites/player/idle_down_1.png",
-        "width": 32,
-        "height": 32
+        "width": 64,
+        "height": 64
       }
     ],
     "move_down": [
       {
         "file": "public/sprites/player/move_down_0.png",
-        "width": 32,
-        "height": 32
+        "width": 64,
+        "height": 64
       },
       {
         "file": "public/sprites/player/move_down_1.png",
-        "width": 32,
-        "height": 32
+        "width": 64,
+        "height": 64
       }
     ],
     "attack_down": [
       {
         "file": "public/sprites/player/attack_down_0.png",
-        "width": 32,
-        "height": 32
+        "width": 64,
+        "height": 64
       },
       {
         "file": "public/sprites/player/attack_down_1.png",
-        "width": 32,
-        "height": 32
+        "width": 64,
+        "height": 64
       },
       {
         "file": "public/sprites/player/attack_down_2.png",
-        "width": 32,
-        "height": 32
+        "width": 64,
+        "height": 64
       }
     ],
     "hit_down": [
       {
         "file": "public/sprites/player/hit_down_0.png",
-        "width": 32,
-        "height": 32
+        "width": 64,
+        "height": 64
       },
       {
         "file": "public/sprites/player/hit_down_1.png",
-        "width": 32,
-        "height": 32
+        "width": 64,
+        "height": 64
       }
     ],
     "idle_up": [
       {
         "file": "public/sprites/player/idle_up_0.png",
-        "width": 32,
-        "height": 32
+        "width": 64,
+        "height": 64
       },
       {
         "file": "public/sprites/player/idle_up_1.png",
-        "width": 32,
-        "height": 32
+        "width": 64,
+        "height": 64
       }
     ],
     "move_up": [
       {
         "file": "public/sprites/player/move_up_0.png",
-        "width": 32,
-        "height": 32
+        "width": 64,
+        "height": 64
       },
       {
         "file": "public/sprites/player/move_up_1.png",
-        "width": 32,
-        "height": 32
+        "width": 64,
+        "height": 64
       }
     ],
     "attack_up": [
       {
         "file": "public/sprites/player/attack_up_0.png",
-        "width": 32,
-        "height": 32
+        "width": 64,
+        "height": 64
       },
       {
         "file": "public/sprites/player/attack_up_1.png",
-        "width": 32,
-        "height": 32
+        "width": 64,
+        "height": 64
       },
       {
         "file": "public/sprites/player/attack_up_2.png",
-        "width": 32,
-        "height": 32
+        "width": 64,
+        "height": 64
       }
     ],
     "hit_up": [
       {
         "file": "public/sprites/player/hit_up_0.png",
-        "width": 32,
-        "height": 32
+        "width": 64,
+        "height": 64
       },
       {
         "file": "public/sprites/player/hit_up_1.png",
-        "width": 32,
-        "height": 32
+        "width": 64,
+        "height": 64
       }
     ],
     "idle_left": [
       {
         "file": "public/sprites/player/idle_left_0.png",
-        "width": 32,
-        "height": 32
+        "width": 64,
+        "height": 64
       },
       {
         "file": "public/sprites/player/idle_left_1.png",
-        "width": 32,
-        "height": 32
+        "width": 64,
+        "height": 64
       }
     ],
     "move_left": [
       {
         "file": "public/sprites/player/move_left_0.png",
-        "width": 32,
-        "height": 32
+        "width": 64,
+        "height": 64
       },
       {
         "file": "public/sprites/player/move_left_1.png",
-        "width": 32,
-        "height": 32
+        "width": 64,
+        "height": 64
       }
     ],
     "attack_left": [
       {
         "file": "public/sprites/player/attack_left_0.png",
-        "width": 32,
-        "height": 32
+        "width": 64,
+        "height": 64
       },
       {
         "file": "public/sprites/player/attack_left_1.png",
-        "width": 32,
-        "height": 32
+        "width": 64,
+        "height": 64
       },
       {
         "file": "public/sprites/player/attack_left_2.png",
-        "width": 32,
-        "height": 32
+        "width": 64,
+        "height": 64
       }
     ],
     "hit_left": [
       {
         "file": "public/sprites/player/hit_left_0.png",
-        "width": 32,
-        "height": 32
+        "width": 64,
+        "height": 64
       },
       {
         "file": "public/sprites/player/hit_left_1.png",
-        "width": 32,
-        "height": 32
+        "width": 64,
+        "height": 64
       }
     ],
     "idle_right": [
       {
         "file": "public/sprites/player/idle_right_0.png",
-        "width": 32,
-        "height": 32
+        "width": 64,
+        "height": 64
       },
       {
         "file": "public/sprites/player/idle_right_1.png",
-        "width": 32,
-        "height": 32
+        "width": 64,
+        "height": 64
       }
     ],
     "move_right": [
       {
         "file": "public/sprites/player/move_right_0.png",
-        "width": 32,
-        "height": 32
+        "width": 64,
+        "height": 64
       },
       {
         "file": "public/sprites/player/move_right_1.png",
-        "width": 32,
-        "height": 32
+        "width": 64,
+        "height": 64
       }
     ],
     "attack_right": [
       {
         "file": "public/sprites/player/attack_right_0.png",
-        "width": 32,
-        "height": 32
+        "width": 64,
+        "height": 64
       },
       {
         "file": "public/sprites/player/attack_right_1.png",
-        "width": 32,
-        "height": 32
+        "width": 64,
+        "height": 64
       },
       {
         "file": "public/sprites/player/attack_right_2.png",
-        "width": 32,
-        "height": 32
+        "width": 64,
+        "height": 64
       }
     ],
     "hit_right": [
       {
         "file": "public/sprites/player/hit_right_0.png",
-        "width": 32,
-        "height": 32
+        "width": 64,
+        "height": 64
       },
       {
         "file": "public/sprites/player/hit_right_1.png",
-        "width": 32,
-        "height": 32
+        "width": 64,
+        "height": 64
       }
     ],
     "item_use": [
       {
         "file": "public/sprites/player/item_use_0.png",
-        "width": 32,
-        "height": 32
+        "width": 64,
+        "height": 64
       },
       {
         "file": "public/sprites/player/item_use_1.png",
-        "width": 32,
-        "height": 32
+        "width": 64,
+        "height": 64
       }
     ],
     "near_death": [
@@ -3004,11 +2994,6 @@
     },
     "black_market_npc": {
       "file": "public/sprites/npc/black_market_npc.png",
-      "width": 32,
-      "height": 32
-    },
-    "repair_npc": {
-      "file": "public/sprites/npc/repair_npc.png",
       "width": 32,
       "height": 32
     }
