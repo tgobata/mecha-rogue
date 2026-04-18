@@ -132,6 +132,7 @@ import BossDefeatOverlay from "./BossDefeatOverlay";
 import TitleScreen from "./TitleScreen";
 import GameOverOverlay from "./GameOverOverlay";
 import AchievementPanel from "./AchievementPanel";
+import BattleScreen, { isInBattle } from "./BattleScreen";
 
 // ---------------------------------------------------------------------------
 // 定数
@@ -3177,6 +3178,29 @@ export default function GameCanvas() {
   const canvasLogicalW = TILES_X * tileSize;
   const canvasLogicalH = TILES_Y * tileSize;
 
+  const isBattleMode =
+    gameState.phase === 'exploring' &&
+    !!gameState.player &&
+    isInBattle(gameState);
+
+  const battleSkillSlots = gameState.skills
+    .filter((sk) => getSkillDefinition(sk.id)?.type === 'active')
+    .map((sk) => ({
+      name: getSkillDefinition(sk.id)?.name ?? sk.id,
+      cooldown: sk.cooldownRemaining,
+    }));
+
+  const battleHasFloorItem = (() => {
+    const p = gameState.player;
+    const m = gameState.map;
+    if (!p || !m || gameState.phase !== 'exploring') return false;
+    const cell = m.cells[p.pos.y]?.[p.pos.x];
+    return !!cell && (
+      (cell.tile === TILE_ITEM && !!cell.itemId) ||
+      (cell.tile === TILE_WEAPON && !!cell.weaponId)
+    );
+  })();
+
   return (
     // 外枠: 相対配置でオーバーレイを重ねる
     <div className="relative flex flex-col w-full h-full bg-black">
@@ -4118,12 +4142,14 @@ export default function GameCanvas() {
           .kb-guide     { display: flex !important; }
           .pc-info-bar  { display: flex !important; }
         }
+        /* バトル中は !important でも確実に非表示 */
+        .vc-battle-hide { display: none !important; }
       `}</style>
 
       {/* ── 仮想コントローラー（スマホ） ── */}
       {/* ショップ・修理屋・倉庫フェーズ時は非表示にしてパネルを広く使う */}
       <div
-        className="vc-wrapper hidden pointer-events-auto justify-center py-2 w-full px-2"
+        className={`vc-wrapper hidden pointer-events-auto justify-center py-2 w-full px-2${isBattleMode ? ' vc-battle-hide' : ''}`}
         style={(['shop', 'repair', 'storage'] as string[]).includes(gameState.phase) ? { display: 'none' } : {}}
       >
         <VirtualController
@@ -4159,6 +4185,25 @@ export default function GameCanvas() {
           })()}
         />
       </div>
+
+      {/* ── バトル専用画面オーバーレイ ── */}
+      {/* メニュー/スキル選択が開いている間は非表示にしてキャンバス側のパネルを使わせる */}
+      {isBattleMode && !menuPanel && !skillSelectState && (
+        <div className="absolute inset-0" style={{ zIndex: 200 }}>
+          <BattleScreen
+            gameState={gameState}
+            battleLog={battleLog}
+            onAction={(action) => {
+              playSE('ui_select');
+              handleAction(action);
+            }}
+            onUIAction={handleUIAction}
+            onSkillUse={handleUseSkill}
+            skillSlots={battleSkillSlots}
+            hasFloorItem={battleHasFloorItem}
+          />
+        </div>
+      )}
 
       {/* ── タイトル画面オーバーレイ ── */}
       {gameState.phase === "title" && (

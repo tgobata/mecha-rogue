@@ -580,7 +580,7 @@ export function renderGame(
             drawSFFloor(ctx, drawX, drawY, tileSize, floorPalette);
           } else {
             // 可視罠: 100% サイズで表示
-            const trapSprite = sprites.get('tile_trap');
+            const trapSprite = sprites.get(`tile_trap_${trapHere.type}`) ?? sprites.get('tile_trap');
             if (trapSprite) {
               drawSFFloor(ctx, drawX, drawY, tileSize, floorPalette);
               ctx.drawImage(trapSprite, drawX, drawY, tileSize, tileSize);

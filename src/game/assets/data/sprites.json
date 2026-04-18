@@ -44,6 +44,56 @@
       "file": "public/sprites/tiles/shop.png",
       "width": 32,
       "height": 32
+    },
+    "trap_visible_pitfall": {
+      "file": "public/sprites/tiles/trap_visible_pitfall.png",
+      "width": 64,
+      "height": 64
+    },
+    "trap_hidden_pitfall": {
+      "file": "public/sprites/tiles/trap_hidden_pitfall.png",
+      "width": 64,
+      "height": 64
+    },
+    "trap_large_pitfall": {
+      "file": "public/sprites/tiles/trap_large_pitfall.png",
+      "width": 64,
+      "height": 64
+    },
+    "trap_landmine": {
+      "file": "public/sprites/tiles/trap_landmine.png",
+      "width": 64,
+      "height": 64
+    },
+    "trap_poison_gas": {
+      "file": "public/sprites/tiles/trap_poison_gas.png",
+      "width": 64,
+      "height": 64
+    },
+    "trap_arrow_trap": {
+      "file": "public/sprites/tiles/trap_arrow_trap.png",
+      "width": 64,
+      "height": 64
+    },
+    "trap_teleport_trap": {
+      "file": "public/sprites/tiles/trap_teleport_trap.png",
+      "width": 64,
+      "height": 64
+    },
+    "trap_item_loss": {
+      "file": "public/sprites/tiles/trap_item_loss.png",
+      "width": 64,
+      "height": 64
+    },
+    "trap_summon_trap": {
+      "file": "public/sprites/tiles/trap_summon_trap.png",
+      "width": 64,
+      "height": 64
+    },
+    "trap_rust_trap": {
+      "file": "public/sprites/tiles/trap_rust_trap.png",
+      "width": 64,
+      "height": 64
     }
   },
   "player": {
