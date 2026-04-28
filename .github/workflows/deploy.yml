@@ -21,6 +21,9 @@ jobs:
       - run: npm ci
 
       - run: npm run build
+        env:
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
 
       - name: Create Pages project (skip if already exists)
         run: npx wrangler@3 pages project create mecha-rogue-tg --production-branch main || true
