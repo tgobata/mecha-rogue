@@ -5,6 +5,7 @@
  */
 
 import type { GameState } from '../core/game-state';
+import type { Floor, Position } from '../core/types';
 import {
   TILE_WALL,
   TILE_FLOOR,
@@ -1054,4 +1055,93 @@ export function renderGame(
       ctx.restore();
     }
   }
+}
+
+// ---------------------------------------------------------------------------
+// ミニマップ描画
+// ---------------------------------------------------------------------------
+
+/**
+ * 3D ダンジョンビュー用の小型ミニマップを Canvas 上の指定領域に描画する。
+ *
+ * @param ctx      - Canvas 2D コンテキスト
+ * @param map      - 現在フロアのマップデータ
+ * @param playerPos - プレイヤー座標
+ * @param facing   - プレイヤーの向き
+ * @param ox       - 描画左上 X (px)
+ * @param oy       - 描画左上 Y (px)
+ * @param w        - 描画幅 (px)
+ * @param h        - 描画高さ (px)
+ */
+export function renderMinimap(
+  ctx: CanvasRenderingContext2D,
+  map: Floor,
+  playerPos: Position,
+  facing: string,
+  ox: number,
+  oy: number,
+  w: number,
+  h: number,
+): void {
+  const tilePx = Math.min(w / map.width, h / map.height);
+  const totalW = map.width  * tilePx;
+  const totalH = map.height * tilePx;
+  const offX   = ox + (w - totalW) / 2;
+  const offY   = oy + (h - totalH) / 2;
+
+  ctx.save();
+
+  // 背景
+  ctx.fillStyle = 'rgba(0,0,0,0.65)';
+  ctx.fillRect(ox, oy, w, h);
+
+  // タイル
+  for (let y = 0; y < map.height; y++) {
+    for (let x = 0; x < map.width; x++) {
+      const cell = map.cells[y]?.[x];
+      if (!cell || (!cell.isExplored && !cell.isVisible)) continue;
+      const dim = !cell.isVisible;
+      const t = cell.tile;
+      if (t === '#' || t === 'C') {
+        ctx.fillStyle = dim ? '#333344' : '#556677';
+      } else if (t === '>') {
+        ctx.fillStyle = dim ? '#887700' : '#ffdd00';
+      } else if (t === '$') {
+        ctx.fillStyle = '#44ff44';
+      } else if (t === 'V') {
+        ctx.fillStyle = '#4488ff';
+      } else {
+        ctx.fillStyle = dim ? '#444455' : '#99aaaa';
+      }
+      ctx.fillRect(offX + x * tilePx, offY + y * tilePx, tilePx, tilePx);
+    }
+  }
+
+  // プレイヤー（明るい点 + 向き三角）
+  const px = offX + (playerPos.x + 0.5) * tilePx;
+  const py = offY + (playerPos.y + 0.5) * tilePx;
+  const r  = Math.max(tilePx * 0.8, 2);
+
+  ctx.fillStyle = '#ffffff';
+  ctx.beginPath();
+  ctx.arc(px, py, r, 0, Math.PI * 2);
+  ctx.fill();
+
+  // 向き三角
+  const len = r * 2.5;
+  const dx = facing === 'left' ? -len : facing === 'right' ? len : 0;
+  const dy = facing === 'up'   ? -len : facing === 'down'  ? len : 0;
+  ctx.strokeStyle = '#ffff44';
+  ctx.lineWidth   = Math.max(1, tilePx * 0.5);
+  ctx.beginPath();
+  ctx.moveTo(px, py);
+  ctx.lineTo(px + dx, py + dy);
+  ctx.stroke();
+
+  // 枠線
+  ctx.strokeStyle = 'rgba(100,130,160,0.6)';
+  ctx.lineWidth = 1;
+  ctx.strokeRect(ox, oy, w, h);
+
+  ctx.restore();
 }

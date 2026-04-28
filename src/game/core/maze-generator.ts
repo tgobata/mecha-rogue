@@ -215,29 +215,17 @@ function dividePartition(
 function carveRoomInPartition(
   partition: Partition,
   cells: Cell[][],
-  rng: () => number,
+  _rng: () => number,
 ): Bounds {
-  const maxInnerW = partition.width - 2;
-  const maxInnerH = partition.height - 2;
-
-  // 内寸をランダムに決定（最小 ROOM_MIN_INNER_SIZE）
-  const innerW =
-    ROOM_MIN_INNER_SIZE + Math.floor(rng() * (maxInnerW - ROOM_MIN_INNER_SIZE + 1));
-  const innerH =
-    ROOM_MIN_INNER_SIZE + Math.floor(rng() * (maxInnerH - ROOM_MIN_INNER_SIZE + 1));
-
-  // 部屋の左上（外壁含む）をランダムに配置
-  const roomX = partition.x + 1 + Math.floor(rng() * (partition.width - innerW - 2));
-  const roomY = partition.y + 1 + Math.floor(rng() * (partition.height - innerH - 2));
-
-  // 内部を FLOOR で塗る
-  for (let y = roomY; y < roomY + innerH; y++) {
-    for (let x = roomX; x < roomX + innerW; x++) {
-      cells[y][x].tile = TILE_FLOOR;
-    }
+  // 通路のみモード: パーティション中心を1タイルの接続ジャンクションとして使う。
+  // 部屋を持たず通路がダンジョンの主要経路となる。
+  const cx = partition.x + Math.floor(partition.width / 2);
+  const cy = partition.y + Math.floor(partition.height / 2);
+  if (cells[cy]?.[cx] !== undefined) {
+    cells[cy][cx].tile = TILE_FLOOR;
   }
-
-  return { x: roomX - 1, y: roomY - 1, width: innerW + 2, height: innerH + 2 };
+  // 3×3 の bounds を返す（inner = 1×1 = 中心タイルのみ）
+  return { x: cx - 1, y: cy - 1, width: 3, height: 3 };
 }
 
 // ---------------------------------------------------------------------------

@@ -65,8 +65,14 @@ import {
   renderGame,
   loadSprites,
   getDefaultSpriteList,
+  renderMinimap,
 } from "../systems/renderer";
 import type { SpriteCache, Viewport, FlashMap, ScreenFlash } from "../systems/renderer";
+import {
+  renderDungeon3D,
+  loadDungeonTextures,
+} from "../systems/dungeon-renderer-3d";
+import type { DungeonTextureCache } from "../systems/dungeon-renderer-3d";
 import { useGameInput } from "../systems/input";
 import type { UIAction } from "../systems/input";
 import {
@@ -625,6 +631,9 @@ export default function GameCanvas() {
    * RAF ループがこのマップを参照し、期限切れエントリを idle にリセットする。
    */
   const animStateExpiryRef = useRef<Map<string, number>>(new Map());
+  /** 疑似 3D ビューモードフラグ（RAF ループ内から読むため Ref で管理） */
+  const view3DRef = useRef<boolean>(false);
+  const dungeonTexturesRef = useRef<DungeonTextureCache | null>(null);
   /**
    * タイルフラッシュエフェクトマップ。
    * キー: "x,y"、値: 色文字列と有効期限 (performance.now() ベース)。
@@ -768,6 +777,9 @@ export default function GameCanvas() {
   /** 大マップ表示状態 */
   const [showBigMap, setShowBigMap] = useState(false);
 
+  /** 疑似 3D ビューモード（UI 再レンダリング用。RAF は view3DRef を参照） */
+  const [view3D, setView3D] = useState(false);
+
   /** 発見済みボスの座標（フロアが変わるとリセット） */
   const [seenBossPositions, setSeenBossPositions] = useState<Position[]>([]);
 
@@ -810,6 +822,14 @@ export default function GameCanvas() {
       setSpritesReady(true);
     });
   }, []);
+
+  // ── ダンジョンテクスチャ読み込み ──────────────────────────────
+  useEffect(() => {
+    loadDungeonTextures().then((t) => { dungeonTexturesRef.current = t; });
+  }, []);
+
+  // ── view3DRef を view3D state に同期 ──────────────────────────
+  useEffect(() => { view3DRef.current = view3D; }, [view3D]);
 
   // ── コンテナサイズ監視 ───────────────────────────────────────────
   useEffect(() => {
@@ -918,31 +938,64 @@ export default function GameCanvas() {
       const state = stateRef.current;
 
       if (state.phase === "exploring" && state.player) {
-        const viewport: Viewport = {
-          tilesX: TILES_X,
-          tilesY: TILES_Y,
-          tileSize,
-          centerX: state.player.pos.x,
-          centerY: state.player.pos.y,
-        };
-        try {
-          renderGame(
-            ctx,
-            state,
-            viewport,
-            spritesRef.current,
-            animFrameRef.current,
-            flashMapRef.current,
-            screenFlashRef.current,
+        const cW = canvas.width  / (window.devicePixelRatio || 1);
+        const cH = canvas.height / (window.devicePixelRatio || 1);
+
+        if (view3DRef.current && state.map) {
+          // ── 疑似 3D ビュー ──
+          try {
+            renderDungeon3D({
+              ctx,
+              x: 0, y: 0,
+              width: cW, height: cH,
+              map:       state.map,
+              playerPos: state.player.pos,
+              facing:    state.player.facing,
+              textures:  dungeonTexturesRef.current ?? undefined,
+              enemies:   state.enemies,
+              sprites:   spritesRef.current,
+            });
+          } catch (err) {
+            ctx.fillStyle = "#000";
+            ctx.fillRect(0, 0, cW, cH);
+            ctx.fillStyle = "#ff4444";
+            ctx.font = "12px monospace";
+            ctx.fillText("3D描画エラー: " + String(err), 10, 20);
+            console.error("[renderDungeon3D] error:", err);
+          }
+          // ミニマップ（右上）
+          const mmSize = Math.min(96, cW * 0.22);
+          renderMinimap(
+            ctx, state.map, state.player.pos, state.player.facing,
+            cW - mmSize - 4, 4, mmSize, mmSize,
           );
-        } catch (err) {
-          // renderGame が例外を投げた場合は黒画面を防ぐためエラー表示を行う
-          ctx.fillStyle = "#000";
-          ctx.fillRect(0, 0, canvas.width, canvas.height);
-          ctx.fillStyle = "#ff4444";
-          ctx.font = "12px monospace";
-          ctx.fillText("描画エラー: " + String(err), 10, 20);
-          console.error("[renderGame] error:", err);
+        } else {
+          // ── 通常 2D ビュー ──
+          const viewport: Viewport = {
+            tilesX: TILES_X,
+            tilesY: TILES_Y,
+            tileSize,
+            centerX: state.player.pos.x,
+            centerY: state.player.pos.y,
+          };
+          try {
+            renderGame(
+              ctx,
+              state,
+              viewport,
+              spritesRef.current,
+              animFrameRef.current,
+              flashMapRef.current,
+              screenFlashRef.current,
+            );
+          } catch (err) {
+            ctx.fillStyle = "#000";
+            ctx.fillRect(0, 0, cW, cH);
+            ctx.fillStyle = "#ff4444";
+            ctx.font = "12px monospace";
+            ctx.fillText("描画エラー: " + String(err), 10, 20);
+            console.error("[renderGame] error:", err);
+          }
         }
       } else if (state.phase !== "exploring") {
         // exploring 以外のフェーズ（base / title / gameover 等）はキャンバスを黒で塗り潰す
@@ -3170,6 +3223,58 @@ export default function GameCanvas() {
     return () => window.removeEventListener("keydown", handleKeyDown, { capture: true });
   }, [gameState.phase, showBigMap]);
 
+  // ── 3D ビュー: Tab トグル & 向き相対移動キーハンドラ ─────────────
+  // capture:true で useGameInput より先に実行し、3D モード時は
+  // WASD/Arrow を「前進/後退/左旋回/右旋回」に読み替える。
+  useEffect(() => {
+    if (gameState.phase !== "exploring") return;
+
+    const handle = (e: KeyboardEvent) => {
+      const target = e.target as HTMLElement;
+      if (target.tagName === "INPUT" || target.tagName === "TEXTAREA") return;
+
+      // Tab キー: 3D/2D トグル
+      if (e.key === "Tab") {
+        e.preventDefault();
+        e.stopImmediatePropagation();
+        setView3D((v) => !v);
+        view3DRef.current = !view3DRef.current;
+        return;
+      }
+
+      // 3D モード以外は何もしない
+      if (!view3DRef.current) return;
+      if (isMenuOpen) return;
+
+      const facing = stateRef.current.player?.facing;
+      if (!facing) return;
+
+      type Dir = "up" | "down" | "left" | "right";
+      type Act = import("../core/turn-system").PlayerAction;
+
+      const fwd:  Record<Dir, Act> = { up:"move_up",    down:"move_down",  left:"move_left",  right:"move_right" };
+      const bwd:  Record<Dir, Act> = { up:"move_down",  down:"move_up",    left:"move_right", right:"move_left"  };
+      const tL:   Record<Dir, Act> = { up:"turn_left",  left:"turn_down",  down:"turn_right", right:"turn_up"    };
+      const tR:   Record<Dir, Act> = { up:"turn_right", right:"turn_down", down:"turn_left",  left:"turn_up"     };
+
+      let action: Act | null = null;
+      switch (e.key) {
+        case "ArrowUp":    case "w": case "W": action = fwd[facing as Dir]; break;
+        case "ArrowDown":  case "s": case "S": action = bwd[facing as Dir]; break;
+        case "ArrowLeft":  case "a": case "A": action = tL[facing as Dir];  break;
+        case "ArrowRight": case "d": case "D": action = tR[facing as Dir];  break;
+      }
+      if (action) {
+        e.preventDefault();
+        e.stopImmediatePropagation();
+        handleAction(action);
+      }
+    };
+
+    window.addEventListener("keydown", handle, { capture: true });
+    return () => window.removeEventListener("keydown", handle, { capture: true });
+  }, [gameState.phase, isMenuOpen, handleAction]);
+
   // ── 常にキャンバスをレンダリングし、タイトル/ゲームオーバーはオーバーレイで表示 ──
   // 理由: Canvas が DOM に存在しないとき canvasRef.current === null のため
   // DPR セットアップ useEffect が効かず、キャンバスがデフォルトの 300×150px のまま
@@ -3242,6 +3347,23 @@ export default function GameCanvas() {
               className="block"
               style={{ imageRendering: "pixelated" }}
             />
+
+            {/* 3D/2D トグルボタン（exploring フェーズのみ） */}
+            {gameState.phase === "exploring" && (
+              <button
+                onClick={() => { setView3D((v) => !v); view3DRef.current = !view3DRef.current; }}
+                style={{
+                  position: "absolute", bottom: 4, left: 4, zIndex: 30,
+                  background: view3D ? "rgba(60,100,180,0.85)" : "rgba(30,30,50,0.75)",
+                  color: "#cceeff", border: "1px solid rgba(100,160,220,0.6)",
+                  borderRadius: 4, padding: "2px 7px", fontSize: 10,
+                  fontFamily: "monospace", cursor: "pointer", letterSpacing: 1,
+                }}
+                title="Tab キーで切替"
+              >
+                {view3D ? "3D▶2D" : "2D▶3D"}
+              </button>
+            )}
 
             {/* HUD オーバーレイ（exploring フェーズのみ） */}
             {gameState.player && gameState.phase === "exploring" && (
