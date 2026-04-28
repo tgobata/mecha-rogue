@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { supabase } from '@/lib/supabase';
+import { getSupabase } from '@/lib/supabase';
 
 /**
  * OAuth・メール確認のコールバックページ。
@@ -20,7 +20,7 @@ export default function AuthCallbackPage() {
       return;
     }
 
-    supabase.auth.exchangeCodeForSession(code).then(({ error }) => {
+    getSupabase().auth.exchangeCodeForSession(code).then(({ error }) => {
       if (error) {
         setError(error.message);
       } else {
