@@ -10,6 +10,7 @@ import {
 } from "../systems/audio";
 import { getAllSaves, deleteSave, SaveSummary } from "../core/save-system";
 import HelpManualOverlay from "./HelpManualOverlay";
+import { useAuth } from "./AuthProvider";
 
 interface TitleScreenProps {
   onNewGame: (mode: 'normal' | 'easy') => void;
@@ -24,6 +25,7 @@ const TitleScreen: React.FC<TitleScreenProps> = ({
   onLoadGame,
   onAchievements,
 }) => {
+  const { user, signOut, deleteAccount } = useAuth();
   const [menuMode, setMenuMode] = useState<MenuMode>("main");
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [saves, setSaves] = useState<(SaveSummary | null)[]>([]);
@@ -32,6 +34,10 @@ const TitleScreen: React.FC<TitleScreenProps> = ({
   const [deleteConfirmSlot, setDeleteConfirmSlot] = useState<number | null>(null);
   const [showFullSavesNotice, setShowFullSavesNotice] = useState(false);
   const [isMuted, setIsMuted] = useState(() => getMuted());
+  const [showAccountDialog, setShowAccountDialog] = useState(false);
+  const [showDeleteAccountConfirm, setShowDeleteAccountConfirm] = useState(false);
+  const [deleteAccountBusy, setDeleteAccountBusy] = useState(false);
+  const [deleteAccountError, setDeleteAccountError] = useState<string | null>(null);
 
   // メニューモードが切り替わるか、コンポーネントがマウントされた時にセーブデータを取得する
   useEffect(() => {
@@ -72,6 +78,8 @@ const TitleScreen: React.FC<TitleScreenProps> = ({
         setShowManual(true);
       } else if (selectedIndex === 4) {
         onAchievements();
+      } else if (selectedIndex === 5) {
+        setShowAccountDialog(true);
       }
     } else if (menuMode === "modeSelect") {
       if (selectedIndex === 0) {
@@ -136,7 +144,7 @@ const TitleScreen: React.FC<TitleScreenProps> = ({
       if (showManual) return;
 
       const maxIndex =
-        menuMode === "main" ? 4 :
+        menuMode === "main" ? 5 :
         menuMode === "modeSelect" ? 2 :
         5; // load/delete = 5 (slots 1-5 + back)
 
@@ -171,6 +179,7 @@ const TitleScreen: React.FC<TitleScreenProps> = ({
       { label: "データ削除", enabled: hasSaves },
       { label: "マニュアル確認", enabled: true },
       { label: "実績", enabled: true },
+      { label: "アカウント設定", enabled: true },
     ];
 
     return (
@@ -208,6 +217,7 @@ const TitleScreen: React.FC<TitleScreenProps> = ({
           else if (idx === 2 && item.enabled) setMenuMode("delete");
           else if (idx === 3) setShowManual(true);
           else if (idx === 4) onAchievements();
+          else if (idx === 5) setShowAccountDialog(true);
         }}
         onTouchStart={unlockAudioContext}
         onMouseEnter={() => { if (item.enabled) setSelectedIndex(idx); }}
@@ -556,6 +566,123 @@ const TitleScreen: React.FC<TitleScreenProps> = ({
                 onTouchStart={unlockAudioContext}
               >
                 もどる
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* アカウント設定ダイアログ */}
+      {showAccountDialog && (
+        <div
+          className="absolute inset-0 flex items-center justify-center z-50"
+          style={{ backgroundColor: 'rgba(0,0,0,0.8)' }}
+        >
+          <div
+            className="flex flex-col items-center gap-5 p-7 rounded-lg border font-mono"
+            style={{ backgroundColor: 'rgba(0,15,0,0.98)', border: '1px solid #166534', boxShadow: '0 0 24px rgba(74,222,128,0.15)', minWidth: 280, maxWidth: 340 }}
+          >
+            <div className="text-sm font-bold tracking-widest" style={{ color: '#4ade80' }}>ACCOUNT</div>
+            <div className="text-center">
+              <div className="text-xs mb-1" style={{ color: '#6b7280' }}>ログイン中</div>
+              <div className="text-sm break-all" style={{ color: '#d1fae5' }}>{user?.email}</div>
+            </div>
+            <div className="flex flex-col gap-2 w-full">
+              <button
+                className="py-2 text-sm tracking-wider transition-all rounded-sm"
+                style={{ background: 'rgba(74,222,128,0.1)', border: '1px solid #4ade80', color: '#4ade80', cursor: 'pointer', fontFamily: 'monospace' }}
+                onClick={() => {
+                  playSE("ui_select");
+                  setShowAccountDialog(false);
+                  signOut();
+                }}
+                onTouchStart={unlockAudioContext}
+              >
+                サインアウト
+              </button>
+              <button
+                className="py-2 text-sm tracking-wider transition-all rounded-sm"
+                style={{ background: 'rgba(239,68,68,0.08)', border: '1px solid #7f1d1d', color: '#f87171', cursor: 'pointer', fontFamily: 'monospace' }}
+                onClick={() => {
+                  playSE("ui_cancel");
+                  setShowAccountDialog(false);
+                  setDeleteAccountError(null);
+                  setShowDeleteAccountConfirm(true);
+                }}
+                onTouchStart={unlockAudioContext}
+              >
+                退会する
+              </button>
+              <button
+                className="py-2 text-sm tracking-wider transition-all rounded-sm"
+                style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid #374151', color: '#9ca3af', cursor: 'pointer', fontFamily: 'monospace' }}
+                onClick={() => {
+                  playSE("ui_cancel");
+                  setShowAccountDialog(false);
+                }}
+                onTouchStart={unlockAudioContext}
+              >
+                もどる
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 退会確認ダイアログ */}
+      {showDeleteAccountConfirm && (
+        <div
+          className="absolute inset-0 flex items-center justify-center z-50"
+          style={{ backgroundColor: 'rgba(0,0,0,0.85)' }}
+        >
+          <div
+            className="flex flex-col items-center gap-5 p-7 rounded-lg font-mono"
+            style={{ backgroundColor: 'rgba(30,5,5,0.98)', border: '1px solid #7f1d1d', minWidth: 280, maxWidth: 340 }}
+          >
+            <div className="text-sm font-bold tracking-widest" style={{ color: '#f87171' }}>⚠ 退会の確認</div>
+            <div className="text-xs text-center leading-relaxed" style={{ color: '#d1d5db' }}>
+              アカウントを削除します。<br />
+              この操作は取り消せません。<br />
+              セーブデータも失われます。<br />
+              本当に退会しますか？
+            </div>
+            {deleteAccountError && (
+              <div className="text-xs px-3 py-2 rounded-sm w-full text-center" style={{ color: '#f87171', background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.3)' }}>
+                {deleteAccountError}
+              </div>
+            )}
+            <div className="flex gap-3 w-full">
+              <button
+                disabled={deleteAccountBusy}
+                className="flex-1 py-2 text-sm rounded-sm transition-all"
+                style={{ background: 'rgba(239,68,68,0.2)', border: '1px solid #ef4444', color: deleteAccountBusy ? '#6b7280' : '#f87171', cursor: deleteAccountBusy ? 'not-allowed' : 'pointer', fontFamily: 'monospace' }}
+                onClick={async () => {
+                  setDeleteAccountBusy(true);
+                  setDeleteAccountError(null);
+                  const { error } = await deleteAccount();
+                  setDeleteAccountBusy(false);
+                  if (error) {
+                    setDeleteAccountError('退会処理に失敗しました: ' + error.message);
+                  } else {
+                    setShowDeleteAccountConfirm(false);
+                  }
+                }}
+                onTouchStart={unlockAudioContext}
+              >
+                {deleteAccountBusy ? '処理中...' : '退会する'}
+              </button>
+              <button
+                disabled={deleteAccountBusy}
+                className="flex-1 py-2 text-sm rounded-sm transition-all"
+                style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid #374151', color: '#9ca3af', cursor: deleteAccountBusy ? 'not-allowed' : 'pointer', fontFamily: 'monospace' }}
+                onClick={() => {
+                  playSE("ui_cancel");
+                  setShowDeleteAccountConfirm(false);
+                  setDeleteAccountError(null);
+                }}
+                onTouchStart={unlockAudioContext}
+              >
+                キャンセル
               </button>
             </div>
           </div>
