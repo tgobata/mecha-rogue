@@ -1,27 +1,11 @@
 'use client';
 
 import React from 'react';
-import { useAuth } from './AuthProvider';
-import AuthScreen from './AuthScreen';
 import GameCanvas from './GameCanvas';
 
+// 認証無効化中 — 認証ゲートをパススルーに変更
+// 再有効化: git diff HEAD~1 -- src/game/ui/AuthGate.tsx で元の実装を参照
+
 export default function AuthGate() {
-  const { session, loading } = useAuth();
-
-  if (loading) {
-    return (
-      <div className="fixed inset-0 bg-black flex items-center justify-center">
-        <p
-          className="text-sm tracking-widest animate-pulse"
-          style={{ color: '#4ade80', fontFamily: 'monospace' }}
-        >
-          LOADING...
-        </p>
-      </div>
-    );
-  }
-
-  if (!session) return <AuthScreen />;
-
   return <GameCanvas />;
 }
