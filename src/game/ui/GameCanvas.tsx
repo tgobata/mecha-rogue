@@ -70,6 +70,7 @@ import type { SpriteCache, Viewport, FlashMap, ScreenFlash } from "../systems/re
 import { useGameInput } from "../systems/input";
 import type { UIAction } from "../systems/input";
 import { useGamepadInput } from "../systems/gamepad";
+import { useInputMode } from "../systems/useInputMode";
 import {
   initAudio,
   isAudioReady,
@@ -3116,6 +3117,10 @@ export default function GameCanvas() {
     [handleUseItem, handleEquipWeapon, handleSaveAndExit, handleMoveToBase, handleLearnSkill],
   );
 
+  // ── 入力デバイス種別（キーボード / ゲームパッド）────────────────
+  const inputMode = useInputMode();
+  const isGamepad = inputMode === 'gamepad';
+
   // ── キーボード入力フック ─────────────────────────────────────
   // confirmDialog・スキル選択ダイアログが開いている間も入力を遮断する
   const isMenuOpen = menuPanel !== null || confirmDialog !== null || skillSelectState !== null;
@@ -3462,7 +3467,7 @@ export default function GameCanvas() {
 
             {/* ヘルプマニュアルオーバーレイ（どのフェーズでも表示可能） */}
             {menuPanel?.type === "help" && (
-              <HelpManualOverlay onClose={() => setMenuPanel(null)} />
+              <HelpManualOverlay onClose={() => setMenuPanel(null)} isGamepad={isGamepad} />
             )}
 
             {/* ショップパネルオーバーレイ */}
@@ -3839,13 +3844,13 @@ export default function GameCanvas() {
                 overflow: "hidden",
               }}
             >
-              {/* キーボード操作ガイド */}
-              <div style={{ width: 170, flexShrink: 0 }}>
+              {/* 操作ガイド（キーボード / コントローラー自動切替） */}
+              <div style={{ width: 190, flexShrink: 0 }}>
                 <div style={{ marginBottom: 3, display: "flex", alignItems: "baseline", gap: 0 }}>
                   <span style={{ color: "#ffee88", fontWeight: "bold", fontSize: 11 }}>
-                    キーボード操作
+                    {isGamepad ? "コントローラー操作" : "キーボード操作"}
                   </span>
-                  {(() => {
+                  {!isGamepad && (() => {
                     const px = gameState.player?.pos?.x;
                     const py = gameState.player?.pos?.y;
                     const tile = (px !== undefined && py !== undefined)
@@ -3863,77 +3868,47 @@ export default function GameCanvas() {
                 <table style={{ borderCollapse: "collapse", width: "100%" }}>
                   <thead>
                     <tr style={{ color: "#8888aa", fontSize: 9 }}>
-                      <th
-                        style={{
-                          textAlign: "left",
-                          paddingRight: 8,
-                          paddingBottom: 1,
-                        }}
-                      >
-                        キー
+                      <th style={{ textAlign: "left", paddingRight: 8, paddingBottom: 1 }}>
+                        {isGamepad ? "ボタン" : "キー"}
                       </th>
-                      <th
-                        style={{
-                          textAlign: "left",
-                          paddingRight: 8,
-                          paddingBottom: 1,
-                          color: isMenuOpen ? "#aaaacc" : "#ffffff",
-                        }}
-                      >
+                      <th style={{ textAlign: "left", paddingRight: 8, paddingBottom: 1, color: isMenuOpen ? "#aaaacc" : "#ffffff" }}>
                         通常
                       </th>
-                      <th
-                        style={{
-                          textAlign: "left",
-                          paddingBottom: 1,
-                          color: isMenuOpen ? "#ffffff" : "#aaaacc",
-                        }}
-                      >
+                      <th style={{ textAlign: "left", paddingBottom: 1, color: isMenuOpen ? "#ffffff" : "#aaaacc" }}>
                         パネル
                       </th>
                     </tr>
                   </thead>
                   <tbody>
-                    {(
-                      [
-                        ["WASD/矢印", "移動", "↑↓選択"],
-                        ["Ctrl+WASD", "向き変更", "—"],
-                        ["Z / X", "攻撃", "決定"],
-                        ["Space", "待機", "—"],
-                        ["I", "アイテム", "閉じる"],
-                        ["E", "装備", "閉じる"],
-                        ["H", "マニュアル確認", "閉じる"],
-                        ["Esc", "メニュー", "閉じる"],
-                      ] as [string, string, string][]
+                    {(isGamepad
+                      ? [
+                          ["十字/スティック", "移動", "↑↓選択"],
+                          ["× / A", "攻撃", "決定"],
+                          ["○ / B", "—", "閉じる"],
+                          ["□ / X", "足元アイテム", "—"],
+                          ["L1 / LB", "アイテム", "閉じる"],
+                          ["R1 / RB", "装備", "閉じる"],
+                          ["Options/Menu", "メニュー", "閉じる"],
+                        ]
+                      : [
+                          ["WASD/矢印", "移動", "↑↓選択"],
+                          ["Ctrl+WASD", "向き変更", "—"],
+                          ["Z / X", "攻撃", "決定"],
+                          ["Space", "待機", "—"],
+                          ["I", "アイテム", "閉じる"],
+                          ["E", "装備", "閉じる"],
+                          ["H", "マニュアル確認", "閉じる"],
+                          ["Esc", "メニュー", "閉じる"],
+                        ]
                     ).map(([key, normal, menu]) => (
                       <tr key={key}>
-                        <td
-                          style={{
-                            paddingRight: 8,
-                            paddingBottom: 1,
-                            color: "#ffdd88",
-                            whiteSpace: "nowrap",
-                          }}
-                        >
+                        <td style={{ paddingRight: 8, paddingBottom: 1, color: "#ffdd88", whiteSpace: "nowrap" }}>
                           {key}
                         </td>
-                        <td
-                          style={{
-                            paddingRight: 8,
-                            paddingBottom: 1,
-                            color: isMenuOpen ? "#555577" : "#ddddff",
-                            whiteSpace: "nowrap",
-                          }}
-                        >
+                        <td style={{ paddingRight: 8, paddingBottom: 1, color: isMenuOpen ? "#555577" : "#ddddff", whiteSpace: "nowrap" }}>
                           {normal}
                         </td>
-                        <td
-                          style={{
-                            paddingBottom: 1,
-                            color: isMenuOpen ? "#ddddff" : "#555577",
-                            whiteSpace: "nowrap",
-                          }}
-                        >
+                        <td style={{ paddingBottom: 1, color: isMenuOpen ? "#ddddff" : "#555577", whiteSpace: "nowrap" }}>
                           {menu}
                         </td>
                       </tr>

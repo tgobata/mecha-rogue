@@ -3,12 +3,15 @@
 /**
  * @fileoverview ゲーム内マニュアルオーバーレイ
  * プレイヤー向けのわかりやすいゲーム説明を表示する。
+ * isGamepad が true のとき、操作説明をコントローラー向けに切り替える。
  */
 
 import { useState } from 'react';
 
 interface HelpManualOverlayProps {
   onClose: () => void;
+  /** true のときコントローラー向け操作ガイドを表示する */
+  isGamepad?: boolean;
 }
 
 // ---------------------------------------------------------------------------
@@ -116,21 +119,42 @@ function Note({ children }: { children: React.ReactNode }) {
 // タブコンテンツ
 // ---------------------------------------------------------------------------
 
-function TabBasic() {
+function TabBasic({ isGamepad }: { isGamepad: boolean }) {
   return (
     <div>
-      <SectionTitle>PC（キーボード）操作</SectionTitle>
-      <Row label="移動" value={<><KeyBadge>W</KeyBadge> <KeyBadge>A</KeyBadge> <KeyBadge>S</KeyBadge> <KeyBadge>D</KeyBadge> または 矢印キー</>} />
-      <Row label="攻撃" value={<><KeyBadge>Z</KeyBadge> または <KeyBadge>X</KeyBadge></>} />
-      <Row label="待機（1ターン）" value={<KeyBadge>Space</KeyBadge>} />
-      <Row label="向きだけ変える" value={<><KeyBadge>Ctrl</KeyBadge> + 方向キー（ターン消費なし）</>} />
-      <Row label="アイテム一覧" value={<KeyBadge>I</KeyBadge>} />
-      <Row label="装備一覧" value={<KeyBadge>E</KeyBadge>} />
-      <Row label="足元アイテム操作" value={<><KeyBadge>F</KeyBadge> （足元にアイテム/装備があるとき）</>} />
-      <Row label="ステータス" value={<KeyBadge>C</KeyBadge>} />
-      <Row label="ヘルプを開く" value={<KeyBadge>H</KeyBadge>} />
-      <Row label="メニューを閉じる" value={<KeyBadge>Esc</KeyBadge>} />
-      <Row label="ポーズ" value={<><KeyBadge>Esc</KeyBadge>（メニューが閉じているとき）</>} />
+      {isGamepad ? (
+        <>
+          <SectionTitle>コントローラー操作（PS4 / Xbox）</SectionTitle>
+          <Row label="移動" value={<><KeyBadge>十字キー</KeyBadge> または <KeyBadge>左スティック</KeyBadge></>} />
+          <Row label="攻撃" value={<><KeyBadge>× / A</KeyBadge></>} />
+          <Row label="待機（1ターン）" value="なし（キーボードの Space に相当する操作はなし）" />
+          <Row label="メニュー決定" value={<><KeyBadge>× / A</KeyBadge>（パネル開放中）</>} />
+          <Row label="メニューを閉じる" value={<><KeyBadge>○ / B</KeyBadge> または <KeyBadge>Options / Menu</KeyBadge></>} />
+          <Row label="アイテム一覧" value={<><KeyBadge>L1 / LB</KeyBadge></>} />
+          <Row label="装備一覧" value={<><KeyBadge>R1 / RB</KeyBadge></>} />
+          <Row label="足元アイテム操作" value={<><KeyBadge>□ / X</KeyBadge>（足元にアイテム/装備があるとき）</>} />
+          <Row label="ヘルプを開く" value={<><KeyBadge>△ / Y</KeyBadge></>} />
+          <Note>
+            方向入力（十字キー・左スティック）は<span style={{ color: ACCENT_COLOR }}>長押しでキーリピート</span>します（400ms 後から 150ms 間隔）。<br />
+            左スティックは斜め入力を無視し、より大きく傾いた軸の方向のみ採用します。
+          </Note>
+        </>
+      ) : (
+        <>
+          <SectionTitle>PC（キーボード）操作</SectionTitle>
+          <Row label="移動" value={<><KeyBadge>W</KeyBadge> <KeyBadge>A</KeyBadge> <KeyBadge>S</KeyBadge> <KeyBadge>D</KeyBadge> または 矢印キー</>} />
+          <Row label="攻撃" value={<><KeyBadge>Z</KeyBadge> または <KeyBadge>X</KeyBadge></>} />
+          <Row label="待機（1ターン）" value={<KeyBadge>Space</KeyBadge>} />
+          <Row label="向きだけ変える" value={<><KeyBadge>Ctrl</KeyBadge> + 方向キー（ターン消費なし）</>} />
+          <Row label="アイテム一覧" value={<KeyBadge>I</KeyBadge>} />
+          <Row label="装備一覧" value={<KeyBadge>E</KeyBadge>} />
+          <Row label="足元アイテム操作" value={<><KeyBadge>F</KeyBadge> （足元にアイテム/装備があるとき）</>} />
+          <Row label="ステータス" value={<KeyBadge>C</KeyBadge>} />
+          <Row label="ヘルプを開く" value={<KeyBadge>H</KeyBadge>} />
+          <Row label="メニューを閉じる" value={<KeyBadge>Esc</KeyBadge>} />
+          <Row label="ポーズ" value={<><KeyBadge>Esc</KeyBadge>（メニューが閉じているとき）</>} />
+        </>
+      )}
 
       <SectionTitle>スマホ（仮想コントローラー）操作</SectionTitle>
       <Row label="移動" value="Dpad（十字ボタン）" />
@@ -152,7 +176,7 @@ function TabBasic() {
   );
 }
 
-function TabCombat() {
+function TabCombat({ isGamepad }: { isGamepad: boolean }) {
   return (
     <div>
       <SectionTitle>攻撃の方法</SectionTitle>
@@ -166,7 +190,11 @@ function TabCombat() {
       <div style={{ fontSize: 12, color: TEXT_COLOR, lineHeight: 1.8, marginBottom: 8 }}>
         移動せずに向きだけ変えたいときは：
       </div>
-      <Row label="PC" value={<><KeyBadge>Ctrl</KeyBadge> + 方向キー（ターン消費なし）</>} />
+      {isGamepad ? (
+        <Row label="コントローラー" value="未対応（キーボードの Ctrl+方向キーに相当する機能はなし）" />
+      ) : (
+        <Row label="PC" value={<><KeyBadge>Ctrl</KeyBadge> + 方向キー（ターン消費なし）</>} />
+      )}
       <Row label="スマホ" value="Dpad中央「向」をタップ → 向きモード → 方向ボタン" />
       <Note>
         向きモードはターンを消費せず、向きだけを変えます。
@@ -206,7 +234,7 @@ function TabCombat() {
   );
 }
 
-function TabSave() {
+function TabSave({ isGamepad }: { isGamepad: boolean }) {
   return (
     <div>
       <SectionTitle>セーブ方法</SectionTitle>
@@ -251,7 +279,11 @@ function TabSave() {
 
       <SectionTitle>セーブして終了する方法</SectionTitle>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-        <Row label="PC" value={<><KeyBadge>Esc</KeyBadge> → 「セーブして終了」</>} />
+        {isGamepad ? (
+          <Row label="コントローラー" value={<><KeyBadge>Options / Menu</KeyBadge> → 「セーブして終了」</>} />
+        ) : (
+          <Row label="PC" value={<><KeyBadge>Esc</KeyBadge> → 「セーブして終了」</>} />
+        )}
         <Row label="スマホ" value="ポーズ → 「セーブして終了」" />
       </div>
       <Note>
@@ -269,7 +301,7 @@ function TabSave() {
   );
 }
 
-function TabSkill() {
+function TabSkill({ isGamepad }: { isGamepad: boolean }) {
   return (
     <div>
       <SectionTitle>スキルとは</SectionTitle>
@@ -340,7 +372,11 @@ function TabSkill() {
       </div>
 
       <SectionTitle>アクティブスキルの使い方</SectionTitle>
-      <Row label="PC" value="ステータス画面（C）からスキルを選択" />
+      {isGamepad ? (
+        <Row label="コントローラー" value="ステータス画面から選択（コントローラー対応は今後追加予定）" />
+      ) : (
+        <Row label="PC" value="ステータス画面（C）からスキルを選択" />
+      )}
       <Row label="スマホ" value="画面下部のスキルボタン列" />
       <Note>
         スキルが使えるときはボタンが青く光ります。
@@ -350,15 +386,25 @@ function TabSkill() {
   );
 }
 
-function TabItems() {
+function TabItems({ isGamepad }: { isGamepad: boolean }) {
+  const pcLabel = isGamepad ? 'コントローラー' : 'PC';
+
   return (
     <div>
       <SectionTitle>アイテムの使い方</SectionTitle>
-      <Row label="PC" value={<><KeyBadge>I</KeyBadge> でアイテム一覧 → 選択 → <KeyBadge>Enter</KeyBadge> または <KeyBadge>Z</KeyBadge></>} />
+      {isGamepad ? (
+        <Row label={pcLabel} value={<><KeyBadge>L1 / LB</KeyBadge> でアイテム一覧 → 選択 → <KeyBadge>× / A</KeyBadge></>} />
+      ) : (
+        <Row label={pcLabel} value={<><KeyBadge>I</KeyBadge> でアイテム一覧 → 選択 → <KeyBadge>Enter</KeyBadge> または <KeyBadge>Z</KeyBadge></>} />
+      )}
       <Row label="スマホ" value="「アイ」ボタン → アイテムをタップ → 「使用」" />
 
       <SectionTitle>アイテムを投げる</SectionTitle>
-      <Row label="PC" value={<><KeyBadge>I</KeyBadge> でアイテム一覧 → 「投」ボタン → 方向を選択</>} />
+      {isGamepad ? (
+        <Row label={pcLabel} value={<><KeyBadge>L1 / LB</KeyBadge> でアイテム一覧 → 「投」ボタン → 方向を選択</>} />
+      ) : (
+        <Row label={pcLabel} value={<><KeyBadge>I</KeyBadge> でアイテム一覧 → 「投」ボタン → 方向を選択</>} />
+      )}
       <Row label="スマホ" value="「アイ」ボタン → アイテムをタップ → 「投」→ 方向を選択" />
       <Note>
         アイテムを投げると、向いている方向へ飛んでいきます。<br />
@@ -369,7 +415,11 @@ function TabItems() {
       </Note>
 
       <SectionTitle>装備（武器・盾・アーマー）を投げる</SectionTitle>
-      <Row label="PC" value={<><KeyBadge>E</KeyBadge> で装備一覧 → 「投」ボタン → 方向を選択</>} />
+      {isGamepad ? (
+        <Row label={pcLabel} value={<><KeyBadge>R1 / RB</KeyBadge> で装備一覧 → 「投」ボタン → 方向を選択</>} />
+      ) : (
+        <Row label={pcLabel} value={<><KeyBadge>E</KeyBadge> で装備一覧 → 「投」ボタン → 方向を選択</>} />
+      )}
       <Row label="スマホ" value="「装備」ボタン → 装備をタップ → 「投」→ 方向を選択" />
       <Note>
         武器を投げると敵にATKダメージを与えます。ただし、
@@ -379,7 +429,11 @@ function TabItems() {
       </Note>
 
       <SectionTitle>装備の付け替え</SectionTitle>
-      <Row label="PC" value={<><KeyBadge>E</KeyBadge> で装備一覧 → 選択</>} />
+      {isGamepad ? (
+        <Row label={pcLabel} value={<><KeyBadge>R1 / RB</KeyBadge> で装備一覧 → 選択</>} />
+      ) : (
+        <Row label={pcLabel} value={<><KeyBadge>E</KeyBadge> で装備一覧 → 選択</>} />
+      )}
       <Row label="スマホ" value="「装備」ボタン → 武器をタップして装備" />
       <Note>
         装備可能な武器スロット数はメカ（機体）によって異なります。
@@ -423,7 +477,7 @@ function TabItems() {
   );
 }
 
-function TabTips() {
+function TabTips({ isGamepad }: { isGamepad: boolean }) {
   return (
     <div>
       <SectionTitle>生き残るためのコツ</SectionTitle>
@@ -435,11 +489,15 @@ function TabTips() {
           },
           {
             title: '向きを意識する',
-            body: 'Ctrl+方向キー（PC）または向きモード（スマホ）で、ターンを消費せず向きを変えられます。敵に背を向けないようにしましょう。',
+            body: isGamepad
+              ? 'スマホの向きモードで、ターンを消費せず向きを変えられます。敵に背を向けないようにしましょう。'
+              : 'Ctrl+方向キー（PC）または向きモード（スマホ）で、ターンを消費せず向きを変えられます。敵に背を向けないようにしましょう。',
           },
           {
             title: '待機して回復',
-            body: 'Spaceキー（待機）を押すとターンを消費します。リジェネスキルを持っていれば待機中にHPが自動回復します。',
+            body: isGamepad
+              ? 'コントローラーには待機専用ボタンはありません。リジェネスキルを持っていれば移動後でも自動回復します。'
+              : 'Spaceキー（待機）を押すとターンを消費します。リジェネスキルを持っていれば待機中にHPが自動回復します。',
           },
           {
             title: 'ミニマップを活用',
@@ -480,17 +538,17 @@ function TabTips() {
 // メインコンポーネント
 // ---------------------------------------------------------------------------
 
-export default function HelpManualOverlay({ onClose }: HelpManualOverlayProps) {
+export default function HelpManualOverlay({ onClose, isGamepad = false }: HelpManualOverlayProps) {
   const [activeTab, setActiveTab] = useState<TabId>('basic');
 
   const renderContent = () => {
     switch (activeTab) {
-      case 'basic':   return <TabBasic />;
-      case 'combat':  return <TabCombat />;
-      case 'save':    return <TabSave />;
-      case 'skill':   return <TabSkill />;
-      case 'items':   return <TabItems />;
-      case 'tips':    return <TabTips />;
+      case 'basic':   return <TabBasic   isGamepad={isGamepad} />;
+      case 'combat':  return <TabCombat  isGamepad={isGamepad} />;
+      case 'save':    return <TabSave    isGamepad={isGamepad} />;
+      case 'skill':   return <TabSkill   isGamepad={isGamepad} />;
+      case 'items':   return <TabItems   isGamepad={isGamepad} />;
+      case 'tips':    return <TabTips    isGamepad={isGamepad} />;
     }
   };
 
@@ -554,6 +612,32 @@ export default function HelpManualOverlay({ onClose }: HelpManualOverlayProps) {
           </button>
         </div>
 
+        {/* 入力モードバッジ */}
+        <div style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: 6,
+          padding: '4px 14px',
+          backgroundColor: 'rgba(15, 15, 35, 0.95)',
+          borderBottom: '1px solid #223344',
+          fontSize: 10,
+          color: MUTED_COLOR,
+          flexShrink: 0,
+        }}>
+          <span style={{
+            display: 'inline-block',
+            padding: '1px 7px',
+            borderRadius: 10,
+            fontSize: 10,
+            backgroundColor: isGamepad ? 'rgba(68,120,200,0.3)' : 'rgba(60,80,60,0.3)',
+            border: isGamepad ? '1px solid #4488cc' : '1px solid #448844',
+            color: isGamepad ? '#88bbff' : '#88cc88',
+          }}>
+            {isGamepad ? '🎮 コントローラー' : '⌨️ キーボード'}
+          </span>
+          <span>で操作中のガイドを表示</span>
+        </div>
+
         {/* タブバー */}
         <div style={{
           display: 'flex',
@@ -608,8 +692,10 @@ export default function HelpManualOverlay({ onClose }: HelpManualOverlayProps) {
           flexShrink: 0,
           backgroundColor: 'rgba(15, 15, 35, 0.9)',
         }}>
-          PC: <span style={{ color: '#aabbcc' }}>H キー</span> でいつでも開閉 ／
-          スマホ: <span style={{ color: '#aabbcc' }}>「？」ボタン</span> でいつでも開閉
+          {isGamepad
+            ? <>コントローラー: <span style={{ color: '#aabbcc' }}>△ / Y</span> でいつでも開閉 ／ スマホ: <span style={{ color: '#aabbcc' }}>「？」ボタン</span> でいつでも開閉</>
+            : <>PC: <span style={{ color: '#aabbcc' }}>H キー</span> でいつでも開閉 ／ スマホ: <span style={{ color: '#aabbcc' }}>「？」ボタン</span> でいつでも開閉</>
+          }
         </div>
       </div>
     </div>
