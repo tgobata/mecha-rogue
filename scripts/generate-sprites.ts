@@ -557,6 +557,8 @@ async function generateTileSprites(meta: SpriteMeta): Promise<void> {
   meta.tiles['trap']   = await generateTrapTile(outDir);
   meta.tiles['hint']   = await generateHintTile(outDir);
   meta.tiles['shop']   = await generateShopTile(outDir);
+  // oil タイルは generate-oil-fire-sprites.mjs が public/sprites/tiles/oil.png に生成する
+  meta.tiles['oil']    = { file: 'public/sprites/tiles/oil.png', width: 32, height: 32 };
 }
 
 // ---------------------------------------------------------------------------
@@ -586,12 +588,12 @@ function getLetterPalette(letter: PlayerLetter): LetterPalette {
   switch (letter) {
     case 'H':
       return {
-        main:   hexToRGBA('#FF8C00'),  // オレンジ本体
-        mid:    hexToRGBA('#CC6000'),  // 濃いオレンジ（影）
-        dark:   hexToRGBA('#994400'),  // より濃い影
-        edge:   hexToRGBA('#FFD700'),  // ゴールドアウトライン
-        accent: hexToRGBA('#44AAFF'),  // 水色（バイザー・手）
-        sensor: hexToRGBA('#1A6AFF'),  // 青（虹彩）
+        main:   hexToRGBA('#A8DCFF'),  // 明るい水色（本体）
+        mid:    hexToRGBA('#5AAAE0'),  // 中間ブルー（影）
+        dark:   hexToRGBA('#1E6AAF'),  // 濃いブルー（深影）
+        edge:   hexToRGBA('#FFFFFF'),  // 白アウトライン
+        accent: hexToRGBA('#E0F8FF'),  // 薄水色（バイザー・手）
+        sensor: hexToRGBA('#0044DD'),  // 深い青（虹彩）
         core:   hexToRGBA('#FFFFFF'),  // 白
       };
     case 'D':
@@ -1059,22 +1061,22 @@ function drawLetterH(
   frame: number,
 ): void {
   const pal = getLetterPalette('H');
-  const O   = hexToRGBA('#FF9010');  // オレンジ本体
-  const OM  = hexToRGBA('#CC5A00');  // 影オレンジ
-  const OL  = hexToRGBA('#FFCC55');  // ハイライトオレンジ
-  const OH  = hexToRGBA('#FFE8B0');  // 強光沢
+  const O   = hexToRGBA('#A8DCFF');  // 明るい水色（本体）
+  const OM  = hexToRGBA('#5AAAE0');  // 中間ブルー（影）
+  const OL  = hexToRGBA('#D8F0FF');  // 薄い水色ハイライト
+  const OH  = hexToRGBA('#FFFFFF');  // 白（強光沢）
   const BV  = hexToRGBA('#2288EE');  // バイザー青（手も同色）
-  const BH  = hexToRGBA('#77CCFF');  // バイザーハイライト
+  const BH  = hexToRGBA('#AADDFF');  // バイザーハイライト
   const BD  = hexToRGBA('#0044AA');  // バイザー影
-  const BE  = hexToRGBA('#0055FF');  // 虹彩（青）
+  const BE  = hexToRGBA('#0044DD');  // 虹彩（青）
   const WH  = hexToRGBA('#FFFFFF');  // 白
-  const BK  = hexToRGBA('#111133');  // 瞳（黒）
-  const GD  = pal.edge;              // #FFD700 ゴールドアウトライン
-  const AN  = hexToRGBA('#FFDD00');  // アンテナ軸
-  const AB  = hexToRGBA('#FF4400');  // アンテナ球
-  const AH  = hexToRGBA('#FFAA55');  // アンテナ球ハイライト
+  const BK  = hexToRGBA('#001133');  // 瞳（黒）
+  const GD  = pal.edge;              // 白アウトライン
+  const AN  = hexToRGBA('#88BBDD');  // アンテナ軸（青灰）
+  const AB  = hexToRGBA('#55AAFF');  // アンテナ球（水色）
+  const AH  = hexToRGBA('#CCEEFF');  // アンテナ球ハイライト
   const MK  = hexToRGBA('#0033BB');  // 口（濃い青）
-  const MT  = hexToRGBA('#66BBFF');  // 口内ハイライト
+  const MT  = hexToRGBA('#AADDFF');  // 口内ハイライト
   const dir = direction;
 
   // ─── アニメーションオフセット ─────────────────────────────────────

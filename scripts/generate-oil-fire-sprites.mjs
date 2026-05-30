@@ -87,49 +87,80 @@ async function savePNG(buf, width, height, filePath) {
 }
 
 // ---------------------------------------------------------------------------
-// tile_oil.png - オイルマス（32x32）
+// tiles/oil.png - オイルマス（32x32）
 // ---------------------------------------------------------------------------
 
 async function generateTileOil() {
   const S = 32;
   const buf = createBuffer(S, S);
 
-  const floor    = hexToRGBA('#3a3a3a');
-  const oil1     = hexToRGBA('#1a1a1a');
-  const oil2     = hexToRGBA('#2d2d2d');
-  const reflect  = hexToRGBA('#4a4a5a');
+  // 床ベース: 暗い青灰色
+  const floor    = hexToRGBA('#2a2e38');
+  // 油だまり本体: ほぼ黒
+  const oilDark  = hexToRGBA('#0d0d12');
+  // 油の中間層: 濃い青黒
+  const oilMid   = hexToRGBA('#1a1a28');
+  // 虹色反射1: 濃い紫
+  const iridPurp = hexToRGBA('#5a2a7a');
+  // 虹色反射2: 深い青緑
+  const iridTeal = hexToRGBA('#1a5a5a');
+  // 油の縁: 暗めのグレー
+  const oilEdge  = hexToRGBA('#383840');
+  // 明るい反射スポット: 明るい白青
+  const glint    = hexToRGBA('#aaddff');
+  // 床のグリッド線
+  const gridLine = hexToRGBA('#353a45');
 
   // 床を塗りつぶす
   fillRect(buf, S, 0, 0, S, S, floor);
 
-  // 油だまり中央の大楕円（暗め）
-  fillEllipse(buf, S, 16, 18, 10, 6, oil1);
-
-  // 中楕円（少し明るめでグラデーション感）
-  fillEllipse(buf, S, 16, 18, 7, 4, oil2);
-
-  // 中心に向かう小楕円（最も暗い）
-  fillEllipse(buf, S, 16, 18, 4, 2, oil1);
-
-  // 染みの広がり: 左上方向のシミ
-  fillEllipse(buf, S, 9, 12, 4, 3, oil2);
-  fillEllipse(buf, S, 9, 12, 2, 2, oil1);
-
-  // 染みの広がり: 右方向のシミ
-  fillEllipse(buf, S, 23, 16, 3, 2, oil2);
-
-  // 染みの広がり: 下方向のシミ
-  fillEllipse(buf, S, 15, 24, 3, 2, oil2);
-
-  // 端の反射光（少数の明るいドット）
-  const reflectPoints = [
-    [7, 11], [8, 10], [22, 14], [24, 15], [14, 25], [18, 20],
-  ];
-  for (const [rx, ry] of reflectPoints) {
-    setPixel(buf, S, rx, ry, reflect);
+  // 床グリッド（8px格子）
+  for (let y = 0; y < S; y += 8) {
+    for (let x = 0; x < S; x++) {
+      setPixel(buf, S, x, y, gridLine);
+    }
+  }
+  for (let x = 0; x < S; x += 8) {
+    for (let y = 0; y < S; y++) {
+      setPixel(buf, S, x, y, gridLine);
+    }
   }
 
-  const outPath = path.join(SPRITES_DIR, 'tile_oil.png');
+  // 油だまり: 大楕円（メイン）
+  fillEllipse(buf, S, 16, 18, 11, 7, oilEdge);
+  fillEllipse(buf, S, 16, 18, 10, 6, oilDark);
+
+  // 油だまり内部のグラデーション層
+  fillEllipse(buf, S, 14, 17, 6, 4, oilMid);
+
+  // 虹色反射（油膜の光学干渉模様）
+  fillEllipse(buf, S, 11, 15, 4, 3, iridPurp);
+  fillEllipse(buf, S, 11, 15, 3, 2, oilMid);
+  fillEllipse(buf, S, 21, 20, 3, 2, iridTeal);
+
+  // 染み広がり: 左上シミ
+  fillEllipse(buf, S, 8, 11, 4, 3, oilEdge);
+  fillEllipse(buf, S, 8, 11, 3, 2, oilDark);
+
+  // 染み広がり: 右シミ
+  fillEllipse(buf, S, 24, 17, 4, 2, oilEdge);
+  fillEllipse(buf, S, 24, 17, 3, 2, oilDark);
+
+  // 染み広がり: 下シミ
+  fillEllipse(buf, S, 15, 25, 4, 2, oilEdge);
+  fillEllipse(buf, S, 15, 25, 3, 1, oilDark);
+
+  // 明るい反射グリント（白青のハイライト）
+  const glintPoints = [
+    [10, 13], [11, 12], [20, 19], [22, 17],
+  ];
+  for (const [gx, gy] of glintPoints) {
+    setPixel(buf, S, gx, gy, glint);
+  }
+
+  const tilesDir = path.join(SPRITES_DIR, 'tiles');
+  fs.mkdirSync(tilesDir, { recursive: true });
+  const outPath = path.join(tilesDir, 'oil.png');
   await savePNG(buf, S, S, outPath);
   console.log('Generated:', outPath);
 }
