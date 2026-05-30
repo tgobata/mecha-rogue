@@ -69,6 +69,7 @@ import {
 import type { SpriteCache, Viewport, FlashMap, ScreenFlash } from "../systems/renderer";
 import { useGameInput } from "../systems/input";
 import type { UIAction } from "../systems/input";
+import { useGamepadInput } from "../systems/gamepad";
 import {
   initAudio,
   isAudioReady,
@@ -3120,6 +3121,14 @@ export default function GameCanvas() {
   const isMenuOpen = menuPanel !== null || confirmDialog !== null || skillSelectState !== null;
 
   useGameInput(
+    handleAction,
+    gameState.phase === "exploring",
+    handleUIAction,
+    isMenuOpen,
+  );
+
+  // ── ゲームパッド入力フック（PS4 / Xbox / 標準ゲームパッド）──────
+  useGamepadInput(
     handleAction,
     gameState.phase === "exploring",
     handleUIAction,
